@@ -3,6 +3,7 @@
 #include <RTBEngine.h>
 #include <memory>
 #include "../UI/EditorLayer.h"
+#include "../Project/Project.h"
 
 namespace RTBEditor {
 
@@ -22,6 +23,7 @@ namespace RTBEditor {
     private:
         std::unique_ptr<RTBEngine::Core::Application> engineApp;
         std::unique_ptr<EditorLayer> uiLayer;
+        std::unique_ptr<Project> project;
         bool isRunning = false;
     };
 

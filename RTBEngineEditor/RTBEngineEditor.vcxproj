@@ -93,6 +93,7 @@ xcopy /y /d /e /i "$(ProjectDir)RTBEngine_SDK\Default" "$(OutDir)Default"</Comma
   <ItemGroup>
     <ClCompile Include="Source\Core\EditorApplication.cpp" />
     <ClCompile Include="Source\main.cpp" />
+    <ClCompile Include="Source\Project\Project.cpp" />
     <ClCompile Include="Source\UI\EditorLayer.cpp" />
     <ClCompile Include="Source\UI\MainMenuBar.cpp" />
     <ClCompile Include="Source\UI\Panels\InspectorPanel.cpp" />
@@ -100,6 +101,7 @@ xcopy /y /d /e /i "$(ProjectDir)RTBEngine_SDK\Default" "$(OutDir)Default"</Comma
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Core\EditorApplication.h" />
+    <ClInclude Include="Source\Project\Project.h" />
     <ClInclude Include="Source\UI\EditorLayer.h" />
     <ClInclude Include="Source\UI\MainMenuBar.h" />
     <ClInclude Include="Source\UI\Panels\EditorPanel.h" />

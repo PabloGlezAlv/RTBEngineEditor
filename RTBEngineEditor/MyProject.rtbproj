@@ -1,0 +1,3 @@
+Name=RTBEngine Demo
+StartScene=Default/Scenes/DefaultScene.lua
+AssetDirectory=Assets

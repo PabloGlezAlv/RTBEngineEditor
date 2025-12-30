@@ -1,6 +1,7 @@
 #include "EditorApplication.h"
 #include <GL/glew.h>
 #include <iostream>
+#include <RTBEngine/ECS/SceneManager.h>
 
 namespace RTBEditor {
 
@@ -18,6 +19,12 @@ namespace RTBEditor {
         }
 
         engineApp->SetIsRunning(true);
+
+        // Load Project Settings
+        project = std::make_unique<Project>();
+        if (project->Load("MyProject.rtbproj")) {
+            RTBEngine::ECS::SceneManager::GetInstance().LoadScene(project->GetStartScene());
+        }
 
         // Initialize UI Layer
         uiLayer = std::make_unique<EditorLayer>();
