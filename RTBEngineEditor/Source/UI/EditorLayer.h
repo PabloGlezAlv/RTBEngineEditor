@@ -1,6 +1,7 @@
 #pragma once
 #include "Panels/EditorPanel.h"
 #include "Panels/SceneHierarchyPanel.h"
+#include "Panels/SceneViewPanel.h"
 #include "MainMenuBar.h"
 #include <imgui.h>
 #include <vector>
@@ -26,6 +27,7 @@ namespace RTBEditor {
 
         void AddPanel(std::unique_ptr<EditorPanel> panel);
         MainMenuBar* GetMenuBar() { return menuBar.get(); }
+        SceneViewPanel* GetSceneViewPanel() { return sceneViewPanel; }
 
     private:
         void SetupDockspace();
@@ -35,6 +37,7 @@ namespace RTBEditor {
         EditorContext context;
         std::unique_ptr<MainMenuBar> menuBar;
         std::vector<std::unique_ptr<EditorPanel>> panels;
+        SceneViewPanel* sceneViewPanel = nullptr;
         bool isDockspaceOpen = true;
     };
 

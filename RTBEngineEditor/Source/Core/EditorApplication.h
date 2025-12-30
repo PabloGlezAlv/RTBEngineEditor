@@ -19,6 +19,7 @@ namespace RTBEditor {
     private:
         void Update(float deltaTime);
         void Render();
+        void RenderSceneToFramebuffer();
 
     private:
         std::unique_ptr<RTBEngine::Core::Application> engineApp;
