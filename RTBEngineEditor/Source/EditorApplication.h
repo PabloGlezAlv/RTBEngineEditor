@@ -18,6 +18,11 @@ namespace RTBEditor {
         void Update(float deltaTime);
         void Render();
 
+        // UI Management logic
+        void BeginUI();
+        void EndUI();
+        void SetupDockspace();
+
     private:
         std::unique_ptr<RTBEngine::Core::Application> engineApp;
         bool isRunning = false;
