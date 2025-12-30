@@ -95,6 +95,7 @@ xcopy /y /d /e /i "$(ProjectDir)RTBEngine_SDK\Default" "$(OutDir)Default"</Comma
     <ClCompile Include="Source\main.cpp" />
     <ClCompile Include="Source\UI\EditorLayer.cpp" />
     <ClCompile Include="Source\UI\MainMenuBar.cpp" />
+    <ClCompile Include="Source\UI\Panels\InspectorPanel.cpp" />
     <ClCompile Include="Source\UI\Panels\SceneHierarchyPanel.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -102,6 +103,7 @@ xcopy /y /d /e /i "$(ProjectDir)RTBEngine_SDK\Default" "$(OutDir)Default"</Comma
     <ClInclude Include="Source\UI\EditorLayer.h" />
     <ClInclude Include="Source\UI\MainMenuBar.h" />
     <ClInclude Include="Source\UI\Panels\EditorPanel.h" />
+    <ClInclude Include="Source\UI\Panels\InspectorPanel.h" />
     <ClInclude Include="Source\UI\Panels\SceneHierarchyPanel.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

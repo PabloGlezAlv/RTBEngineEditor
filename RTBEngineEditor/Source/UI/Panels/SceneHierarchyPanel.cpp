@@ -8,17 +8,17 @@ namespace RTBEditor {
     SceneHierarchyPanel::SceneHierarchyPanel() {}
     SceneHierarchyPanel::~SceneHierarchyPanel() {}
 
-    void SceneHierarchyPanel::OnUIRender() {
+    void SceneHierarchyPanel::OnUIRender(EditorContext& context) {
         ImGui::Begin("Hierarchy");
 
         auto activeScene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
         if (activeScene) {
             for (const auto& gameObject : activeScene->GetGameObjects()) {
-                DrawGameObjectNode(gameObject.get());
+                DrawGameObjectNode(gameObject.get(), context);
             }
 
             if (ImGui::IsMouseDown(0) && ImGui::IsWindowHovered()) {
-                selectedContext = nullptr;
+                context.selectedGameObject = nullptr;
             }
 
             // Context menu for the window
@@ -33,17 +33,17 @@ namespace RTBEditor {
         ImGui::End();
     }
 
-    void SceneHierarchyPanel::DrawGameObjectNode(RTBEngine::ECS::GameObject* gameObject) {
+    void SceneHierarchyPanel::DrawGameObjectNode(RTBEngine::ECS::GameObject* gameObject, EditorContext& context) {
         auto& name = gameObject->GetName();
 
-        ImGuiTreeNodeFlags flags = ((selectedContext == gameObject) ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
+        ImGuiTreeNodeFlags flags = ((context.selectedGameObject == gameObject) ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
         flags |= ImGuiTreeNodeFlags_SpanAvailWidth;
         
         // Using pointer as ID to ensure uniqueness
         bool opened = ImGui::TreeNodeEx((void*)gameObject, flags, name.c_str());
 
         if (ImGui::IsItemClicked()) {
-            selectedContext = gameObject;
+            context.selectedGameObject = gameObject;
         }
 
         if (opened) {

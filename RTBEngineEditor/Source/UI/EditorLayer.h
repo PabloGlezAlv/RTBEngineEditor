@@ -1,3 +1,4 @@
+#pragma once
 #include "Panels/EditorPanel.h"
 #include "Panels/SceneHierarchyPanel.h"
 #include "MainMenuBar.h"
@@ -6,6 +7,11 @@
 #include <memory>
 #include <SDL.h>
 
+/**
+ * UI inspired by Dear ImGui Demo and Wiki.
+ * Reference: https://github.com/ocornut/imgui/blob/master/imgui_demo.cpp
+ * Docking API based on imgui_internal.h (Docking branch)
+ */
 namespace RTBEditor {
 
     class EditorLayer {
@@ -26,6 +32,7 @@ namespace RTBEditor {
         void CreateDefaultLayout(ImGuiID dockspaceId);
 
     private:
+        EditorContext context;
         std::unique_ptr<MainMenuBar> menuBar;
         std::vector<std::unique_ptr<EditorPanel>> panels;
         bool isDockspaceOpen = true;

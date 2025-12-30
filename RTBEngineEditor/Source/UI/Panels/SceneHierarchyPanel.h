@@ -10,16 +10,12 @@ namespace RTBEditor {
         SceneHierarchyPanel();
         virtual ~SceneHierarchyPanel() override;
 
-        virtual void OnUIRender() override;
-
-        RTBEngine::ECS::GameObject* GetSelectedGameObject() const { return selectedContext; }
-        void SetSelectedGameObject(RTBEngine::ECS::GameObject* gameObject) { selectedContext = gameObject; }
+        virtual void OnUIRender(EditorContext& context) override;
 
     private:
-        void DrawGameObjectNode(RTBEngine::ECS::GameObject* gameObject);
+        void DrawGameObjectNode(RTBEngine::ECS::GameObject* gameObject, EditorContext& context);
 
     private:
-        RTBEngine::ECS::GameObject* selectedContext = nullptr;
     };
 
 }
