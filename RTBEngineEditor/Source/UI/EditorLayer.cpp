@@ -1,6 +1,7 @@
 #include "EditorLayer.h"
 #include "Panels/SceneHierarchyPanel.h"
 #include "Panels/InspectorPanel.h"
+#include "Panels/ContentBrowserPanel.h"
 #include "MainMenuBar.h"
 #include <imgui_internal.h>
 #include <utility>
@@ -16,6 +17,7 @@ namespace RTBEditor {
         // Add default panels
         AddPanel(std::make_unique<SceneHierarchyPanel>());
         AddPanel(std::make_unique<InspectorPanel>());
+        AddPanel(std::make_unique<ContentBrowserPanel>());
     }
 
     EditorLayer::~EditorLayer() {}
@@ -111,10 +113,12 @@ namespace RTBEditor {
         // Split nodes
         ImGuiID dock_id_left = ImGui::DockBuilderSplitNode(dockspaceId, ImGuiDir_Left, 0.2f, nullptr, &dockspaceId);
         ImGuiID dock_id_right = ImGui::DockBuilderSplitNode(dockspaceId, ImGuiDir_Right, 0.2f, nullptr, &dockspaceId);
+        ImGuiID dock_id_bottom = ImGui::DockBuilderSplitNode(dockspaceId, ImGuiDir_Down, 0.3f, nullptr, &dockspaceId);
         
         // Assign windows
         ImGui::DockBuilderDockWindow("Hierarchy", dock_id_left);
         ImGui::DockBuilderDockWindow("Inspector", dock_id_right);
+        ImGui::DockBuilderDockWindow("Content Browser", dock_id_bottom);
         
         ImGui::DockBuilderFinish(dockspaceId);
     }
