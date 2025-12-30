@@ -1,11 +1,11 @@
 function CreateScene()
     return {
-        name = "Test Scene",
+        name = "Default Scene",
         gameObjects = {
             -- Main Camera
             {
                 name = "MainCamera",
-                position = Vector3(0.0, 2.0, 5.0),
+                position = Vector3(0.0, 5.0, 10.0),
                 rotation = Quaternion.FromEulerAngles(-20.0, 180.0, 0.0),
                 components = {
                     {
@@ -19,29 +19,58 @@ function CreateScene()
                     {
                         type = "FreeLookCamera",
                         moveSpeed = 10.0,
-                        lookSpeed = 0.2
+                        lookSpeed = 0.1
                     }
                 }
             },
-            -- Directional Light
+            -- Directional Light (Sun)
             {
-                name = "MainLight",
-                rotation = Quaternion.FromEulerAngles(45.0, 45.0, 0.0),
+                name = "Sun",
+                rotation = Quaternion.FromEulerAngles(50.0, -30.0, 0.0),
                 components = {
                     {
                         type = "LightComponent",
                         lightType = "Directional",
-                        color = Vector3(1.0, 1.0, 1.0),
-                        intensity = 1.0,
-                        castShadows = true
+                        color = Vector3(1.0, 0.95, 0.9), -- Sunlight
+                        intensity = 1.2,
+                        castShadows = true,
+                        shadowResolution = 2048,
+                        shadowBias = 0.005
                     }
                 }
             },
-            -- Simple Cube
+            -- Point Light (Red glow)
+            {
+                name = "RedLight",
+                position = Vector3(-3.0, 2.0, 0.0),
+                components = {
+                    {
+                        type = "LightComponent",
+                        lightType = "Point",
+                        color = Vector3(1.0, 0.2, 0.2),
+                        intensity = 3.0,
+                        range = 10.0
+                    }
+                }
+            },
+            -- Floor
+            {
+                name = "Floor",
+                position = Vector3(0.0, -0.5, 0.0),
+                scale = Vector3(10.0, 1.0, 10.0),
+                components = {
+                    {
+                        type = "MeshRenderer",
+                        mesh = "Default/Models/plane.obj",
+                        shader = "basic"
+                    }
+                }
+            },
+            -- Cube
             {
                 name = "Cube",
-                position = Vector3(0.0, 0.0, 0.0),
-                scale = Vector3(1.0, 1.0, 1.0),
+                position = Vector3(0.0, 1.0, 0.0),
+                rotation = Quaternion.FromEulerAngles(0.0, 45.0, 0.0),
                 components = {
                     {
                         type = "MeshRenderer",
