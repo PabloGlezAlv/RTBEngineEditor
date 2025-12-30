@@ -1,4 +1,5 @@
 #include "EditorApplication.h"
+#include <imgui.h>
 #include <GL/glew.h>
 #include <iostream>
 #include <RTBEngine/ECS/SceneManager.h>
@@ -32,6 +33,13 @@ namespace RTBEditor {
         uiLayer = std::make_unique<EditorLayer>();
         uiLayer->Initialize(engineApp->GetWindow()->GetSDLWindow());
 
+        uiLayer->SetupToolbar(
+            [this]() { OnPlay(); },
+            [this]() { OnPause(); },
+            [this]() { OnStop(); },
+            [this]() { return GetState(); }
+        );
+
         // Set up menu bar callbacks
         uiLayer->GetMenuBar()->SetExitCallback([this]() {
             isRunning = false;
@@ -61,7 +69,30 @@ namespace RTBEditor {
     }
 
     void EditorApplication::Update(float deltaTime) {
+        if (m_State == EditorState::Play) {
+            engineApp->Update(deltaTime);
+        }
+    }
+
+    void EditorApplication::OnPlay() {
+        m_State = EditorState::Play;
+        // Focus the Game window when playing
+        ImGui::SetWindowFocus("Game");
+    }
+
+    void EditorApplication::OnPause() {
+        m_State = EditorState::Pause;
+    }
+
+    void EditorApplication::OnStop() {
+        m_State = EditorState::Edit;
         
+        if (project) {
+            RTBEngine::ECS::SceneManager::GetInstance().LoadScene(project->GetStartScene());
+        } else {
+            // Fallback
+             RTBEngine::ECS::SceneManager::GetInstance().LoadScene("Default/Scenes/DefaultScene.lua");
+        }
     }
 
     void EditorApplication::Render() {
@@ -83,37 +114,52 @@ namespace RTBEditor {
     }
 
     void EditorApplication::RenderSceneToFramebuffer() {
-        SceneViewPanel* sceneView = uiLayer ? uiLayer->GetSceneViewPanel() : nullptr;
-        if (!sceneView) return;
-
-        RTBEngine::Rendering::Framebuffer* framebuffer = sceneView->GetFramebuffer();
-        RTBEngine::Rendering::Camera* editorCamera = sceneView->GetEditorCamera();
-        
-        if (!framebuffer || !editorCamera) return;
-        
-        int vpWidth = sceneView->GetViewportWidth();
-        int vpHeight = sceneView->GetViewportHeight();
-        if (vpWidth <= 0 || vpHeight <= 0) return;
+        if (!uiLayer) return;
 
         RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
         if (!scene) return;
 
-        // Bind framebuffer and set viewport
-        framebuffer->Bind();
-        glViewport(0, 0, vpWidth, vpHeight);
-        
-        // Render shadows first (this might change FBO and viewport)
-        engineApp->RenderShadowPass(scene);
+        // 1. Render Scene View (Editor Camera)
+        SceneViewPanel* sceneView = uiLayer->GetSceneViewPanel();
+        if (sceneView) {
+            RTBEngine::Rendering::Framebuffer* framebuffer = sceneView->GetFramebuffer();
+            RTBEngine::Rendering::Camera* editorCamera = sceneView->GetEditorCamera();
+            int vpWidth = sceneView->GetViewportWidth();
+            int vpHeight = sceneView->GetViewportHeight();
 
-        // CRITICAL: Rebind our framebuffer and restore viewport because RenderShadowPass unbinds to 0
-        framebuffer->Bind();
-        glViewport(0, 0, vpWidth, vpHeight);
-        
-        // Render the scene geometry
-        engineApp->RenderGeometryPass(scene, editorCamera);
+            if (framebuffer && editorCamera && vpWidth > 0 && vpHeight > 0) {
+                framebuffer->Bind();
+                glViewport(0, 0, vpWidth, vpHeight);
+                engineApp->RenderShadowPass(scene);
+                framebuffer->Bind();
+                glViewport(0, 0, vpWidth, vpHeight);
+                engineApp->RenderGeometryPass(scene, editorCamera);
+                framebuffer->Unbind();
+            }
+        }
 
-        // Unbind framebuffer and restore main viewport
-        framebuffer->Unbind();
+        // 2. Render Game View (Main Camera)
+        GameViewPanel* gameView = uiLayer->GetGameViewPanel();
+        if (gameView) {
+            RTBEngine::Rendering::Framebuffer* framebuffer = gameView->GetFramebuffer();
+            RTBEngine::ECS::CameraComponent* mainCamComp = scene->GetMainCamera();
+            int vpWidth = gameView->GetViewportWidth();
+            int vpHeight = gameView->GetViewportHeight();
+
+            // We only need to render Game view if it exists and has a camera
+            if (framebuffer && mainCamComp && vpWidth > 0 && vpHeight > 0) {
+                RTBEngine::Rendering::Camera* mainCamera = mainCamComp->GetCamera();
+                if (mainCamera) {
+                    framebuffer->Bind();
+                    glViewport(0, 0, vpWidth, vpHeight);
+                    // For now, reuse shadow maps from first pass
+                    engineApp->RenderGeometryPass(scene, mainCamera);
+                    framebuffer->Unbind();
+                }
+            }
+        }
+
+        // Restore main viewport
         glViewport(0, 0, engineApp->GetWindow()->GetWidth(), engineApp->GetWindow()->GetHeight());
     }
 

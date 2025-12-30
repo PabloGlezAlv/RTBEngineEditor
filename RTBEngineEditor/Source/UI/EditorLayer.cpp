@@ -16,10 +16,14 @@ namespace RTBEditor {
     EditorLayer::EditorLayer() {
         menuBar = std::make_unique<MainMenuBar>();
         
-        // Add default panels - store reference to SceneViewPanel
+        // Add default panels
         auto sceneView = std::make_unique<SceneViewPanel>();
         sceneViewPanel = sceneView.get();
         AddPanel(std::move(sceneView));
+
+        auto gameView = std::make_unique<GameViewPanel>();
+        gameViewPanel = gameView.get();
+        AddPanel(std::move(gameView));
         
         AddPanel(std::make_unique<SceneHierarchyPanel>());
         AddPanel(std::make_unique<InspectorPanel>());
@@ -118,19 +122,26 @@ namespace RTBEditor {
         ImGui::DockBuilderSetNodeSize(dockspaceId, viewport->Size);
 
         // Split nodes
+        ImGuiID dock_id_top = ImGui::DockBuilderSplitNode(dockspaceId, ImGuiDir_Up, 0.06f, nullptr, &dockspaceId);
         ImGuiID dock_id_left = ImGui::DockBuilderSplitNode(dockspaceId, ImGuiDir_Left, 0.2f, nullptr, &dockspaceId);
         ImGuiID dock_id_right = ImGui::DockBuilderSplitNode(dockspaceId, ImGuiDir_Right, 0.25f, nullptr, &dockspaceId);
         ImGuiID dock_id_bottom = ImGui::DockBuilderSplitNode(dockspaceId, ImGuiDir_Down, 0.3f, nullptr, &dockspaceId);
         ImGuiID dock_id_center = dockspaceId; // The remaining space is the center
         
         // Assign windows
+        ImGui::DockBuilderDockWindow("Toolbar", dock_id_top);
         ImGui::DockBuilderDockWindow("Scene", dock_id_center);
+        ImGui::DockBuilderDockWindow("Game", dock_id_center);
         ImGui::DockBuilderDockWindow("Hierarchy", dock_id_left);
         ImGui::DockBuilderDockWindow("Inspector", dock_id_right);
         ImGui::DockBuilderDockWindow("Content Browser", dock_id_bottom);
         ImGui::DockBuilderDockWindow("Console", dock_id_bottom);
         
         ImGui::DockBuilderFinish(dockspaceId);
+    }
+
+    void EditorLayer::SetupToolbar(std::function<void()> onPlay, std::function<void()> onPause, std::function<void()> onStop, std::function<EditorState()> getState) {
+        AddPanel(std::make_unique<ToolbarPanel>(onPlay, onPause, onStop, getState));
     }
 
 }
