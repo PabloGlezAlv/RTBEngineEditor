@@ -1,15 +1,18 @@
 // RTBEngineEditor - main.cpp
-// Entry point for the RTBEngine Editor application
-
-#include <RTBEngine.h>
-#include <iostream>
+#include "EditorApplication.h"
 
 int main(int argc, char* argv[]) {
     RTBEngine::Core::ApplicationConfig config;
-    config.window.title = "RTBEngine Editor";
-    config.window.width = 1920;
-    config.window.height = 1080;
-    config.initialScenePath = ""; 
+    config.window.title = "RTBEngine - Editor Mode";
+    config.window.width = 1600;
+    config.window.height = 900;
+    config.window.maximized = true;
+    config.initialScenePath = ""; // Start with empty scene
 
-    return RTBEngine::Run(config);
+    RTBEditor::EditorApplication editor;
+    if (editor.Initialize(config)) {
+        editor.Run();
+    }
+
+    return 0;
 }
