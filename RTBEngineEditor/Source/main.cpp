@@ -1,5 +1,5 @@
 // RTBEngineEditor - main.cpp
-#include "EditorApplication.h"
+#include "Core/EditorApplication.h"
 
 int main(int argc, char* argv[]) {
     RTBEngine::Core::ApplicationConfig config;

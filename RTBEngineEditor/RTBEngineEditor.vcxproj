@@ -43,7 +43,6 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-
   <!-- DEBUG x64 -->
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -66,7 +65,6 @@
 xcopy /y /d /e /i "$(ProjectDir)RTBEngine_SDK\Default" "$(OutDir)Default"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
-
   <!-- RELEASE x64 -->
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -91,16 +89,19 @@ xcopy /y /d /e /i "$(ProjectDir)RTBEngine_SDK\Default" "$(OutDir)Default"</Comma
 xcopy /y /d /e /i "$(ProjectDir)RTBEngine_SDK\Default" "$(OutDir)Default"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
-
   <!-- Source Files -->
   <ItemGroup>
+    <ClCompile Include="Source\Core\EditorApplication.cpp" />
     <ClCompile Include="Source\main.cpp" />
-    <ClCompile Include="Source\EditorApplication.cpp" />
+    <ClCompile Include="Source\UI\EditorLayer.cpp" />
+    <ClCompile Include="Source\UI\MainMenuBar.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Source\EditorApplication.h" />
+    <ClInclude Include="Source\Core\EditorApplication.h" />
+    <ClInclude Include="Source\UI\EditorLayer.h" />
+    <ClInclude Include="Source\UI\MainMenuBar.h" />
+    <ClInclude Include="Source\UI\Panels\EditorPanel.h" />
   </ItemGroup>
-
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

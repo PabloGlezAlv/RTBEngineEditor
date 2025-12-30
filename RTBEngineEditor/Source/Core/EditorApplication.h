@@ -2,6 +2,7 @@
 
 #include <RTBEngine.h>
 #include <memory>
+#include "../UI/EditorLayer.h"
 
 namespace RTBEditor {
 
@@ -18,13 +19,9 @@ namespace RTBEditor {
         void Update(float deltaTime);
         void Render();
 
-        // UI Management logic
-        void BeginUI();
-        void EndUI();
-        void SetupDockspace();
-
     private:
         std::unique_ptr<RTBEngine::Core::Application> engineApp;
+        std::unique_ptr<EditorLayer> uiLayer;
         bool isRunning = false;
     };
 
