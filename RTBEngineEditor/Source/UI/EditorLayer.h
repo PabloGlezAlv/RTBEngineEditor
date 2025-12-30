@@ -1,5 +1,7 @@
 #include "Panels/EditorPanel.h"
+#include "Panels/SceneHierarchyPanel.h"
 #include "MainMenuBar.h"
+#include <imgui.h>
 #include <vector>
 #include <memory>
 #include <SDL.h>
@@ -21,6 +23,7 @@ namespace RTBEditor {
 
     private:
         void SetupDockspace();
+        void CreateDefaultLayout(ImGuiID dockspaceId);
 
     private:
         std::unique_ptr<MainMenuBar> menuBar;

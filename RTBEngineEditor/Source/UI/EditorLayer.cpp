@@ -1,5 +1,6 @@
 #include "EditorLayer.h"
 #include <imgui.h>
+#include <imgui_internal.h>
 #include <backends/imgui_impl_sdl2.h>
 #include <backends/imgui_impl_opengl3.h>
 
@@ -7,6 +8,9 @@ namespace RTBEditor {
 
     EditorLayer::EditorLayer() {
         menuBar = std::make_unique<MainMenuBar>();
+        
+        // Add default panels
+        AddPanel(std::make_unique<SceneHierarchyPanel>());
     }
 
     EditorLayer::~EditorLayer() {}
@@ -73,9 +77,16 @@ namespace RTBEditor {
         ImGui::Begin("MainDockSpace", &isDockspaceOpen, windowFlags);
         ImGui::PopStyleVar(2);
 
-        // DockSpace
+        // Core DockSpace logic
         ImGuiID dockspaceId = ImGui::GetID("MyDockSpace");
         ImGui::DockSpace(dockspaceId, ImVec2(0.0f, 0.0f), dockspaceFlags);
+
+        // Setup default layout once
+        static bool firstTime = true;
+        if (firstTime) {
+            firstTime = false;
+            CreateDefaultLayout(dockspaceId);
+        }
 
         // Menu bar
         if (menuBar) {
@@ -83,6 +94,22 @@ namespace RTBEditor {
         }
 
         ImGui::End();
+    }
+
+    void EditorLayer::CreateDefaultLayout(ImGuiID dockspaceId) {
+        ImGuiViewport* viewport = ImGui::GetMainViewport();
+
+        ImGui::DockBuilderRemoveNode(dockspaceId);
+        ImGui::DockBuilderAddNode(dockspaceId, ImGuiDockNodeFlags_DockSpace);
+        ImGui::DockBuilderSetNodeSize(dockspaceId, viewport->Size);
+
+        // Split nodes
+        ImGuiID dock_id_left = ImGui::DockBuilderSplitNode(dockspaceId, ImGuiDir_Left, 0.2f, nullptr, &dockspaceId);
+        
+        // Assign windows
+        ImGui::DockBuilderDockWindow("Hierarchy", dock_id_left);
+        
+        ImGui::DockBuilderFinish(dockspaceId);
     }
 
 }
