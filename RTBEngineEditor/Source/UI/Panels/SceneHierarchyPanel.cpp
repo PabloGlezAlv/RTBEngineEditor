@@ -14,7 +14,10 @@ namespace RTBEditor {
         auto activeScene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
         if (activeScene) {
             for (const auto& gameObject : activeScene->GetGameObjects()) {
-                DrawGameObjectNode(gameObject.get(), context);
+                // Only start drawing from root objects (those without a parent)
+                if (gameObject->GetParent() == nullptr) {
+                    DrawGameObjectNode(gameObject.get(), context);
+                }
             }
 
             if (ImGui::IsMouseDown(0) && ImGui::IsWindowHovered()) {
@@ -39,6 +42,11 @@ namespace RTBEditor {
         ImGuiTreeNodeFlags flags = ((context.selectedGameObject == gameObject) ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
         flags |= ImGuiTreeNodeFlags_SpanAvailWidth;
         
+        const auto& children = gameObject->GetChildren();
+        if (children.empty()) {
+            flags |= ImGuiTreeNodeFlags_Leaf;
+        }
+
         // Using pointer as ID to ensure uniqueness
         bool opened = ImGui::TreeNodeEx((void*)gameObject, flags, name.c_str());
 
@@ -47,8 +55,9 @@ namespace RTBEditor {
         }
 
         if (opened) {
-            // Recurse for children if the engine supports it in the future
-            // For now, objects are in a flat list in Scene
+            for (auto* child : children) {
+                DrawGameObjectNode(child, context);
+            }
             ImGui::TreePop();
         }
     }

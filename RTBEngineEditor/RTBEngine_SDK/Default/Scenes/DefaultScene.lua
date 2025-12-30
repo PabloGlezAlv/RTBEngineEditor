@@ -159,25 +159,11 @@ function CreateScene()
                     }
                 }
             },
-            -- Static Cube 
+            -- Static Cube (shadow caster)
             {
                 name = "Cube",
                 position = Vector3(2.0, 1.0, 0.0),
                 scale = Vector3(1.0, 1.0, 1.0),
-                components = {
-                    {
-                        type = "MeshRenderer",
-                        mesh = "Default/Models/cube.obj",
-                        shader = "basic"
-                    }
-                }
-            },
-            -- Nested Child Cube
-            {
-                name = "SmallCube",
-                parent = "Cube",
-                position = Vector3(0.0, 1.0, 0.0), -
-                scale = Vector3(0.5, 0.5, 0.5),
                 components = {
                     {
                         type = "MeshRenderer",
