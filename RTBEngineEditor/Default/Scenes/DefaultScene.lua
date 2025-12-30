@@ -176,7 +176,7 @@ function CreateScene()
             {
                 name = "SmallCube",
                 parent = "Cube",
-                position = Vector3(0.0, 1.0, 0.0), -
+                position = Vector3(0.0, 1.0, 0.0),
                 scale = Vector3(0.5, 0.5, 0.5),
                 components = {
                     {
