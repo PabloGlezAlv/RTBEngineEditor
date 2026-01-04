@@ -158,7 +158,11 @@ namespace RTBEditor {
             }
             case RTBEngine::Reflection::PropertyType::Color: {
                 float* val = (float*)data;
-                ImGui::ColorEdit4(prop.displayName.c_str(), val);
+                if (prop.size == sizeof(float) * 3) {
+                    ImGui::ColorEdit3(prop.displayName.c_str(), val);
+                } else {
+                    ImGui::ColorEdit4(prop.displayName.c_str(), val);
+                }
                 break;
             }
             case RTBEngine::Reflection::PropertyType::String: {
