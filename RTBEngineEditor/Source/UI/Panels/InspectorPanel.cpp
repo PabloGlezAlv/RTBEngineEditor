@@ -191,6 +191,92 @@ namespace RTBEditor {
                 }
                 break;
             }
+            case RTBEngine::Reflection::PropertyType::TextureRef: {
+                void** texPtr = (void**)data;
+                ImGui::Text("%s:", prop.displayName.c_str());
+                ImGui::SameLine();
+                if (*texPtr) {
+                    ImGui::TextColored(ImVec4(0.4f, 0.8f, 0.4f, 1.0f), "[Texture Set]");
+                } else {
+                    ImGui::TextDisabled("[None]");
+                }
+                ImGui::SameLine();
+                if (ImGui::SmallButton("...##SelectTexture")) {
+                    // TODO: Open asset browser for textures
+                }
+                if (ImGui::SmallButton("X##ClearTexture")) {
+                    *texPtr = nullptr;
+                }
+                break;
+            }
+            case RTBEngine::Reflection::PropertyType::AudioClipRef: {
+                void** clipPtr = (void**)data;
+                ImGui::Text("%s:", prop.displayName.c_str());
+                ImGui::SameLine();
+                if (*clipPtr) {
+                    ImGui::TextColored(ImVec4(0.4f, 0.8f, 0.4f, 1.0f), "[AudioClip Set]");
+                } else {
+                    ImGui::TextDisabled("[None]");
+                }
+                ImGui::SameLine();
+                if (ImGui::SmallButton("...##SelectAudioClip")) {
+                    // TODO: Open asset browser for audio clips
+                }
+                if (ImGui::SmallButton("X##ClearAudioClip")) {
+                    *clipPtr = nullptr;
+                }
+                break;
+            }
+            case RTBEngine::Reflection::PropertyType::MeshRef: {
+                void** meshPtr = (void**)data;
+                ImGui::Text("%s:", prop.displayName.c_str());
+                ImGui::SameLine();
+                if (*meshPtr) {
+                    ImGui::TextColored(ImVec4(0.4f, 0.8f, 0.4f, 1.0f), "[Mesh Set]");
+                } else {
+                    ImGui::TextDisabled("[None]");
+                }
+                break;
+            }
+            case RTBEngine::Reflection::PropertyType::FontRef: {
+                void** fontPtr = (void**)data;
+                ImGui::Text("%s:", prop.displayName.c_str());
+                ImGui::SameLine();
+                if (*fontPtr) {
+                    ImGui::TextColored(ImVec4(0.4f, 0.8f, 0.4f, 1.0f), "[Font Set]");
+                } else {
+                    ImGui::TextDisabled("[None]");
+                }
+                break;
+            }
+            case RTBEngine::Reflection::PropertyType::GameObjectRef: {
+                RTBEngine::ECS::GameObject** goPtr = (RTBEngine::ECS::GameObject**)data;
+                ImGui::Text("%s:", prop.displayName.c_str());
+                ImGui::SameLine();
+                if (*goPtr) {
+                    ImGui::TextColored(ImVec4(0.6f, 0.8f, 1.0f, 1.0f), "%s", (*goPtr)->GetName().c_str());
+                } else {
+                    ImGui::TextDisabled("[None]");
+                }
+                // TODO: Implement drag-drop from hierarchy
+                if (ImGui::BeginDragDropTarget()) {
+                    // Accept GameObject drag-drop here
+                    ImGui::EndDragDropTarget();
+                }
+                break;
+            }
+            case RTBEngine::Reflection::PropertyType::ComponentRef: {
+                RTBEngine::ECS::Component** compPtr = (RTBEngine::ECS::Component**)data;
+                ImGui::Text("%s (%s):", prop.displayName.c_str(), prop.componentTypeName.c_str());
+                ImGui::SameLine();
+                if (*compPtr) {
+                    ImGui::TextColored(ImVec4(0.8f, 0.6f, 1.0f, 1.0f), "[%s]", (*compPtr)->GetTypeName());
+                } else {
+                    ImGui::TextDisabled("[None]");
+                }
+                // TODO: Implement component picker filtered by componentTypeName
+                break;
+            }
             default:
                 ImGui::Text("%s: [Unsupported Type]", prop.displayName.c_str());
                 break;
