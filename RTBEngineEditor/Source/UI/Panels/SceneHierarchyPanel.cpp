@@ -2,6 +2,7 @@
 #include <imgui.h>
 #include <RTBEngine/ECS/SceneManager.h>
 #include <RTBEngine/ECS/Scene.h>
+#include "../DragDropPayloads.h"
 
 namespace RTBEditor {
 
@@ -52,6 +53,15 @@ namespace RTBEditor {
 
         if (ImGui::IsItemClicked()) {
             context.selectedGameObject = gameObject;
+        }
+
+        // Drag-and-drop source for GameObject
+        if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None)) {
+            GameObjectPayload payload;
+            payload.gameObjectId = reinterpret_cast<uint64_t>(gameObject); // Store pointer as ID
+            ImGui::SetDragDropPayload(PAYLOAD_GAMEOBJECT, &payload, sizeof(GameObjectPayload));
+            ImGui::Text("GameObject: %s", name.c_str());
+            ImGui::EndDragDropSource();
         }
 
         if (opened) {

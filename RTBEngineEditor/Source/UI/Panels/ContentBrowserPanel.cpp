@@ -130,6 +130,16 @@ namespace RTBEditor {
                         ImGui::SetDragDropPayload(PAYLOAD_AUDIOCLIP, &payload, sizeof(AudioClipPayload));
                         ImGui::Text("Audio: %s", filenameString.c_str());
                     }
+                    // Check if it's a font file
+                    else if (ext == ".ttf" || ext == ".otf") {
+                        FontPayload payload;
+                        std::string relativePath = std::filesystem::relative(path, rootPath).string();
+                        strncpy_s(payload.path, relativePath.c_str(), sizeof(payload.path) - 1);
+                        payload.path[sizeof(payload.path) - 1] = '\0';
+
+                        ImGui::SetDragDropPayload(PAYLOAD_FONT, &payload, sizeof(FontPayload));
+                        ImGui::Text("Font: %s", filenameString.c_str());
+                    }
 
                     ImGui::EndDragDropSource();
                 }

@@ -209,10 +209,10 @@ namespace RTBEditor {
 
                 // Color del texto seg�n el estado
                 if (*texPtr) {
-                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4f, 0.8f, 0.4f, 1.0f)); // Verde
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4f, 0.8f, 0.4f, 1.0f)); // Green
                 }
                 else {
-                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 1.0f)); // Gris
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 1.0f)); // Gray
                 }
 
                 // Bot�n invisible para drag-drop
@@ -266,10 +266,10 @@ namespace RTBEditor {
 
                 // Color del texto seg�n el estado
                 if (*clipPtr) {
-                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4f, 0.8f, 0.4f, 1.0f)); // Verde
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4f, 0.8f, 0.4f, 1.0f)); // Green
                 }
                 else {
-                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 1.0f)); // Gris
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 1.0f)); // Gray
                 }
 
                 // Bot�n invisible para drag-drop
@@ -323,10 +323,10 @@ namespace RTBEditor {
 
                 // Color del texto seg�n el estado
                 if (*meshPtr) {
-                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4f, 0.8f, 0.4f, 1.0f)); // Verde
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4f, 0.8f, 0.4f, 1.0f)); // Green
                 }
                 else {
-                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 1.0f)); // Gris
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 1.0f)); // Gray
                 }
 
                 // Bot�n invisible para drag-drop
@@ -377,10 +377,59 @@ namespace RTBEditor {
                 void** fontPtr = (void**)data;
                 ImGui::Text("%s:", prop.displayName.c_str());
                 ImGui::SameLine();
+
+                // Text color based on state
                 if (*fontPtr) {
-                    ImGui::TextColored(ImVec4(0.4f, 0.8f, 0.4f, 1.0f), "[Font Set]");
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4f, 0.8f, 0.4f, 1.0f)); // Green
                 } else {
-                    ImGui::TextDisabled("[None]");
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 1.0f)); // Gray
+                }
+
+                // Invisible button for drag-drop area
+                ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.2f, 0.5f, 0.8f, 0.3f));
+                ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.2f, 0.5f, 0.8f, 0.5f));
+
+                if (*fontPtr) {
+                    ImGui::Button("[Font Set]##FontDropArea", ImVec2(100, 0));
+                } else {
+                    ImGui::Button("[None]##FontDropArea", ImVec2(100, 0));
+                }
+
+                ImGui::PopStyleColor(4); // Pop text color + button colors
+
+                // Drag-and-drop target for fonts
+                if (ImGui::BeginDragDropTarget()) {
+                    if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(PAYLOAD_FONT)) {
+                        const FontPayload* payloadData = (const FontPayload*)payload->Data;
+                        std::string fullPath = std::string("Assets/") + payloadData->path;
+
+                        // Default font sizes
+                        float sizes[] = { 12.0f, 16.0f, 18.0f, 24.0f, 32.0f, 48.0f };
+                        auto* font = RTBEngine::Core::ResourceManager::GetInstance().LoadFont(fullPath, sizes, 6);
+                        if (font) {
+                            *fontPtr = font;
+                        }
+                    }
+                    ImGui::EndDragDropTarget();
+                }
+
+                ImGui::SameLine();
+                if (ImGui::SmallButton("...##SelectFont")) {
+                    m_AssetBrowserModal->Open(AssetType::Font, [fontPtr](const std::string& path) {
+                        std::string fullPath = std::string("Assets/") + path;
+
+                        // Default font sizes
+                        float sizes[] = { 12.0f, 16.0f, 18.0f, 24.0f, 32.0f, 48.0f };
+                        auto* font = RTBEngine::Core::ResourceManager::GetInstance().LoadFont(fullPath, sizes, 6);
+                        if (font) {
+                            *fontPtr = font;
+                        }
+                    });
+                }
+                ImGui::SameLine();
+                if (ImGui::SmallButton("X##ClearFont")) {
+                    *fontPtr = nullptr;
                 }
                 break;
             }
@@ -388,15 +437,42 @@ namespace RTBEditor {
                 RTBEngine::ECS::GameObject** goPtr = (RTBEngine::ECS::GameObject**)data;
                 ImGui::Text("%s:", prop.displayName.c_str());
                 ImGui::SameLine();
+
+                // Text color based on state
                 if (*goPtr) {
-                    ImGui::TextColored(ImVec4(0.6f, 0.8f, 1.0f, 1.0f), "%s", (*goPtr)->GetName().c_str());
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 0.8f, 1.0f, 1.0f)); // Light blue
                 } else {
-                    ImGui::TextDisabled("[None]");
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 1.0f)); // Gray
                 }
-                // TODO: Implement drag-drop from hierarchy
+
+                // Invisible button for drag-drop area
+                ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3f, 0.5f, 0.8f, 0.3f));
+                ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.3f, 0.5f, 0.8f, 0.5f));
+
+                if (*goPtr) {
+                    ImGui::Button((*goPtr)->GetName().c_str(), ImVec2(150, 0));
+                } else {
+                    ImGui::Button("[None]##GODropArea", ImVec2(150, 0));
+                }
+
+                ImGui::PopStyleColor(4); // Pop text color + button colors
+
+                // Drag-and-drop target for GameObjects
                 if (ImGui::BeginDragDropTarget()) {
-                    // Accept GameObject drag-drop here
+                    if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(PAYLOAD_GAMEOBJECT)) {
+                        const GameObjectPayload* payloadData = (const GameObjectPayload*)payload->Data;
+                        RTBEngine::ECS::GameObject* draggedGameObject = reinterpret_cast<RTBEngine::ECS::GameObject*>(payloadData->gameObjectId);
+                        if (draggedGameObject) {
+                            *goPtr = draggedGameObject;
+                        }
+                    }
                     ImGui::EndDragDropTarget();
+                }
+
+                ImGui::SameLine();
+                if (ImGui::SmallButton("X##ClearGameObject")) {
+                    *goPtr = nullptr;
                 }
                 break;
             }
@@ -404,12 +480,67 @@ namespace RTBEditor {
                 RTBEngine::ECS::Component** compPtr = (RTBEngine::ECS::Component**)data;
                 ImGui::Text("%s (%s):", prop.displayName.c_str(), prop.componentTypeName.c_str());
                 ImGui::SameLine();
+
+                // Text color based on state
                 if (*compPtr) {
-                    ImGui::TextColored(ImVec4(0.8f, 0.6f, 1.0f, 1.0f), "[%s]", (*compPtr)->GetTypeName());
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.8f, 0.6f, 1.0f, 1.0f)); // Purple
                 } else {
-                    ImGui::TextDisabled("[None]");
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 1.0f)); // Gray
                 }
-                // TODO: Implement component picker filtered by componentTypeName
+
+                // Invisible button for drag-drop area
+                ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.5f, 0.3f, 0.8f, 0.3f));
+                ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.5f, 0.3f, 0.8f, 0.5f));
+
+                if (*compPtr) {
+                    std::string label = std::string("[") + (*compPtr)->GetTypeName() + "]##CompDropArea";
+                    ImGui::Button(label.c_str(), ImVec2(150, 0));
+                } else {
+                    ImGui::Button("[None]##CompDropArea", ImVec2(150, 0));
+                }
+
+                ImGui::PopStyleColor(4); // Pop text color + button colors
+
+                // Drag-and-drop target for GameObject (will extract component)
+                if (ImGui::BeginDragDropTarget()) {
+                    if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(PAYLOAD_GAMEOBJECT)) {
+                        const GameObjectPayload* payloadData = (const GameObjectPayload*)payload->Data;
+                        RTBEngine::ECS::GameObject* draggedGameObject = reinterpret_cast<RTBEngine::ECS::GameObject*>(payloadData->gameObjectId);
+
+                        if (draggedGameObject) {
+                            // Try to find component of the specified type from GameObject
+                            bool foundComponent = false;
+                            const auto& components = draggedGameObject->GetComponents();
+                            for (const auto& comp : components) {
+                                if (std::string(comp->GetTypeName()) == prop.componentTypeName) {
+                                    *compPtr = comp.get();
+                                    foundComponent = true;
+                                    break;
+                                }
+                            }
+
+                            // Visual feedback if component not found
+                            if (!foundComponent) {
+                                ImGui::SetTooltip("GameObject '%s' doesn't have a %s component",
+                                    draggedGameObject->GetName().c_str(),
+                                    prop.componentTypeName.c_str());
+                            }
+                        }
+                    }
+                    ImGui::EndDragDropTarget();
+                }
+
+                ImGui::SameLine();
+                if (ImGui::SmallButton("X##ClearComponent")) {
+                    *compPtr = nullptr;
+                }
+
+                // Help text
+                if (ImGui::IsItemHovered()) {
+                    ImGui::SetTooltip("Drag a GameObject with a %s component", prop.componentTypeName.c_str());
+                }
+
                 break;
             }
             default:
