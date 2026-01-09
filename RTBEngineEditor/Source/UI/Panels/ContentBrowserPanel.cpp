@@ -2,6 +2,7 @@
 #include <imgui.h>
 #include <RTBEngine/Core/ResourceManager.h>
 #include "../../Project/Project.h"
+#include "../DragDropPayloads.h"
 
 namespace RTBEditor {
 
@@ -91,6 +92,48 @@ namespace RTBEditor {
                     }
                 }
                 ImGui::PopStyleColor();
+
+                // Drag-and-drop source
+                if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID)) {
+                    std::string ext = path.extension().string();
+                    for (auto& c : ext) c = std::tolower(c);
+
+                    // Check if it's a texture file
+                    if (ext == ".png" || ext == ".jpg" || ext == ".jpeg" ||
+                        ext == ".tga" || ext == ".dds" || ext == ".bmp") {
+
+                        TexturePayload payload;
+                        std::string relativePath = std::filesystem::relative(path, rootPath).string();
+                        strncpy_s(payload.path, relativePath.c_str(), sizeof(payload.path) - 1);
+                        payload.path[sizeof(payload.path) - 1] = '\0';
+
+                        ImGui::SetDragDropPayload(PAYLOAD_TEXTURE, &payload, sizeof(TexturePayload));
+                        ImGui::Text("Texture: %s", filenameString.c_str());
+                    }
+                    // Check if it's a mesh file
+                    else if (ext == ".fbx" || ext == ".obj" || ext == ".gltf" || ext == ".glb") {
+                        MeshPayload payload;
+                        std::string relativePath = std::filesystem::relative(path, rootPath).string();
+                        strncpy_s(payload.path, relativePath.c_str(), sizeof(payload.path) - 1);
+                        payload.path[sizeof(payload.path) - 1] = '\0';
+
+                        ImGui::SetDragDropPayload(PAYLOAD_MESH, &payload, sizeof(MeshPayload));
+                        ImGui::Text("Mesh: %s", filenameString.c_str());
+                    }
+                    // Check if it's an audio file
+                    else if (ext == ".wav" || ext == ".mp3" || ext == ".ogg") {
+                        AudioClipPayload payload;
+                        std::string relativePath = std::filesystem::relative(path, rootPath).string();
+                        strncpy_s(payload.path, relativePath.c_str(), sizeof(payload.path) - 1);
+                        payload.path[sizeof(payload.path) - 1] = '\0';
+
+                        ImGui::SetDragDropPayload(PAYLOAD_AUDIOCLIP, &payload, sizeof(AudioClipPayload));
+                        ImGui::Text("Audio: %s", filenameString.c_str());
+                    }
+
+                    ImGui::EndDragDropSource();
+                }
+
 
                 // Selection logic (visual only for now)
                 if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {

@@ -7,6 +7,8 @@
 #include <RTBEngine/Math/Vectors/Vector4.h>
 #include <RTBEngine/Math/Quaternions/Quaternion.h>
 #include <RTBEngine/Reflection/TypeInfo.h>
+#include <RTBEngine/Core/ResourceManager.h>
+#include "../DragDropPayloads.h"
 
 namespace RTBEditor {
 
@@ -195,49 +197,155 @@ namespace RTBEditor {
                 void** texPtr = (void**)data;
                 ImGui::Text("%s:", prop.displayName.c_str());
                 ImGui::SameLine();
+
+                // Color del texto según el estado
                 if (*texPtr) {
-                    ImGui::TextColored(ImVec4(0.4f, 0.8f, 0.4f, 1.0f), "[Texture Set]");
-                } else {
-                    ImGui::TextDisabled("[None]");
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4f, 0.8f, 0.4f, 1.0f)); // Verde
                 }
+                else {
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 1.0f)); // Gris
+                }
+
+                // Botón invisible para drag-drop
+                ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.2f, 0.5f, 0.8f, 0.3f));
+                ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.2f, 0.5f, 0.8f, 0.5f));
+
+                if (*texPtr) {
+                    ImGui::Button("[Texture Set]##TextureDropArea", ImVec2(100, 0));
+                }
+                else {
+                    ImGui::Button("[None]##TextureDropArea", ImVec2(100, 0));
+                }
+
+                ImGui::PopStyleColor(4); // Pop text color + button colors
+
+                // Drag-and-drop target for textures
+                if (ImGui::BeginDragDropTarget()) {
+                    if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(PAYLOAD_TEXTURE)) {
+                        const TexturePayload* payloadData = (const TexturePayload*)payload->Data;
+                        std::string fullPath = std::string("Assets/") + payloadData->path;
+                        auto* texture = RTBEngine::Core::ResourceManager::GetInstance().LoadTexture(fullPath);
+                        if (texture) {
+                            *texPtr = texture;
+                        }
+                    }
+                    ImGui::EndDragDropTarget();
+                }
+
                 ImGui::SameLine();
                 if (ImGui::SmallButton("...##SelectTexture")) {
                     // TODO: Open asset browser for textures
                 }
+                ImGui::SameLine();
                 if (ImGui::SmallButton("X##ClearTexture")) {
                     *texPtr = nullptr;
                 }
                 break;
             }
+
             case RTBEngine::Reflection::PropertyType::AudioClipRef: {
                 void** clipPtr = (void**)data;
                 ImGui::Text("%s:", prop.displayName.c_str());
                 ImGui::SameLine();
+
+                // Color del texto según el estado
                 if (*clipPtr) {
-                    ImGui::TextColored(ImVec4(0.4f, 0.8f, 0.4f, 1.0f), "[AudioClip Set]");
-                } else {
-                    ImGui::TextDisabled("[None]");
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4f, 0.8f, 0.4f, 1.0f)); // Verde
                 }
+                else {
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 1.0f)); // Gris
+                }
+
+                // Botón invisible para drag-drop
+                ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.2f, 0.5f, 0.8f, 0.3f));
+                ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.2f, 0.5f, 0.8f, 0.5f));
+
+                if (*clipPtr) {
+                    ImGui::Button("[AudioClip Set]##AudioDropArea", ImVec2(120, 0));
+                }
+                else {
+                    ImGui::Button("[None]##AudioDropArea", ImVec2(120, 0));
+                }
+
+                ImGui::PopStyleColor(4); // Pop text color + button colors
+
+                // Drag-and-drop target for audio clips
+                if (ImGui::BeginDragDropTarget()) {
+                    if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(PAYLOAD_AUDIOCLIP)) {
+                        const AudioClipPayload* payloadData = (const AudioClipPayload*)payload->Data;
+                        std::string fullPath = std::string("Assets/") + payloadData->path;
+                        auto* audioClip = RTBEngine::Core::ResourceManager::GetInstance().LoadAudioClip(fullPath);
+                        if (audioClip) {
+                            *clipPtr = audioClip;
+                        }
+                    }
+                    ImGui::EndDragDropTarget();
+                }
+
                 ImGui::SameLine();
                 if (ImGui::SmallButton("...##SelectAudioClip")) {
                     // TODO: Open asset browser for audio clips
                 }
+                ImGui::SameLine();
                 if (ImGui::SmallButton("X##ClearAudioClip")) {
                     *clipPtr = nullptr;
                 }
                 break;
             }
+
             case RTBEngine::Reflection::PropertyType::MeshRef: {
                 void** meshPtr = (void**)data;
                 ImGui::Text("%s:", prop.displayName.c_str());
                 ImGui::SameLine();
+
+                // Color del texto según el estado
                 if (*meshPtr) {
-                    ImGui::TextColored(ImVec4(0.4f, 0.8f, 0.4f, 1.0f), "[Mesh Set]");
-                } else {
-                    ImGui::TextDisabled("[None]");
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4f, 0.8f, 0.4f, 1.0f)); // Verde
+                }
+                else {
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 1.0f)); // Gris
+                }
+
+                // Botón invisible para drag-drop
+                ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.2f, 0.5f, 0.8f, 0.3f));
+                ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.2f, 0.5f, 0.8f, 0.5f));
+
+                if (*meshPtr) {
+                    ImGui::Button("[Mesh Set]##MeshDropArea", ImVec2(100, 0));
+                }
+                else {
+                    ImGui::Button("[None]##MeshDropArea", ImVec2(100, 0));
+                }
+
+                ImGui::PopStyleColor(4); // Pop text color + button colors
+
+                // Drag-and-drop target for meshes
+                if (ImGui::BeginDragDropTarget()) {
+                    if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(PAYLOAD_MESH)) {
+                        const MeshPayload* payloadData = (const MeshPayload*)payload->Data;
+                        std::string fullPath = std::string("Assets/") + payloadData->path;
+                        auto* mesh = RTBEngine::Core::ResourceManager::GetInstance().LoadModel(fullPath);
+                        if (mesh) {
+                            *meshPtr = mesh;
+                        }
+                    }
+                    ImGui::EndDragDropTarget();
+                }
+
+                ImGui::SameLine();
+                if (ImGui::SmallButton("...##SelectMesh")) {
+                    // TODO: Open asset browser for meshes
+                }
+                ImGui::SameLine();
+                if (ImGui::SmallButton("X##ClearMesh")) {
+                    *meshPtr = nullptr;
                 }
                 break;
             }
+
             case RTBEngine::Reflection::PropertyType::FontRef: {
                 void** fontPtr = (void**)data;
                 ImGui::Text("%s:", prop.displayName.c_str());

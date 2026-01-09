@@ -107,6 +107,7 @@ xcopy /y /d /e /i "$(ProjectDir)RTBEngine_SDK\Default" "$(OutDir)Default"</Comma
   <ItemGroup>
     <ClInclude Include="Source\Core\EditorApplication.h" />
     <ClInclude Include="Source\Project\Project.h" />
+    <ClInclude Include="Source\UI\DragDropPayloads.h" />
     <ClInclude Include="Source\UI\EditorLayer.h" />
     <ClInclude Include="Source\UI\MainMenuBar.h" />
     <ClInclude Include="Source\UI\Panels\ContentBrowserPanel.h" />
