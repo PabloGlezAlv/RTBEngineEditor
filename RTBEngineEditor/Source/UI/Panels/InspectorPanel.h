@@ -1,6 +1,7 @@
 #pragma once
 
 #include "EditorPanel.h"
+#include <memory>
 
 namespace RTBEngine {
     namespace ECS {
@@ -13,6 +14,7 @@ namespace RTBEngine {
 }
 
 namespace RTBEditor {
+    class AssetBrowserModal;
 
     class InspectorPanel : public EditorPanel {
     public:
@@ -26,6 +28,7 @@ namespace RTBEditor {
         void DrawProperty(RTBEngine::ECS::Component* component, const RTBEngine::Reflection::PropertyInfo& prop);
 
         std::vector<RTBEngine::ECS::Component*> m_ComponentsToRemove;
+        std::unique_ptr<AssetBrowserModal> m_AssetBrowserModal;
     };
 
 }

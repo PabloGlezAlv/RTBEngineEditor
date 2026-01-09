@@ -91,6 +91,7 @@ xcopy /y /d /e /i "$(ProjectDir)RTBEngine_SDK\Default" "$(OutDir)Default"</Comma
   </ItemDefinitionGroup>
   <!-- Source Files -->
   <ItemGroup>
+    <ClCompile Include="Source\UI\Modals\AssetBrowserModal.cpp" />
     <ClCompile Include="Source\Core\EditorApplication.cpp" />
     <ClCompile Include="Source\main.cpp" />
     <ClCompile Include="Source\Project\Project.cpp" />
@@ -105,6 +106,7 @@ xcopy /y /d /e /i "$(ProjectDir)RTBEngine_SDK\Default" "$(OutDir)Default"</Comma
     <ClCompile Include="Source\UI\Panels\GameViewPanel.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Source\UI\Modals\AssetBrowserModal.h" />
     <ClInclude Include="Source\Core\EditorApplication.h" />
     <ClInclude Include="Source\Project\Project.h" />
     <ClInclude Include="Source\UI\DragDropPayloads.h" />

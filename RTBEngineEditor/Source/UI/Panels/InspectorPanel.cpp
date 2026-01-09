@@ -9,10 +9,14 @@
 #include <RTBEngine/Reflection/TypeInfo.h>
 #include <RTBEngine/Core/ResourceManager.h>
 #include "../DragDropPayloads.h"
+#include "../Modals/AssetBrowserModal.h"
 
 namespace RTBEditor {
 
-    InspectorPanel::InspectorPanel() {}
+    InspectorPanel::InspectorPanel() {
+        m_AssetBrowserModal = std::make_unique<AssetBrowserModal>();
+    }
+
     InspectorPanel::~InspectorPanel() {}
 
     void InspectorPanel::OnUIRender(EditorContext& context) {
@@ -60,6 +64,11 @@ namespace RTBEditor {
 
         } else {
             ImGui::Text("Select a GameObject to see its properties.");
+        }
+
+        // Render asset browser modal
+        if (m_AssetBrowserModal) {
+            m_AssetBrowserModal->Render();
         }
 
         ImGui::End();
@@ -198,7 +207,7 @@ namespace RTBEditor {
                 ImGui::Text("%s:", prop.displayName.c_str());
                 ImGui::SameLine();
 
-                // Color del texto según el estado
+                // Color del texto segï¿½n el estado
                 if (*texPtr) {
                     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4f, 0.8f, 0.4f, 1.0f)); // Verde
                 }
@@ -206,7 +215,7 @@ namespace RTBEditor {
                     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 1.0f)); // Gris
                 }
 
-                // Botón invisible para drag-drop
+                // Botï¿½n invisible para drag-drop
                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
                 ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.2f, 0.5f, 0.8f, 0.3f));
                 ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.2f, 0.5f, 0.8f, 0.5f));
@@ -235,7 +244,13 @@ namespace RTBEditor {
 
                 ImGui::SameLine();
                 if (ImGui::SmallButton("...##SelectTexture")) {
-                    // TODO: Open asset browser for textures
+                    m_AssetBrowserModal->Open(AssetType::Texture, [texPtr](const std::string& path) {
+                        std::string fullPath = std::string("Assets/") + path;
+                        auto* texture = RTBEngine::Core::ResourceManager::GetInstance().LoadTexture(fullPath);
+                        if (texture) {
+                            *texPtr = texture;
+                        }
+                    });
                 }
                 ImGui::SameLine();
                 if (ImGui::SmallButton("X##ClearTexture")) {
@@ -249,7 +264,7 @@ namespace RTBEditor {
                 ImGui::Text("%s:", prop.displayName.c_str());
                 ImGui::SameLine();
 
-                // Color del texto según el estado
+                // Color del texto segï¿½n el estado
                 if (*clipPtr) {
                     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4f, 0.8f, 0.4f, 1.0f)); // Verde
                 }
@@ -257,7 +272,7 @@ namespace RTBEditor {
                     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 1.0f)); // Gris
                 }
 
-                // Botón invisible para drag-drop
+                // Botï¿½n invisible para drag-drop
                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
                 ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.2f, 0.5f, 0.8f, 0.3f));
                 ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.2f, 0.5f, 0.8f, 0.5f));
@@ -286,7 +301,13 @@ namespace RTBEditor {
 
                 ImGui::SameLine();
                 if (ImGui::SmallButton("...##SelectAudioClip")) {
-                    // TODO: Open asset browser for audio clips
+                    m_AssetBrowserModal->Open(AssetType::AudioClip, [clipPtr](const std::string& path) {
+                        std::string fullPath = std::string("Assets/") + path;
+                        auto* audioClip = RTBEngine::Core::ResourceManager::GetInstance().LoadAudioClip(fullPath);
+                        if (audioClip) {
+                            *clipPtr = audioClip;
+                        }
+                    });
                 }
                 ImGui::SameLine();
                 if (ImGui::SmallButton("X##ClearAudioClip")) {
@@ -300,7 +321,7 @@ namespace RTBEditor {
                 ImGui::Text("%s:", prop.displayName.c_str());
                 ImGui::SameLine();
 
-                // Color del texto según el estado
+                // Color del texto segï¿½n el estado
                 if (*meshPtr) {
                     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4f, 0.8f, 0.4f, 1.0f)); // Verde
                 }
@@ -308,7 +329,7 @@ namespace RTBEditor {
                     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 1.0f)); // Gris
                 }
 
-                // Botón invisible para drag-drop
+                // Botï¿½n invisible para drag-drop
                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
                 ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.2f, 0.5f, 0.8f, 0.3f));
                 ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.2f, 0.5f, 0.8f, 0.5f));
@@ -337,7 +358,13 @@ namespace RTBEditor {
 
                 ImGui::SameLine();
                 if (ImGui::SmallButton("...##SelectMesh")) {
-                    // TODO: Open asset browser for meshes
+                    m_AssetBrowserModal->Open(AssetType::Mesh, [meshPtr](const std::string& path) {
+                        std::string fullPath = std::string("Assets/") + path;
+                        auto* mesh = RTBEngine::Core::ResourceManager::GetInstance().LoadModel(fullPath);
+                        if (mesh) {
+                            *meshPtr = mesh;
+                        }
+                    });
                 }
                 ImGui::SameLine();
                 if (ImGui::SmallButton("X##ClearMesh")) {
