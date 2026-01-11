@@ -19,14 +19,14 @@ namespace RTBEditor {
         void OnBuild();
 
     private:
-        bool m_Open = false;
-        bool m_ShowResult = false;
-        BuildSettings m_Settings;
-        BuildResult m_LastResult = BuildResult::Success;
-        
-        bool m_IsBuilding = false;
-        float m_BuildProgress = 0.0f;
-        std::string m_StatusMessage;
+        bool open = false;
+        bool showResult = false;
+        BuildSettings settings;
+        BuildResult lastResult = BuildResult::Success;
+
+        bool isBuilding = false;
+        float buildProgress = 0.0f;
+        std::string statusMessage;
     };
 
 }

@@ -43,7 +43,7 @@ namespace RTBEditor {
     private:
         EditorContext context;
         std::unique_ptr<MainMenuBar> menuBar;
-        std::unique_ptr<BuildDialog> m_BuildDialog;
+        std::unique_ptr<BuildDialog> buildDialog;
         std::vector<std::unique_ptr<EditorPanel>> panels;
         SceneViewPanel* sceneViewPanel = nullptr;
         GameViewPanel* gameViewPanel = nullptr;

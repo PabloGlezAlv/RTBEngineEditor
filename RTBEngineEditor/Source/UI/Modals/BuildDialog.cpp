@@ -7,37 +7,37 @@
 namespace RTBEditor {
 
     BuildDialog::BuildDialog() {
-        m_Settings.gameName = "MyGame";
-        m_Settings.windowWidth = 1280;
-        m_Settings.windowHeight = 720;
-        m_Settings.fullscreen = false;
+        settings.gameName = "MyGame";
+        settings.windowWidth = 1280;
+        settings.windowHeight = 720;
+        settings.fullscreen = false;
     }
 
     void BuildDialog::Open() {
-        m_Open = true;
+        open = true;
     }
 
     void BuildDialog::Render() {
-        if (m_Open) {
+        if (open) {
             ImGui::OpenPopup("Build Settings");
         }
 
-        if (ImGui::BeginPopupModal("Build Settings", &m_Open, ImGuiWindowFlags_AlwaysAutoResize)) {
+        if (ImGui::BeginPopupModal("Build Settings", &open, ImGuiWindowFlags_AlwaysAutoResize)) {
 
             static char nameBuf[256];
             // Initialize buffer once or when empty to avoid overwriting user input every frame
-            if (m_Settings.gameName != nameBuf) {
-                 strcpy_s(nameBuf, m_Settings.gameName.c_str());
+            if (settings.gameName != nameBuf) {
+                 strcpy_s(nameBuf, settings.gameName.c_str());
             }
 
             if (ImGui::InputText("Game Name", nameBuf, sizeof(nameBuf))) {
-                m_Settings.gameName = nameBuf;
+                settings.gameName = nameBuf;
             }
 
             static char pathBuf[1024];
-            strcpy_s(pathBuf, m_Settings.outputDirectory.string().c_str());
+            strcpy_s(pathBuf, settings.outputDirectory.string().c_str());
             if (ImGui::InputText("Output Directory", pathBuf, sizeof(pathBuf))) {
-                m_Settings.outputDirectory = pathBuf;
+                settings.outputDirectory = pathBuf;
             }
             ImGui::SameLine();
             if (ImGui::Button("Browse...")) {
@@ -46,18 +46,18 @@ namespace RTBEditor {
 
             ImGui::Separator();
 
-            ImGui::InputInt("Width", &m_Settings.windowWidth);
-            ImGui::InputInt("Height", &m_Settings.windowHeight);
-            ImGui::Checkbox("Fullscreen", &m_Settings.fullscreen);
+            ImGui::InputInt("Width", &settings.windowWidth);
+            ImGui::InputInt("Height", &settings.windowHeight);
+            ImGui::Checkbox("Fullscreen", &settings.fullscreen);
 
             ImGui::Separator();
 
-            if (m_IsBuilding) {
-                ImGui::ProgressBar(m_BuildProgress, ImVec2(0.0f, 0.0f));
-                ImGui::Text("%s", m_StatusMessage.c_str());
+            if (isBuilding) {
+                ImGui::ProgressBar(buildProgress, ImVec2(0.0f, 0.0f));
+                ImGui::Text("%s", statusMessage.c_str());
             }
 
-            ImGui::BeginDisabled(m_IsBuilding);
+            ImGui::BeginDisabled(isBuilding);
             if (ImGui::Button("Build")) {
                 OnBuild();
             }
@@ -65,27 +65,27 @@ namespace RTBEditor {
 
             ImGui::SameLine();
             if (ImGui::Button("Cancel")) {
-                m_Open = false;
+                open = false;
                 ImGui::CloseCurrentPopup();
             }
 
             ImGui::EndPopup();
         }
 
-        if (m_ShowResult) {
+        if (showResult) {
             ImGui::OpenPopup("Build Result");
         }
 
         bool showResultOpen = true; // Local bool for modal
         if (ImGui::BeginPopupModal("Build Result", &showResultOpen, ImGuiWindowFlags_AlwaysAutoResize)) {
-            ImGui::Text("%s", BuildSystem::GetResultMessage(m_LastResult).c_str());
+            ImGui::Text("%s", BuildSystem::GetResultMessage(lastResult).c_str());
             if (ImGui::Button("OK")) {
-                m_ShowResult = false;
+                showResult = false;
                 ImGui::CloseCurrentPopup();
             }
             ImGui::EndPopup();
         }
-        if (!showResultOpen) m_ShowResult = false;
+        if (!showResultOpen) showResult = false;
     }
 
     void BuildDialog::DrawDirectorySelector() {
@@ -106,7 +106,7 @@ namespace RTBEditor {
                     hr = pItem->GetDisplayName(SIGDN_FILESYSPATH, &pszFilePath);
                     if (SUCCEEDED(hr)) {
                         std::filesystem::path p(pszFilePath);
-                        m_Settings.outputDirectory = p;
+                        settings.outputDirectory = p;
                         CoTaskMemFree(pszFilePath);
                     }
                     pItem->Release();
@@ -117,23 +117,23 @@ namespace RTBEditor {
     }
 
     void BuildDialog::OnBuild() {
-        if (m_Settings.outputDirectory.empty()) {
-            m_LastResult = BuildResult::InvalidOutputDirectory;
-            m_ShowResult = true;
+        if (settings.outputDirectory.empty()) {
+            lastResult = BuildResult::InvalidOutputDirectory;
+            showResult = true;
             return;
         }
 
-        m_IsBuilding = true;
+        isBuilding = true;
         // Run synchronously for now
-        m_LastResult = BuildSystem::Build(m_Settings, [this](const std::string& status, float progress) {
-            m_StatusMessage = status;
-            m_BuildProgress = progress;
+        lastResult = BuildSystem::Build(settings, [this](const std::string& status, float progress) {
+            statusMessage = status;
+            buildProgress = progress;
             // Force redraw? Not possible in sync on main thread.
         });
 
-        m_IsBuilding = false;
-        m_Open = false;
-        m_ShowResult = true;
+        isBuilding = false;
+        open = false;
+        showResult = true;
     }
 
 }

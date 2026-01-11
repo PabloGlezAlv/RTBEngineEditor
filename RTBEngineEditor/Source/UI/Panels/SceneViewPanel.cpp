@@ -21,6 +21,9 @@ namespace RTBEditor {
         editorCamera.SetFOV(45.0f);
         editorCamera.SetNearPlane(0.1f);
         editorCamera.SetFarPlane(1000.0f);
+
+        // Create grid renderer
+        gridRenderer = std::make_unique<EditorGridRenderer>();
     }
 
     SceneViewPanel::~SceneViewPanel() {}

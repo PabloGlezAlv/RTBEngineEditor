@@ -12,15 +12,15 @@ namespace RTBEditor {
 
         virtual void OnUIRender(EditorContext& context) override;
         
-        uint32_t GetViewportWidth() const { return m_ViewportWidth; }
-        uint32_t GetViewportHeight() const { return m_ViewportHeight; }
-        RTBEngine::Rendering::Framebuffer* GetFramebuffer() { return m_Framebuffer.get(); }
-        bool IsVisible() const { return m_IsVisible; }
+        uint32_t GetViewportWidth() const { return viewportWidth; }
+        uint32_t GetViewportHeight() const { return viewportHeight; }
+        RTBEngine::Rendering::Framebuffer* GetFramebuffer() { return framebuffer.get(); }
+        bool IsVisible() const { return isVisible; }
 
     private:
-        std::unique_ptr<RTBEngine::Rendering::Framebuffer> m_Framebuffer;
-        uint32_t m_ViewportWidth = 1280;
-        uint32_t m_ViewportHeight = 720;
-        bool m_IsVisible = true;
+        std::unique_ptr<RTBEngine::Rendering::Framebuffer> framebuffer;
+        uint32_t viewportWidth = 1280;
+        uint32_t viewportHeight = 720;
+        bool isVisible = true;
     };
 }

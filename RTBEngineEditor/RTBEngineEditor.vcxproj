@@ -106,6 +106,7 @@ xcopy /y /d /e /i "$(ProjectDir)RTBEngine_SDK\Default" "$(OutDir)Default"</Comma
     <ClCompile Include="Source\UI\Panels\SceneViewPanel.cpp" />
     <ClCompile Include="Source\UI\Panels\ToolbarPanel.cpp" />
     <ClCompile Include="Source\UI\Panels\GameViewPanel.cpp" />
+    <ClCompile Include="Source\Rendering\EditorGridRenderer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Build\BuildSystem.h" />
@@ -124,6 +125,7 @@ xcopy /y /d /e /i "$(ProjectDir)RTBEngine_SDK\Default" "$(OutDir)Default"</Comma
     <ClInclude Include="Source\UI\Panels\SceneViewPanel.h" />
     <ClInclude Include="Source\UI\Panels\ToolbarPanel.h" />
     <ClInclude Include="Source\UI\Panels\GameViewPanel.h" />
+    <ClInclude Include="Source\Rendering\EditorGridRenderer.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

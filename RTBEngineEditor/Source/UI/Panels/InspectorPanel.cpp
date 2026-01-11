@@ -14,7 +14,7 @@
 namespace RTBEditor {
 
     InspectorPanel::InspectorPanel() {
-        m_AssetBrowserModal = std::make_unique<AssetBrowserModal>();
+        assetBrowserModal = std::make_unique<AssetBrowserModal>();
     }
 
     InspectorPanel::~InspectorPanel() {}
@@ -57,18 +57,18 @@ namespace RTBEditor {
             }
 
             // Deferred component removal
-            for (auto* comp : m_ComponentsToRemove) {
+            for (auto* comp : componentsToRemove) {
                 context.selectedGameObject->RemoveComponent(comp);
             }
-            m_ComponentsToRemove.clear();
+            componentsToRemove.clear();
 
         } else {
             ImGui::Text("Select a GameObject to see its properties.");
         }
 
         // Render asset browser modal
-        if (m_AssetBrowserModal) {
-            m_AssetBrowserModal->Render();
+        if (assetBrowserModal) {
+            assetBrowserModal->Render();
         }
 
         ImGui::End();
@@ -106,7 +106,7 @@ namespace RTBEditor {
             // Context menu for component
             if (ImGui::BeginPopupContextItem("ComponentSettings")) {
                 if (ImGui::MenuItem("Remove Component")) {
-                    m_ComponentsToRemove.push_back(component.get());
+                    componentsToRemove.push_back(component.get());
                 }
                 ImGui::EndPopup();
             }
@@ -244,7 +244,7 @@ namespace RTBEditor {
 
                 ImGui::SameLine();
                 if (ImGui::SmallButton("...##SelectTexture")) {
-                    m_AssetBrowserModal->Open(AssetType::Texture, [texPtr](const std::string& path) {
+                    assetBrowserModal->Open(AssetType::Texture, [texPtr](const std::string& path) {
                         std::string fullPath = std::string("Assets/") + path;
                         auto* texture = RTBEngine::Core::ResourceManager::GetInstance().LoadTexture(fullPath);
                         if (texture) {
@@ -301,7 +301,7 @@ namespace RTBEditor {
 
                 ImGui::SameLine();
                 if (ImGui::SmallButton("...##SelectAudioClip")) {
-                    m_AssetBrowserModal->Open(AssetType::AudioClip, [clipPtr](const std::string& path) {
+                    assetBrowserModal->Open(AssetType::AudioClip, [clipPtr](const std::string& path) {
                         std::string fullPath = std::string("Assets/") + path;
                         auto* audioClip = RTBEngine::Core::ResourceManager::GetInstance().LoadAudioClip(fullPath);
                         if (audioClip) {
@@ -358,7 +358,7 @@ namespace RTBEditor {
 
                 ImGui::SameLine();
                 if (ImGui::SmallButton("...##SelectMesh")) {
-                    m_AssetBrowserModal->Open(AssetType::Mesh, [meshPtr](const std::string& path) {
+                    assetBrowserModal->Open(AssetType::Mesh, [meshPtr](const std::string& path) {
                         std::string fullPath = std::string("Assets/") + path;
                         auto* mesh = RTBEngine::Core::ResourceManager::GetInstance().LoadModel(fullPath);
                         if (mesh) {
@@ -416,7 +416,7 @@ namespace RTBEditor {
 
                 ImGui::SameLine();
                 if (ImGui::SmallButton("...##SelectFont")) {
-                    m_AssetBrowserModal->Open(AssetType::Font, [fontPtr](const std::string& path) {
+                    assetBrowserModal->Open(AssetType::Font, [fontPtr](const std::string& path) {
                         std::string fullPath = std::string("Assets/") + path;
 
                         // Default font sizes

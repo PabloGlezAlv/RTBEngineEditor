@@ -23,7 +23,7 @@ namespace RTBEditor {
         void OnStop();
         void OnPause();
         
-        EditorState GetState() const { return m_State; }
+        EditorState GetState() const { return state; }
 
     private:
         void Update(float deltaTime);
@@ -35,7 +35,7 @@ namespace RTBEditor {
         std::unique_ptr<EditorLayer> uiLayer;
         std::unique_ptr<Project> project;
         bool isRunning = false;
-        EditorState m_State = EditorState::Edit;
+        EditorState state = EditorState::Edit;
     };
 
 }

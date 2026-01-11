@@ -73,23 +73,23 @@ namespace RTBEditor {
     }
 
     void EditorApplication::Update(float deltaTime) {
-        if (m_State == EditorState::Play) {
+        if (state == EditorState::Play) {
             engineApp->Update(deltaTime);
         }
     }
 
     void EditorApplication::OnPlay() {
-        m_State = EditorState::Play;
+        state = EditorState::Play;
         // Focus the Game window when playing
         ImGui::SetWindowFocus("Game");
     }
 
     void EditorApplication::OnPause() {
-        m_State = EditorState::Pause;
+        state = EditorState::Pause;
     }
 
     void EditorApplication::OnStop() {
-        m_State = EditorState::Edit;
+        state = EditorState::Edit;
         
         if (project) {
             RTBEngine::ECS::SceneManager::GetInstance().LoadScene(project->GetStartScene());
@@ -138,6 +138,12 @@ namespace RTBEditor {
                 framebuffer->Bind();
                 glViewport(0, 0, vpWidth, vpHeight);
                 engineApp->RenderGeometryPass(scene, editorCamera);
+
+                // Render editor grid and axes
+                if (sceneView->GetGridRenderer()) {
+                    sceneView->GetGridRenderer()->Render(editorCamera);
+                }
+
                 framebuffer->Unbind();
             }
         }
