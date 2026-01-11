@@ -154,6 +154,10 @@ namespace RTBEditor {
                     glViewport(0, 0, vpWidth, vpHeight);
                     // For now, reuse shadow maps from first pass
                     engineApp->RenderGeometryPass(scene, mainCamera);
+
+                    // Note: Scene UI is rendered in GameViewPanel::OnUIRender()
+                    // after the framebuffer image, within the ImGui frame
+
                     framebuffer->Unbind();
                 }
             }

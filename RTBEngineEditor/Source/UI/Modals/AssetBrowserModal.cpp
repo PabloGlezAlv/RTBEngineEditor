@@ -93,7 +93,7 @@ namespace RTBEditor {
                     bool isDirectory = entry.is_directory();
 
                     if (isDirectory) {
-                        if (ImGui::Selectable(("📁 " + filename).c_str(), false, ImGuiSelectableFlags_AllowDoubleClick)) {
+                        if (ImGui::Selectable((" 📁 " + filename).c_str(), false, ImGuiSelectableFlags_AllowDoubleClick)) {
                             if (ImGui::IsMouseDoubleClicked(0)) {
                                 currentDirectory /= entry.path().filename();
                             }
