@@ -4,6 +4,7 @@
 #include "Panels/SceneViewPanel.h"
 #include "Panels/GameViewPanel.h"
 #include "Panels/ToolbarPanel.h"
+#include "Modals/BuildDialog.h"
 #include "MainMenuBar.h"
 #include <imgui.h>
 #include <vector>
@@ -33,6 +34,7 @@ namespace RTBEditor {
         SceneViewPanel* GetSceneViewPanel() { return sceneViewPanel; }
         GameViewPanel* GetGameViewPanel() { return gameViewPanel; }
         void SetupToolbar(std::function<void()> onPlay, std::function<void()> onPause, std::function<void()> onStop, std::function<EditorState()> getState);
+        void OpenBuildDialog();
 
     private:
         void SetupDockspace();
@@ -41,6 +43,7 @@ namespace RTBEditor {
     private:
         EditorContext context;
         std::unique_ptr<MainMenuBar> menuBar;
+        std::unique_ptr<BuildDialog> m_BuildDialog;
         std::vector<std::unique_ptr<EditorPanel>> panels;
         SceneViewPanel* sceneViewPanel = nullptr;
         GameViewPanel* gameViewPanel = nullptr;

@@ -41,6 +41,10 @@ namespace RTBEditor {
         );
 
         // Set up menu bar callbacks
+        uiLayer->GetMenuBar()->SetBuildCallback([this]() {
+            uiLayer->OpenBuildDialog();
+        });
+
         uiLayer->GetMenuBar()->SetExitCallback([this]() {
             isRunning = false;
         });

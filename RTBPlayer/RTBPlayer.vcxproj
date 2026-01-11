@@ -13,8 +13,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{f54893fb-0118-46f9-bfae-8ba15f4bc8da}</ProjectGuid>
-    <RootNamespace>RTBEngineEditor</RootNamespace>
+    <ProjectGuid>{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}</ProjectGuid>
+    <RootNamespace>RTBPlayer</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -43,6 +43,17 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
+  <!-- Output to RTBEngineEditor's SDK Bin folder -->
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>$(ProjectDir)..\RTBEngineEditor\RTBEngine_SDK\Bin\</OutDir>
+    <IntDir>$(ProjectDir)x64\Debug\</IntDir>
+    <TargetName>RTBPlayer</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>$(ProjectDir)..\RTBEngineEditor\RTBEngine_SDK\Bin\</OutDir>
+    <IntDir>$(ProjectDir)x64\Release\</IntDir>
+    <TargetName>RTBPlayer</TargetName>
+  </PropertyGroup>
   <!-- DEBUG x64 -->
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -51,19 +62,15 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(ProjectDir)RTBEngine_SDK\Include;$(ProjectDir)RTBEngine_SDK\Include\RTBEngine;$(ProjectDir)RTBEngine_SDK\Include\SDL2;$(ProjectDir)RTBEngine_SDK\Include\Bullet;$(ProjectDir)RTBEngine_SDK\Include\ImGui;$(ProjectDir)Source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\RTBEngineEditor\RTBEngine_SDK\Include;$(ProjectDir)..\RTBEngineEditor\RTBEngine_SDK\Include\RTBEngine;$(ProjectDir)..\RTBEngineEditor\RTBEngine_SDK\Include\SDL2;$(ProjectDir)..\RTBEngineEditor\RTBEngine_SDK\Include\Bullet;$(ProjectDir)..\RTBEngineEditor\RTBEngine_SDK\Include\ImGui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(ProjectDir)RTBEngine_SDK\Lib\Debug;$(ProjectDir)RTBEngine_SDK\Lib\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)..\RTBEngineEditor\RTBEngine_SDK\Lib\Debug;$(ProjectDir)..\RTBEngineEditor\RTBEngine_SDK\Lib\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>RTBEngine.lib;SDL2.lib;SDL2main.lib;lua54.lib;glew32.lib;assimp-vc143-mt.lib;fmod_vc.lib;LinearMath_Debug.lib;BulletCollision_Debug.lib;BulletDynamics_Debug.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <PostBuildEvent>
-      <Command>xcopy /y /d "$(ProjectDir)RTBEngine_SDK\Bin\*.dll" "$(OutDir)"
-xcopy /y /d /e /i "$(ProjectDir)RTBEngine_SDK\Default" "$(OutDir)Default"</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <!-- RELEASE x64 -->
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -75,55 +82,23 @@ xcopy /y /d /e /i "$(ProjectDir)RTBEngine_SDK\Default" "$(OutDir)Default"</Comma
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(ProjectDir)RTBEngine_SDK\Include;$(ProjectDir)RTBEngine_SDK\Include\RTBEngine;$(ProjectDir)RTBEngine_SDK\Include\SDL2;$(ProjectDir)RTBEngine_SDK\Include\Bullet;$(ProjectDir)RTBEngine_SDK\Include\ImGui;$(ProjectDir)Source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\RTBEngineEditor\RTBEngine_SDK\Include;$(ProjectDir)..\RTBEngineEditor\RTBEngine_SDK\Include\RTBEngine;$(ProjectDir)..\RTBEngineEditor\RTBEngine_SDK\Include\SDL2;$(ProjectDir)..\RTBEngineEditor\RTBEngine_SDK\Include\Bullet;$(ProjectDir)..\RTBEngineEditor\RTBEngine_SDK\Include\ImGui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(ProjectDir)RTBEngine_SDK\Lib\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)..\RTBEngineEditor\RTBEngine_SDK\Lib\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>RTBEngine.lib;SDL2.lib;SDL2main.lib;lua54.lib;glew32.lib;assimp-vc143-mt.lib;fmod_vc.lib;LinearMath.lib;BulletCollision.lib;BulletDynamics.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <PostBuildEvent>
-      <Command>xcopy /y /d "$(ProjectDir)RTBEngine_SDK\Bin\*.dll" "$(OutDir)"
-xcopy /y /d /e /i "$(ProjectDir)RTBEngine_SDK\Default" "$(OutDir)Default"</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <!-- Source Files -->
   <ItemGroup>
-    <ClCompile Include="Source\Build\BuildSystem.cpp" />
-    <ClCompile Include="Source\UI\Modals\BuildDialog.cpp" />
-    <ClCompile Include="Source\UI\Modals\AssetBrowserModal.cpp" />
-    <ClCompile Include="Source\Core\EditorApplication.cpp" />
     <ClCompile Include="Source\main.cpp" />
-    <ClCompile Include="Source\Project\Project.cpp" />
-    <ClCompile Include="Source\UI\EditorLayer.cpp" />
-    <ClCompile Include="Source\UI\MainMenuBar.cpp" />
-    <ClCompile Include="Source\UI\Panels\ContentBrowserPanel.cpp" />
-    <ClCompile Include="Source\UI\Panels\InspectorPanel.cpp" />
-    <ClCompile Include="Source\UI\Panels\SceneHierarchyPanel.cpp" />
-    <ClCompile Include="Source\UI\Panels\ConsolePanel.cpp" />
-    <ClCompile Include="Source\UI\Panels\SceneViewPanel.cpp" />
-    <ClCompile Include="Source\UI\Panels\ToolbarPanel.cpp" />
-    <ClCompile Include="Source\UI\Panels\GameViewPanel.cpp" />
+    <ClCompile Include="Source\GameConfig.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Source\Build\BuildSystem.h" />
-    <ClInclude Include="Source\UI\Modals\BuildDialog.h" />
-    <ClInclude Include="Source\UI\Modals\AssetBrowserModal.h" />
-    <ClInclude Include="Source\Core\EditorApplication.h" />
-    <ClInclude Include="Source\Project\Project.h" />
-    <ClInclude Include="Source\UI\DragDropPayloads.h" />
-    <ClInclude Include="Source\UI\EditorLayer.h" />
-    <ClInclude Include="Source\UI\MainMenuBar.h" />
-    <ClInclude Include="Source\UI\Panels\ContentBrowserPanel.h" />
-    <ClInclude Include="Source\UI\Panels\EditorPanel.h" />
-    <ClInclude Include="Source\UI\Panels\InspectorPanel.h" />
-    <ClInclude Include="Source\UI\Panels\SceneHierarchyPanel.h" />
-    <ClInclude Include="Source\UI\Panels\ConsolePanel.h" />
-    <ClInclude Include="Source\UI\Panels\SceneViewPanel.h" />
-    <ClInclude Include="Source\UI\Panels\ToolbarPanel.h" />
-    <ClInclude Include="Source\UI\Panels\GameViewPanel.h" />
+    <ClInclude Include="Source\GameConfig.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -15,6 +15,7 @@ namespace RTBEditor {
 
     EditorLayer::EditorLayer() {
         menuBar = std::make_unique<MainMenuBar>();
+        m_BuildDialog = std::make_unique<BuildDialog>();
         
         // Add default panels
         auto sceneView = std::make_unique<SceneViewPanel>();
@@ -51,6 +52,10 @@ namespace RTBEditor {
         // Render all registered panels
         for (auto& panel : panels) {
             panel->OnUIRender(context);
+        }
+
+        if (m_BuildDialog) {
+            m_BuildDialog->Render();
         }
     }
 
@@ -142,6 +147,10 @@ namespace RTBEditor {
 
     void EditorLayer::SetupToolbar(std::function<void()> onPlay, std::function<void()> onPause, std::function<void()> onStop, std::function<EditorState()> getState) {
         AddPanel(std::make_unique<ToolbarPanel>(onPlay, onPause, onStop, getState));
+    }
+
+    void EditorLayer::OpenBuildDialog() {
+        if (m_BuildDialog) m_BuildDialog->Open();
     }
 
 }

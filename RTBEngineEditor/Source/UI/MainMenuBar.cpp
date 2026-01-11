@@ -9,6 +9,10 @@ namespace RTBEditor {
     void MainMenuBar::OnUIRender() {
         if (ImGui::BeginMenuBar()) {
             if (ImGui::BeginMenu("File")) {
+                if (ImGui::MenuItem("Build...", "Ctrl+B")) {
+                    if (buildCallback) buildCallback();
+                }
+                ImGui::Separator();
                 if (ImGui::MenuItem("Exit", "Alt+F4")) {
                     if (exitCallback) exitCallback();
                 }
