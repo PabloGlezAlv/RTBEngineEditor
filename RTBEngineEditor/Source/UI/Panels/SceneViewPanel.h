@@ -3,6 +3,7 @@
 #include <RTBEngine/Rendering/FrameBuffer.h>
 #include <RTBEngine/Rendering/Camera.h>
 #include "../../Rendering/EditorGridRenderer.h"
+#include "../../Utils/RaycastUtils.h"
 #include <imgui.h>
 #include <memory>
 
@@ -36,6 +37,7 @@ namespace RTBEditor {
         void UpdateEditorCamera(float deltaTime);
         void HandleMouseInput();
         void HandleKeyboardInput(float deltaTime);
+        void HandleObjectPicking(EditorContext& context);
 
         std::unique_ptr<RTBEngine::Rendering::Framebuffer> framebuffer;
         RTBEngine::Rendering::Camera editorCamera;

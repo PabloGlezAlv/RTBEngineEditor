@@ -4,7 +4,10 @@
 #include <RTBEngine/Input/KeyCode.h>
 #include <RTBEngine/Input/MouseButton.h>
 #include <RTBEngine/ECS/SceneManager.h>
+#include <RTBEngine/ECS/MeshRenderer.h>
+#include <RTBEngine/Rendering/Mesh.h>
 #include <GL/glew.h>
+#include <limits>
 
 namespace RTBEditor {
 
@@ -61,6 +64,8 @@ namespace RTBEditor {
                 ImVec2(0, 1),  // UV top-left (flipped)
                 ImVec2(1, 0)   // UV bottom-right (flipped)
             );
+
+            HandleObjectPicking(context);
         }
 
         ImGui::End();
@@ -118,6 +123,92 @@ namespace RTBEditor {
         if (ImGui::IsKeyDown(ImGuiKey_Q) || ImGui::IsKeyDown(ImGuiKey_LeftCtrl)) {
             editorCamera.MoveUp(-moveAmount);
         }
+    }
+
+    void SceneViewPanel::HandleObjectPicking(EditorContext& context) {
+        if (!ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+            return;
+        }
+
+        if (!ImGui::IsItemHovered()) {
+            return;
+        }
+
+        ImVec2 mousePos = ImGui::GetMousePos();
+        ImVec2 windowPos = ImGui::GetItemRectMin();
+
+        RTBEngine::Math::Vector2 localMousePos(
+            mousePos.x - windowPos.x,
+            mousePos.y - windowPos.y
+        );
+
+        if (localMousePos.x < 0 || localMousePos.x >= viewportWidth ||
+            localMousePos.y < 0 || localMousePos.y >= viewportHeight) {
+            return;
+        }
+
+        RTBEngine::Math::Vector2 viewportSize((float)viewportWidth, (float)viewportHeight);
+        Ray ray = Ray::ScreenPointToRay(localMousePos, viewportSize, &editorCamera);
+
+        RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
+        if (!scene) {
+            return;
+        }
+
+        RTBEngine::ECS::GameObject* closestObject = nullptr;
+        float closestDistance = std::numeric_limits<float>::max();
+
+        const auto& gameObjects = scene->GetGameObjects();
+
+        for (const auto& goPtr : gameObjects) {
+            RTBEngine::ECS::GameObject* obj = goPtr.get();
+            if (!obj) continue;
+
+            RTBEngine::ECS::MeshRenderer* meshRenderer = obj->GetComponent<RTBEngine::ECS::MeshRenderer>();
+            if (!meshRenderer) continue;
+
+            const auto& meshes = meshRenderer->GetMeshes();
+            if (meshes.empty()) continue;
+
+            // Calculate world-space AABB from all meshes
+            RTBEngine::Math::Vector3 worldMin(std::numeric_limits<float>::max());
+            RTBEngine::Math::Vector3 worldMax(std::numeric_limits<float>::lowest());
+
+            for (RTBEngine::Rendering::Mesh* mesh : meshes) {
+                if (!mesh) continue;
+
+                RTBEngine::Math::Vector3 meshMin = mesh->GetAABBMin();
+                RTBEngine::Math::Vector3 meshMax = mesh->GetAABBMax();
+
+                // Transform AABB by object transform
+                RTBEngine::ECS::Transform& transform = obj->GetTransform();
+                RTBEngine::Math::Vector3 position = transform.GetPosition();
+                RTBEngine::Math::Vector3 scale = transform.GetScale();
+
+                RTBEngine::Math::Vector3 transformedMin = position + meshMin * scale;
+                RTBEngine::Math::Vector3 transformedMax = position + meshMax * scale;
+
+                // Expand world AABB
+                worldMin.x = std::min(worldMin.x, transformedMin.x);
+                worldMin.y = std::min(worldMin.y, transformedMin.y);
+                worldMin.z = std::min(worldMin.z, transformedMin.z);
+
+                worldMax.x = std::max(worldMax.x, transformedMax.x);
+                worldMax.y = std::max(worldMax.y, transformedMax.y);
+                worldMax.z = std::max(worldMax.z, transformedMax.z);
+            }
+
+            // Test ray intersection
+            float distance;
+            if (ray.IntersectsAABB(worldMin, worldMax, distance)) {
+                if (distance < closestDistance) {
+                    closestDistance = distance;
+                    closestObject = obj;
+                }
+            }
+        }
+
+        context.selectedGameObject = closestObject;
     }
 
 }
