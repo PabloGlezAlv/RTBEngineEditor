@@ -8,6 +8,12 @@
 
 namespace RTBEditor {
 
+    enum class GizmoOperation {
+        Translate = 0,
+        Rotate = 1,
+        Scale = 2
+    };
+
     class SceneViewPanel : public EditorPanel {
     public:
         SceneViewPanel();
@@ -37,6 +43,7 @@ namespace RTBEditor {
         void HandleMouseInput();
         void HandleKeyboardInput(float deltaTime);
         void HandleObjectPicking(EditorContext& context);
+        void HandleGizmo(EditorContext& context);
 
         std::unique_ptr<RTBEngine::Rendering::Framebuffer> framebuffer;
         RTBEngine::Rendering::Camera editorCamera;
@@ -51,6 +58,10 @@ namespace RTBEditor {
         // Camera control state
         float cameraSpeed = 5.0f;
         float mouseSensitivity = 0.1f;
+
+        // Gizmo state
+        GizmoOperation gizmoOperation = GizmoOperation::Translate;
+        bool gizmoLocalMode = true; // true=Local, false=World
     };
 
 }

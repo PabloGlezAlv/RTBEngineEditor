@@ -42,13 +42,33 @@ namespace RTBEditor {
         isFocused = ImGui::IsWindowFocused();
         isHovered = ImGui::IsWindowHovered();
 
+        // Toolbar for gizmo controls
+        ImGui::PopStyleVar(); // Remove padding for toolbar
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(5, 5));
+
+        // Gizmo operation buttons
+        if (ImGui::Button("Translate (W)")) gizmoOperation = GizmoOperation::Translate;
+        ImGui::SameLine();
+        if (ImGui::Button("Rotate (E)")) gizmoOperation = GizmoOperation::Rotate;
+        ImGui::SameLine();
+        if (ImGui::Button("Scale (R)")) gizmoOperation = GizmoOperation::Scale;
+        ImGui::SameLine();
+        ImGui::Separator();
+        ImGui::SameLine();
+        if (ImGui::Button(gizmoLocalMode ? "Local" : "World")) {
+            gizmoLocalMode = !gizmoLocalMode;
+        }
+
+        ImGui::PopStyleVar();
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+
         // Get available size for the viewport
         ImVec2 availableSize = ImGui::GetContentRegionAvail();
-        
+
         // Check if we need to resize the framebuffer
         int newWidth = (int)availableSize.x;
         int newHeight = (int)availableSize.y;
-        
+
         if (newWidth > 0 && newHeight > 0) {
             if (viewportWidth != newWidth || viewportHeight != newHeight) {
                 viewportWidth = newWidth;
@@ -70,6 +90,7 @@ namespace RTBEditor {
             );
 
             HandleObjectPicking(context);
+            HandleGizmo(context);
         }
 
         ImGui::End();
@@ -79,6 +100,13 @@ namespace RTBEditor {
         if (isFocused || isHovered) {
             float deltaTime = 1.0f / 60.0f;
             UpdateEditorCamera(deltaTime);
+        }
+
+        // Handle keyboard shortcuts for gizmo operations
+        if (isFocused && !ImGui::IsMouseDown(ImGuiMouseButton_Right)) {
+            if (ImGui::IsKeyPressed(ImGuiKey_W)) gizmoOperation = GizmoOperation::Translate;
+            if (ImGui::IsKeyPressed(ImGuiKey_E)) gizmoOperation = GizmoOperation::Rotate;
+            if (ImGui::IsKeyPressed(ImGuiKey_R)) gizmoOperation = GizmoOperation::Scale;
         }
     }
 
@@ -213,6 +241,66 @@ namespace RTBEditor {
         }
 
         context.selectedGameObject = closestObject;
+    }
+
+    void SceneViewPanel::HandleGizmo(EditorContext& context) {
+        if (!context.selectedGameObject) {
+            return;
+        }
+
+        // Don't show gizmo if camera is being controlled
+        if (ImGui::IsMouseDown(ImGuiMouseButton_Right)) {
+            return;
+        }
+
+        // Setup ImGuizmo
+        ImGuizmo::BeginFrame();
+        ImGuizmo::SetDrawlist();
+
+        // Set the rect for the viewport
+        ImVec2 windowPos = ImGui::GetItemRectMin();
+        ImGuizmo::SetRect(windowPos.x, windowPos.y, (float)viewportWidth, (float)viewportHeight);
+
+        // Get view and projection matrices
+        RTBEngine::Math::Matrix4 viewMatrix = editorCamera.GetViewMatrix();
+        RTBEngine::Math::Matrix4 projMatrix = editorCamera.GetProjectionMatrix();
+
+        // Get transform of selected object
+        RTBEngine::ECS::Transform& transform = context.selectedGameObject->GetTransform();
+        RTBEngine::Math::Matrix4 modelMatrix = transform.GetModelMatrix();
+
+        // Determine operation
+        ImGuizmo::OPERATION operation;
+        switch (gizmoOperation) {
+        case GizmoOperation::Translate: operation = ImGuizmo::TRANSLATE; break;
+        case GizmoOperation::Rotate: operation = ImGuizmo::ROTATE; break;
+        case GizmoOperation::Scale: operation = ImGuizmo::SCALE; break;
+        default: operation = ImGuizmo::TRANSLATE; break;
+        }
+
+        // Determine mode
+        ImGuizmo::MODE mode = gizmoLocalMode ? ImGuizmo::LOCAL : ImGuizmo::WORLD;
+
+        // Manipulate the object
+        bool manipulated = ImGuizmo::Manipulate(
+            viewMatrix.GetData(),
+            projMatrix.GetData(),
+            operation,
+            mode,
+            modelMatrix.GetData()
+        );
+
+        // If the gizmo was manipulated, update the transform
+        if (manipulated && ImGuizmo::IsUsing()) {
+            // Decompose the matrix to get position, rotation, scale
+            float position[3], rotation[3], scale[3];
+            ImGuizmo::DecomposeMatrixToComponents(modelMatrix.GetData(), position, rotation, scale);
+
+            // Update the transform
+            transform.SetPosition(RTBEngine::Math::Vector3(position[0], position[1], position[2]));
+            transform.SetRotation(RTBEngine::Math::Vector3(rotation[0], rotation[1], rotation[2]));
+            transform.SetScale(RTBEngine::Math::Vector3(scale[0], scale[1], scale[2]));
+        }
     }
 
 }
