@@ -29,13 +29,7 @@ namespace RTBEditor {
         RTBEngine::Math::Vector4 rayWorld4 = invView * rayView;
         RTBEngine::Math::Vector3 rayWorld(rayWorld4.x, rayWorld4.y, rayWorld4.z);
 
-        // Normalize direction
-        float length = sqrtf(rayWorld.x * rayWorld.x + rayWorld.y * rayWorld.y + rayWorld.z * rayWorld.z);
-        if (length > 0.0001f) {
-            rayWorld.x /= length;
-            rayWorld.y /= length;
-            rayWorld.z /= length;
-        }
+        rayWorld.Normalize();
 
         Ray ray;
         ray.origin = camera->GetPosition();

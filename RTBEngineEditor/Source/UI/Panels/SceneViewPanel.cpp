@@ -1,5 +1,9 @@
+#ifndef IMGUI_DEFINE_MATH_OPERATORS
+#define IMGUI_DEFINE_MATH_OPERATORS
+#endif
 #include "SceneViewPanel.h"
 #include <imgui.h>
+#include <ImGuizmo.h>
 #include <RTBEngine/Input/InputManager.h>
 #include <RTBEngine/Input/KeyCode.h>
 #include <RTBEngine/Input/MouseButton.h>

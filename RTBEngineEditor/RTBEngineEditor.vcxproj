@@ -51,7 +51,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(ProjectDir)RTBEngine_SDK\Include;$(ProjectDir)RTBEngine_SDK\Include\RTBEngine;$(ProjectDir)RTBEngine_SDK\Include\SDL2;$(ProjectDir)RTBEngine_SDK\Include\Bullet;$(ProjectDir)RTBEngine_SDK\Include\ImGui;$(ProjectDir)Source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)RTBEngine_SDK\Include;$(ProjectDir)RTBEngine_SDK\Include\RTBEngine;$(ProjectDir)RTBEngine_SDK\Include\SDL2;$(ProjectDir)RTBEngine_SDK\Include\Bullet;$(ProjectDir)RTBEngine_SDK\Include\ImGui;$(ProjectDir)ThirdParty\ImGuizmo-1.83;$(ProjectDir)Source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -75,7 +75,7 @@ xcopy /y /d /e /i "$(ProjectDir)RTBEngine_SDK\Default" "$(OutDir)Default"</Comma
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(ProjectDir)RTBEngine_SDK\Include;$(ProjectDir)RTBEngine_SDK\Include\RTBEngine;$(ProjectDir)RTBEngine_SDK\Include\SDL2;$(ProjectDir)RTBEngine_SDK\Include\Bullet;$(ProjectDir)RTBEngine_SDK\Include\ImGui;$(ProjectDir)Source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)RTBEngine_SDK\Include;$(ProjectDir)RTBEngine_SDK\Include\RTBEngine;$(ProjectDir)RTBEngine_SDK\Include\SDL2;$(ProjectDir)RTBEngine_SDK\Include\Bullet;$(ProjectDir)RTBEngine_SDK\Include\ImGui;$(ProjectDir)ThirdParty\ImGuizmo-1.83;$(ProjectDir)Source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -108,6 +108,7 @@ xcopy /y /d /e /i "$(ProjectDir)RTBEngine_SDK\Default" "$(OutDir)Default"</Comma
     <ClCompile Include="Source\UI\Panels\GameViewPanel.cpp" />
     <ClCompile Include="Source\Rendering\EditorGridRenderer.cpp" />
     <ClCompile Include="Source\Utils\RaycastUtils.cpp" />
+    <ClCompile Include="ThirdParty\ImGuizmo-1.83\ImGuizmo.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Build\BuildSystem.h" />
@@ -128,6 +129,7 @@ xcopy /y /d /e /i "$(ProjectDir)RTBEngine_SDK\Default" "$(OutDir)Default"</Comma
     <ClInclude Include="Source\UI\Panels\GameViewPanel.h" />
     <ClInclude Include="Source\Rendering\EditorGridRenderer.h" />
     <ClInclude Include="Source\Utils\RaycastUtils.h" />
+    <ClInclude Include="ThirdParty\ImGuizmo-1.83\ImGuizmo.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

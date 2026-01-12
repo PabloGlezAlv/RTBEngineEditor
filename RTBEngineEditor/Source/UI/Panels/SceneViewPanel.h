@@ -4,7 +4,6 @@
 #include <RTBEngine/Rendering/Camera.h>
 #include "../../Rendering/EditorGridRenderer.h"
 #include "../../Utils/RaycastUtils.h"
-#include <imgui.h>
 #include <memory>
 
 namespace RTBEditor {
