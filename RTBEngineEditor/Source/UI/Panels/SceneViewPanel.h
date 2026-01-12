@@ -44,6 +44,8 @@ namespace RTBEditor {
         void HandleKeyboardInput(float deltaTime);
         void HandleObjectPicking(EditorContext& context);
         void HandleGizmo(EditorContext& context);
+        void DrawViewCube();
+        void AlignCameraToView(const RTBEngine::Math::Vector3& direction, const RTBEngine::Math::Vector3& up);
 
         std::unique_ptr<RTBEngine::Rendering::Framebuffer> framebuffer;
         RTBEngine::Rendering::Camera editorCamera;

@@ -91,6 +91,9 @@ namespace RTBEditor {
 
             HandleObjectPicking(context);
             HandleGizmo(context);
+
+            // Draw view cube overlay
+            DrawViewCube();
         }
 
         ImGui::End();
@@ -301,6 +304,135 @@ namespace RTBEditor {
             transform.SetRotation(RTBEngine::Math::Vector3(rotation[0], rotation[1], rotation[2]));
             transform.SetScale(RTBEngine::Math::Vector3(scale[0], scale[1], scale[2]));
         }
+    }
+
+    void SceneViewPanel::AlignCameraToView(const RTBEngine::Math::Vector3& direction, const RTBEngine::Math::Vector3& up) {
+        // Get current camera position
+        RTBEngine::Math::Vector3 currentPos = editorCamera.GetPosition();
+
+        // Calculate distance to origin (or selected object if any)
+        float distance = currentPos.Length();
+        if (distance < 1.0f) distance = 10.0f; // Default distance
+
+        // Set new position maintaining the distance
+        RTBEngine::Math::Vector3 newPos = -direction * distance;
+        editorCamera.SetPosition(newPos);
+
+        // Calculate rotation to look at origin
+        RTBEngine::Math::Vector3 target(0, 0, 0);
+        RTBEngine::Math::Vector3 forward = (target - newPos).Normalized();
+        RTBEngine::Math::Vector3 right = up.Cross(forward).Normalized();
+        RTBEngine::Math::Vector3 correctedUp = forward.Cross(right);
+
+        // Convert to euler angles (pitch, yaw)
+        float pitch = asinf(-forward.y) * (180.0f / 3.14159f);
+        float yaw = atan2f(forward.x, forward.z) * (180.0f / 3.14159f);
+
+        editorCamera.SetRotation(pitch, yaw);
+    }
+
+    void SceneViewPanel::DrawViewCube() {
+        // Position in top-right corner
+        const float size = 80.0f;
+        const float padding = 10.0f;
+
+        ImVec2 windowPos = ImGui::GetWindowPos();
+        ImVec2 windowSize = ImGui::GetWindowSize();
+        ImVec2 cubePos(windowPos.x + windowSize.x - size - padding, windowPos.y + padding + 30.0f);
+
+        // Set next window position
+        ImGui::SetNextWindowPos(cubePos);
+        ImGui::SetNextWindowSize(ImVec2(size, size));
+
+        // Create a child window for the view cube
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.15f, 0.15f, 0.15f, 0.8f));
+
+        if (ImGui::BeginChild("ViewCube", ImVec2(size, size), true, ImGuiWindowFlags_NoScrollbar)) {
+            ImDrawList* drawList = ImGui::GetWindowDrawList();
+            ImVec2 center = ImGui::GetWindowPos() + ImVec2(size * 0.5f, size * 0.5f);
+
+            // Get camera forward direction
+            RTBEngine::Math::Vector3 camForward = editorCamera.GetForward();
+            RTBEngine::Math::Vector3 camRight = editorCamera.GetRight();
+            RTBEngine::Math::Vector3 camUp = editorCamera.GetUp();
+
+            // Define axis directions and colors
+            struct AxisInfo {
+                RTBEngine::Math::Vector3 direction;
+                const char* label;
+                ImU32 color;
+                ImU32 hoverColor;
+            };
+
+            AxisInfo axes[] = {
+                // Primary axes
+                { RTBEngine::Math::Vector3(1, 0, 0),  "X",  IM_COL32(220, 50, 50, 255),   IM_COL32(255, 100, 100, 255) },   // +X Right (Red)
+                { RTBEngine::Math::Vector3(-1, 0, 0), "-X", IM_COL32(150, 30, 30, 255),   IM_COL32(200, 50, 50, 255) },     // -X Left
+                { RTBEngine::Math::Vector3(0, 1, 0),  "Y",  IM_COL32(100, 220, 50, 255),  IM_COL32(150, 255, 100, 255) },   // +Y Up (Green)
+                { RTBEngine::Math::Vector3(0, -1, 0), "-Y", IM_COL32(50, 150, 30, 255),   IM_COL32(100, 200, 50, 255) },    // -Y Down
+                { RTBEngine::Math::Vector3(0, 0, 1),  "Z",  IM_COL32(50, 100, 220, 255),  IM_COL32(100, 150, 255, 255) },   // +Z Forward (Blue)
+                { RTBEngine::Math::Vector3(0, 0, -1), "-Z", IM_COL32(30, 50, 150, 255),   IM_COL32(50, 100, 200, 255) }     // -Z Back
+            };
+
+            // Project axes to 2D and draw
+            for (int i = 0; i < 6; i++) {
+                const AxisInfo& axis = axes[i];
+
+                // Project 3D direction to 2D screen space
+                float dotForward = axis.direction.Dot(camForward);
+                float dotRight = axis.direction.Dot(camRight);
+                float dotUp = axis.direction.Dot(camUp);
+
+                // Only draw visible faces (facing camera)
+                if (dotForward < 0.1f) continue;
+
+                // Calculate 2D position
+                ImVec2 pos2D(
+                    center.x + dotRight * 30.0f,
+                    center.y - dotUp * 30.0f
+                );
+
+                // Check if mouse is hovering
+                ImVec2 mousePos = ImGui::GetMousePos();
+                float distToMouse = sqrtf(
+                    (mousePos.x - pos2D.x) * (mousePos.x - pos2D.x) +
+                    (mousePos.y - pos2D.y) * (mousePos.y - pos2D.y)
+                );
+
+                bool isHovered = distToMouse < 15.0f;
+                ImU32 color = isHovered ? axis.hoverColor : axis.color;
+
+                // Draw circle for axis
+                drawList->AddCircleFilled(pos2D, 12.0f, color);
+                drawList->AddCircle(pos2D, 12.0f, IM_COL32(255, 255, 255, 100), 12, 1.5f);
+
+                // Draw label
+                ImVec2 textSize = ImGui::CalcTextSize(axis.label);
+                drawList->AddText(
+                    ImVec2(pos2D.x - textSize.x * 0.5f, pos2D.y - textSize.y * 0.5f),
+                    IM_COL32(255, 255, 255, 255),
+                    axis.label
+                );
+
+                // Handle click
+                if (isHovered && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+                    RTBEngine::Math::Vector3 up(0, 1, 0);
+                    // If looking at top/bottom, use different up vector
+                    if (fabsf(axis.direction.y) > 0.9f) {
+                        up = RTBEngine::Math::Vector3(0, 0, -1);
+                    }
+                    AlignCameraToView(axis.direction, up);
+                }
+            }
+
+            // Draw center sphere
+            drawList->AddCircleFilled(center, 5.0f, IM_COL32(150, 150, 150, 255));
+        }
+        ImGui::EndChild();
+
+        ImGui::PopStyleColor();
+        ImGui::PopStyleVar();
     }
 
 }
