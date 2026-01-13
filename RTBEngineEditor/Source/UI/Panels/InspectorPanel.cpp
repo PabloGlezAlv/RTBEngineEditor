@@ -6,6 +6,7 @@
 #include <RTBEngine/Math/Vectors/Vector3.h>
 #include <RTBEngine/Math/Vectors/Vector4.h>
 #include <RTBEngine/Math/Quaternions/Quaternion.h>
+#include <RTBEngine/ECS/SceneManager.h>
 #include <RTBEngine/Reflection/TypeInfo.h>
 #include <RTBEngine/Core/ResourceManager.h>
 #include "../DragDropPayloads.h"
@@ -30,7 +31,9 @@ namespace RTBEditor {
             strncpy_s(buffer, sizeof(buffer), name.c_str(), _TRUNCATE);
             if (ImGui::InputText("##Name", buffer, sizeof(buffer))) {
                 context.selectedGameObject->SetName(buffer);
+                RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
             }
+
 
             ImGui::Separator();
 
@@ -50,7 +53,9 @@ namespace RTBEditor {
                         auto* newComp = RTBEngine::Reflection::TypeRegistry::GetInstance().CreateComponent(type);
                         if (newComp) {
                             context.selectedGameObject->AddComponent(newComp);
+                            RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
                         }
+
                     }
                 }
                 ImGui::EndPopup();
@@ -59,7 +64,9 @@ namespace RTBEditor {
             // Deferred component removal
             for (auto* comp : componentsToRemove) {
                 context.selectedGameObject->RemoveComponent(comp);
+                RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
             }
+
             componentsToRemove.clear();
 
         } else {
@@ -82,17 +89,22 @@ namespace RTBEditor {
             RTBEngine::Math::Vector3 pos = transform.GetPosition();
             if (ImGui::DragFloat3("Position", (float*)&pos, 0.1f)) {
                 transform.SetPosition(pos);
+                RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
             }
 
             RTBEngine::Math::Vector3 rot = transform.GetRotation().ToEulerAngles();
             if (ImGui::DragFloat3("Rotation", (float*)&rot, 0.1f)) {
                 transform.SetRotation(rot);
+                RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
             }
 
             RTBEngine::Math::Vector3 scale = transform.GetScale();
             if (ImGui::DragFloat3("Scale", (float*)&scale, 0.1f)) {
                 transform.SetScale(scale);
+                RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
             }
+
+
         }
 
         // Other Components
@@ -127,6 +139,7 @@ namespace RTBEditor {
 
     void InspectorPanel::DrawProperty(RTBEngine::ECS::Component* component, const RTBEngine::Reflection::PropertyInfo& prop) {
         void* data = (char*)component + prop.offset;
+        bool changed = false;
         
         ImGui::PushID(prop.name.c_str());
         
@@ -136,43 +149,43 @@ namespace RTBEditor {
             case RTBEngine::Reflection::PropertyType::Float: {
                 float* val = (float*)data;
                 if (prop.range) {
-                    ImGui::SliderFloat(prop.displayName.c_str(), val, prop.range->min, prop.range->max);
+                    changed |= ImGui::SliderFloat(prop.displayName.c_str(), val, prop.range->min, prop.range->max);
                 } else {
-                    ImGui::DragFloat(prop.displayName.c_str(), val, 0.1f);
+                    changed |= ImGui::DragFloat(prop.displayName.c_str(), val, 0.1f);
                 }
                 break;
             }
             case RTBEngine::Reflection::PropertyType::Int: {
                 int* val = (int*)data;
-                ImGui::DragInt(prop.displayName.c_str(), val, 1);
+                changed |= ImGui::DragInt(prop.displayName.c_str(), val, 1);
                 break;
             }
             case RTBEngine::Reflection::PropertyType::Bool: {
                 bool* val = (bool*)data;
-                ImGui::Checkbox(prop.displayName.c_str(), val);
+                changed |= ImGui::Checkbox(prop.displayName.c_str(), val);
                 break;
             }
             case RTBEngine::Reflection::PropertyType::Vector2: {
                 float* val = (float*)data;
-                ImGui::DragFloat2(prop.displayName.c_str(), val, 0.1f);
+                changed |= ImGui::DragFloat2(prop.displayName.c_str(), val, 0.1f);
                 break;
             }
             case RTBEngine::Reflection::PropertyType::Vector3: {
                 float* val = (float*)data;
-                ImGui::DragFloat3(prop.displayName.c_str(), val, 0.1f);
+                changed |= ImGui::DragFloat3(prop.displayName.c_str(), val, 0.1f);
                 break;
             }
             case RTBEngine::Reflection::PropertyType::Vector4: {
                 float* val = (float*)data;
-                ImGui::DragFloat4(prop.displayName.c_str(), val, 0.1f);
+                changed |= ImGui::DragFloat4(prop.displayName.c_str(), val, 0.1f);
                 break;
             }
             case RTBEngine::Reflection::PropertyType::Color: {
                 float* val = (float*)data;
                 if (prop.size == sizeof(float) * 3) {
-                    ImGui::ColorEdit3(prop.displayName.c_str(), val);
+                    changed |= ImGui::ColorEdit3(prop.displayName.c_str(), val);
                 } else {
-                    ImGui::ColorEdit4(prop.displayName.c_str(), val);
+                    changed |= ImGui::ColorEdit4(prop.displayName.c_str(), val);
                 }
                 break;
             }
@@ -183,6 +196,7 @@ namespace RTBEditor {
                 strncpy_s(buffer, sizeof(buffer), val->c_str(), _TRUNCATE);
                 if (ImGui::InputText(prop.displayName.c_str(), buffer, sizeof(buffer))) {
                     *val = buffer;
+                    changed = true;
                 }
                 break;
             }
@@ -195,6 +209,7 @@ namespace RTBEditor {
                         bool isSelected = (*val == i);
                         if (ImGui::Selectable(prop.enumNames[i].c_str(), isSelected)) {
                             *val = i;
+                            changed = true;
                         }
                         if (isSelected) ImGui::SetItemDefaultFocus();
                     }
@@ -237,6 +252,7 @@ namespace RTBEditor {
                         auto* texture = RTBEngine::Core::ResourceManager::GetInstance().LoadTexture(fullPath);
                         if (texture) {
                             *texPtr = texture;
+                            changed = true;
                         }
                     }
                     ImGui::EndDragDropTarget();
@@ -249,12 +265,14 @@ namespace RTBEditor {
                         auto* texture = RTBEngine::Core::ResourceManager::GetInstance().LoadTexture(fullPath);
                         if (texture) {
                             *texPtr = texture;
+                            RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
                         }
                     });
                 }
                 ImGui::SameLine();
                 if (ImGui::SmallButton("X##ClearTexture")) {
                     *texPtr = nullptr;
+                    changed = true;
                 }
                 break;
             }
@@ -294,6 +312,7 @@ namespace RTBEditor {
                         auto* audioClip = RTBEngine::Core::ResourceManager::GetInstance().LoadAudioClip(fullPath);
                         if (audioClip) {
                             *clipPtr = audioClip;
+                            changed = true;
                         }
                     }
                     ImGui::EndDragDropTarget();
@@ -306,12 +325,14 @@ namespace RTBEditor {
                         auto* audioClip = RTBEngine::Core::ResourceManager::GetInstance().LoadAudioClip(fullPath);
                         if (audioClip) {
                             *clipPtr = audioClip;
+                            RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
                         }
                     });
                 }
                 ImGui::SameLine();
                 if (ImGui::SmallButton("X##ClearAudioClip")) {
                     *clipPtr = nullptr;
+                    changed = true;
                 }
                 break;
             }
@@ -351,6 +372,7 @@ namespace RTBEditor {
                         auto* mesh = RTBEngine::Core::ResourceManager::GetInstance().LoadModel(fullPath);
                         if (mesh) {
                             *meshPtr = mesh;
+                            changed = true;
                         }
                     }
                     ImGui::EndDragDropTarget();
@@ -363,12 +385,14 @@ namespace RTBEditor {
                         auto* mesh = RTBEngine::Core::ResourceManager::GetInstance().LoadModel(fullPath);
                         if (mesh) {
                             *meshPtr = mesh;
+                            RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
                         }
                     });
                 }
                 ImGui::SameLine();
                 if (ImGui::SmallButton("X##ClearMesh")) {
                     *meshPtr = nullptr;
+                    changed = true;
                 }
                 break;
             }
@@ -409,6 +433,7 @@ namespace RTBEditor {
                         auto* font = RTBEngine::Core::ResourceManager::GetInstance().LoadFont(fullPath, sizes, 6);
                         if (font) {
                             *fontPtr = font;
+                            changed = true;
                         }
                     }
                     ImGui::EndDragDropTarget();
@@ -424,12 +449,14 @@ namespace RTBEditor {
                         auto* font = RTBEngine::Core::ResourceManager::GetInstance().LoadFont(fullPath, sizes, 6);
                         if (font) {
                             *fontPtr = font;
+                            RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
                         }
                     });
                 }
                 ImGui::SameLine();
                 if (ImGui::SmallButton("X##ClearFont")) {
                     *fontPtr = nullptr;
+                    changed = true;
                 }
                 break;
             }
@@ -465,6 +492,7 @@ namespace RTBEditor {
                         RTBEngine::ECS::GameObject* draggedGameObject = reinterpret_cast<RTBEngine::ECS::GameObject*>(payloadData->gameObjectId);
                         if (draggedGameObject) {
                             *goPtr = draggedGameObject;
+                            changed = true;
                         }
                     }
                     ImGui::EndDragDropTarget();
@@ -473,6 +501,7 @@ namespace RTBEditor {
                 ImGui::SameLine();
                 if (ImGui::SmallButton("X##ClearGameObject")) {
                     *goPtr = nullptr;
+                    changed = true;
                 }
                 break;
             }
@@ -516,6 +545,7 @@ namespace RTBEditor {
                                 if (std::string(comp->GetTypeName()) == prop.componentTypeName) {
                                     *compPtr = comp.get();
                                     foundComponent = true;
+                                    changed = true;
                                     break;
                                 }
                             }
@@ -534,6 +564,7 @@ namespace RTBEditor {
                 ImGui::SameLine();
                 if (ImGui::SmallButton("X##ClearComponent")) {
                     *compPtr = nullptr;
+                    changed = true;
                 }
 
                 // Help text
@@ -555,6 +586,10 @@ namespace RTBEditor {
         }
 
         if (prop.IsReadOnly()) ImGui::EndDisabled();
+
+        if (changed) {
+            RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+        }
 
         ImGui::PopID();
     }
