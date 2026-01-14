@@ -1,5 +1,6 @@
 #include "MainMenuBar.h"
 #include <imgui.h>
+#include <string>
 
 namespace RTBEditor {
 
@@ -9,10 +10,24 @@ namespace RTBEditor {
     void MainMenuBar::OnUIRender() {
         if (ImGui::BeginMenuBar()) {
             if (ImGui::BeginMenu("File")) {
+                std::string saveLabel = sceneDirty ? "Save Scene* (Ctrl+S)" : "Save Scene (Ctrl+S)";
+
+                if (ImGui::MenuItem(saveLabel.c_str(), nullptr, false, sceneDirty)) {
+                    if (saveSceneCallback) saveSceneCallback();
+                }
+
+                if (ImGui::MenuItem("Save Scene As...", "Ctrl+Shift+S")) {
+                    if (saveSceneAsCallback) saveSceneAsCallback();
+                }
+
+                ImGui::Separator();
+
                 if (ImGui::MenuItem("Build...", "Ctrl+B")) {
                     if (buildCallback) buildCallback();
                 }
+
                 ImGui::Separator();
+
                 if (ImGui::MenuItem("Exit", "Alt+F4")) {
                     if (exitCallback) exitCallback();
                 }
@@ -20,7 +35,6 @@ namespace RTBEditor {
             }
 
             if (ImGui::BeginMenu("Window")) {
-                // Placeholder for future window toggles
                 ImGui::EndMenu();
             }
 
