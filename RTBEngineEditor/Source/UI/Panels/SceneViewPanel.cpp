@@ -303,6 +303,7 @@ namespace RTBEditor {
             transform.SetPosition(RTBEngine::Math::Vector3(position[0], position[1], position[2]));
             transform.SetRotation(RTBEngine::Math::Vector3(rotation[0], rotation[1], rotation[2]));
             transform.SetScale(RTBEngine::Math::Vector3(scale[0], scale[1], scale[2]));
+            RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
         }
     }
 

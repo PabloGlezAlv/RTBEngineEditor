@@ -92,10 +92,23 @@ namespace RTBEditor {
                 RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
             }
 
-            RTBEngine::Math::Vector3 rot = transform.GetRotation().ToEulerAngles();
-            if (ImGui::DragFloat3("Rotation", (float*)&rot, 0.1f)) {
-                transform.SetRotation(rot);
+            constexpr float kRad2Deg = 180.0f / 3.14159265f;
+            constexpr float kDeg2Rad = 3.14159265f / 180.0f;
+            // Refresh cache only when the selected object changes or the widget is not being dragged
+            if (cachedRotationTarget != gameObject) {
+                cachedRotationTarget = gameObject;
+                RTBEngine::Math::Vector3 r = transform.GetRotation().ToEulerAngles();
+                cachedRotationDeg = RTBEngine::Math::Vector3(r.x * kRad2Deg, r.y * kRad2Deg, r.z * kRad2Deg);
+            }
+            if (ImGui::DragFloat3("Rotation", (float*)&cachedRotationDeg, 0.5f, 0.0f, 0.0f, "%.1f°")) {
+                RTBEngine::Math::Vector3 newRad(cachedRotationDeg.x * kDeg2Rad, cachedRotationDeg.y * kDeg2Rad, cachedRotationDeg.z * kDeg2Rad);
+                transform.SetRotation(newRad);
                 RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+            }
+            // Once the drag is released, sync cache back from quaternion to avoid drift
+            if (!ImGui::IsItemActive()) {
+                RTBEngine::Math::Vector3 r = transform.GetRotation().ToEulerAngles();
+                cachedRotationDeg = RTBEngine::Math::Vector3(r.x * kRad2Deg, r.y * kRad2Deg, r.z * kRad2Deg);
             }
 
             RTBEngine::Math::Vector3 scale = transform.GetScale();

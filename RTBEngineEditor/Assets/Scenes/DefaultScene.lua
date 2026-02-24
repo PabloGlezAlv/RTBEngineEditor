@@ -1,196 +1,143 @@
 function CreateScene()
     return {
         name = "Test Scene",
+        skyboxEnabled = true,
         gameObjects = {
-            -- Main Camera
             {
                 name = "MainCamera",
-                position = Vector3(0.0, 1.0, 5.0),
-                rotation = Quaternion.FromEulerAngles(0.0, 180.0, 0.0),
+                uuid = "0E7CE370-7C0E-45A8-89CA-AD7A3E70C216",
+                position = Vector3(0.00, 1.00, 5.00),
+                rotation = Quaternion.FromEulerAngles(-0.00, 3.14, -0.00),
                 components = {
                     {
                         type = "CameraComponent",
-                        fov = 45.0,
-                        nearPlane = 0.1,
-                        farPlane = 1000.0,
-                        projection = "Perspective",
-                        isMain = true
+                        fov = 45.00,
+                        nearClip = 0.10,
+                        farClip = 100.00,
+                        projectionType = 0,
+                        orthographicSize = 10.00,
+                        syncWithTransform = true,
+                        isMainCamera = false
                     },
                     {
                         type = "FreeLookCamera",
-                        moveSpeed = 10.0,
-                        lookSpeed = 0.2
-                    }
+                        moveSpeed = 10.00,
+                        lookSpeed = 0.20,
+                        rotationSpeed = 90.00
+                    },
                 }
             },
-            -- Directional Light
             {
                 name = "MainLight",
-                rotation = Quaternion.FromEulerAngles(45.0, 45.0, 0.0),
+                uuid = "63347DB4-BEBE-4CCF-90C0-A270A9F7BF1E",
                 components = {
                     {
                         type = "LightComponent",
-                        lightType = "Directional",
-                        color = Vector3(1.0, 1.0, 1.0),
-                        intensity = 1.0,
-                        castShadows = true,
-                        shadowMapResolution = 2048,
-                        shadowBias = 0.005
-                    }
-
+                        lightType = 0,
+                        color = Vector4(1.00, 1.00, 1.00, 1.00),
+                        intensity = 1.20,
+                        range = 10.00,
+                        spotAngle = 45.00,
+                        spotInnerAngle = 30.00,
+                        syncPosition = true,
+                        syncDirection = true
+                    },
                 }
             },
-            -- Point Light
             {
                 name = "PointLight",
-                position = Vector3(3.0, 4.0, 0.0),
+                uuid = "148BC308-B383-468A-B7FF-CE0203AAAB79",
+                position = Vector3(3.00, 4.00, 0.00),
                 components = {
                     {
                         type = "LightComponent",
-                        lightType = "Point",
-                        color = Vector3(0.2, 0.5, 1.0),
-                        intensity = 1.0,
-                        range = 30.0
-                    }
+                        lightType = 1,
+                        color = Vector4(0.20, 0.50, 1.00, 1.00),
+                        intensity = 1.00,
+                        range = 10.00,
+                        spotAngle = 45.00,
+                        spotInnerAngle = 30.00,
+                        syncPosition = true,
+                        syncDirection = true
+                    },
                 }
             },
-            -- Spot Light
             {
                 name = "SpotLight",
-                position = Vector3(-3.0, 6.0, 0.0),
-                rotation = Quaternion.FromEulerAngles(90.0, 0.0, 0.0),
+                uuid = "7858929D-02D1-4003-BBBE-FA27270B24FB",
+                position = Vector3(-3.00, 6.00, 0.00),
                 components = {
                     {
                         type = "LightComponent",
-                        lightType = "Spot",
-                        color = Vector3(1.0, 0.0, 0.0),
-                        intensity = 50.0,
-                        range = 50.0,
-                        innerCutOff = 5.0,
-                        outerCutOff = 15.0
-                    }
+                        lightType = 2,
+                        color = Vector4(1.00, 0.00, 0.00, 50.00),
+                        intensity = 50.00,
+                        range = 10.00,
+                        spotAngle = 45.00,
+                        spotInnerAngle = 30.00,
+                        syncPosition = true,
+                        syncDirection = true
+                    },
                 }
             },
-            -- UI Canvas
             {
                 name = "UICanvas",
+                uuid = "62E6AE07-7DC2-42B3-8F0E-AA7CA40264F0",
                 components = {
                     {
-                        type = "Canvas",
-                        sortOrder = 0
-                    }
-                }
-            },
-            -- Title Text
-            {
-                name = "TitleText",
-                parent = "UICanvas",
-                components = {
-                    {
-                        type = "UIText",
-                        text = "RTBEngine",
-                        color = Vector4(1.0, 1.0, 1.0, 1.0),
-                        fontSize = 24.0,
-                        alignment = 1, -- Center
-                        -- RectTransform
-                        anchorMin = Vector2(0.0, 1.0),
-                        anchorMax = Vector2(0.0, 1.0),
-                        pivot = Vector2(0.0, 1.0),
-                        anchoredPosition = Vector2(10.0, -10.0),
-                        sizeDelta = Vector2(200.0, 50.0)
-                    }
-                }
-            },
-            -- Logo Image
-            {
-                name = "LogoImage",
-                parent = "UICanvas",
-                components = {
-                    {
-                        type = "UIImage",
-                        texture = "Default/Textures/logo.png",
-                        color = Vector4(1.0, 1.0, 1.0, 1.0),
-                        preserveAspect = true,
-                        -- RectTransform
-                        anchorMin = Vector2(1.0, 1.0),
-                        anchorMax = Vector2(1.0, 1.0),
-                        pivot = Vector2(1.0, 1.0),
-                        anchoredPosition = Vector2(-10.0, -10.0),
-                        sizeDelta = Vector2(64.0, 64.0)
-                    }
-                }
-            },
-            -- Panel Button
-            {
-                name = "PanelButton",
-                parent = "UICanvas",
-                components = {
-                    {
-                        type = "UIPanel",
-                        color = Vector4(0.2, 0.6, 0.3, 1.0),
-                        borderColor = Vector4(1.0, 1.0, 1.0, 1.0),
-                        borderThickness = 2.0,
-                        hasBorder = true,
-                        -- RectTransform
-                        anchorMin = Vector2(0.0, 0.5),
-                        anchorMax = Vector2(0.0, 0.5),
-                        pivot = Vector2(0.0, 0.5),
-                        anchoredPosition = Vector2(20.0, 0.0),
-                        sizeDelta = Vector2(150.0, 50.0)
+                        type = "Canvas"
                     },
-                    {
-                        type = "UIButton",
-                        normalColor = Vector4(1.0, 1.0, 1.0, 1.0),
-                        hoveredColor = Vector4(1.3, 1.3, 1.3, 1.0),
-                        pressedColor = Vector4(0.7, 0.7, 0.7, 1.0)
-                    }
                 }
             },
-            -- Floor
             {
                 name = "Floor",
-                position = Vector3(0.0, -0.05, 0.0),
-                scale = Vector3(10.0, 0.1, 10.0),
+                uuid = "737688CD-BE46-4776-B38D-CA30B01FB6D1",
+                position = Vector3(0.00, -0.05, 0.00),
+                scale = Vector3(10.00, 0.10, 10.00),
                 components = {
                     {
                         type = "MeshRenderer",
-                        mesh = "Default/Models/cube.obj",
-                        shader = "basic",
-                    }
+                        meshRef = "Default/Models/cube.obj",
+                        textureRef = "",
+                        colorRef = Vector4(1.00, 1.00, 1.00, 1.00)
+                    },
                 }
             },
-            -- Static Cube (shadow caster)
             {
                 name = "Cube",
-                position = Vector3(2.0, 1.0, 0.0),
-                scale = Vector3(1.0, 1.0, 1.0),
+                uuid = "64B0D534-9E35-4D68-A32D-CFFCC1F5E1F3",
+                position = Vector3(2.00, 1.00, 0.00),
                 components = {
                     {
                         type = "MeshRenderer",
-                        mesh = "Default/Models/cube.obj",
-                        shader = "basic"
-                    }
+                        meshRef = "Default/Models/cube.obj",
+                        textureRef = "",
+                        colorRef = Vector4(1.00, 1.00, 1.00, 1.00)
+                    },
                 }
             },
-            -- Animated Character
             {
                 name = "Character",
-                position = Vector3(0.0, 0.0, 0.0),
+                uuid = "E3D87585-8C8B-4639-9B1B-520E44A062F9",
+                position = Vector3(0.69, 0.00, 0.00),
                 scale = Vector3(0.01, 0.01, 0.01),
                 components = {
                     {
                         type = "MeshRenderer",
-                        shader = "basic",
+                        meshRef = "",
+                        textureRef = "",
+                        colorRef = Vector4(1.00, 1.00, 1.00, 1.00)
                     },
                     {
                         type = "Animator",
-                        model = "Assets/Models/walking.fbx",
-                        defaultClip = "mixamo.com",
-                        loop = true,
-                        speed = 1.0
-                    }
+                        modelRef = "Assets/Models/walking.fbx",
+                        currentClipName = "mixamo.com",
+                        speed = 1.00,
+                        playing = true,
+                        looping = true
+                    },
                 }
-            }
+            },
         }
     }
 end

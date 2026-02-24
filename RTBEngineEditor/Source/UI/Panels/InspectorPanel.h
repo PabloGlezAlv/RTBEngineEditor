@@ -1,6 +1,7 @@
 #pragma once
 
 #include "EditorPanel.h"
+#include <RTBEngine/Math/Vectors/Vector3.h>
 #include <memory>
 
 namespace RTBEngine {
@@ -30,6 +31,10 @@ namespace RTBEditor {
         
         std::vector<RTBEngine::ECS::Component*> componentsToRemove;
         std::unique_ptr<AssetBrowserModal> assetBrowserModal;
+
+        // Cached euler angles in degrees to avoid quaternion round-trip every frame
+        RTBEngine::ECS::GameObject* cachedRotationTarget = nullptr;
+        RTBEngine::Math::Vector3 cachedRotationDeg;
     };
 
 }
