@@ -8,6 +8,13 @@ namespace RTBEditor {
     MainMenuBar::~MainMenuBar() {}
 
     void MainMenuBar::OnUIRender() {
+        // Global Keyboard Shortcuts
+        if (ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_S, false)) {
+            if (sceneDirty && saveSceneCallback) {
+                saveSceneCallback();
+            }
+        }
+
         if (ImGui::BeginMenuBar()) {
             if (ImGui::BeginMenu("File")) {
                 std::string saveLabel = sceneDirty ? "Save Scene* (Ctrl+S)" : "Save Scene (Ctrl+S)";

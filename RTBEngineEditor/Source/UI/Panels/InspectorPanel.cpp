@@ -602,6 +602,7 @@ namespace RTBEditor {
         if (prop.IsReadOnly()) ImGui::EndDisabled();
 
         if (changed) {
+            component->OnValidate();
             RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
         }
 

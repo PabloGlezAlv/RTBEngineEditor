@@ -13,6 +13,7 @@ namespace RTBEngine {
             ~CameraComponent();
 
             void OnUpdate(float deltaTime) override;
+            void OnValidate() override;
 
             // Reflected properties
             float fov = 45.0f;
