@@ -62,7 +62,9 @@
     </Link>
     <PostBuildEvent>
       <Command>xcopy /y /d "$(ProjectDir)RTBEngine_SDK\Bin\*.dll" "$(OutDir)"
-xcopy /y /d /e /i "$(ProjectDir)RTBEngine_SDK\Default" "$(OutDir)Default"</Command>
+xcopy /y /d /e /i "$(ProjectDir)Default" "$(OutDir)Default"
+xcopy /y /d /e /i "$(ProjectDir)Assets" "$(OutDir)Assets"
+if exist "$(ProjectDir)MyProject.rtbproj" xcopy /y /d "$(ProjectDir)MyProject.rtbproj" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <!-- RELEASE x64 -->
@@ -86,7 +88,9 @@ xcopy /y /d /e /i "$(ProjectDir)RTBEngine_SDK\Default" "$(OutDir)Default"</Comma
     </Link>
     <PostBuildEvent>
       <Command>xcopy /y /d "$(ProjectDir)RTBEngine_SDK\Bin\*.dll" "$(OutDir)"
-xcopy /y /d /e /i "$(ProjectDir)RTBEngine_SDK\Default" "$(OutDir)Default"</Command>
+xcopy /y /d /e /i "$(ProjectDir)Default" "$(OutDir)Default"
+xcopy /y /d /e /i "$(ProjectDir)Assets" "$(OutDir)Assets"
+if exist "$(ProjectDir)MyProject.rtbproj" xcopy /y /d "$(ProjectDir)MyProject.rtbproj" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <!-- Source Files -->

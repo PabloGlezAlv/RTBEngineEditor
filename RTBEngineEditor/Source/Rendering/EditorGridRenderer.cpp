@@ -17,8 +17,8 @@ namespace RTBEditor {
 
         lineShader = RTBEngine::Core::ResourceManager::GetInstance().LoadShader(
             "EditorLineShader",
-            "Assets/Shaders/EditorLine.vert",
-            "Assets/Shaders/EditorLine.frag"
+            "Default/Shaders/EditorLine.vert",
+            "Default/Shaders/EditorLine.frag"
         );
 
         CreateGridMesh();
