@@ -12,8 +12,21 @@ namespace RTBEditor {
     void SceneHierarchyPanel::OnUIRender(EditorContext& context) {
         ImGui::Begin("Hierarchy");
 
-        auto activeScene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
+        auto& sceneManager = RTBEngine::ECS::SceneManager::GetInstance();
+        auto activeScene = sceneManager.GetActiveScene();
         if (activeScene) {
+            // Scene header
+            std::string sceneName = activeScene->GetName();
+            if (sceneManager.IsSceneDirty()) {
+                sceneName += " *";
+            }
+            
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.8f, 0.8f, 1.0f, 1.0f));
+            ImGui::Text("Scene: %s", sceneName.c_str());
+            ImGui::PopStyleColor();
+            ImGui::Separator();
+            ImGui::Spacing();
+
             for (const auto& gameObject : activeScene->GetGameObjects()) {
                 // Only start drawing from root objects (those without a parent)
                 if (gameObject->GetParent() == nullptr) {
