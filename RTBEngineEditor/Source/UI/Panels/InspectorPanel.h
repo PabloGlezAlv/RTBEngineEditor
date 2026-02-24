@@ -26,7 +26,8 @@ namespace RTBEditor {
     private:
         void DrawComponents(RTBEngine::ECS::GameObject* gameObject);
         void DrawProperty(RTBEngine::ECS::Component* component, const RTBEngine::Reflection::PropertyInfo& prop);
-
+        std::string FormatTypeName(const char* typeName);
+        
         std::vector<RTBEngine::ECS::Component*> componentsToRemove;
         std::unique_ptr<AssetBrowserModal> assetBrowserModal;
     };

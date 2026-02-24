@@ -113,7 +113,8 @@ namespace RTBEditor {
             const char* typeName = component->GetTypeName();
 
             ImGui::PushID(component.get());
-            bool open = ImGui::CollapsingHeader(typeName, ImGuiTreeNodeFlags_DefaultOpen);
+            std::string displayName = FormatTypeName(typeName);
+            bool open = ImGui::CollapsingHeader(displayName.c_str(), ImGuiTreeNodeFlags_DefaultOpen);
             
             // Context menu for component
             if (ImGui::BeginPopupContextItem("ComponentSettings")) {
@@ -594,4 +595,14 @@ namespace RTBEditor {
         ImGui::PopID();
     }
 
+    std::string InspectorPanel::FormatTypeName(const char* typeName) {
+        std::string result;
+        for (int i = 0; typeName[i] != '\0'; i++) {
+            if (i > 0 && std::isupper((unsigned char)typeName[i]) && std::islower((unsigned char)typeName[i - 1])) {
+                result += ' ';
+            }
+            result += typeName[i];
+        }
+        return result;
+    }
 }

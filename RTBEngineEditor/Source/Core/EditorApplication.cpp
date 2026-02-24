@@ -4,6 +4,7 @@
 #include <iostream>
 #include <RTBEngine/ECS/SceneManager.h>
 #include <RTBEngine/Rendering/FrameBuffer.h>
+#include <RTBEngine/Scripting/SceneSaver.h>
 #include "../UI/Panels/SceneViewPanel.h"
 
 namespace RTBEditor {
@@ -49,6 +50,13 @@ namespace RTBEditor {
             isRunning = false;
         });
 
+        uiLayer->GetMenuBar()->SetSaveSceneCallback([this]() {
+            auto& sm = RTBEngine::ECS::SceneManager::GetInstance();
+            RTBEngine::Scripting::SceneSaver::SaveScene(sm.GetActiveScene(), sm.GetActiveScenePath());
+            sm.ClearSceneDirty();
+            uiLayer->GetMenuBar()->SetSceneDirty(false);
+        });
+
         isRunning = true;
         return true;
     }
@@ -73,6 +81,11 @@ namespace RTBEditor {
     }
 
     void EditorApplication::Update(float deltaTime) {
+        // Sync dirty flag from SceneManager to menu bar
+        uiLayer->GetMenuBar()->SetSceneDirty(
+            RTBEngine::ECS::SceneManager::GetInstance().IsSceneDirty()
+        );
+
         if (state == EditorState::Play) {
             engineApp->Update(deltaTime);
         }
