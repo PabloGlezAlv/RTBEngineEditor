@@ -7,7 +7,6 @@ function CreateScene()
                 name = "MainCamera",
                 uuid = "0E7CE370-7C0E-45A8-89CA-AD7A3E70C216",
                 position = Vector3(0.00, 1.00, 5.00),
-                rotation = Quaternion.FromEulerAngles(-0.00, 3.14, -0.00),
                 components = {
                     {
                         type = "CameraComponent",
@@ -17,7 +16,7 @@ function CreateScene()
                         projectionType = 0,
                         orthographicSize = 10.00,
                         syncWithTransform = true,
-                        isMainCamera = false
+                        isMainCamera = true
                     },
                     {
                         type = "FreeLookCamera",
@@ -87,6 +86,80 @@ function CreateScene()
                     {
                         type = "Canvas"
                     },
+                },
+                children = {
+                    {
+                        name = "HUDPanel",
+                        uuid = "A1B2C3D4-0001-4000-8000-000000000001",
+                        components = {
+                            {
+                                type = "UIPanel",
+                                backgroundColor = Vector4(1.00, 1.00, 1.00, 1.00),
+                                borderColor = Vector4(0.40, 0.40, 0.40, 1.00),
+                                borderThickness = 2.00,
+                                hasBorder = true,
+                                isVisible = true,
+                                anchorMin = Vector2(0.00, 0.00),
+                                anchorMax = Vector2(0.00, 0.00),
+                                anchoredPosition = Vector2(0.00, 0.00),
+                                sizeDelta = Vector2(100.00, 100.00)
+                            },
+                        }
+                    },
+                    {
+                        name = "TitleText",
+                        uuid = "A1B2C3D4-0002-4000-8000-000000000002",
+                        components = {
+                            {
+                                type = "UIText",
+                                text = "RTBEngine Demo",
+                                color = Vector4(1.00, 1.00, 1.00, 1.00),
+                                fontSize = 28.00,
+                                alignment = 0,
+                                font = "",
+                                isVisible = true,
+                                anchorMin = Vector2(0.00, 0.00),
+                                anchorMax = Vector2(0.00, 0.00),
+                                anchoredPosition = Vector2(69.80, 20.70),
+                                sizeDelta = Vector2(100.00, 100.00)
+                            },
+                        }
+                    },
+                    {
+                        name = "LogoImage",
+                        uuid = "A1B2C3D4-0003-4000-8000-000000000003",
+                        components = {
+                            {
+                                type = "UIImage",
+                                texture = "Assets/Textures/testTexture.png",
+                                tintColor = Vector4(1.00, 1.00, 1.00, 1.00),
+                                preserveAspect = true,
+                                isVisible = true,
+                                anchorMin = Vector2(0.00, 0.00),
+                                anchorMax = Vector2(0.00, 0.00),
+                                anchoredPosition = Vector2(198.50, 22.10),
+                                sizeDelta = Vector2(25.00, 25.00)
+                            },
+                        }
+                    },
+                    {
+                        name = "PlayButton",
+                        uuid = "A1B2C3D4-0004-4000-8000-000000000004",
+                        components = {
+                            {
+                                type = "UIButton",
+                                normalColor = Vector4(0.20, 0.60, 1.00, 1.00),
+                                hoveredColor = Vector4(0.30, 0.70, 1.00, 1.00),
+                                pressedColor = Vector4(0.10, 0.40, 0.80, 1.00),
+                                disabledColor = Vector4(0.50, 0.50, 0.50, 0.50),
+                                interactable = true,
+                                anchorMin = Vector2(0.00, 0.00),
+                                anchorMax = Vector2(0.00, 0.00),
+                                anchoredPosition = Vector2(-43.00, 0.00),
+                                sizeDelta = Vector2(100.00, 100.00)
+                            },
+                        }
+                    },
                 }
             },
             {
@@ -119,7 +192,7 @@ function CreateScene()
             {
                 name = "Character",
                 uuid = "E3D87585-8C8B-4639-9B1B-520E44A062F9",
-                position = Vector3(-0.22, 0.00, 0.00),
+                position = Vector3(-0.04, 0.00, 0.00),
                 scale = Vector3(0.01, 0.01, 0.01),
                 components = {
                     {

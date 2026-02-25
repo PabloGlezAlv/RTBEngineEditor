@@ -110,6 +110,8 @@ if exist "$(ProjectDir)MyProject.rtbproj" xcopy /y /d "$(ProjectDir)MyProject.rt
     <ClCompile Include="Source\UI\Panels\SceneViewPanel.cpp" />
     <ClCompile Include="Source\UI\Panels\ToolbarPanel.cpp" />
     <ClCompile Include="Source\UI\Panels\GameViewPanel.cpp" />
+    <ClCompile Include="Source\Components\RefLogger.cpp" />
+    <ClCompile Include="Source\Components\TargetHolder.cpp" />
     <ClCompile Include="Source\Rendering\EditorGridRenderer.cpp" />
     <ClCompile Include="Source\Utils\RaycastUtils.cpp" />
     <ClCompile Include="ThirdParty\ImGuizmo-1.83\ImGuizmo.cpp" />
@@ -131,6 +133,8 @@ if exist "$(ProjectDir)MyProject.rtbproj" xcopy /y /d "$(ProjectDir)MyProject.rt
     <ClInclude Include="Source\UI\Panels\SceneViewPanel.h" />
     <ClInclude Include="Source\UI\Panels\ToolbarPanel.h" />
     <ClInclude Include="Source\UI\Panels\GameViewPanel.h" />
+    <ClInclude Include="Source\Components\RefLogger.h" />
+    <ClInclude Include="Source\Components\TargetHolder.h" />
     <ClInclude Include="Source\Rendering\EditorGridRenderer.h" />
     <ClInclude Include="Source\Utils\RaycastUtils.h" />
     <ClInclude Include="ThirdParty\ImGuizmo-1.83\ImGuizmo.h" />

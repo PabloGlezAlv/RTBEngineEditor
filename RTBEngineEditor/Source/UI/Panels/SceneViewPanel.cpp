@@ -303,6 +303,12 @@ namespace RTBEditor {
             transform.SetPosition(RTBEngine::Math::Vector3(position[0], position[1], position[2]));
             transform.SetRotation(RTBEngine::Math::Vector3(rotation[0], rotation[1], rotation[2]));
             transform.SetScale(RTBEngine::Math::Vector3(scale[0], scale[1], scale[2]));
+            
+            // Notify components that something has changed
+            for (auto& comp : context.selectedGameObject->GetComponents()) {
+                if (comp) comp->OnValidate();
+            }
+
             RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
         }
     }

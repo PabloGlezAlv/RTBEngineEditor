@@ -26,10 +26,6 @@ namespace RTBEngine {
             bool syncWithTransform = true;
             bool isMainCamera = false;
 
-            // Getters/Setters wrapping members if needed, or removing them if we use direct access. 
-            // Keeping them for compatibility might be wise, updating members inside them?
-            // For now, let's keep the API but update it in .cpp implementation to use the members.
-
             Rendering::Camera* GetCamera() const { return camera.get(); }
 
             void SetFOV(float fov);
