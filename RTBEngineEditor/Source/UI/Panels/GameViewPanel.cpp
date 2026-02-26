@@ -46,15 +46,37 @@ namespace RTBEditor {
         // Render scene UI on top of the game view
         RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
         if (scene && viewportWidth > 0 && viewportHeight > 0) {
-            // Update CanvasSystem to collect active canvases
-            RTBEngine::UI::CanvasSystem::GetInstance().Update(scene);
-
-            // Get the window's DrawList and render canvases with offset
-            ImDrawList* drawList = ImGui::GetWindowDrawList();
             RTBEngine::Math::Vector2 screenSize((float)viewportWidth, (float)viewportHeight);
             RTBEngine::Math::Vector2 offset(contentPos.x, contentPos.y);
 
-            RTBEngine::UI::CanvasSystem::GetInstance().RenderCanvasesToDrawList(drawList, screenSize, offset);
+            auto& canvasSystem = RTBEngine::UI::CanvasSystem::GetInstance();
+
+            // Update CanvasSystem to collect active canvases
+            canvasSystem.Update(scene);
+            canvasSystem.UpdateAllRectTransforms(screenSize);
+
+            // Dispatch pointer events — only when mouse is inside the game viewport
+            ImVec2 mousePos = ImGui::GetMousePos();
+            bool mouseInViewport = mousePos.x >= contentPos.x && mousePos.x <= contentPos.x + (float)viewportWidth
+                                && mousePos.y >= contentPos.y && mousePos.y <= contentPos.y + (float)viewportHeight;
+            if (mouseInViewport && context.state == EditorState::Play) {
+                RTBEngine::Math::Vector2 localMouse(mousePos.x - contentPos.x, mousePos.y - contentPos.y);
+                canvasSystem.ProcessInput(localMouse);
+            }
+
+            // Render UI elements into the ImGui draw list
+            ImDrawList* drawList = ImGui::GetWindowDrawList();
+            canvasSystem.RenderToDrawList(drawList, screenSize, offset);
+
+            // Draw interaction area outline for the selected UI object
+            if (context.selectedGameObject) {
+                auto rects = canvasSystem.GetRaycastRectsForGameObject(context.selectedGameObject);
+                for (const auto& rect : rects) {
+                    ImVec2 rMin(rect.x + offset.x, rect.y + offset.y);
+                    ImVec2 rMax(rect.x + rect.z + offset.x, rect.y + rect.w + offset.y);
+                    drawList->AddRect(rMin, rMax, IM_COL32(255, 0, 0, 220), 0.0f, 0, 1.5f);
+                }
+            }
         }
 
         ImGui::End();

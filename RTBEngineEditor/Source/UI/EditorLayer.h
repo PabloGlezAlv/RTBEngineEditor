@@ -34,6 +34,7 @@ namespace RTBEditor {
         SceneViewPanel* GetSceneViewPanel() { return sceneViewPanel; }
         GameViewPanel* GetGameViewPanel() { return gameViewPanel; }
         void SetupToolbar(std::function<void()> onPlay, std::function<void()> onPause, std::function<void()> onStop, std::function<EditorState()> getState);
+        void SetEditorState(EditorState s) { context.state = s; }
         void OpenBuildDialog();
 
     private:

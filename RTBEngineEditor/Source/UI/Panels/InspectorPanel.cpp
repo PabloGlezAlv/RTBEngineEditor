@@ -7,8 +7,10 @@
 #include <RTBEngine/Math/Vectors/Vector4.h>
 #include <RTBEngine/Math/Quaternions/Quaternion.h>
 #include <RTBEngine/ECS/SceneManager.h>
+#include <RTBEngine/ECS/Scene.h>
 #include <RTBEngine/Reflection/TypeInfo.h>
 #include <RTBEngine/Core/ResourceManager.h>
+#include <RTBEngine/UI/UIElement.h>
 #include "../DragDropPayloads.h"
 #include "../Modals/AssetBrowserModal.h"
 
@@ -22,6 +24,22 @@ namespace RTBEditor {
 
     void InspectorPanel::OnUIRender(EditorContext& context) {
         ImGui::Begin("Inspector");
+
+        // Validate that the selected GO still exists in the active scene
+        if (context.selectedGameObject) {
+            auto* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
+            bool alive = false;
+            if (scene) {
+                for (const auto& obj : scene->GetGameObjects()) {
+                    if (obj.get() == context.selectedGameObject) { alive = true; break; }
+                }
+            }
+            if (!alive) {
+                context.selectedGameObject = nullptr;
+                componentsToRemove.clear();
+                cachedRotationTarget = nullptr;
+            }
+        }
 
         if (context.selectedGameObject) {
             auto& name = context.selectedGameObject->GetName();
@@ -82,42 +100,74 @@ namespace RTBEditor {
     }
 
     void InspectorPanel::DrawComponents(RTBEngine::ECS::GameObject* gameObject) {
-        // Transform Component (Special case as it's not a regular component list item)
-        if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen)) {
-            auto& transform = gameObject->GetTransform();
-            
-            RTBEngine::Math::Vector3 pos = transform.GetPosition();
-            if (ImGui::DragFloat3("Position", (float*)&pos, 0.1f)) {
-                transform.SetPosition(pos);
-                RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
-            }
+        // Detect if this GameObject has any UIElement — if so show Rect Transform instead of Transform
+        RTBEngine::UI::UIElement* uiElement = gameObject->GetComponent<RTBEngine::UI::UIElement>();
 
-            constexpr float kRad2Deg = 180.0f / 3.14159265f;
-            constexpr float kDeg2Rad = 3.14159265f / 180.0f;
-            // Refresh cache only when the selected object changes or the widget is not being dragged
-            if (cachedRotationTarget != gameObject) {
-                cachedRotationTarget = gameObject;
-                RTBEngine::Math::Vector3 r = transform.GetRotation().ToEulerAngles();
-                cachedRotationDeg = RTBEngine::Math::Vector3(r.x * kRad2Deg, r.y * kRad2Deg, r.z * kRad2Deg);
-            }
-            if (ImGui::DragFloat3("Rotation", (float*)&cachedRotationDeg, 0.5f, 0.0f, 0.0f, "%.1f°")) {
-                RTBEngine::Math::Vector3 newRad(cachedRotationDeg.x * kDeg2Rad, cachedRotationDeg.y * kDeg2Rad, cachedRotationDeg.z * kDeg2Rad);
-                transform.SetRotation(newRad);
-                RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
-            }
-            // Once the drag is released, sync cache back from quaternion to avoid drift
-            if (!ImGui::IsItemActive()) {
-                RTBEngine::Math::Vector3 r = transform.GetRotation().ToEulerAngles();
-                cachedRotationDeg = RTBEngine::Math::Vector3(r.x * kRad2Deg, r.y * kRad2Deg, r.z * kRad2Deg);
-            }
+        if (uiElement) {
+            // Rect Transform (replaces Transform for UI objects)
+            if (ImGui::CollapsingHeader("Rect Transform", ImGuiTreeNodeFlags_DefaultOpen)) {
+                RTBEngine::Math::Vector2 pos = uiElement->anchoredPosition;
+                if (ImGui::DragFloat2("Position", (float*)&pos, 1.0f)) {
+                    uiElement->anchoredPosition = pos;
+                    uiElement->SyncRectTransform();
+                    RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                }
 
-            RTBEngine::Math::Vector3 scale = transform.GetScale();
-            if (ImGui::DragFloat3("Scale", (float*)&scale, 0.1f)) {
-                transform.SetScale(scale);
-                RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                RTBEngine::Math::Vector2 size = uiElement->sizeDelta;
+                if (ImGui::DragFloat2("Size", (float*)&size, 1.0f)) {
+                    uiElement->sizeDelta = size;
+                    uiElement->SyncRectTransform();
+                    RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                }
+
+                RTBEngine::Math::Vector2 anchorMin = uiElement->anchorMin;
+                if (ImGui::DragFloat2("Anchor Min", (float*)&anchorMin, 0.01f, 0.0f, 1.0f)) {
+                    uiElement->anchorMin = anchorMin;
+                    uiElement->SyncRectTransform();
+                    RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                }
+
+                RTBEngine::Math::Vector2 anchorMax = uiElement->anchorMax;
+                if (ImGui::DragFloat2("Anchor Max", (float*)&anchorMax, 0.01f, 0.0f, 1.0f)) {
+                    uiElement->anchorMax = anchorMax;
+                    uiElement->SyncRectTransform();
+                    RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                }
             }
+        } else {
+            // Transform Component (3D — shown for non-UI objects)
+            if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen)) {
+                auto& transform = gameObject->GetTransform();
 
+                RTBEngine::Math::Vector3 pos = transform.GetPosition();
+                if (ImGui::DragFloat3("Position", (float*)&pos, 0.1f)) {
+                    transform.SetPosition(pos);
+                    RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                }
 
+                constexpr float kRad2Deg = 180.0f / 3.14159265f;
+                constexpr float kDeg2Rad = 3.14159265f / 180.0f;
+                if (cachedRotationTarget != gameObject) {
+                    cachedRotationTarget = gameObject;
+                    RTBEngine::Math::Vector3 r = transform.GetRotation().ToEulerAngles();
+                    cachedRotationDeg = RTBEngine::Math::Vector3(r.x * kRad2Deg, r.y * kRad2Deg, r.z * kRad2Deg);
+                }
+                if (ImGui::DragFloat3("Rotation", (float*)&cachedRotationDeg, 0.5f, 0.0f, 0.0f, "%.1f°")) {
+                    RTBEngine::Math::Vector3 newRad(cachedRotationDeg.x * kDeg2Rad, cachedRotationDeg.y * kDeg2Rad, cachedRotationDeg.z * kDeg2Rad);
+                    transform.SetRotation(newRad);
+                    RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                }
+                if (!ImGui::IsItemActive()) {
+                    RTBEngine::Math::Vector3 r = transform.GetRotation().ToEulerAngles();
+                    cachedRotationDeg = RTBEngine::Math::Vector3(r.x * kRad2Deg, r.y * kRad2Deg, r.z * kRad2Deg);
+                }
+
+                RTBEngine::Math::Vector3 scale = transform.GetScale();
+                if (ImGui::DragFloat3("Scale", (float*)&scale, 0.1f)) {
+                    transform.SetScale(scale);
+                    RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                }
+            }
         }
 
         // Other Components

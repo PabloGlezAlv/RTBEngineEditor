@@ -2,7 +2,13 @@
 #include <imgui.h>
 #include <RTBEngine/ECS/SceneManager.h>
 #include <RTBEngine/ECS/Scene.h>
+#include <RTBEngine/UI/Elements/UIButton.h>
+#include <RTBEngine/UI/Elements/UIContainer.h>
+#include <RTBEngine/UI/Elements/UIPanel.h>
+#include <RTBEngine/UI/Elements/UIText.h>
+#include <RTBEngine/Math/Vectors/Vector2.h>
 #include "../DragDropPayloads.h"
+#include <vector>
 
 namespace RTBEditor {
 
@@ -38,10 +44,39 @@ namespace RTBEditor {
                 context.selectedGameObject = nullptr;
             }
 
+            // Delete selected GameObject
+            if (ImGui::IsWindowFocused() && ImGui::IsKeyPressed(ImGuiKey_Delete) && context.selectedGameObject) {
+                DeleteGameObject(activeScene, context.selectedGameObject, context);
+            }
+
+            // Parent for newly created objects: same parent as selected, or root if none
+            RTBEngine::ECS::GameObject* creationParent = context.selectedGameObject
+                ? context.selectedGameObject->GetParent()
+                : nullptr;
+
             // Context menu for the window
             if (ImGui::BeginPopupContextWindow()) {
                 if (ImGui::MenuItem("Create Empty Object")) {
-                    // TODO: Scene object creation
+                    auto* go = new RTBEngine::ECS::GameObject("GameObject");
+                    if (creationParent) go->SetParent(creationParent);
+                    activeScene->AddGameObject(go);
+                    context.selectedGameObject = go;
+                    RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                }
+                if (ImGui::BeginMenu("UI")) {
+                    if (ImGui::MenuItem("Empty")) {
+                        auto* go = new RTBEngine::ECS::GameObject("GameObject");
+                        auto* container = new RTBEngine::UI::UIContainer();
+                        go->AddComponent(container);
+                        if (creationParent) go->SetParent(creationParent);
+                        activeScene->AddGameObject(go);
+                        context.selectedGameObject = go;
+                        RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                    }
+                    if (ImGui::MenuItem("Button")) {
+                        CreateUIButton(activeScene, context, creationParent);
+                    }
+                    ImGui::EndMenu();
                 }
                 ImGui::EndPopup();
             }
@@ -71,10 +106,32 @@ namespace RTBEditor {
         // Drag-and-drop source for GameObject
         if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None)) {
             GameObjectPayload payload;
-            payload.gameObjectId = reinterpret_cast<uint64_t>(gameObject); // Store pointer as ID
+            payload.gameObjectId = reinterpret_cast<uint64_t>(gameObject);
             ImGui::SetDragDropPayload(PAYLOAD_GAMEOBJECT, &payload, sizeof(GameObjectPayload));
             ImGui::Text("GameObject: %s", name.c_str());
             ImGui::EndDragDropSource();
+        }
+
+        // Drop target: reparent dragged GO under this node
+        if (ImGui::BeginDragDropTarget()) {
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(PAYLOAD_GAMEOBJECT)) {
+                const GameObjectPayload* data = static_cast<const GameObjectPayload*>(payload->Data);
+                RTBEngine::ECS::GameObject* dragged = reinterpret_cast<RTBEngine::ECS::GameObject*>(data->gameObjectId);
+
+                // Prevent parenting a node to itself or one of its own descendants
+                bool isCycle = false;
+                RTBEngine::ECS::GameObject* check = gameObject;
+                while (check) {
+                    if (check == dragged) { isCycle = true; break; }
+                    check = check->GetParent();
+                }
+
+                if (!isCycle) {
+                    dragged->SetParent(gameObject);
+                    RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                }
+            }
+            ImGui::EndDragDropTarget();
         }
 
         if (opened) {
@@ -83,6 +140,79 @@ namespace RTBEditor {
             }
             ImGui::TreePop();
         }
+    }
+
+    void SceneHierarchyPanel::CreateUIButton(RTBEngine::ECS::Scene* scene, EditorContext& context, RTBEngine::ECS::GameObject* parent) {
+        // Button GO: UIPanel (visual + hit area) + UIButton (logic) on the same GameObject
+        auto* buttonGO = new RTBEngine::ECS::GameObject("Button");
+        if (parent) buttonGO->SetParent(parent);
+
+        auto* uiPanel = new RTBEngine::UI::UIPanel();
+        uiPanel->anchorMin        = RTBEngine::Math::Vector2(0.5f, 0.5f);
+        uiPanel->anchorMax        = RTBEngine::Math::Vector2(0.5f, 0.5f);
+        uiPanel->anchoredPosition = RTBEngine::Math::Vector2(0.0f, 0.0f);
+        uiPanel->sizeDelta        = RTBEngine::Math::Vector2(160.0f, 40.0f);
+        buttonGO->AddComponent(uiPanel);
+
+        // UIPanel must be added first so UIButton::OnAwake() finds it via GetComponent<UIPanel>()
+        auto* uiButton = new RTBEngine::UI::UIButton();
+        buttonGO->AddComponent(uiButton);
+
+        scene->AddGameObject(buttonGO);
+
+        // Text GO (child): UIText centered, stretches to fill parent
+        auto* textGO = new RTBEngine::ECS::GameObject("Text");
+        textGO->SetParent(buttonGO);
+
+        auto* uiText = new RTBEngine::UI::UIText();
+        uiText->anchorMin        = RTBEngine::Math::Vector2(0.0f, 0.0f);
+        uiText->anchorMax        = RTBEngine::Math::Vector2(1.0f, 1.0f);
+        uiText->anchoredPosition = RTBEngine::Math::Vector2(0.0f, 0.0f);
+        uiText->sizeDelta        = RTBEngine::Math::Vector2(0.0f, 0.0f);
+        uiText->SetText("Button");
+        uiText->SetAlignment(RTBEngine::UI::TextAlignment::Center);
+        textGO->AddComponent(uiText);
+
+        scene->AddGameObject(textGO);
+
+        context.selectedGameObject = buttonGO;
+        RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+    }
+
+    void SceneHierarchyPanel::CollectDescendants(RTBEngine::ECS::GameObject* gameObject, std::vector<RTBEngine::ECS::GameObject*>& out) {
+        for (auto* child : gameObject->GetChildren()) {
+            CollectDescendants(child, out);
+            out.push_back(child);
+        }
+    }
+
+    void SceneHierarchyPanel::DeleteGameObject(RTBEngine::ECS::Scene* scene, RTBEngine::ECS::GameObject* gameObject, EditorContext& context) {
+        // Collect all descendants (deepest first) so they can be removed from the scene
+        std::vector<RTBEngine::ECS::GameObject*> descendants;
+        CollectDescendants(gameObject, descendants);
+
+        // Detach descendants from their parents to avoid dangling child pointers
+        for (auto* desc : descendants) {
+            if (desc->GetParent()) {
+                desc->SetParent(nullptr);
+            }
+        }
+
+        // Detach the root GO from its parent
+        if (gameObject->GetParent()) {
+            gameObject->SetParent(nullptr);
+        }
+
+        // Remove descendants from scene (unique_ptr destroyed here)
+        for (auto* desc : descendants) {
+            scene->RemoveGameObject(desc);
+        }
+
+        // Remove the GO itself
+        scene->RemoveGameObject(gameObject);
+
+        context.selectedGameObject = nullptr;
+        RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
     }
 
 }

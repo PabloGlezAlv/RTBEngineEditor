@@ -122,6 +122,7 @@ namespace RTBEditor {
 
         // Render editor UI
         if (uiLayer) {
+            uiLayer->SetEditorState(state);
             uiLayer->Begin();
             uiLayer->OnUIRender();
             uiLayer->End();

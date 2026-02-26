@@ -6,7 +6,7 @@ function CreateScene()
             {
                 name = "MainCamera",
                 uuid = "0E7CE370-7C0E-45A8-89CA-AD7A3E70C216",
-                position = Vector3(0.00, 1.00, 5.00),
+                position = Vector3(-0.00, -2.53, 4.94),
                 components = {
                     {
                         type = "CameraComponent",
@@ -89,20 +89,20 @@ function CreateScene()
                 },
                 children = {
                     {
-                        name = "HUDPanel",
-                        uuid = "A1B2C3D4-0001-4000-8000-000000000001",
+                        name = "LogoImage",
+                        uuid = "A1B2C3D4-0003-4000-8000-000000000003",
                         components = {
                             {
-                                type = "UIPanel",
-                                backgroundColor = Vector4(1.00, 1.00, 1.00, 1.00),
-                                borderColor = Vector4(0.40, 0.40, 0.40, 1.00),
-                                borderThickness = 2.00,
-                                hasBorder = true,
+                                type = "UIImage",
+                                texture = "Assets/Textures/testTexture.png",
+                                tintColor = Vector4(1.00, 1.00, 1.00, 1.00),
+                                preserveAspect = true,
                                 isVisible = true,
+                                raycastTarget = true,
                                 anchorMin = Vector2(0.00, 0.00),
                                 anchorMax = Vector2(0.00, 0.00),
-                                anchoredPosition = Vector2(0.00, 0.00),
-                                sizeDelta = Vector2(100.00, 100.00)
+                                anchoredPosition = Vector2(198.50, 22.10),
+                                sizeDelta = Vector2(25.00, 25.00)
                             },
                         }
                     },
@@ -116,8 +116,9 @@ function CreateScene()
                                 color = Vector4(1.00, 1.00, 1.00, 1.00),
                                 fontSize = 28.00,
                                 alignment = 0,
-                                font = "",
+                                font = nil,
                                 isVisible = true,
+                                raycastTarget = false,
                                 anchorMin = Vector2(0.00, 0.00),
                                 anchorMax = Vector2(0.00, 0.00),
                                 anchoredPosition = Vector2(69.80, 20.70),
@@ -126,37 +127,51 @@ function CreateScene()
                         }
                     },
                     {
-                        name = "LogoImage",
-                        uuid = "A1B2C3D4-0003-4000-8000-000000000003",
+                        name = "Button",
+                        uuid = "8EA9A9F4-55AD-46BB-B8AF-B7CD5969EF80",
                         components = {
                             {
-                                type = "UIImage",
-                                texture = "Assets/Textures/testTexture.png",
-                                tintColor = Vector4(1.00, 1.00, 1.00, 1.00),
-                                preserveAspect = true,
+                                type = "UIPanel",
+                                backgroundColor = Vector4(1.00, 1.00, 1.00, 0.37),
+                                borderColor = Vector4(1.00, 1.00, 1.00, 1.00),
+                                borderThickness = 1.00,
+                                hasBorder = false,
                                 isVisible = true,
-                                anchorMin = Vector2(0.00, 0.00),
-                                anchorMax = Vector2(0.00, 0.00),
-                                anchoredPosition = Vector2(198.50, 22.10),
-                                sizeDelta = Vector2(25.00, 25.00)
+                                raycastTarget = true,
+                                anchorMin = Vector2(0.50, 0.50),
+                                anchorMax = Vector2(0.50, 0.50),
+                                anchoredPosition = Vector2(0.00, 0.00),
+                                sizeDelta = Vector2(160.00, 40.00)
                             },
-                        }
-                    },
-                    {
-                        name = "PlayButton",
-                        uuid = "A1B2C3D4-0004-4000-8000-000000000004",
-                        components = {
                             {
                                 type = "UIButton",
-                                normalColor = Vector4(0.20, 0.60, 1.00, 1.00),
-                                hoveredColor = Vector4(0.30, 0.70, 1.00, 1.00),
-                                pressedColor = Vector4(0.10, 0.40, 0.80, 1.00),
+                                normalColor = Vector4(1.00, 1.00, 1.00, 0.48),
+                                hoveredColor = Vector4(0.90, 0.90, 0.90, 1.00),
+                                pressedColor = Vector4(0.70, 0.70, 0.70, 1.00),
                                 disabledColor = Vector4(0.50, 0.50, 0.50, 0.50),
-                                interactable = true,
-                                anchorMin = Vector2(0.00, 0.00),
-                                anchorMax = Vector2(0.00, 0.00),
-                                anchoredPosition = Vector2(-43.00, 0.00),
-                                sizeDelta = Vector2(100.00, 100.00)
+                                interactable = true
+                            },
+                        },
+                        children = {
+                            {
+                                name = "Text",
+                                uuid = "0A595D55-A62A-43F8-8CC5-B0229AB450E2",
+                                components = {
+                                    {
+                                        type = "UIText",
+                                        text = "PULSAR",
+                                        color = Vector4(1.00, 1.00, 1.00, 1.00),
+                                        fontSize = 16.00,
+                                        alignment = 1,
+                                        font = nil,
+                                        isVisible = true,
+                                        raycastTarget = false,
+                                        anchorMin = Vector2(0.00, 0.00),
+                                        anchorMax = Vector2(1.00, 1.00),
+                                        anchoredPosition = Vector2(0.00, 0.00),
+                                        sizeDelta = Vector2(0.00, 0.00)
+                                    },
+                                }
                             },
                         }
                     },
@@ -171,7 +186,7 @@ function CreateScene()
                     {
                         type = "MeshRenderer",
                         meshRef = "Default/Models/cube.obj",
-                        textureRef = "",
+                        textureRef = nil,
                         colorRef = Vector4(1.00, 1.00, 1.00, 1.00)
                     },
                 }
@@ -184,7 +199,7 @@ function CreateScene()
                     {
                         type = "MeshRenderer",
                         meshRef = "Default/Models/cube.obj",
-                        textureRef = "",
+                        textureRef = nil,
                         colorRef = Vector4(1.00, 1.00, 1.00, 1.00)
                     },
                 }
@@ -197,8 +212,8 @@ function CreateScene()
                 components = {
                     {
                         type = "MeshRenderer",
-                        meshRef = "",
-                        textureRef = "",
+                        meshRef = nil,
+                        textureRef = nil,
                         colorRef = Vector4(1.00, 1.00, 1.00, 1.00)
                     },
                     {

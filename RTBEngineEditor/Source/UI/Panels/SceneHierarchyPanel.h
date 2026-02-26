@@ -2,6 +2,8 @@
 
 #include "EditorPanel.h"
 #include <RTBEngine/ECS/GameObject.h>
+#include <RTBEngine/ECS/Scene.h>
+#include <vector>
 
 namespace RTBEditor {
 
@@ -14,8 +16,9 @@ namespace RTBEditor {
 
     private:
         void DrawGameObjectNode(RTBEngine::ECS::GameObject* gameObject, EditorContext& context);
-
-    private:
+        void CreateUIButton(RTBEngine::ECS::Scene* scene, EditorContext& context, RTBEngine::ECS::GameObject* parent = nullptr);
+        void CollectDescendants(RTBEngine::ECS::GameObject* gameObject, std::vector<RTBEngine::ECS::GameObject*>& out);
+        void DeleteGameObject(RTBEngine::ECS::Scene* scene, RTBEngine::ECS::GameObject* gameObject, EditorContext& context);
     };
 
 }
