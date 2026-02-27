@@ -167,8 +167,10 @@ namespace RTBEditor {
         auto* go = new RTBEngine::ECS::GameObject("Sphere");
         if (parent) go->SetParent(parent);
 
+        auto& resources = RTBEngine::Core::ResourceManager::GetInstance();
         auto* renderer = new RTBEngine::ECS::MeshRenderer();
-        renderer->SetMesh(RTBEngine::Core::ResourceManager::GetInstance().GetDefaultSphere());
+        renderer->SetMesh(resources.GetDefaultSphere());
+        renderer->SetShader(resources.GetShader("basic"));
         go->AddComponent(renderer);
 
         scene->AddGameObject(go);
@@ -180,8 +182,10 @@ namespace RTBEditor {
         auto* go = new RTBEngine::ECS::GameObject("Cube");
         if (parent) go->SetParent(parent);
 
+        auto& resources = RTBEngine::Core::ResourceManager::GetInstance();
         auto* renderer = new RTBEngine::ECS::MeshRenderer();
-        renderer->SetMesh(RTBEngine::Core::ResourceManager::GetInstance().GetDefaultCube());
+        renderer->SetMesh(resources.GetDefaultCube());
+        renderer->SetShader(resources.GetShader("basic"));
         go->AddComponent(renderer);
 
         scene->AddGameObject(go);
@@ -193,8 +197,10 @@ namespace RTBEditor {
         auto* go = new RTBEngine::ECS::GameObject("Plane");
         if (parent) go->SetParent(parent);
 
+        auto& resources = RTBEngine::Core::ResourceManager::GetInstance();
         auto* renderer = new RTBEngine::ECS::MeshRenderer();
-        renderer->SetMesh(RTBEngine::Core::ResourceManager::GetInstance().GetDefaultPlane());
+        renderer->SetMesh(resources.GetDefaultPlane());
+        renderer->SetShader(resources.GetShader("basic"));
         go->AddComponent(renderer);
 
         scene->AddGameObject(go);

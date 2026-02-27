@@ -212,7 +212,7 @@ function CreateScene()
                 components = {
                     {
                         type = "MeshRenderer",
-                        meshRef = "Assets/Models/walking.fbx",
+                        meshRef = nil,
                         textureRef = nil,
                         colorRef = Vector4(1.00, 1.00, 1.00, 1.00)
                     },
@@ -223,6 +223,20 @@ function CreateScene()
                         speed = 1.00,
                         playing = true,
                         looping = true
+                    },
+                }
+            },
+            {
+                name = "Cube",
+                uuid = "8FB4850C-0A3A-41D9-866E-BB98439FE7DD",
+                position = Vector3(-2.03, 1.10, 0.00),
+                scale = Vector3(1.22, 1.22, 1.22),
+                components = {
+                    {
+                        type = "MeshRenderer",
+                        meshRef = "Default/Models/cube.obj",
+                        textureRef = nil,
+                        colorRef = Vector4(1.00, 1.00, 1.00, 1.00)
                     },
                 }
             },
