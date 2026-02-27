@@ -202,9 +202,6 @@ namespace RTBEditor {
     }
 
     void EditorApplication::Shutdown() {
-
-        uiLayer.reset();
-
         if (engineApp) {
             engineApp->Shutdown();
             engineApp.reset();
