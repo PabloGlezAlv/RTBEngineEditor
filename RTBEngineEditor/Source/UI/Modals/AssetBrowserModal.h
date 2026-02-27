@@ -20,7 +20,8 @@ namespace RTBEditor {
         ~AssetBrowserModal();
 
         // Open the modal with a filter
-        void Open(AssetType type, std::function<void(const std::string&)> onAssetSelected);
+        void Open(AssetType type, std::function<void(const std::string&)> onAssetSelected, 
+        std::function<void(const std::string&)> onDefaultAssetSelected = nullptr);
 
         // Render the modal (call every frame)
         void Render();
@@ -32,7 +33,11 @@ namespace RTBEditor {
         bool isOpen = false;
         AssetType filterType = AssetType::Any;
         std::function<void(const std::string&)> callback;
-
+        std::function<void(const std::string&)> defaultCallback;
+        
+        bool atRoot = true;
+        std::filesystem::path assetsDirectory;
+        std::filesystem::path defaultDirectory;
         std::filesystem::path currentDirectory;
         std::filesystem::path rootDirectory;
 

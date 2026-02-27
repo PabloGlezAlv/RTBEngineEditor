@@ -6,7 +6,8 @@ function CreateScene()
             {
                 name = "MainCamera",
                 uuid = "0E7CE370-7C0E-45A8-89CA-AD7A3E70C216",
-                position = Vector3(-0.00, -2.53, 4.94),
+                position = Vector3(-0.00, 1.00, 4.94),
+                rotation = Quaternion.FromEulerAngles(0.00, -3.12, 0.00),
                 components = {
                     {
                         type = "CameraComponent",
@@ -14,7 +15,7 @@ function CreateScene()
                         nearClip = 0.10,
                         farClip = 100.00,
                         projectionType = 0,
-                        orthographicSize = 10.00,
+                        orthographicSize = 3.50,
                         syncWithTransform = true,
                         isMainCamera = true
                     },
@@ -132,7 +133,7 @@ function CreateScene()
                         components = {
                             {
                                 type = "UIPanel",
-                                backgroundColor = Vector4(1.00, 1.00, 1.00, 0.37),
+                                backgroundColor = Vector4(1.00, 1.00, 1.00, 0.48),
                                 borderColor = Vector4(1.00, 1.00, 1.00, 1.00),
                                 borderThickness = 1.00,
                                 hasBorder = false,

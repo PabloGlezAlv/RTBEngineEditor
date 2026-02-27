@@ -300,10 +300,13 @@ namespace RTBEditor {
                 ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.2f, 0.5f, 0.8f, 0.5f));
 
                 if (*texPtr) {
-                    ImGui::Button("[Texture Set]##TextureDropArea", ImVec2(100, 0));
+                    auto& rm = RTBEngine::Core::ResourceManager::GetInstance();
+                    std::string path = rm.GetTexturePath((RTBEngine::Rendering::Texture*)*texPtr);
+                    std::string label = (path.empty() ? "[Texture Set]" : path) + "##TextureDropArea";
+                    ImGui::Button(label.c_str(), ImVec2(150, 0));
                 }
                 else {
-                    ImGui::Button("[None]##TextureDropArea", ImVec2(100, 0));
+                    ImGui::Button("[None]##TextureDropArea", ImVec2(150, 0));
                 }
 
                 ImGui::PopStyleColor(4); // Pop text color + button colors
@@ -324,14 +327,17 @@ namespace RTBEditor {
 
                 ImGui::SameLine();
                 if (ImGui::SmallButton("...##SelectTexture")) {
-                    assetBrowserModal->Open(AssetType::Texture, [texPtr](const std::string& path) {
-                        std::string fullPath = std::string("Assets/") + path;
-                        auto* texture = RTBEngine::Core::ResourceManager::GetInstance().LoadTexture(fullPath);
-                        if (texture) {
-                            *texPtr = texture;
-                            RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                    assetBrowserModal->Open(
+                        AssetType::Texture,
+                        [texPtr](const std::string& path) {
+                            auto* tex = RTBEngine::Core::ResourceManager::GetInstance().LoadTexture("Assets/" + path);
+                            if (tex) { *texPtr = tex; RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty(); }
+                        },
+                        [texPtr](const std::string& path) {
+                            auto* tex = RTBEngine::Core::ResourceManager::GetInstance().LoadTexture(path);
+                            if (tex) { *texPtr = tex; RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty(); }
                         }
-                    });
+                    );
                 }
                 ImGui::SameLine();
                 if (ImGui::SmallButton("X##ClearTexture")) {
@@ -360,10 +366,13 @@ namespace RTBEditor {
                 ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.2f, 0.5f, 0.8f, 0.5f));
 
                 if (*clipPtr) {
-                    ImGui::Button("[AudioClip Set]##AudioDropArea", ImVec2(120, 0));
+                    auto& rm = RTBEngine::Core::ResourceManager::GetInstance();
+                    std::string path = rm.GetAudioClipPath((RTBEngine::Audio::AudioClip*)*clipPtr);
+                    std::string label = (path.empty() ? "[AudioClip Set]" : path) + "##AudioDropArea";
+                    ImGui::Button(label.c_str(), ImVec2(150, 0));
                 }
                 else {
-                    ImGui::Button("[None]##AudioDropArea", ImVec2(120, 0));
+                    ImGui::Button("[None]##AudioDropArea", ImVec2(150, 0));
                 }
 
                 ImGui::PopStyleColor(4); // Pop text color + button colors
@@ -420,10 +429,13 @@ namespace RTBEditor {
                 ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.2f, 0.5f, 0.8f, 0.5f));
 
                 if (*meshPtr) {
-                    ImGui::Button("[Mesh Set]##MeshDropArea", ImVec2(100, 0));
+                    auto& rm = RTBEngine::Core::ResourceManager::GetInstance();
+                    std::string path = rm.GetMeshPath((RTBEngine::Rendering::Mesh*)*meshPtr);
+                    std::string label = (path.empty() ? "[Mesh Set]" : path) + "##MeshDropArea";
+                    ImGui::Button(label.c_str(), ImVec2(150, 0));
                 }
                 else {
-                    ImGui::Button("[None]##MeshDropArea", ImVec2(100, 0));
+                    ImGui::Button("[None]##MeshDropArea", ImVec2(150, 0));
                 }
 
                 ImGui::PopStyleColor(4); // Pop text color + button colors
@@ -444,14 +456,17 @@ namespace RTBEditor {
 
                 ImGui::SameLine();
                 if (ImGui::SmallButton("...##SelectMesh")) {
-                    assetBrowserModal->Open(AssetType::Mesh, [meshPtr](const std::string& path) {
-                        std::string fullPath = std::string("Assets/") + path;
-                        auto* mesh = RTBEngine::Core::ResourceManager::GetInstance().LoadModel(fullPath);
-                        if (mesh) {
-                            *meshPtr = mesh;
-                            RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                    assetBrowserModal->Open(
+                        AssetType::Mesh,
+                        [meshPtr](const std::string& path) {
+                            auto* mesh = RTBEngine::Core::ResourceManager::GetInstance().LoadModel("Assets/" + path);
+                            if (mesh) { *meshPtr = mesh; RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty(); }
+                        },
+                        [meshPtr](const std::string& path) {
+                            auto* mesh = RTBEngine::Core::ResourceManager::GetInstance().LoadModel(path);
+                            if (mesh) { *meshPtr = mesh; RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty(); }
                         }
-                    });
+                    );
                 }
                 ImGui::SameLine();
                 if (ImGui::SmallButton("X##ClearMesh")) {
@@ -479,9 +494,12 @@ namespace RTBEditor {
                 ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.2f, 0.5f, 0.8f, 0.5f));
 
                 if (*fontPtr) {
-                    ImGui::Button("[Font Set]##FontDropArea", ImVec2(100, 0));
+                    auto& rm = RTBEngine::Core::ResourceManager::GetInstance();
+                    std::string path = rm.GetFontPath((RTBEngine::Rendering::Font*)*fontPtr);
+                    std::string label = (path.empty() ? "[Font Set]" : path) + "##FontDropArea";
+                    ImGui::Button(label.c_str(), ImVec2(150, 0));
                 } else {
-                    ImGui::Button("[None]##FontDropArea", ImVec2(100, 0));
+                    ImGui::Button("[None]##FontDropArea", ImVec2(150, 0));
                 }
 
                 ImGui::PopStyleColor(4); // Pop text color + button colors
@@ -505,17 +523,19 @@ namespace RTBEditor {
 
                 ImGui::SameLine();
                 if (ImGui::SmallButton("...##SelectFont")) {
-                    assetBrowserModal->Open(AssetType::Font, [fontPtr](const std::string& path) {
-                        std::string fullPath = std::string("Assets/") + path;
-
-                        // Default font sizes
-                        float sizes[] = { 12.0f, 16.0f, 18.0f, 24.0f, 32.0f, 48.0f };
-                        auto* font = RTBEngine::Core::ResourceManager::GetInstance().LoadFont(fullPath, sizes, 6);
-                        if (font) {
-                            *fontPtr = font;
-                            RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                    assetBrowserModal->Open(
+                        AssetType::Font,
+                        [fontPtr](const std::string& path) {
+                            float sizes[] = { 12.0f, 16.0f, 18.0f, 24.0f, 32.0f, 48.0f };
+                            auto* font = RTBEngine::Core::ResourceManager::GetInstance().LoadFont("Assets/" + path, sizes, 6);
+                            if (font) { *fontPtr = font; RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty(); }
+                        },
+                        [fontPtr](const std::string& path) {
+                            float sizes[] = { 12.0f, 16.0f, 18.0f, 24.0f, 32.0f, 48.0f };
+                            auto* font = RTBEngine::Core::ResourceManager::GetInstance().LoadFont(path, sizes, 6);
+                            if (font) { *fontPtr = font; RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty(); }
                         }
-                    });
+                    );
                 }
                 ImGui::SameLine();
                 if (ImGui::SmallButton("X##ClearFont")) {

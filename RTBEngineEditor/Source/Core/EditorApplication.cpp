@@ -88,6 +88,16 @@ namespace RTBEditor {
 
         if (state == EditorState::Play) {
             engineApp->Update(deltaTime);
+        } else {
+            // In Edit/Pause mode, sync component properties so inspector changes reflect in the viewport
+            RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
+            if (scene) {
+                for (auto& go : scene->GetGameObjects()) {
+                    for (auto& comp : go->GetComponents()) {
+                        comp->OnValidate();
+                    }
+                }
+            }
         }
     }
 
@@ -192,6 +202,9 @@ namespace RTBEditor {
     }
 
     void EditorApplication::Shutdown() {
+
+        uiLayer.reset();
+
         if (engineApp) {
             engineApp->Shutdown();
             engineApp.reset();

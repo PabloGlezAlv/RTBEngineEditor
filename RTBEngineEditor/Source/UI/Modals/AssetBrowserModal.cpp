@@ -8,22 +8,29 @@ namespace RTBEditor {
 
     AssetBrowserModal::AssetBrowserModal() {
         if (Project::GetActiveProject()) {
-            rootDirectory = Project::GetActiveProject()->GetAssetDirectory();
+            assetsDirectory = Project::GetActiveProject()->GetAssetDirectory();
+        } else {
+            assetsDirectory = "Assets";
         }
-        else {
-            rootDirectory = "Assets";
-        }
-        currentDirectory = rootDirectory;
+        defaultDirectory = "Default";
+        rootDirectory = assetsDirectory; 
+        currentDirectory = assetsDirectory;
+        atRoot = true;
     }
+
 
     AssetBrowserModal::~AssetBrowserModal() {}
 
-    void AssetBrowserModal::Open(AssetType type, std::function<void(const std::string&)> onAssetSelected) {
+    void AssetBrowserModal::Open(AssetType type, std::function<void(const std::string&)> onAssetSelected,
+        std::function<void(const std::string&)> onDefaultAssetSelected) {
         filterType = type;
         callback = onAssetSelected;
+        defaultCallback = onDefaultAssetSelected;
         currentDirectory = rootDirectory;
         isOpen = true;
+        atRoot = true;
     }
+
 
     std::vector<std::string> AssetBrowserModal::GetFilterExtensions() {
         switch (filterType) {
@@ -55,7 +62,7 @@ namespace RTBEditor {
 
     void AssetBrowserModal::Render() {
         if (!isOpen) return;
-        
+
         if (isOpen && !ImGui::IsPopupOpen("Select Asset")) {
             ImGui::OpenPopup("Select Asset");
         }
@@ -64,14 +71,21 @@ namespace RTBEditor {
 
         if (ImGui::BeginPopupModal("Select Asset", &isOpen, ImGuiWindowFlags_NoCollapse)) {
 
-            // Breadcrumbs
-            if (currentDirectory != rootDirectory) {
+            // Back button and path
+            if (!atRoot) {
+                bool atFirstLevel = (currentDirectory == assetsDirectory || currentDirectory == defaultDirectory);
                 if (ImGui::Button("<- Back")) {
-                    currentDirectory = currentDirectory.parent_path();
+                    if (atFirstLevel) {
+                        atRoot = true;
+                    } else {
+                        currentDirectory = currentDirectory.parent_path();
+                    }
                 }
                 ImGui::SameLine();
+                ImGui::Text("Path: %s", currentDirectory.string().c_str());
+            } else {
+                ImGui::Text("Select source:");
             }
-            ImGui::Text("Path: %s", std::filesystem::relative(currentDirectory, rootDirectory).string().c_str());
             ImGui::Separator();
 
             // Filter info
@@ -85,30 +99,55 @@ namespace RTBEditor {
             // File list
             ImGui::BeginChild("FileList", ImVec2(0, -30), true);
 
-            if (std::filesystem::exists(currentDirectory)) {
-                for (auto& entry : std::filesystem::directory_iterator(currentDirectory)) {
-                    if (!MatchesFilter(entry.path())) continue;
-
-                    std::string filename = entry.path().filename().string();
-                    bool isDirectory = entry.is_directory();
-
-                    if (isDirectory) {
-                        if (ImGui::Selectable((" 📁 " + filename).c_str(), false, ImGuiSelectableFlags_AllowDoubleClick)) {
-                            if (ImGui::IsMouseDoubleClicked(0)) {
-                                currentDirectory /= entry.path().filename();
-                            }
-                        }
+            if (atRoot) {
+                if (ImGui::Selectable("[D] Assets", false, ImGuiSelectableFlags_AllowDoubleClick)) {
+                    if (ImGui::IsMouseDoubleClicked(0)) {
+                        currentDirectory = assetsDirectory;
+                        atRoot = false;
                     }
-                    else {
-                        if (ImGui::Selectable(("📄 " + filename).c_str(), false, ImGuiSelectableFlags_AllowDoubleClick)) {
-                            if (ImGui::IsMouseDoubleClicked(0)) {
-                                // Selected! Return relative path
-                                std::string relativePath = std::filesystem::relative(entry.path(), rootDirectory).string();
-                                if (callback) {
-                                    callback(relativePath);
+                }
+                if (ImGui::Selectable("[D] Default", false, ImGuiSelectableFlags_AllowDoubleClick)) {
+                    if (ImGui::IsMouseDoubleClicked(0)) {
+                        currentDirectory = defaultDirectory;
+                        atRoot = false;
+                    }
+                }
+            } else {
+                bool inDefault = currentDirectory.string().find(defaultDirectory.string()) == 0;
+
+                if (std::filesystem::exists(currentDirectory)) {
+                    for (auto& entry : std::filesystem::directory_iterator(currentDirectory)) {
+                        if (!MatchesFilter(entry.path())) continue;
+
+                        std::string filename = entry.path().filename().string();
+                        bool isDirectory = entry.is_directory();
+
+                        if (isDirectory) {
+                            if (ImGui::Selectable(("[D] " + filename).c_str(), false, ImGuiSelectableFlags_AllowDoubleClick)) {
+                                if (ImGui::IsMouseDoubleClicked(0)) {
+                                    currentDirectory /= entry.path().filename();
                                 }
-                                isOpen = false;
-                                ImGui::CloseCurrentPopup();
+                            }
+                        } else {
+                            if (ImGui::Selectable(("[F] " + filename).c_str(), false, ImGuiSelectableFlags_AllowDoubleClick)) {
+                                if (ImGui::IsMouseDoubleClicked(0)) {
+                                    if (inDefault) {
+                                        // Reconstruct "Default/subpath/file" from the current path string
+                                        std::string cur = currentDirectory.string();
+                                        std::string def = defaultDirectory.string();
+                                        std::string sub = cur.size() > def.size() ? cur.substr(def.size() + 1) + "/" : "";
+                                        std::string relStr = def + "/" + (sub.empty() ? "" : sub) + filename;
+                                        std::replace(relStr.begin(), relStr.end(), '\\', '/');
+                                        if (defaultCallback) defaultCallback(relStr);
+                                    } else {
+                                        std::filesystem::path rel = std::filesystem::relative(entry.path(), assetsDirectory);
+                                        std::string relStr = rel.string();
+                                        std::replace(relStr.begin(), relStr.end(), '\\', '/');
+                                        if (callback) callback(relStr);
+                                    }
+                                    isOpen = false;
+                                    ImGui::CloseCurrentPopup();
+                                }
                             }
                         }
                     }
