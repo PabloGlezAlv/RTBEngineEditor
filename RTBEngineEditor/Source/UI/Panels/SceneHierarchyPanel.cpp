@@ -2,6 +2,9 @@
 #include <imgui.h>
 #include <RTBEngine/ECS/SceneManager.h>
 #include <RTBEngine/ECS/Scene.h>
+#include <RTBEngine/ECS/MeshRenderer.h>
+#include <RTBEngine/Core/ResourceManager.h>
+#include <RTBEngine/UI/Canvas.h>
 #include <RTBEngine/UI/Elements/UIButton.h>
 #include <RTBEngine/UI/Elements/UIContainer.h>
 #include <RTBEngine/UI/Elements/UIPanel.h>
@@ -56,12 +59,24 @@ namespace RTBEditor {
 
             // Context menu for the window
             if (ImGui::BeginPopupContextWindow()) {
-                if (ImGui::MenuItem("Create Empty Object")) {
-                    auto* go = new RTBEngine::ECS::GameObject("GameObject");
-                    if (creationParent) go->SetParent(creationParent);
-                    activeScene->AddGameObject(go);
-                    context.selectedGameObject = go;
-                    RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                if (ImGui::BeginMenu("GameObject")) {
+                    if (ImGui::MenuItem("Empty Object")) {
+                        auto* go = new RTBEngine::ECS::GameObject("GameObject");
+                        if (creationParent) go->SetParent(creationParent);
+                        activeScene->AddGameObject(go);
+                        context.selectedGameObject = go;
+                        RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                    }
+                    if (ImGui::MenuItem("Sphere")) {
+                        CreateSphere(activeScene, context, creationParent);
+                    }
+                    if (ImGui::MenuItem("Cube")) {
+                        CreateCube(activeScene, context, creationParent);
+                    }
+                    if (ImGui::MenuItem("Plane")) {
+                        CreatePlane(activeScene, context, creationParent);
+                    }
+                    ImGui::EndMenu();
                 }
                 if (ImGui::BeginMenu("UI")) {
                     if (ImGui::MenuItem("Empty")) {
@@ -73,8 +88,14 @@ namespace RTBEditor {
                         context.selectedGameObject = go;
                         RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
                     }
+                    if (ImGui::MenuItem("Canvas")) {
+                        CreateCanvas(activeScene, context, creationParent);
+                    }
                     if (ImGui::MenuItem("Button")) {
                         CreateUIButton(activeScene, context, creationParent);
+                    }
+                    if (ImGui::MenuItem("Text")) {
+                        CreateUIText(activeScene, context, creationParent);
                     }
                     ImGui::EndMenu();
                 }
@@ -140,6 +161,76 @@ namespace RTBEditor {
             }
             ImGui::TreePop();
         }
+    }
+
+    void SceneHierarchyPanel::CreateSphere(RTBEngine::ECS::Scene* scene, EditorContext& context, RTBEngine::ECS::GameObject* parent) {
+        auto* go = new RTBEngine::ECS::GameObject("Sphere");
+        if (parent) go->SetParent(parent);
+
+        auto* renderer = new RTBEngine::ECS::MeshRenderer();
+        renderer->SetMesh(RTBEngine::Core::ResourceManager::GetInstance().GetDefaultSphere());
+        go->AddComponent(renderer);
+
+        scene->AddGameObject(go);
+        context.selectedGameObject = go;
+        RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+    }
+
+    void SceneHierarchyPanel::CreateCube(RTBEngine::ECS::Scene* scene, EditorContext& context, RTBEngine::ECS::GameObject* parent) {
+        auto* go = new RTBEngine::ECS::GameObject("Cube");
+        if (parent) go->SetParent(parent);
+
+        auto* renderer = new RTBEngine::ECS::MeshRenderer();
+        renderer->SetMesh(RTBEngine::Core::ResourceManager::GetInstance().GetDefaultCube());
+        go->AddComponent(renderer);
+
+        scene->AddGameObject(go);
+        context.selectedGameObject = go;
+        RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+    }
+
+    void SceneHierarchyPanel::CreatePlane(RTBEngine::ECS::Scene* scene, EditorContext& context, RTBEngine::ECS::GameObject* parent) {
+        auto* go = new RTBEngine::ECS::GameObject("Plane");
+        if (parent) go->SetParent(parent);
+
+        auto* renderer = new RTBEngine::ECS::MeshRenderer();
+        renderer->SetMesh(RTBEngine::Core::ResourceManager::GetInstance().GetDefaultPlane());
+        go->AddComponent(renderer);
+
+        scene->AddGameObject(go);
+        context.selectedGameObject = go;
+        RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+    }
+
+    void SceneHierarchyPanel::CreateCanvas(RTBEngine::ECS::Scene* scene, EditorContext& context, RTBEngine::ECS::GameObject* parent) {
+        auto* go = new RTBEngine::ECS::GameObject("Canvas");
+        if (parent) go->SetParent(parent);
+
+        auto* canvas = new RTBEngine::UI::Canvas();
+        canvas->SetRenderMode(RTBEngine::UI::Canvas::RenderMode::ScreenSpaceOverlay);
+        go->AddComponent(canvas);
+
+        scene->AddGameObject(go);
+        context.selectedGameObject = go;
+        RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+    }
+
+    void SceneHierarchyPanel::CreateUIText(RTBEngine::ECS::Scene* scene, EditorContext& context, RTBEngine::ECS::GameObject* parent) {
+        auto* go = new RTBEngine::ECS::GameObject("Text");
+        if (parent) go->SetParent(parent);
+
+        auto* uiText = new RTBEngine::UI::UIText();
+        uiText->anchorMin        = RTBEngine::Math::Vector2(0.5f, 0.5f);
+        uiText->anchorMax        = RTBEngine::Math::Vector2(0.5f, 0.5f);
+        uiText->anchoredPosition = RTBEngine::Math::Vector2(0.0f, 0.0f);
+        uiText->sizeDelta        = RTBEngine::Math::Vector2(160.0f, 30.0f);
+        uiText->SetText("Text");
+        uiText->SetAlignment(RTBEngine::UI::TextAlignment::Center);
+        go->AddComponent(uiText);
+
+        scene->AddGameObject(go);
+        context.selectedGameObject = go;
+        RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
     }
 
     void SceneHierarchyPanel::CreateUIButton(RTBEngine::ECS::Scene* scene, EditorContext& context, RTBEngine::ECS::GameObject* parent) {
