@@ -299,9 +299,16 @@ namespace RTBEditor {
             float position[3], rotation[3], scale[3];
             ImGuizmo::DecomposeMatrixToComponents(modelMatrix.GetData(), position, rotation, scale);
 
+            // ImGuizmo returns degrees; Transform::SetRotation expects radians
+            constexpr float kDeg2Rad = 3.14159265f / 180.0f;
+
             // Update the transform
             transform.SetPosition(RTBEngine::Math::Vector3(position[0], position[1], position[2]));
-            transform.SetRotation(RTBEngine::Math::Vector3(rotation[0], rotation[1], rotation[2]));
+            transform.SetRotation(RTBEngine::Math::Vector3(
+                rotation[0] * kDeg2Rad,
+                rotation[1] * kDeg2Rad,
+                rotation[2] * kDeg2Rad
+            ));
             transform.SetScale(RTBEngine::Math::Vector3(scale[0], scale[1], scale[2]));
             
             // Notify components that something has changed
