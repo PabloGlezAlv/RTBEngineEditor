@@ -13,6 +13,9 @@
 #include <RTBEngine/UI/UIElement.h>
 #include "../DragDropPayloads.h"
 #include "../Modals/AssetBrowserModal.h"
+#include "../../Project/Project.h"
+#include <fstream>
+#include <sstream>
 
 namespace RTBEditor {
 
@@ -87,6 +90,12 @@ namespace RTBEditor {
 
             componentsToRemove.clear();
 
+        } else if (!context.selectedAssetPath.empty()) {
+            std::string ext = context.selectedAssetPath.extension().string();
+            for (auto& c : ext) c = std::tolower(c);
+            if (ext == ".cubemap") {
+                DrawCubemapAssetInspector(context.selectedAssetPath);
+            }
         } else {
             ImGui::Text("Select a GameObject to see its properties.");
         }
@@ -688,5 +697,132 @@ namespace RTBEditor {
             result += typeName[i];
         }
         return result;
+    }
+
+    void InspectorPanel::DrawCubemapAssetInspector(const std::filesystem::path& cubemapPath) {
+        // Reload cached data when a different file is selected
+        if (cubemapEditorPath != cubemapPath) {
+            cubemapEditorPath = cubemapPath;
+            cubemapFaces.fill(std::string());
+
+            std::ifstream file(cubemapPath);
+            if (file.is_open()) {
+                static const char* faceKeys[] = { "right", "left", "top", "bottom", "front", "back" };
+                std::string line;
+                while (std::getline(file, line)) {
+                    auto sep = line.find('=');
+                    if (sep == std::string::npos) continue;
+                    std::string key   = line.substr(0, sep);
+                    std::string value = line.substr(sep + 1);
+                    auto trim = [](std::string& s) {
+                        size_t start = s.find_first_not_of(" \t\r\n");
+                        size_t end   = s.find_last_not_of(" \t\r\n");
+                        s = (start == std::string::npos) ? "" : s.substr(start, end - start + 1);
+                    };
+                    trim(key);
+                    trim(value);
+                    for (int i = 0; i < 6; ++i) {
+                        if (key == faceKeys[i]) {
+                            cubemapFaces[i] = value;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        ImGui::Text("Cubemap Asset");
+        ImGui::Text("%s", cubemapPath.filename().string().c_str());
+        ImGui::Separator();
+        ImGui::Spacing();
+
+        static const char* faceLabels[] = { "Right (+X)", "Left  (-X)", "Top   (+Y)", "Bottom(-Y)", "Front (+Z)", "Back  (-Z)" };
+        static const char* faceIds[]    = { "##right", "##left", "##top", "##bottom", "##front", "##back" };
+
+        bool changed = false;
+        for (int i = 0; i < 6; ++i) {
+            ImGui::Text("%s", faceLabels[i]);
+            ImGui::SameLine();
+
+            bool hasTexture = !cubemapFaces[i].empty();
+            ImGui::PushStyleColor(ImGuiCol_Text, hasTexture
+                ? ImVec4(0.4f, 0.8f, 0.4f, 1.0f)
+                : ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.2f, 0.5f, 0.8f, 0.3f));
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive,  ImVec4(0.2f, 0.5f, 0.8f, 0.5f));
+
+            std::string label = (hasTexture
+                ? std::filesystem::path(cubemapFaces[i]).filename().string()
+                : std::string("[None]")) + faceIds[i];
+            ImGui::Button(label.c_str(), ImVec2(ImGui::GetContentRegionAvail().x - 52.0f, 0));
+            ImGui::PopStyleColor(4);
+
+            // Drag-drop target for texture
+            if (ImGui::BeginDragDropTarget()) {
+                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(PAYLOAD_TEXTURE)) {
+                    const TexturePayload* data = static_cast<const TexturePayload*>(payload->Data);
+
+                    std::filesystem::path assetRoot = Project::GetActiveProject()
+                        ? Project::GetActiveProject()->GetAssetDirectory()
+                        : std::filesystem::path("Assets");
+                    std::string fullPath = (assetRoot / data->path).string();
+                    for (char& c : fullPath) if (c == '\\') c = '/';
+                    cubemapFaces[i] = fullPath;
+                    changed = true;
+                }
+                ImGui::EndDragDropTarget();
+            }
+
+            ImGui::SameLine();
+            ImGui::PushID(i);
+
+            // Browse button — opens asset browser modal
+            if (ImGui::SmallButton("...")) {
+                int capturedIndex = i;
+                assetBrowserModal->Open(
+                    AssetType::Texture,
+                    [this, capturedIndex](const std::string& path) {
+                        // path is relative to Assets/
+                        std::filesystem::path assetRoot = Project::GetActiveProject()
+                            ? Project::GetActiveProject()->GetAssetDirectory()
+                            : std::filesystem::path("Assets");
+                        std::string fullPath = (assetRoot / path).string();
+                        for (char& c : fullPath) if (c == '\\') c = '/';
+                        cubemapFaces[capturedIndex] = fullPath;
+                        SaveCubemapAsset(cubemapEditorPath);
+                    },
+                    [this, capturedIndex](const std::string& path) {
+                        // path is a Default/... path
+                        std::string fullPath = path;
+                        for (char& c : fullPath) if (c == '\\') c = '/';
+                        cubemapFaces[capturedIndex] = fullPath;
+                        SaveCubemapAsset(cubemapEditorPath);
+                    }
+                );
+            }
+
+            ImGui::SameLine();
+            if (ImGui::SmallButton("X")) {
+                cubemapFaces[i].clear();
+                changed = true;
+            }
+            ImGui::PopID();
+        }
+
+        ImGui::Spacing();
+        if (ImGui::Button("Save", ImVec2(ImGui::GetContentRegionAvail().x, 0)) || changed) {
+            SaveCubemapAsset(cubemapPath);
+        }
+    }
+
+    void InspectorPanel::SaveCubemapAsset(const std::filesystem::path& cubemapPath) {
+        std::ofstream file(cubemapPath);
+        if (!file.is_open()) return;
+
+        static const char* faceKeys[] = { "right", "left", "top", "bottom", "front", "back" };
+        for (int i = 0; i < 6; ++i) {
+            file << faceKeys[i] << "=" << cubemapFaces[i] << "\n";
+        }
     }
 }

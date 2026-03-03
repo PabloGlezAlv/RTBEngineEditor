@@ -26,10 +26,13 @@ namespace RTBEditor {
     private:
         void LoadIcons();
         RTBEngine::Rendering::Texture* GetIconForFile(const std::filesystem::path& path);
-        bool IsCubemapFolder(const std::filesystem::path& dir);
+        void DrawContextMenu();
 
     private:
         std::filesystem::path currentDirectory;
+        std::filesystem::path selectedPath;
+        std::filesystem::path renamingPath;
+        char renameBuffer[256] = {};
         std::map<IconType, RTBEngine::Rendering::Texture*> icons;
     };
 

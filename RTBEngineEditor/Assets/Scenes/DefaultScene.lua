@@ -2,6 +2,7 @@ function CreateScene()
     return {
         name = "Test Scene",
         skyboxEnabled = true,
+        skybox = "Assets/Cubemap/NewCubemap.cubemap",
         gameObjects = {
             {
                 name = "MainCamera",
@@ -34,7 +35,7 @@ function CreateScene()
                     {
                         type = "LightComponent",
                         lightType = 0,
-                        color = Vector4(1.00, 1.00, 1.00, 1.00),
+                        color = Color(1.00, 1.00, 1.00, 1.00),
                         intensity = 0.50,
                         range = 10.00,
                         spotAngle = 45.00,
@@ -52,7 +53,7 @@ function CreateScene()
                     {
                         type = "LightComponent",
                         lightType = 1,
-                        color = Vector4(0.20, 0.50, 1.00, 1.00),
+                        color = Color(0.20, 0.50, 1.00, 1.00),
                         intensity = 1.00,
                         range = 10.00,
                         spotAngle = 45.00,
@@ -70,7 +71,7 @@ function CreateScene()
                     {
                         type = "LightComponent",
                         lightType = 2,
-                        color = Vector4(1.00, 0.00, 0.00, 50.00),
+                        color = Color(1.00, 0.00, 0.00, 50.00),
                         intensity = 50.00,
                         range = 10.00,
                         spotAngle = 45.00,
@@ -96,7 +97,7 @@ function CreateScene()
                             {
                                 type = "UIImage",
                                 texture = "Assets/Textures/testTexture.png",
-                                tintColor = Vector4(1.00, 1.00, 1.00, 1.00),
+                                tintColor = Color(1.00, 1.00, 1.00, 1.00),
                                 preserveAspect = true,
                                 isVisible = true,
                                 raycastTarget = true,
@@ -114,7 +115,7 @@ function CreateScene()
                             {
                                 type = "UIText",
                                 text = "RTBEngine Demo",
-                                color = Vector4(1.00, 1.00, 1.00, 1.00),
+                                color = Color(1.00, 1.00, 1.00, 1.00),
                                 fontSize = 28.00,
                                 alignment = 0,
                                 font = nil,
@@ -133,8 +134,8 @@ function CreateScene()
                         components = {
                             {
                                 type = "UIPanel",
-                                backgroundColor = Vector4(1.00, 1.00, 1.00, 0.48),
-                                borderColor = Vector4(1.00, 1.00, 1.00, 1.00),
+                                backgroundColor = Color(1.00, 1.00, 1.00, 0.48),
+                                borderColor = Color(1.00, 1.00, 1.00, 1.00),
                                 borderThickness = 1.00,
                                 hasBorder = false,
                                 isVisible = true,
@@ -146,10 +147,10 @@ function CreateScene()
                             },
                             {
                                 type = "UIButton",
-                                normalColor = Vector4(1.00, 1.00, 1.00, 0.48),
-                                hoveredColor = Vector4(0.90, 0.90, 0.90, 1.00),
-                                pressedColor = Vector4(0.70, 0.70, 0.70, 1.00),
-                                disabledColor = Vector4(0.50, 0.50, 0.50, 0.50),
+                                normalColor = Color(1.00, 1.00, 1.00, 0.48),
+                                hoveredColor = Color(0.90, 0.90, 0.90, 1.00),
+                                pressedColor = Color(0.70, 0.70, 0.70, 1.00),
+                                disabledColor = Color(0.50, 0.50, 0.50, 0.50),
                                 interactable = true
                             },
                         },
@@ -161,7 +162,7 @@ function CreateScene()
                                     {
                                         type = "UIText",
                                         text = "PULSAR",
-                                        color = Vector4(1.00, 1.00, 1.00, 1.00),
+                                        color = Color(1.00, 1.00, 1.00, 1.00),
                                         fontSize = 16.00,
                                         alignment = 1,
                                         font = nil,
@@ -188,7 +189,7 @@ function CreateScene()
                         type = "MeshRenderer",
                         meshRef = "Default/Models/cube.obj",
                         textureRef = nil,
-                        colorRef = Vector4(1.00, 1.00, 1.00, 1.00)
+                        colorRef = Color(1.00, 1.00, 1.00, 1.00)
                     },
                 }
             },
@@ -201,7 +202,7 @@ function CreateScene()
                         type = "MeshRenderer",
                         meshRef = "Default/Models/cube.obj",
                         textureRef = nil,
-                        colorRef = Vector4(1.00, 1.00, 1.00, 1.00)
+                        colorRef = Color(1.00, 1.00, 1.00, 1.00)
                     },
                 }
             },
@@ -215,7 +216,7 @@ function CreateScene()
                         type = "MeshRenderer",
                         meshRef = nil,
                         textureRef = nil,
-                        colorRef = Vector4(1.00, 1.00, 1.00, 1.00)
+                        colorRef = Color(1.00, 1.00, 1.00, 1.00)
                     },
                     {
                         type = "Animator",
@@ -237,7 +238,7 @@ function CreateScene()
                         type = "MeshRenderer",
                         meshRef = "Default/Models/sphere.obj",
                         textureRef = nil,
-                        colorRef = Vector4(1.00, 1.00, 1.00, 1.00)
+                        colorRef = Color(1.00, 1.00, 1.00, 1.00)
                     },
                 }
             },

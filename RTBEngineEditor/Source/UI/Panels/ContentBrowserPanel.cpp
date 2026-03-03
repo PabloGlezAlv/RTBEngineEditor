@@ -3,6 +3,7 @@
 #include <RTBEngine/Core/ResourceManager.h>
 #include "../../Project/Project.h"
 #include "../DragDropPayloads.h"
+#include <fstream>
 
 namespace RTBEditor {
 
@@ -38,35 +39,19 @@ namespace RTBEditor {
 
     RTBEngine::Rendering::Texture* ContentBrowserPanel::GetIconForFile(const std::filesystem::path& path) {
         if (std::filesystem::is_directory(path)) {
-            if (IsCubemapFolder(path)) return icons[IconType::Cubemap];
             return icons[IconType::Folder];
         }
 
         std::string ext = path.extension().string();
         for (auto& c : ext) c = std::tolower(c);
 
+        if (ext == ".cubemap") return icons[IconType::Cubemap];
         if (ext == ".lua") return icons[IconType::Lua];
         if (ext == ".obj" || ext == ".fbx") return icons[IconType::Model];
         if (ext == ".png" || ext == ".jpg" || ext == ".tga") return icons[IconType::Image];
         if (ext == ".glsl" || ext == ".vert" || ext == ".frag") return icons[IconType::Shader];
 
         return icons[IconType::File];
-    }
-
-    bool ContentBrowserPanel::IsCubemapFolder(const std::filesystem::path& dir) {
-        if (!std::filesystem::is_directory(dir)) return false;
-        // A cubemap folder must contain at least one of the standard face files
-        static const char* faceNames[] = { "right", "left", "top", "bottom", "front", "back", "px", "nx", "py", "ny", "pz", "nz" };
-        for (auto& entry : std::filesystem::directory_iterator(dir)) {
-            if (entry.is_regular_file()) {
-                std::string stem = entry.path().stem().string();
-                for (auto& c : stem) c = std::tolower(c);
-                for (const char* face : faceNames) {
-                    if (stem == face) return true;
-                }
-            }
-        }
-        return false;
     }
 
     void ContentBrowserPanel::OnUIRender(EditorContext& context) {
@@ -78,6 +63,9 @@ namespace RTBEditor {
         if (currentDirectory != rootPath) {
             if (ImGui::Button("<- Back")) {
                 currentDirectory = currentDirectory.parent_path();
+                selectedPath.clear();
+                renamingPath.clear();
+                context.selectedAssetPath.clear();
             }
             ImGui::SameLine();
         }
@@ -108,21 +96,49 @@ namespace RTBEditor {
                 RTBEngine::Rendering::Texture* icon = GetIconForFile(path);
                 ImTextureID textureID = (ImTextureID)(intptr_t)(icon ? icon->GetID() : 0);
 
-                ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0)); // Transparent background
-                if (ImGui::ImageButton(filenameString.c_str(), textureID, ImVec2(thumbnailSize, thumbnailSize), ImVec2(0, 1), ImVec2(1, 0))) {
-                    if (directoryEntry.is_directory()) {
-                        currentDirectory /= path.filename();
-                    }
-                }
+                bool isSelected = (selectedPath == path);
+                ImVec4 tint = isSelected ? ImVec4(0.3f, 0.5f, 0.9f, 0.4f) : ImVec4(0, 0, 0, 0);
+                ImGui::PushStyleColor(ImGuiCol_Button, tint);
+                ImGui::ImageButton(filenameString.c_str(), textureID, ImVec2(thumbnailSize, thumbnailSize), ImVec2(0, 1), ImVec2(1, 0));
                 ImGui::PopStyleColor();
 
+                // Single click — select
+                if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
+                    selectedPath = path;
+                    // Expose .cubemap files to the Inspector via context
+                    std::string clickedExt = path.extension().string();
+                    for (auto& c : clickedExt) c = std::tolower(c);
+                    if (clickedExt == ".cubemap") {
+                        context.selectedAssetPath = path;
+                        context.selectedGameObject = nullptr;
+                    } else {
+                        context.selectedAssetPath.clear();
+                    }
+                }
+
+                // Double click — enter folder
+                if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
+                    if (directoryEntry.is_directory() && renamingPath != path) {
+                        currentDirectory /= path.filename();
+                        selectedPath.clear();
+                        renamingPath.clear();
+                        context.selectedAssetPath.clear();
+                    }
+                }
+
+                // F2 to rename selected item
+                if (isSelected && ImGui::IsWindowFocused() && ImGui::IsKeyPressed(ImGuiKey_F2) && renamingPath != path) {
+                    renamingPath = path;
+                    strncpy_s(renameBuffer, path.stem().string().c_str(), sizeof(renameBuffer) - 1);
+                }
+
                 // Drag-and-drop source
-                if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID)) {
+                if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None)) {
                     std::string ext = path.extension().string();
                     for (auto& c : ext) c = std::tolower(c);
 
-                    // Check if it's a cubemap folder
-                    if (directoryEntry.is_directory() && IsCubemapFolder(path)) {
+                    // Check if it's a .cubemap asset file
+                    if (ext == ".cubemap") {
                         CubemapPayload payload;
                         std::string relativePath = std::filesystem::relative(path, rootPath).string();
                         strncpy_s(payload.path, relativePath.c_str(), sizeof(payload.path) - 1);
@@ -178,14 +194,30 @@ namespace RTBEditor {
                 }
 
 
-                // Selection logic (visual only for now)
-                if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
-                    if (directoryEntry.is_directory()) {
-                        currentDirectory /= path.filename();
-                    }
-                }
+                // Inline rename
+                if (renamingPath == path) {
+                    ImGui::SetNextItemWidth(thumbnailSize + padding - 4.0f);
+                    ImGui::SetKeyboardFocusHere();
+                    if (ImGui::InputText("##rename", renameBuffer, sizeof(renameBuffer),
+                        ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll)) {
 
-                ImGui::TextWrapped("%s", filenameString.c_str());
+                        std::string newName = renameBuffer;
+                        if (!newName.empty() && newName != path.stem().string()) {
+                            std::filesystem::path newPath = path.parent_path() / (newName + path.extension().string());
+                            if (!std::filesystem::exists(newPath)) {
+                                std::filesystem::rename(path, newPath);
+                                selectedPath = newPath;
+                            }
+                        }
+                        renamingPath.clear();
+                    }
+                    // Cancel on Escape or focus lost
+                    if (ImGui::IsKeyPressed(ImGuiKey_Escape) || (!ImGui::IsItemActive() && !ImGui::IsItemFocused())) {
+                        renamingPath.clear();
+                    }
+                } else {
+                    ImGui::TextWrapped("%s", filenameString.c_str());
+                }
 
                 ImGui::NextColumn();
                 ImGui::PopID();
@@ -197,8 +229,132 @@ namespace RTBEditor {
             }
         }
 
+        // Click on empty area deselects
+        if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && ImGui::IsWindowHovered() && !ImGui::IsAnyItemHovered()) {
+            selectedPath.clear();
+            renamingPath.clear();
+            context.selectedAssetPath.clear();
+        }
+
+        // Delete selected item with Supr
+        if (!selectedPath.empty() && ImGui::IsWindowFocused() && ImGui::IsKeyPressed(ImGuiKey_Delete)) {
+            std::filesystem::remove_all(selectedPath);
+            selectedPath.clear();
+            renamingPath.clear();
+            context.selectedAssetPath.clear();
+        }
+
+        DrawContextMenu();
+
         ImGui::Columns(1);
         ImGui::End();
+    }
+
+    void ContentBrowserPanel::DrawContextMenu() {
+        if (ImGui::BeginPopupContextWindow("ContentBrowserContext", ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverItems)) {
+
+            if (ImGui::BeginMenu("Create")) {
+
+                if (ImGui::MenuItem("Folder")) {
+                    std::filesystem::path newFolder = currentDirectory / "New Folder";
+                    int suffix = 1;
+                    while (std::filesystem::exists(newFolder)) {
+                        newFolder = currentDirectory / ("New Folder " + std::to_string(suffix++));
+                    }
+                    std::filesystem::create_directory(newFolder);
+                    selectedPath = newFolder;
+                    renamingPath = newFolder;
+                    strncpy_s(renameBuffer, newFolder.stem().string().c_str(), sizeof(renameBuffer) - 1);
+                }
+
+                ImGui::Separator();
+
+                if (ImGui::MenuItem("Lua Script")) {
+                    std::filesystem::path newFile = currentDirectory / "NewScript.lua";
+                    int suffix = 1;
+                    while (std::filesystem::exists(newFile)) {
+                        newFile = currentDirectory / ("NewScript" + std::to_string(suffix++) + ".lua");
+                    }
+                    std::ofstream f(newFile);
+                    f << "-- " << newFile.stem().string() << "\n\n";
+                    f << "local " << newFile.stem().string() << " = {}\n\n";
+                    f << "function " << newFile.stem().string() << ":OnStart()\n";
+                    f << "end\n\n";
+                    f << "function " << newFile.stem().string() << ":OnUpdate(deltaTime)\n";
+                    f << "end\n\n";
+                    f << "return " << newFile.stem().string() << "\n";
+                    selectedPath = newFile;
+                    renamingPath = newFile;
+                    strncpy_s(renameBuffer, newFile.stem().string().c_str(), sizeof(renameBuffer) - 1);
+                }
+
+                if (ImGui::MenuItem("Scene")) {
+                    std::filesystem::path newFile = currentDirectory / "NewScene.lua";
+                    int suffix = 1;
+                    while (std::filesystem::exists(newFile)) {
+                        newFile = currentDirectory / ("NewScene" + std::to_string(suffix++) + ".lua");
+                    }
+                    std::ofstream f(newFile);
+                    f << "function CreateScene()\n";
+                    f << "    return {\n";
+                    f << "        name = \"" << newFile.stem().string() << "\",\n";
+                    f << "        skyboxEnabled = true,\n";
+                    f << "        gameObjects = {\n";
+                    f << "            {\n";
+                    f << "                name = \"Main Camera\",\n";
+                    f << "                position = Vector3(0.00, 1.00, -5.00),\n";
+                    f << "                components = {\n";
+                    f << "                    { type = \"CameraComponent\", isMain = true, fov = 60.00, nearPlane = 0.10, farPlane = 1000.00 },\n";
+                    f << "                    { type = \"FreeLookCamera\", moveSpeed = 5.00, lookSpeed = 0.10 },\n";
+                    f << "                }\n";
+                    f << "            },\n";
+                    f << "            {\n";
+                    f << "                name = \"Directional Light\",\n";
+                    f << "                rotation = Quaternion.FromEulerAngles(45.00, -30.00, 0.00),\n";
+                    f << "                components = {\n";
+                    f << "                    { type = \"LightComponent\", lightType = 0, color = Color(1.00, 1.00, 1.00, 1.00), intensity = 1.00, castShadows = true },\n";
+                    f << "                }\n";
+                    f << "            },\n";
+                    f << "        }\n";
+                    f << "    }\n";
+                    f << "end\n";
+                    selectedPath = newFile;
+                    renamingPath = newFile;
+                    strncpy_s(renameBuffer, newFile.stem().string().c_str(), sizeof(renameBuffer) - 1);
+                }
+
+                ImGui::Separator();
+
+                if (ImGui::MenuItem("Cubemap Asset")) {
+                    std::filesystem::path newFile = currentDirectory / "NewCubemap.cubemap";
+                    int suffix = 1;
+                    while (std::filesystem::exists(newFile)) {
+                        newFile = currentDirectory / ("NewCubemap" + std::to_string(suffix++) + ".cubemap");
+                    }
+                    std::ofstream f(newFile);
+                    f << "right=\n";
+                    f << "left=\n";
+                    f << "top=\n";
+                    f << "bottom=\n";
+                    f << "front=\n";
+                    f << "back=\n";
+                    selectedPath = newFile;
+                    renamingPath = newFile;
+                    strncpy_s(renameBuffer, newFile.stem().string().c_str(), sizeof(renameBuffer) - 1);
+                }
+
+                ImGui::EndMenu();
+            }
+
+            ImGui::Separator();
+
+            if (ImGui::MenuItem("Show in Explorer")) {
+                std::string cmd = "explorer \"" + currentDirectory.string() + "\"";
+                system(cmd.c_str());
+            }
+
+            ImGui::EndPopup();
+        }
     }
 
 }

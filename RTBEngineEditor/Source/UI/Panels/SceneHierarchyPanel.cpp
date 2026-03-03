@@ -82,7 +82,7 @@ namespace RTBEditor {
                         std::string absolutePath = (assetRoot / data->path).string();
 
                         RTBEngine::Rendering::Cubemap* cubemap =
-                            RTBEngine::Core::ResourceManager::GetInstance().LoadCubemap(absolutePath);
+                            RTBEngine::Core::ResourceManager::GetInstance().LoadCubemapAsset(absolutePath);
                         if (cubemap) {
                             activeScene->SetSkyboxCubemap(cubemap);
                             RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
