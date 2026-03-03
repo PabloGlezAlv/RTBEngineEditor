@@ -4,6 +4,7 @@
 #include <RTBEngine/ECS/Scene.h>
 #include <RTBEngine/ECS/MeshRenderer.h>
 #include <RTBEngine/Core/ResourceManager.h>
+#include <RTBEngine/Rendering/Cubemap.h>
 #include <RTBEngine/UI/Canvas.h>
 #include <RTBEngine/UI/Elements/UIButton.h>
 #include <RTBEngine/UI/Elements/UIContainer.h>
@@ -11,6 +12,8 @@
 #include <RTBEngine/UI/Elements/UIText.h>
 #include <RTBEngine/Math/Vectors/Vector2.h>
 #include "../DragDropPayloads.h"
+#include "../../Project/Project.h"
+#include <filesystem>
 #include <vector>
 
 namespace RTBEditor {
@@ -35,6 +38,70 @@ namespace RTBEditor {
             ImGui::PopStyleColor();
             ImGui::Separator();
             ImGui::Spacing();
+
+            //Scene Settings
+            if (ImGui::CollapsingHeader("Scene Settings")) {
+                ImGui::Spacing();
+
+                // Skybox enabled toggle
+                bool skyboxEnabled = activeScene->IsSkyboxEnabled();
+                if (ImGui::Checkbox("Skybox Enabled", &skyboxEnabled)) {
+                    activeScene->SetSkyboxEnabled(skyboxEnabled);
+                    RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                }
+
+                ImGui::Spacing();
+
+                // Skybox cubemap field
+                RTBEngine::Rendering::Cubemap* currentCubemap = activeScene->GetSkyboxCubemap();
+                std::string cubemapLabel = "None";
+                if (currentCubemap) {
+                    std::string path = RTBEngine::Core::ResourceManager::GetInstance().GetCubemapPath(currentCubemap);
+                    if (!path.empty()) {
+                        cubemapLabel = std::filesystem::path(path).filename().string();
+                    } else {
+                        cubemapLabel = "(unknown)";
+                    }
+                }
+
+                ImGui::Text("Skybox");
+                ImGui::SameLine();
+
+                ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.2f, 0.2f, 1.0f));
+                ImGui::Button(cubemapLabel.c_str(), ImVec2(ImGui::GetContentRegionAvail().x - 26.0f, 0));
+                ImGui::PopStyleColor();
+
+                // Drop target for cubemap folder
+                if (ImGui::BeginDragDropTarget()) {
+                    if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(PAYLOAD_CUBEMAP)) {
+                        const CubemapPayload* data = static_cast<const CubemapPayload*>(payload->Data);
+
+                        std::filesystem::path assetRoot = Project::GetActiveProject()
+                            ? Project::GetActiveProject()->GetAssetDirectory()
+                            : std::filesystem::path("Assets");
+                        std::string absolutePath = (assetRoot / data->path).string();
+
+                        RTBEngine::Rendering::Cubemap* cubemap =
+                            RTBEngine::Core::ResourceManager::GetInstance().LoadCubemap(absolutePath);
+                        if (cubemap) {
+                            activeScene->SetSkyboxCubemap(cubemap);
+                            RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                        }
+                    }
+                    ImGui::EndDragDropTarget();
+                }
+
+                // Clear cubemap button
+                ImGui::SameLine();
+                if (ImGui::Button("x", ImVec2(22.0f, 0))) {
+                    activeScene->SetSkyboxCubemap(nullptr);
+                    RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                }
+
+                ImGui::Spacing();
+                ImGui::Separator();
+                ImGui::Spacing();
+            }
 
             for (const auto& gameObject : activeScene->GetGameObjects()) {
                 // Only start drawing from root objects (those without a parent)

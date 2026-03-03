@@ -24,17 +24,24 @@ namespace RTBEditor {
 
     void ContentBrowserPanel::LoadIcons() {
         auto& rm = RTBEngine::Core::ResourceManager::GetInstance();
-        icons[IconType::Folder] = rm.LoadTexture("Default/Icons/folder.png");
-        icons[IconType::File]   = rm.LoadTexture("Default/Icons/file.png");
-        icons[IconType::Lua]    = rm.LoadTexture("Default/Icons/lua.png");
-        icons[IconType::Model]  = rm.LoadTexture("Default/Icons/model.png");
-        icons[IconType::Image]  = rm.LoadTexture("Default/Icons/image.png");
-        icons[IconType::Shader] = rm.LoadTexture("Default/Icons/shader.png");
+        icons[IconType::Folder]  = rm.LoadTexture("Default/Icons/folder.png");
+        icons[IconType::File]    = rm.LoadTexture("Default/Icons/file.png");
+        icons[IconType::Lua]     = rm.LoadTexture("Default/Icons/lua.png");
+        icons[IconType::Model]   = rm.LoadTexture("Default/Icons/model.png");
+        icons[IconType::Image]   = rm.LoadTexture("Default/Icons/image.png");
+        icons[IconType::Shader]  = rm.LoadTexture("Default/Icons/shader.png");
+
+        // Use folder icon as fallback if dedicated cubemap icon is not present
+        RTBEngine::Rendering::Texture* cubemapIcon = rm.LoadTexture("Default/Icons/cubemap.png");
+        icons[IconType::Cubemap] = cubemapIcon ? cubemapIcon : icons[IconType::Folder];
     }
 
     RTBEngine::Rendering::Texture* ContentBrowserPanel::GetIconForFile(const std::filesystem::path& path) {
-        if (std::filesystem::is_directory(path)) return icons[IconType::Folder];
-        
+        if (std::filesystem::is_directory(path)) {
+            if (IsCubemapFolder(path)) return icons[IconType::Cubemap];
+            return icons[IconType::Folder];
+        }
+
         std::string ext = path.extension().string();
         for (auto& c : ext) c = std::tolower(c);
 
@@ -44,6 +51,22 @@ namespace RTBEditor {
         if (ext == ".glsl" || ext == ".vert" || ext == ".frag") return icons[IconType::Shader];
 
         return icons[IconType::File];
+    }
+
+    bool ContentBrowserPanel::IsCubemapFolder(const std::filesystem::path& dir) {
+        if (!std::filesystem::is_directory(dir)) return false;
+        // A cubemap folder must contain at least one of the standard face files
+        static const char* faceNames[] = { "right", "left", "top", "bottom", "front", "back", "px", "nx", "py", "ny", "pz", "nz" };
+        for (auto& entry : std::filesystem::directory_iterator(dir)) {
+            if (entry.is_regular_file()) {
+                std::string stem = entry.path().stem().string();
+                for (auto& c : stem) c = std::tolower(c);
+                for (const char* face : faceNames) {
+                    if (stem == face) return true;
+                }
+            }
+        }
+        return false;
     }
 
     void ContentBrowserPanel::OnUIRender(EditorContext& context) {
@@ -98,8 +121,18 @@ namespace RTBEditor {
                     std::string ext = path.extension().string();
                     for (auto& c : ext) c = std::tolower(c);
 
+                    // Check if it's a cubemap folder
+                    if (directoryEntry.is_directory() && IsCubemapFolder(path)) {
+                        CubemapPayload payload;
+                        std::string relativePath = std::filesystem::relative(path, rootPath).string();
+                        strncpy_s(payload.path, relativePath.c_str(), sizeof(payload.path) - 1);
+                        payload.path[sizeof(payload.path) - 1] = '\0';
+
+                        ImGui::SetDragDropPayload(PAYLOAD_CUBEMAP, &payload, sizeof(CubemapPayload));
+                        ImGui::Text("Cubemap: %s", filenameString.c_str());
+                    }
                     // Check if it's a texture file
-                    if (ext == ".png" || ext == ".jpg" || ext == ".jpeg" ||
+                    else if (ext == ".png" || ext == ".jpg" || ext == ".jpeg" ||
                         ext == ".tga" || ext == ".dds" || ext == ".bmp") {
 
                         TexturePayload payload;

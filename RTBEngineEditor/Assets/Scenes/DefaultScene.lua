@@ -7,7 +7,7 @@ function CreateScene()
                 name = "MainCamera",
                 uuid = "0E7CE370-7C0E-45A8-89CA-AD7A3E70C216",
                 position = Vector3(-0.00, 1.00, 4.94),
-                rotation = Quaternion.FromEulerAngles(0.00, 180.00, -0.00),
+                rotation = Quaternion.FromEulerAngles(-0.00, 180.00, -0.00),
                 components = {
                     {
                         type = "CameraComponent",
@@ -213,7 +213,7 @@ function CreateScene()
                 components = {
                     {
                         type = "MeshRenderer",
-                        meshRef = "Assets/Models/walking.fbx",
+                        meshRef = nil,
                         textureRef = nil,
                         colorRef = Vector4(1.00, 1.00, 1.00, 1.00)
                     },
@@ -235,7 +235,7 @@ function CreateScene()
                 components = {
                     {
                         type = "MeshRenderer",
-                        meshRef = "Default/Models/cube.obj",
+                        meshRef = "Default/Models/sphere.obj",
                         textureRef = nil,
                         colorRef = Vector4(1.00, 1.00, 1.00, 1.00)
                     },

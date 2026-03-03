@@ -12,7 +12,8 @@ namespace RTBEditor {
         Lua,
         Model,
         Image,
-        Shader
+        Shader,
+        Cubemap
     };
 
     class ContentBrowserPanel : public EditorPanel {
@@ -25,6 +26,7 @@ namespace RTBEditor {
     private:
         void LoadIcons();
         RTBEngine::Rendering::Texture* GetIconForFile(const std::filesystem::path& path);
+        bool IsCubemapFolder(const std::filesystem::path& dir);
 
     private:
         std::filesystem::path currentDirectory;

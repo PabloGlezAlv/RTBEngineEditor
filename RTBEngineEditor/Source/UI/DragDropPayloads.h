@@ -7,6 +7,7 @@ namespace RTBEditor {
     constexpr const char* PAYLOAD_MESH = "PAYLOAD_MESH";
     constexpr const char* PAYLOAD_AUDIOCLIP = "PAYLOAD_AUDIOCLIP";
     constexpr const char* PAYLOAD_FONT = "PAYLOAD_FONT";
+    constexpr const char* PAYLOAD_CUBEMAP = "PAYLOAD_CUBEMAP";
     constexpr const char* PAYLOAD_GAMEOBJECT = "PAYLOAD_GAMEOBJECT";
 
     // Payload structures
@@ -23,6 +24,10 @@ namespace RTBEditor {
     };
 
     struct FontPayload {
+        char path[256];
+    };
+
+    struct CubemapPayload {
         char path[256];
     };
 
