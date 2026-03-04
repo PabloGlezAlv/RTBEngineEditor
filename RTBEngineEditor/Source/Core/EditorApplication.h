@@ -22,6 +22,9 @@ namespace RTBEditor {
         void OnPlay();
         void OnStop();
         void OnPause();
+
+        // Script compilation
+        void OnCompileScripts();
         
         EditorState GetState() const { return state; }
 

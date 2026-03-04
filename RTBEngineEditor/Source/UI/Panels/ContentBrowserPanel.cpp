@@ -217,22 +217,20 @@ namespace RTBEditor {
                                         std::filesystem::rename(oldCpp, newCpp);
                                     }
 
-                                    // Patch the .vcxproj with the new filenames
-                                    std::filesystem::path projectDir = Project::GetActiveProject()
-                                        ? Project::GetActiveProject()->GetProjectDirectory()
-                                        : std::filesystem::current_path();
-                                    std::filesystem::path vcxprojPath = projectDir / (projectDir.filename().string() + ".vcxproj");
-                                    if (std::filesystem::exists(vcxprojPath)) {
-                                        std::ifstream vcxIn(vcxprojPath);
+                                    // Patch GameScripts.vcxproj with the new filenames
+                                    std::filesystem::path gameScriptsVcxproj = std::filesystem::current_path() / "GameScripts" / "GameScripts.vcxproj";
+                                    if (std::filesystem::exists(gameScriptsVcxproj)) {
+                                        std::ifstream vcxIn(gameScriptsVcxproj);
                                         std::ostringstream buf;
                                         buf << vcxIn.rdbuf();
                                         vcxIn.close();
                                         std::string vcxContent = buf.str();
 
-                                        std::string oldH   = "Source\\Components\\" + path.stem().string() + ".h";
-                                        std::string oldCppName = "Source\\Components\\" + path.stem().string() + ".cpp";
-                                        std::string newH   = "Source\\Components\\" + newName + ".h";
-                                        std::string newCppName = "Source\\Components\\" + newName + ".cpp";
+                                        // Replace absolute paths (used when registering)
+                                        std::string oldH      = path.string();
+                                        std::string oldCppStr = (path.parent_path() / (path.stem().string() + ".cpp")).string();
+                                        std::string newH      = (path.parent_path() / (newName + ".h")).string();
+                                        std::string newCppStr = (path.parent_path() / (newName + ".cpp")).string();
 
                                         auto replaceAll = [](std::string& s, const std::string& from, const std::string& to) {
                                             size_t pos = 0;
@@ -242,9 +240,9 @@ namespace RTBEditor {
                                             }
                                         };
                                         replaceAll(vcxContent, oldH, newH);
-                                        replaceAll(vcxContent, oldCppName, newCppName);
+                                        replaceAll(vcxContent, oldCppStr, newCppStr);
 
-                                        std::ofstream vcxOut(vcxprojPath);
+                                        std::ofstream vcxOut(gameScriptsVcxproj);
                                         vcxOut << vcxContent;
                                     }
                                 }
@@ -312,20 +310,18 @@ namespace RTBEditor {
                 ImGui::Separator();
 
                 if (ImGui::MenuItem("C++ Component")) {
-                    // Components always go to Source/Components/ of the editor project
-                    std::filesystem::path projectDir = Project::GetActiveProject()
-                        ? Project::GetActiveProject()->GetProjectDirectory()
-                        : std::filesystem::current_path();
-                    std::filesystem::path componentsDir = projectDir / "Source" / "Components";
-                    std::filesystem::create_directories(componentsDir);
+                    // Scripts live in the current browser directory (inside Assets/)
+                    // and compile into GameScripts.dll via GameScripts.vcxproj
+                    std::filesystem::path scriptsDir = currentDirectory;
+                    std::filesystem::create_directories(scriptsDir);
 
-                    std::filesystem::path headerFile = componentsDir / "NewComponent.h";
-                    std::filesystem::path cppFile    = componentsDir / "NewComponent.cpp";
+                    std::filesystem::path headerFile = scriptsDir / "NewComponent.h";
+                    std::filesystem::path cppFile    = scriptsDir / "NewComponent.cpp";
                     int suffix = 1;
                     while (std::filesystem::exists(headerFile) || std::filesystem::exists(cppFile)) {
                         std::string name = "NewComponent" + std::to_string(suffix++);
-                        headerFile = componentsDir / (name + ".h");
-                        cppFile    = componentsDir / (name + ".cpp");
+                        headerFile = scriptsDir / (name + ".h");
+                        cppFile    = scriptsDir / (name + ".cpp");
                     }
                     std::string className = headerFile.stem().string();
 
@@ -336,36 +332,32 @@ namespace RTBEditor {
                         h << "#include <RTBEngine/ECS/Component.h>\n";
                         h << "#include <RTBEngine/Reflection/PropertyMacros.h>\n";
                         h << "\n";
-                        h << "namespace RTBEditor {\n";
+                        h << "class " << className << " : public RTBEngine::ECS::Component {\n";
+                        h << "public:\n";
+                        h << "    " << className << "();\n";
+                        h << "    ~" << className << "() override;\n";
                         h << "\n";
-                        h << "    class " << className << " : public RTBEngine::ECS::Component {\n";
-                        h << "    public:\n";
-                        h << "        " << className << "();\n";
-                        h << "        ~" << className << "() override;\n";
+                        h << "    " << className << "(const " << className << "&) = delete;\n";
+                        h << "    " << className << "& operator=(const " << className << "&) = delete;\n";
                         h << "\n";
-                        h << "        " << className << "(const " << className << "&) = delete;\n";
-                        h << "        " << className << "& operator=(const " << className << "&) = delete;\n";
+                        h << "    //Loop methods\n";
+                        h << "    void OnAwake() override;\n";
+                        h << "    void OnStart() override;\n";
+                        h << "    void OnUpdate(float deltaTime) override;\n";
+                        h << "    void OnFixedUpdate(float fixedDeltaTime) override;\n";
+                        h << "    void OnDestroy() override;\n";
                         h << "\n";
-                        h << "        //Loop methods\n";
-                        h << "        void OnAwake() override;\n";
-                        h << "        void OnStart() override;\n";
-                        h << "        void OnUpdate(float deltaTime) override;\n";
-                        h << "        void OnFixedUpdate(float fixedDeltaTime) override;\n";
-                        h << "        void OnDestroy() override;\n";
+                        h << "    virtual const char* GetTypeName() const override { return \"" << className << "\"; }\n";
+                        h << "    virtual const RTBEngine::Reflection::TypeInfo* GetTypeInfo() const override;\n";
                         h << "\n";
-                        h << "        virtual const char* GetTypeName() const override { return \"" << className << "\"; }\n";
-                        h << "        virtual const RTBEngine::Reflection::TypeInfo* GetTypeInfo() const override;\n";
+                        h << "    // Reflected properties (Proxy)\n";
+                        h << "    float speedRef = 1.0f;\n";
                         h << "\n";
-                        h << "        // Reflected properties (Proxy)\n";
-                        h << "        float speedRef = 1.0f;\n";
+                        h << "    RTB_COMPONENT(" << className << ")\n";
                         h << "\n";
-                        h << "        RTB_COMPONENT(" << className << ")\n";
-                        h << "\n";
-                        h << "    private:\n";
-                        h << "        float speed = 1.0f;\n";
-                        h << "    };\n";
-                        h << "\n";
-                        h << "}\n";
+                        h << "private:\n";
+                        h << "    float speed = 1.0f;\n";
+                        h << "};\n";
                     }
 
                     // Write .cpp
@@ -373,54 +365,47 @@ namespace RTBEditor {
                         std::ofstream cpp(cppFile);
                         cpp << "#include \"" << className << ".h\"\n";
                         cpp << "\n";
-                        cpp << "namespace RTBEditor {\n";
+                        cpp << className << "::" << className << "() {}\n";
+                        cpp << className << "::~" << className << "() {}\n";
                         cpp << "\n";
-                        cpp << "    " << className << "::" << className << "() {}\n";
-                        cpp << "    " << className << "::~" << className << "() {}\n";
+                        cpp << "void " << className << "::OnAwake() {}\n";
                         cpp << "\n";
-                        cpp << "    void " << className << "::OnAwake() {}\n";
+                        cpp << "void " << className << "::OnStart() {}\n";
                         cpp << "\n";
-                        cpp << "    void " << className << "::OnStart() {}\n";
+                        cpp << "void " << className << "::OnUpdate(float deltaTime) {}\n";
                         cpp << "\n";
-                        cpp << "    void " << className << "::OnUpdate(float deltaTime) {}\n";
+                        cpp << "void " << className << "::OnFixedUpdate(float fixedDeltaTime) {}\n";
                         cpp << "\n";
-                        cpp << "    void " << className << "::OnFixedUpdate(float fixedDeltaTime) {}\n";
-                        cpp << "\n";
-                        cpp << "    void " << className << "::OnDestroy() {}\n";
-                        cpp << "\n";
-                        cpp << "}\n";
+                        cpp << "void " << className << "::OnDestroy() {}\n";
                     }
 
-                    // Register new files in the .vcxproj
-                    std::filesystem::path vcxprojPath = projectDir / (projectDir.filename().string() + ".vcxproj");
-                    if (std::filesystem::exists(vcxprojPath)) {
-                        std::ifstream vcxIn(vcxprojPath);
+                    // Register files in GameScripts.vcxproj
+                    // The vcxproj sits next to the editor exe in GameScripts/
+                    std::filesystem::path gameScriptsVcxproj = std::filesystem::current_path() / "GameScripts" / "GameScripts.vcxproj";
+                    if (std::filesystem::exists(gameScriptsVcxproj)) {
+                        std::ifstream vcxIn(gameScriptsVcxproj);
                         std::ostringstream buf;
                         buf << vcxIn.rdbuf();
                         vcxIn.close();
                         std::string vcxContent = buf.str();
 
-                        // Paths relative to the .vcxproj (which sits in projectDir)
-                        std::string relH   = "Source\\Components\\" + headerFile.filename().string();
-                        std::string relCpp = "Source\\Components\\" + cppFile.filename().string();
+                        // Paths relative to GameScripts.vcxproj → use absolute paths for simplicity
+                        std::string absH   = headerFile.string();
+                        std::string absCpp = cppFile.string();
 
-                        // Insert ClCompile entry before the last </ItemGroup> that contains ClCompile entries
-                        std::string compileAnchor = "<ClCompile Include=\"Source\\Rendering\\EditorGridRenderer.cpp\" />";
-                        std::string includeAnchor = "<ClInclude Include=\"Source\\Components\\TargetHolder.h\" />";
-
-                        std::string newCompile = compileAnchor + "\n    <ClCompile Include=\"" + relCpp + "\" />";
-                        std::string newInclude = includeAnchor + "\n    <ClInclude Include=\"" + relH   + "\" />";
+                        // Insert before the closing </ItemGroup> of the existing ClCompile block
+                        std::string compileAnchor = "<ClCompile Include=\"dllmain.cpp\" />";
+                        std::string newCompile =
+                            compileAnchor +
+                            "\n    <ClCompile Include=\"" + absCpp + "\" />" +
+                            "\n    <ClInclude Include=\"" + absH   + "\" />";
 
                         size_t pos = vcxContent.find(compileAnchor);
                         if (pos != std::string::npos) {
                             vcxContent.replace(pos, compileAnchor.size(), newCompile);
                         }
-                        pos = vcxContent.find(includeAnchor);
-                        if (pos != std::string::npos) {
-                            vcxContent.replace(pos, includeAnchor.size(), newInclude);
-                        }
 
-                        std::ofstream vcxOut(vcxprojPath);
+                        std::ofstream vcxOut(gameScriptsVcxproj);
                         vcxOut << vcxContent;
                     }
 
@@ -428,8 +413,6 @@ namespace RTBEditor {
                     ShellExecuteA(nullptr, "open", headerFile.string().c_str(), nullptr, nullptr, SW_SHOW);
                     ShellExecuteA(nullptr, "open", cppFile.string().c_str(), nullptr, nullptr, SW_SHOW);
 
-                    // Navigate the browser to Source/Components so the user can see the new files
-                    currentDirectory = componentsDir;
                     selectedPath = headerFile;
                     renamingPath = headerFile;
                     strncpy_s(renameBuffer, className.c_str(), sizeof(renameBuffer) - 1);

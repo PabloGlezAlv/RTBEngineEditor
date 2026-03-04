@@ -8,7 +8,7 @@ namespace RTBEditor {
 
     class ToolbarPanel : public EditorPanel {
     public:
-        ToolbarPanel(std::function<void()> onPlay, std::function<void()> onPause, std::function<void()> onStop, std::function<EditorState()> getState);
+        ToolbarPanel(std::function<void()> onPlay, std::function<void()> onPause, std::function<void()> onStop, std::function<EditorState()> getState, std::function<void()> onCompileScripts);
         virtual void OnUIRender(EditorContext& context) override;
 
     private:
@@ -16,6 +16,9 @@ namespace RTBEditor {
         std::function<void()> onPause;
         std::function<void()> onStop;
         std::function<EditorState()> getState;
+        std::function<void()> onCompileScripts;
+
+        bool isCompiling = false;
     };
 
 }

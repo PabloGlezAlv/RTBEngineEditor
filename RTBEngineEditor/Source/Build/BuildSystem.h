@@ -24,12 +24,21 @@ namespace RTBEditor {
         ConfigWriteFailed
     };
 
+    enum class ScriptCompileResult {
+        Success,
+        MSBuildNotFound,
+        CompileError
+    };
+
     class BuildSystem {
     public:
         using ProgressCallback = std::function<void(const std::string& status, float progress)>;
 
         static BuildResult Build(const BuildSettings& settings, ProgressCallback onProgress = nullptr);
         static std::string GetResultMessage(BuildResult result);
+
+        // Invokes MSBuild to compile GameScripts.vcxproj into GameScripts.dll
+        static ScriptCompileResult CompileScripts(const std::string& vcxprojPath, const std::string& configuration = "Debug");
 
     private:
         static bool CreateDirectoryStructure(const std::filesystem::path& outputDir);

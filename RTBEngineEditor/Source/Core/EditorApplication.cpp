@@ -2,10 +2,13 @@
 #include <imgui.h>
 #include <GL/glew.h>
 #include <iostream>
+#include <filesystem>
 #include <RTBEngine/ECS/SceneManager.h>
 #include <RTBEngine/Rendering/FrameBuffer.h>
 #include <RTBEngine/Scripting/SceneSaver.h>
+#include <RTBEngine/Scripting/ScriptManager.h>
 #include "../UI/Panels/SceneViewPanel.h"
+#include "../Build/BuildSystem.h"
 
 namespace RTBEditor {
 
@@ -38,7 +41,8 @@ namespace RTBEditor {
             [this]() { OnPlay(); },
             [this]() { OnPause(); },
             [this]() { OnStop(); },
-            [this]() { return GetState(); }
+            [this]() { return GetState(); },
+            [this]() { OnCompileScripts(); }
         );
 
         // Set up menu bar callbacks
@@ -56,6 +60,13 @@ namespace RTBEditor {
             sm.ClearSceneDirty();
             uiLayer->GetMenuBar()->SetSceneDirty(false);
         });
+
+        // Load GameScripts.dll if it already exists from a previous compilation.
+        // If the DLL is not found it is not an error — the user just hasn't compiled yet.
+        std::string dllPath = (std::filesystem::current_path() / "GameScripts.dll").string();
+        if (std::filesystem::exists(dllPath)) {
+            RTBEngine::Scripting::ScriptManager::GetInstance().LoadScripts(dllPath);
+        }
 
         isRunning = true;
         return true;
@@ -201,7 +212,29 @@ namespace RTBEditor {
         glViewport(0, 0, engineApp->GetWindow()->GetWidth(), engineApp->GetWindow()->GetHeight());
     }
 
+    void EditorApplication::OnCompileScripts()
+    {
+        // Path to GameScripts.vcxproj — relative to the editor working directory
+        std::string vcxprojPath = (std::filesystem::current_path() / "GameScripts" / "GameScripts.vcxproj").string();
+
+        auto& scriptManager = RTBEngine::Scripting::ScriptManager::GetInstance();
+
+        // Unload current DLL before recompiling so MSBuild can overwrite the file
+        scriptManager.UnloadScripts();
+
+        ScriptCompileResult result = BuildSystem::CompileScripts(vcxprojPath);
+
+        if (result == ScriptCompileResult::Success) {
+            // Reload the freshly compiled DLL — static initializers re-register all components
+            std::string dllPath = (std::filesystem::current_path() / "GameScripts.dll").string();
+            scriptManager.LoadScripts(dllPath);
+        }
+    }
+
     void EditorApplication::Shutdown() {
+        // Unload GameScripts.dll before destroying the engine to avoid dangling pointers
+        RTBEngine::Scripting::ScriptManager::GetInstance().UnloadScripts();
+
         if (engineApp) {
             engineApp->Shutdown();
             engineApp.reset();

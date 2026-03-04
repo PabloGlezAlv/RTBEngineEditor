@@ -3,6 +3,29 @@
 #include <iostream>
 #include <RTBEngine/Core/Logger.h>
 
+// --- MSBuild invocation notes ---
+//
+// MSBuild is the Microsoft build system used by Visual Studio.
+// We invoke it as a child process via system() to compile GameScripts.vcxproj.
+//
+// system(command)
+//   Passes the command string to cmd.exe and waits for it to finish.
+//   Returns the exit code of the child process (0 = success for MSBuild).
+//   Simple but does not capture stdout/stderr — output goes to the parent console.
+//
+// MSBuild command format:
+//   msbuild <project.vcxproj> /p:Configuration=<Debug|Release> /p:Platform=x64 /t:Build
+//   /p:Configuration  — selects which configuration to build
+//   /p:Platform       — target architecture (must match the editor: x64)
+//   /t:Build          — build target (default); use /t:Rebuild to force a clean rebuild
+//   /nologo /v:m      — suppress banner and reduce verbosity (minimal output)
+//
+// Why msbuild works without full path:
+//   Visual Studio's "Developer Command Prompt" adds MSBuild to PATH.
+//   When launched from VS or a vswhere-configured shell it resolves automatically.
+//   If the editor is launched outside a VS shell, the PATH may not include MSBuild —
+//   in that case we could use vswhere.exe to locate it, but for now we rely on PATH.
+
 namespace RTBEditor {
 
     BuildResult BuildSystem::Build(const BuildSettings& settings, ProgressCallback onProgress) {
@@ -188,6 +211,38 @@ namespace RTBEditor {
         // Assuming RTBEngine_SDK is relative to the editor executable or project root
         // Adjust this if SDK is located elsewhere
         return std::filesystem::current_path() / "RTBEngine_SDK";
+    }
+
+    ScriptCompileResult BuildSystem::CompileScripts(const std::string& vcxprojPath, const std::string& configuration)
+    {
+        if (!std::filesystem::exists(vcxprojPath)) {
+            RTB_ERROR("CompileScripts: vcxproj not found at '" + vcxprojPath + "'");
+            return ScriptCompileResult::MSBuildNotFound;
+        }
+
+        // Build the MSBuild command.
+        // /nologo suppresses the copyright banner.
+        // /v:m sets verbosity to minimal so only errors and warnings are printed.
+        std::string cmd =
+            "msbuild \"" + vcxprojPath + "\""
+            " /p:Configuration=" + configuration +
+            " /p:Platform=x64"
+            " /t:Build"
+            " /nologo /v:m";
+
+        RTB_INFO("CompileScripts: Running: " + cmd);
+
+        // system() blocks until MSBuild finishes and returns its exit code.
+        // MSBuild returns 0 on success and non-zero on any build error.
+        int exitCode = system(cmd.c_str());
+
+        if (exitCode != 0) {
+            RTB_ERROR("CompileScripts: MSBuild failed with exit code " + std::to_string(exitCode));
+            return ScriptCompileResult::CompileError;
+        }
+
+        RTB_INFO("CompileScripts: GameScripts compiled successfully.");
+        return ScriptCompileResult::Success;
     }
 
 }

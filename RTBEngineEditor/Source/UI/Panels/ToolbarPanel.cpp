@@ -3,8 +3,8 @@
 
 namespace RTBEditor {
 
-    ToolbarPanel::ToolbarPanel(std::function<void()> onPlay, std::function<void()> onPause, std::function<void()> onStop, std::function<EditorState()> getState)
-        : onPlay(onPlay), onPause(onPause), onStop(onStop), getState(getState) {}
+    ToolbarPanel::ToolbarPanel(std::function<void()> onPlay, std::function<void()> onPause, std::function<void()> onStop, std::function<EditorState()> getState, std::function<void()> onCompileScripts)
+        : onPlay(onPlay), onPause(onPause), onStop(onStop), getState(getState), onCompileScripts(onCompileScripts) {}
 
     void ToolbarPanel::OnUIRender(EditorContext& context) {
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 2));
@@ -53,6 +53,25 @@ namespace RTBEditor {
         if (state == EditorState::Edit) {
              ImGui::EndDisabled();
         }
+
+        // Compile Scripts button — right side of toolbar
+        float compileButtonWidth = 110.0f;
+        ImGui::SameLine(ImGui::GetWindowContentRegionMax().x - compileButtonWidth);
+
+        bool compileDisabled = (state != EditorState::Edit) || isCompiling;
+        if (compileDisabled) ImGui::BeginDisabled();
+
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.15f, 0.35f, 0.7f, 1.0f));
+        if (ImGui::Button(isCompiling ? "Compiling..." : "Compile Scripts", ImVec2(compileButtonWidth, 0))) {
+            if (onCompileScripts) {
+                isCompiling = true;
+                onCompileScripts();
+                isCompiling = false;
+            }
+        }
+        ImGui::PopStyleColor();
+
+        if (compileDisabled) ImGui::EndDisabled();
 
         ImGui::End();
         ImGui::PopStyleVar(2);
