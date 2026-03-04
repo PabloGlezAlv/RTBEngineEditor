@@ -34,6 +34,7 @@ namespace RTBEditor {
 
         void DrawCubemapAssetInspector(const std::filesystem::path& cubemapPath);
         void SaveCubemapAsset(const std::filesystem::path& cubemapPath);
+        void DrawScriptPreview(const std::filesystem::path& scriptPath);
 
         std::vector<RTBEngine::ECS::Component*> componentsToRemove;
         std::unique_ptr<AssetBrowserModal> assetBrowserModal;
@@ -46,6 +47,10 @@ namespace RTBEditor {
         std::filesystem::path cubemapEditorPath;
         // face order: right, left, top, bottom, front, back
         std::array<std::string, 6> cubemapFaces;
+
+        // Cached state for the script preview
+        std::filesystem::path scriptPreviewPath;
+        std::string scriptPreviewContent;
     };
 
 }

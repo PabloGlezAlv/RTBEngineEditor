@@ -4,6 +4,9 @@
 #include "../../Project/Project.h"
 #include "../DragDropPayloads.h"
 #include <fstream>
+#include <sstream>
+#include <Windows.h>
+#include <shellapi.h>
 
 namespace RTBEditor {
 
@@ -105,10 +108,10 @@ namespace RTBEditor {
                 // Single click — select
                 if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
                     selectedPath = path;
-                    // Expose .cubemap files to the Inspector via context
+                    // Expose asset files to the Inspector via context
                     std::string clickedExt = path.extension().string();
                     for (auto& c : clickedExt) c = std::tolower(c);
-                    if (clickedExt == ".cubemap") {
+                    if (clickedExt == ".cubemap" || clickedExt == ".h" || clickedExt == ".cpp") {
                         context.selectedAssetPath = path;
                         context.selectedGameObject = nullptr;
                     } else {
@@ -206,6 +209,45 @@ namespace RTBEditor {
                             std::filesystem::path newPath = path.parent_path() / (newName + path.extension().string());
                             if (!std::filesystem::exists(newPath)) {
                                 std::filesystem::rename(path, newPath);
+                                // When renaming a .h, also rename the companion .cpp and update the .vcxproj
+                                if (path.extension() == ".h") {
+                                    std::filesystem::path oldCpp = path.parent_path() / (path.stem().string() + ".cpp");
+                                    std::filesystem::path newCpp = path.parent_path() / (newName + ".cpp");
+                                    if (std::filesystem::exists(oldCpp) && !std::filesystem::exists(newCpp)) {
+                                        std::filesystem::rename(oldCpp, newCpp);
+                                    }
+
+                                    // Patch the .vcxproj with the new filenames
+                                    std::filesystem::path projectDir = Project::GetActiveProject()
+                                        ? Project::GetActiveProject()->GetProjectDirectory()
+                                        : std::filesystem::current_path();
+                                    std::filesystem::path vcxprojPath = projectDir / (projectDir.filename().string() + ".vcxproj");
+                                    if (std::filesystem::exists(vcxprojPath)) {
+                                        std::ifstream vcxIn(vcxprojPath);
+                                        std::ostringstream buf;
+                                        buf << vcxIn.rdbuf();
+                                        vcxIn.close();
+                                        std::string vcxContent = buf.str();
+
+                                        std::string oldH   = "Source\\Components\\" + path.stem().string() + ".h";
+                                        std::string oldCppName = "Source\\Components\\" + path.stem().string() + ".cpp";
+                                        std::string newH   = "Source\\Components\\" + newName + ".h";
+                                        std::string newCppName = "Source\\Components\\" + newName + ".cpp";
+
+                                        auto replaceAll = [](std::string& s, const std::string& from, const std::string& to) {
+                                            size_t pos = 0;
+                                            while ((pos = s.find(from, pos)) != std::string::npos) {
+                                                s.replace(pos, from.size(), to);
+                                                pos += to.size();
+                                            }
+                                        };
+                                        replaceAll(vcxContent, oldH, newH);
+                                        replaceAll(vcxContent, oldCppName, newCppName);
+
+                                        std::ofstream vcxOut(vcxprojPath);
+                                        vcxOut << vcxContent;
+                                    }
+                                }
                                 selectedPath = newPath;
                             }
                         }
@@ -269,23 +311,128 @@ namespace RTBEditor {
 
                 ImGui::Separator();
 
-                if (ImGui::MenuItem("Lua Script")) {
-                    std::filesystem::path newFile = currentDirectory / "NewScript.lua";
+                if (ImGui::MenuItem("C++ Component")) {
+                    // Components always go to Source/Components/ of the editor project
+                    std::filesystem::path projectDir = Project::GetActiveProject()
+                        ? Project::GetActiveProject()->GetProjectDirectory()
+                        : std::filesystem::current_path();
+                    std::filesystem::path componentsDir = projectDir / "Source" / "Components";
+                    std::filesystem::create_directories(componentsDir);
+
+                    std::filesystem::path headerFile = componentsDir / "NewComponent.h";
+                    std::filesystem::path cppFile    = componentsDir / "NewComponent.cpp";
                     int suffix = 1;
-                    while (std::filesystem::exists(newFile)) {
-                        newFile = currentDirectory / ("NewScript" + std::to_string(suffix++) + ".lua");
+                    while (std::filesystem::exists(headerFile) || std::filesystem::exists(cppFile)) {
+                        std::string name = "NewComponent" + std::to_string(suffix++);
+                        headerFile = componentsDir / (name + ".h");
+                        cppFile    = componentsDir / (name + ".cpp");
                     }
-                    std::ofstream f(newFile);
-                    f << "-- " << newFile.stem().string() << "\n\n";
-                    f << "local " << newFile.stem().string() << " = {}\n\n";
-                    f << "function " << newFile.stem().string() << ":OnStart()\n";
-                    f << "end\n\n";
-                    f << "function " << newFile.stem().string() << ":OnUpdate(deltaTime)\n";
-                    f << "end\n\n";
-                    f << "return " << newFile.stem().string() << "\n";
-                    selectedPath = newFile;
-                    renamingPath = newFile;
-                    strncpy_s(renameBuffer, newFile.stem().string().c_str(), sizeof(renameBuffer) - 1);
+                    std::string className = headerFile.stem().string();
+
+                    // Write .h
+                    {
+                        std::ofstream h(headerFile);
+                        h << "#pragma once\n";
+                        h << "#include <RTBEngine/ECS/Component.h>\n";
+                        h << "#include <RTBEngine/Reflection/PropertyMacros.h>\n";
+                        h << "\n";
+                        h << "namespace RTBEditor {\n";
+                        h << "\n";
+                        h << "    class " << className << " : public RTBEngine::ECS::Component {\n";
+                        h << "    public:\n";
+                        h << "        " << className << "();\n";
+                        h << "        ~" << className << "() override;\n";
+                        h << "\n";
+                        h << "        " << className << "(const " << className << "&) = delete;\n";
+                        h << "        " << className << "& operator=(const " << className << "&) = delete;\n";
+                        h << "\n";
+                        h << "        //Loop methods\n";
+                        h << "        void OnAwake() override;\n";
+                        h << "        void OnStart() override;\n";
+                        h << "        void OnUpdate(float deltaTime) override;\n";
+                        h << "        void OnFixedUpdate(float fixedDeltaTime) override;\n";
+                        h << "        void OnDestroy() override;\n";
+                        h << "\n";
+                        h << "        virtual const char* GetTypeName() const override { return \"" << className << "\"; }\n";
+                        h << "        virtual const RTBEngine::Reflection::TypeInfo* GetTypeInfo() const override;\n";
+                        h << "\n";
+                        h << "        // Reflected properties (Proxy)\n";
+                        h << "        float speedRef = 1.0f;\n";
+                        h << "\n";
+                        h << "        RTB_COMPONENT(" << className << ")\n";
+                        h << "\n";
+                        h << "    private:\n";
+                        h << "        float speed = 1.0f;\n";
+                        h << "    };\n";
+                        h << "\n";
+                        h << "}\n";
+                    }
+
+                    // Write .cpp
+                    {
+                        std::ofstream cpp(cppFile);
+                        cpp << "#include \"" << className << ".h\"\n";
+                        cpp << "\n";
+                        cpp << "namespace RTBEditor {\n";
+                        cpp << "\n";
+                        cpp << "    " << className << "::" << className << "() {}\n";
+                        cpp << "    " << className << "::~" << className << "() {}\n";
+                        cpp << "\n";
+                        cpp << "    void " << className << "::OnAwake() {}\n";
+                        cpp << "\n";
+                        cpp << "    void " << className << "::OnStart() {}\n";
+                        cpp << "\n";
+                        cpp << "    void " << className << "::OnUpdate(float deltaTime) {}\n";
+                        cpp << "\n";
+                        cpp << "    void " << className << "::OnFixedUpdate(float fixedDeltaTime) {}\n";
+                        cpp << "\n";
+                        cpp << "    void " << className << "::OnDestroy() {}\n";
+                        cpp << "\n";
+                        cpp << "}\n";
+                    }
+
+                    // Register new files in the .vcxproj
+                    std::filesystem::path vcxprojPath = projectDir / (projectDir.filename().string() + ".vcxproj");
+                    if (std::filesystem::exists(vcxprojPath)) {
+                        std::ifstream vcxIn(vcxprojPath);
+                        std::ostringstream buf;
+                        buf << vcxIn.rdbuf();
+                        vcxIn.close();
+                        std::string vcxContent = buf.str();
+
+                        // Paths relative to the .vcxproj (which sits in projectDir)
+                        std::string relH   = "Source\\Components\\" + headerFile.filename().string();
+                        std::string relCpp = "Source\\Components\\" + cppFile.filename().string();
+
+                        // Insert ClCompile entry before the last </ItemGroup> that contains ClCompile entries
+                        std::string compileAnchor = "<ClCompile Include=\"Source\\Rendering\\EditorGridRenderer.cpp\" />";
+                        std::string includeAnchor = "<ClInclude Include=\"Source\\Components\\TargetHolder.h\" />";
+
+                        std::string newCompile = compileAnchor + "\n    <ClCompile Include=\"" + relCpp + "\" />";
+                        std::string newInclude = includeAnchor + "\n    <ClInclude Include=\"" + relH   + "\" />";
+
+                        size_t pos = vcxContent.find(compileAnchor);
+                        if (pos != std::string::npos) {
+                            vcxContent.replace(pos, compileAnchor.size(), newCompile);
+                        }
+                        pos = vcxContent.find(includeAnchor);
+                        if (pos != std::string::npos) {
+                            vcxContent.replace(pos, includeAnchor.size(), newInclude);
+                        }
+
+                        std::ofstream vcxOut(vcxprojPath);
+                        vcxOut << vcxContent;
+                    }
+
+                    // Open both files in the default external editor
+                    ShellExecuteA(nullptr, "open", headerFile.string().c_str(), nullptr, nullptr, SW_SHOW);
+                    ShellExecuteA(nullptr, "open", cppFile.string().c_str(), nullptr, nullptr, SW_SHOW);
+
+                    // Navigate the browser to Source/Components so the user can see the new files
+                    currentDirectory = componentsDir;
+                    selectedPath = headerFile;
+                    renamingPath = headerFile;
+                    strncpy_s(renameBuffer, className.c_str(), sizeof(renameBuffer) - 1);
                 }
 
                 if (ImGui::MenuItem("Scene")) {

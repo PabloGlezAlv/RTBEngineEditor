@@ -1,6 +1,8 @@
 #include "InspectorPanel.h"
 #include <imgui.h>
 #include <imgui_internal.h>
+#include <Windows.h>
+#include <shellapi.h>
 #include <RTBEngine/ECS/GameObject.h>
 #include <RTBEngine/Math/Vectors/Vector2.h>
 #include <RTBEngine/Math/Vectors/Vector3.h>
@@ -95,6 +97,8 @@ namespace RTBEditor {
             for (auto& c : ext) c = std::tolower(c);
             if (ext == ".cubemap") {
                 DrawCubemapAssetInspector(context.selectedAssetPath);
+            } else if (ext == ".h" || ext == ".cpp") {
+                DrawScriptPreview(context.selectedAssetPath);
             }
         } else {
             ImGui::Text("Select a GameObject to see its properties.");
@@ -824,5 +828,46 @@ namespace RTBEditor {
         for (int i = 0; i < 6; ++i) {
             file << faceKeys[i] << "=" << cubemapFaces[i] << "\n";
         }
+    }
+
+    void InspectorPanel::DrawScriptPreview(const std::filesystem::path& scriptPath) {
+        // Reload file content when selection changes
+        if (scriptPreviewPath != scriptPath) {
+            scriptPreviewPath = scriptPath;
+            scriptPreviewContent.clear();
+            std::ifstream file(scriptPath);
+            if (file.is_open()) {
+                std::ostringstream ss;
+                ss << file.rdbuf();
+                scriptPreviewContent = ss.str();
+            }
+        }
+
+        std::string ext = scriptPath.extension().string();
+        for (auto& c : ext) c = std::tolower(c);
+
+        ImGui::Text("%s", scriptPath.filename().string().c_str());
+        ImGui::SameLine();
+        ImGui::TextDisabled("(%s)", ext == ".h" ? "Header" : "Source");
+        ImGui::Separator();
+        ImGui::Spacing();
+
+        // Open in external editor button
+        if (ImGui::Button("Open in Editor")) {
+            ShellExecuteA(nullptr, "open", scriptPath.string().c_str(), nullptr, nullptr, SW_SHOW);
+        }
+
+        ImGui::Spacing();
+        ImGui::Separator();
+
+        // Read-only scrollable code preview
+        ImVec2 available = ImGui::GetContentRegionAvail();
+        ImGui::InputTextMultiline(
+            "##ScriptPreview",
+            const_cast<char*>(scriptPreviewContent.c_str()),
+            scriptPreviewContent.size() + 1,
+            ImVec2(available.x, available.y - 4.0f),
+            ImGuiInputTextFlags_ReadOnly
+        );
     }
 }
