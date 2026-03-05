@@ -42,6 +42,7 @@ namespace RTBEditor {
             [this]() { OnPause(); },
             [this]() { OnStop(); },
             [this]() { return GetState(); },
+            [this]() { return IsCompilingScripts(); },
             [this]() { OnCompileScripts(); }
         );
 
@@ -107,6 +108,29 @@ namespace RTBEditor {
         uiLayer->GetMenuBar()->SetSceneDirty(
             RTBEngine::ECS::SceneManager::GetInstance().IsSceneDirty()
         );
+
+        // If an async script compilation finished, join the worker and reload the DLL.
+        if (isCompilingScripts && compileJobDone.load(std::memory_order_acquire)) {
+            if (compileThread.joinable()) {
+                compileThread.join();
+            }
+
+            isCompilingScripts = false;
+
+            ScriptCompileResult result =
+                static_cast<ScriptCompileResult>(compileJobResult.load(std::memory_order_acquire));
+
+            if (result == ScriptCompileResult::Success) {
+                namespace fs = std::filesystem;
+                fs::path projectRoot = fs::current_path();
+                fs::path binDirDebug = projectRoot / "x64" / "Debug";
+                fs::path targetDllPath = binDirDebug / "GameScripts.dll";
+
+                if (fs::exists(targetDllPath)) {
+                    RTBEngine::Scripting::ScriptManager::GetInstance().LoadScripts(targetDllPath.string());
+                }
+            }
+        }
 
         if (state == EditorState::Play) {
             engineApp->Update(deltaTime);
@@ -225,48 +249,67 @@ namespace RTBEditor {
 
     void EditorApplication::OnCompileScripts()
     {
+        if (isCompilingScripts)
+            return;
+
+        namespace fs = std::filesystem;
+
         // Path to GameScripts.vcxproj — relative to the editor working directory
-        std::string vcxprojPath = (std::filesystem::current_path() / "GameScripts" / "GameScripts.vcxproj").string();
+        std::string vcxprojPath = (fs::current_path() / "GameScripts" / "GameScripts.vcxproj").string();
 
         auto& scriptManager = RTBEngine::Scripting::ScriptManager::GetInstance();
 
         // Unload current DLL before recompiling so MSBuild can overwrite the file
         scriptManager.UnloadScripts();
 
-        ScriptCompileResult result = BuildSystem::CompileScripts(vcxprojPath);
+        // Ensure previous job is finished
+        if (compileThread.joinable()) {
+            compileThread.join();
+        }
 
-        if (result == ScriptCompileResult::Success) {
-            // MSBuild outputs GameScripts.dll under the project folder (GameScripts/x64/Debug/GameScripts.dll).
-            // Copy it to the editor's binary folder (x64/Debug) so it sits next to RTBEngine.dll
-            // and other dependencies, then load it from there.
+        isCompilingScripts = true;
+        compileJobDone.store(false, std::memory_order_release);
+        compileJobResult.store(static_cast<int>(ScriptCompileResult::Failure), std::memory_order_release);
+
+        // Launch MSBuild in a background thread. It will compile and copy the DLL,
+        // and we will load it back on the main thread once finished.
+        compileThread = std::thread([this, vcxprojPath]() {
             namespace fs = std::filesystem;
 
-            fs::path projectRoot = fs::current_path();
-            fs::path buildDllPath = projectRoot / "GameScripts" / "x64" / "Debug" / "GameScripts.dll";
-            fs::path binDirDebug = projectRoot / "x64" / "Debug";
-            fs::path targetDllPath = binDirDebug / "GameScripts.dll";
+            ScriptCompileResult result = BuildSystem::CompileScripts(vcxprojPath);
 
-            try {
-                if (fs::exists(buildDllPath)) {
-                    if (!fs::exists(binDirDebug)) {
-                        fs::create_directories(binDirDebug);
+            if (result == ScriptCompileResult::Success) {
+                fs::path projectRoot = fs::current_path();
+                fs::path buildDllPath = projectRoot / "GameScripts" / "x64" / "Debug" / "GameScripts.dll";
+                fs::path binDirDebug = projectRoot / "x64" / "Debug";
+                fs::path targetDllPath = binDirDebug / "GameScripts.dll";
+
+                try {
+                    if (fs::exists(buildDllPath)) {
+                        if (!fs::exists(binDirDebug)) {
+                            fs::create_directories(binDirDebug);
+                        }
+                        fs::copy_file(buildDllPath, targetDllPath, fs::copy_options::overwrite_existing);
                     }
-                    fs::copy_file(buildDllPath, targetDllPath, fs::copy_options::overwrite_existing);
+                }
+                catch (const std::exception& e) {
+                    RTBEngine::Core::Logger::GetInstance().Error(
+                        std::string("EditorApplication::OnCompileScripts - Failed to copy GameScripts.dll: ") + e.what());
                 }
             }
-            catch (const std::exception& e) {
-                RTBEngine::Core::Logger::GetInstance().Error(
-                    std::string("EditorApplication::OnCompileScripts - Failed to copy GameScripts.dll: ") + e.what());
-            }
 
-            // Reload the freshly compiled DLL — static initializers re-register all components.
-            scriptManager.LoadScripts(targetDllPath.string());
-        }
+            compileJobResult.store(static_cast<int>(result), std::memory_order_release);
+            compileJobDone.store(true, std::memory_order_release);
+        });
     }
 
     void EditorApplication::Shutdown() {
         // Unload GameScripts.dll before destroying the engine to avoid dangling pointers
         RTBEngine::Scripting::ScriptManager::GetInstance().UnloadScripts();
+
+        if (compileThread.joinable()) {
+            compileThread.join();
+        }
 
         if (engineApp) {
             engineApp->Shutdown();

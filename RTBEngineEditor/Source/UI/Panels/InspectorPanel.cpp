@@ -18,6 +18,7 @@
 #include "../../Project/Project.h"
 #include <fstream>
 #include <sstream>
+#include <filesystem>
 
 namespace RTBEditor {
 
@@ -852,9 +853,25 @@ namespace RTBEditor {
         ImGui::Separator();
         ImGui::Spacing();
 
-        // Open in external editor button
+        // Open script in the associated C++ project/solution so that includes and
+        // IntelliSense work correctly, falling back to just the file if needed.
         if (ImGui::Button("Open in Editor")) {
-            ShellExecuteA(nullptr, "open", scriptPath.string().c_str(), nullptr, nullptr, SW_SHOW);
+            std::filesystem::path solutionPath =
+                std::filesystem::current_path() / "RTBEngineEditor.sln";
+
+            if (std::filesystem::exists(solutionPath)) {
+                ShellExecuteA(
+                    nullptr,
+                    "open",
+                    solutionPath.string().c_str(),
+                    nullptr,
+                    nullptr,
+                    SW_SHOW
+                );
+            }
+            else {
+                ShellExecuteA(nullptr, "open", scriptPath.string().c_str(), nullptr, nullptr, SW_SHOW);
+            }
         }
 
         ImGui::Spacing();

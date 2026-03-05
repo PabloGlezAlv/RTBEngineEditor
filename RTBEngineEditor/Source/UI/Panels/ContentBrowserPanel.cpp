@@ -356,9 +356,29 @@ namespace RTBEditor {
                     // No need to register files explicitly in GameScripts.vcxproj:
                     // it compiles all C++ files under Assets automatically.
 
-                    // Open both files in the default external editor
-                    ShellExecuteA(nullptr, "open", headerFile.string().c_str(), nullptr, nullptr, SW_SHOW);
-                    ShellExecuteA(nullptr, "open", cppFile.string().c_str(), nullptr, nullptr, SW_SHOW);
+                    // Open the C++ project/solution instead of just the files so that
+                    // includes, IntelliSense and build settings are all correctly configured.
+                    // Prefer the RTBEngineEditor solution, which already contains GameScripts.vcxproj.
+                    {
+                        std::filesystem::path solutionPath =
+                            std::filesystem::current_path() / "RTBEngineEditor.sln";
+
+                        if (std::filesystem::exists(solutionPath)) {
+                            ShellExecuteA(
+                                nullptr,
+                                "open",
+                                solutionPath.string().c_str(),
+                                nullptr,
+                                nullptr,
+                                SW_SHOW
+                            );
+                        }
+                        else {
+                            // Fallback: open the individual files with the default editor.
+                            ShellExecuteA(nullptr, "open", headerFile.string().c_str(), nullptr, nullptr, SW_SHOW);
+                            ShellExecuteA(nullptr, "open", cppFile.string().c_str(), nullptr, nullptr, SW_SHOW);
+                        }
+                    }
 
                     selectedPath = headerFile;
                     renamingPath = headerFile;

@@ -151,8 +151,13 @@ namespace RTBEditor {
         ImGui::DockBuilderFinish(dockspaceId);
     }
 
-    void EditorLayer::SetupToolbar(std::function<void()> onPlay, std::function<void()> onPause, std::function<void()> onStop, std::function<EditorState()> getState, std::function<void()> onCompileScripts) {
-        AddPanel(std::make_unique<ToolbarPanel>(onPlay, onPause, onStop, getState, onCompileScripts));
+    void EditorLayer::SetupToolbar(std::function<void()> onPlay,
+                                   std::function<void()> onPause,
+                                   std::function<void()> onStop,
+                                   std::function<EditorState()> getState,
+                                   std::function<bool()> isCompilingScriptsProvider,
+                                   std::function<void()> onCompileScripts) {
+        AddPanel(std::make_unique<ToolbarPanel>(onPlay, onPause, onStop, getState, isCompilingScriptsProvider, onCompileScripts));
     }
 
     void EditorLayer::OpenBuildDialog() {
