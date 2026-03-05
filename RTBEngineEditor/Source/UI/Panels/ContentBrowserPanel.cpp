@@ -218,33 +218,7 @@ namespace RTBEditor {
                                     }
 
                                     // Patch GameScripts.vcxproj with the new filenames
-                                    std::filesystem::path gameScriptsVcxproj = std::filesystem::current_path() / "GameScripts" / "GameScripts.vcxproj";
-                                    if (std::filesystem::exists(gameScriptsVcxproj)) {
-                                        std::ifstream vcxIn(gameScriptsVcxproj);
-                                        std::ostringstream buf;
-                                        buf << vcxIn.rdbuf();
-                                        vcxIn.close();
-                                        std::string vcxContent = buf.str();
-
-                                        // Replace absolute paths (used when registering)
-                                        std::string oldH      = path.string();
-                                        std::string oldCppStr = (path.parent_path() / (path.stem().string() + ".cpp")).string();
-                                        std::string newH      = (path.parent_path() / (newName + ".h")).string();
-                                        std::string newCppStr = (path.parent_path() / (newName + ".cpp")).string();
-
-                                        auto replaceAll = [](std::string& s, const std::string& from, const std::string& to) {
-                                            size_t pos = 0;
-                                            while ((pos = s.find(from, pos)) != std::string::npos) {
-                                                s.replace(pos, from.size(), to);
-                                                pos += to.size();
-                                            }
-                                        };
-                                        replaceAll(vcxContent, oldH, newH);
-                                        replaceAll(vcxContent, oldCppStr, newCppStr);
-
-                                        std::ofstream vcxOut(gameScriptsVcxproj);
-                                        vcxOut << vcxContent;
-                                    }
+                                    // No need to patch GameScripts.vcxproj: it uses wildcard includes (Assets\\**\\*.cpp).
                                 }
                                 selectedPath = newPath;
                             }
@@ -379,35 +353,8 @@ namespace RTBEditor {
                         cpp << "void " << className << "::OnDestroy() {}\n";
                     }
 
-                    // Register files in GameScripts.vcxproj
-                    // The vcxproj sits next to the editor exe in GameScripts/
-                    std::filesystem::path gameScriptsVcxproj = std::filesystem::current_path() / "GameScripts" / "GameScripts.vcxproj";
-                    if (std::filesystem::exists(gameScriptsVcxproj)) {
-                        std::ifstream vcxIn(gameScriptsVcxproj);
-                        std::ostringstream buf;
-                        buf << vcxIn.rdbuf();
-                        vcxIn.close();
-                        std::string vcxContent = buf.str();
-
-                        // Paths relative to GameScripts.vcxproj → use absolute paths for simplicity
-                        std::string absH   = headerFile.string();
-                        std::string absCpp = cppFile.string();
-
-                        // Insert before the closing </ItemGroup> of the existing ClCompile block
-                        std::string compileAnchor = "<ClCompile Include=\"dllmain.cpp\" />";
-                        std::string newCompile =
-                            compileAnchor +
-                            "\n    <ClCompile Include=\"" + absCpp + "\" />" +
-                            "\n    <ClInclude Include=\"" + absH   + "\" />";
-
-                        size_t pos = vcxContent.find(compileAnchor);
-                        if (pos != std::string::npos) {
-                            vcxContent.replace(pos, compileAnchor.size(), newCompile);
-                        }
-
-                        std::ofstream vcxOut(gameScriptsVcxproj);
-                        vcxOut << vcxContent;
-                    }
+                    // No need to register files explicitly in GameScripts.vcxproj:
+                    // it compiles all C++ files under Assets automatically.
 
                     // Open both files in the default external editor
                     ShellExecuteA(nullptr, "open", headerFile.string().c_str(), nullptr, nullptr, SW_SHOW);

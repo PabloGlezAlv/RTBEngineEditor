@@ -85,11 +85,12 @@
       <OutputFile>$(ProjectDir)..\x64\Release\GameScripts.dll</OutputFile>
     </Link>
   </ItemDefinitionGroup>
-  <!-- Compile all C++ scripts under Assets automatically so the editor
+  <!-- Compile all C++ scripts under Assets/Scripts automatically so the editor
        doesn't need to add/remove individual entries when creating/deleting scripts -->
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
-    <ClCompile Include="Assets\**\*.cpp" />
+    <!-- Any .cpp created by the editor under Assets/Scripts will be picked up automatically -->
+    <ClCompile Include="Assets\Scripts\**\*.cpp" />
   </ItemGroup>
 
   <!-- Import default C++ build targets so the 'Build' target exists -->
