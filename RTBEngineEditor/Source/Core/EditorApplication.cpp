@@ -35,7 +35,7 @@ namespace RTBEditor {
 
         // Initialize UI Layer
         uiLayer = std::make_unique<EditorLayer>();
-        uiLayer->Initialize(engineApp->GetWindow()->GetSDLWindow());
+        uiLayer->Initialize(engineApp->GetWindow()->GetSDLWindow(), engineApp->GetImGuiContext());
 
         uiLayer->SetupToolbar(
             [this]() { OnPlay(); },
@@ -62,10 +62,21 @@ namespace RTBEditor {
         });
 
         // Load GameScripts.dll if it already exists from a previous compilation.
-        // If the DLL is not found it is not an error — the user just hasn't compiled yet.
-        std::string dllPath = (std::filesystem::current_path() / "GameScripts.dll").string();
-        if (std::filesystem::exists(dllPath)) {
-            RTBEngine::Scripting::ScriptManager::GetInstance().LoadScripts(dllPath);
+        // Prefer the editor binary folder (x64/Debug) where all engine DLLs live,
+        // so the script DLL can resolve its dependencies.
+        {
+            namespace fs = std::filesystem;
+            fs::path projectRoot = fs::current_path();
+            fs::path binDirDebug = projectRoot / "x64" / "Debug";
+            fs::path binDllPath = binDirDebug / "GameScripts.dll";
+            fs::path legacyPath = projectRoot / "GameScripts.dll";
+
+            if (fs::exists(binDllPath)) {
+                RTBEngine::Scripting::ScriptManager::GetInstance().LoadScripts(binDllPath.string());
+            }
+            else if (fs::exists(legacyPath)) {
+                RTBEngine::Scripting::ScriptManager::GetInstance().LoadScripts(legacyPath.string());
+            }
         }
 
         isRunning = true;
@@ -225,9 +236,31 @@ namespace RTBEditor {
         ScriptCompileResult result = BuildSystem::CompileScripts(vcxprojPath);
 
         if (result == ScriptCompileResult::Success) {
-            // Reload the freshly compiled DLL — static initializers re-register all components
-            std::string dllPath = (std::filesystem::current_path() / "GameScripts.dll").string();
-            scriptManager.LoadScripts(dllPath);
+            // MSBuild outputs GameScripts.dll under the project folder (GameScripts/x64/Debug/GameScripts.dll).
+            // Copy it to the editor's binary folder (x64/Debug) so it sits next to RTBEngine.dll
+            // and other dependencies, then load it from there.
+            namespace fs = std::filesystem;
+
+            fs::path projectRoot = fs::current_path();
+            fs::path buildDllPath = projectRoot / "GameScripts" / "x64" / "Debug" / "GameScripts.dll";
+            fs::path binDirDebug = projectRoot / "x64" / "Debug";
+            fs::path targetDllPath = binDirDebug / "GameScripts.dll";
+
+            try {
+                if (fs::exists(buildDllPath)) {
+                    if (!fs::exists(binDirDebug)) {
+                        fs::create_directories(binDirDebug);
+                    }
+                    fs::copy_file(buildDllPath, targetDllPath, fs::copy_options::overwrite_existing);
+                }
+            }
+            catch (const std::exception& e) {
+                RTBEngine::Core::Logger::GetInstance().Error(
+                    std::string("EditorApplication::OnCompileScripts - Failed to copy GameScripts.dll: ") + e.what());
+            }
+
+            // Reload the freshly compiled DLL — static initializers re-register all components.
+            scriptManager.LoadScripts(targetDllPath.string());
         }
     }
 

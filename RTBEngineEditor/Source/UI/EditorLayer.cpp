@@ -37,7 +37,10 @@ namespace RTBEditor {
 
     EditorLayer::~EditorLayer() {}
 
-    void EditorLayer::Initialize(SDL_Window* window) {
+    void EditorLayer::Initialize(SDL_Window* window, void* imguiContext) {
+        if (imguiContext) {
+            ImGui::SetCurrentContext((ImGuiContext*)imguiContext);
+        }
         ImGuiIO& io = ImGui::GetIO();
         io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
         io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;

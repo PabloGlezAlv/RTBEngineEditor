@@ -220,15 +220,26 @@ namespace RTBEditor {
             return ScriptCompileResult::MSBuildNotFound;
         }
 
+        // Use an explicit path to MSBuild so the editor does not depend on PATH.
+        // This path is based on your current Visual Studio installation.
+        const std::string msbuildPath =
+            "C:\\Program Files\\Microsoft Visual Studio\\18\\Community\\MSBuild\\Current\\Bin\\amd64\\MSBuild.exe";
+
+        if (!std::filesystem::exists(msbuildPath)) {
+            RTB_ERROR("CompileScripts: MSBuild.exe not found at the expected path. "
+                "Please update BuildSystem::CompileScripts with the correct MSBuild location.");
+            return ScriptCompileResult::MSBuildNotFound;
+        }
+
         // Build the MSBuild command.
-        // /nologo suppresses the copyright banner.
-        // /v:m sets verbosity to minimal so only errors and warnings are printed.
+        // We invoke via cmd /C and carefully quote the path with spaces.
+        // /nologo suppresses the banner, /v:m = minimal verbosity.
         std::string cmd =
-            "msbuild \"" + vcxprojPath + "\""
+            "cmd /C \"\"" + msbuildPath + "\" \"" + vcxprojPath + "\""
             " /p:Configuration=" + configuration +
             " /p:Platform=x64"
             " /t:Build"
-            " /nologo /v:m";
+            " /nologo /v:m\"";
 
         RTB_INFO("CompileScripts: Running: " + cmd);
 

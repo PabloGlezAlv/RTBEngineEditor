@@ -226,7 +226,7 @@ namespace RTBEditor {
             case RTBEngine::Reflection::PropertyType::Float: {
                 float* val = (float*)data;
                 if (prop.range) {
-                    changed |= ImGui::SliderFloat(prop.displayName.c_str(), val, prop.range->min, prop.range->max);
+                    changed |= ImGui::SliderFloat(prop.displayName.c_str(), val, prop.range->minValue, prop.range->maxValue);
                 } else {
                     changed |= ImGui::DragFloat(prop.displayName.c_str(), val, 0.1f);
                 }

@@ -115,6 +115,12 @@ if exist "$(ProjectDir)MyProject.rtbproj" xcopy /y /d "$(ProjectDir)MyProject.rt
     <ClCompile Include="Source\Rendering\EditorGridRenderer.cpp" />
     <ClCompile Include="Source\Utils\RaycastUtils.cpp" />
     <ClCompile Include="ThirdParty\ImGuizmo-1.83\ImGuizmo.cpp" />
+    <ClCompile Include="ThirdParty\ImGui\imgui.cpp" />
+    <ClCompile Include="ThirdParty\ImGui\imgui_draw.cpp" />
+    <ClCompile Include="ThirdParty\ImGui\imgui_tables.cpp" />
+    <ClCompile Include="ThirdParty\ImGui\imgui_widgets.cpp" />
+    <ClCompile Include="ThirdParty\ImGui\backends\imgui_impl_sdl2.cpp" />
+    <ClCompile Include="ThirdParty\ImGui\backends\imgui_impl_opengl3.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Build\BuildSystem.h" />
@@ -138,6 +144,11 @@ if exist "$(ProjectDir)MyProject.rtbproj" xcopy /y /d "$(ProjectDir)MyProject.rt
     <ClInclude Include="Source\Rendering\EditorGridRenderer.h" />
     <ClInclude Include="Source\Utils\RaycastUtils.h" />
     <ClInclude Include="ThirdParty\ImGuizmo-1.83\ImGuizmo.h" />
+    <ClInclude Include="ThirdParty\ImGui\imgui.h" />
+    <ClInclude Include="ThirdParty\ImGui\imconfig.h" />
+    <ClInclude Include="ThirdParty\ImGui\imgui_internal.h" />
+    <ClInclude Include="ThirdParty\ImGui\backends\imgui_impl_sdl2.h" />
+    <ClInclude Include="ThirdParty\ImGui\backends\imgui_impl_opengl3.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

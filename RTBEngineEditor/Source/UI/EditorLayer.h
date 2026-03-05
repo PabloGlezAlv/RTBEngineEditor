@@ -24,7 +24,7 @@ namespace RTBEditor {
         EditorLayer();
         ~EditorLayer();
 
-        void Initialize(SDL_Window* window);
+        void Initialize(SDL_Window* window, void* imguiContext = nullptr);
         void Begin();
         void End();
         void OnUIRender();

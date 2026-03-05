@@ -85,7 +85,15 @@
       <OutputFile>$(ProjectDir)..\x64\Release\GameScripts.dll</OutputFile>
     </Link>
   </ItemDefinitionGroup>
+  <!-- Compile all C++ scripts under Assets automatically so the editor
+       doesn't need to add/remove individual entries when creating/deleting scripts -->
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="Assets\**\*.cpp" />
   </ItemGroup>
+
+  <!-- Import default C++ build targets so the 'Build' target exists -->
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
 </Project>
