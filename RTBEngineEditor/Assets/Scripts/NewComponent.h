@@ -17,9 +17,6 @@ public:
     void OnFixedUpdate(float fixedDeltaTime) override;
     void OnDestroy() override;
 
-    virtual const char* GetTypeName() const override { return "NewComponent"; }
-    virtual const RTBEngine::Reflection::TypeInfo* GetTypeInfo() const override;
-
     // Reflected properties (Proxy)
     float speedRef = 1.0f;
 

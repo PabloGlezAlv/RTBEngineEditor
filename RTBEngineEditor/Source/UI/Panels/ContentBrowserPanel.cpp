@@ -321,9 +321,6 @@ namespace RTBEditor {
                         h << "    void OnFixedUpdate(float fixedDeltaTime) override;\n";
                         h << "    void OnDestroy() override;\n";
                         h << "\n";
-                        h << "    virtual const char* GetTypeName() const override { return \"" << className << "\"; }\n";
-                        h << "    virtual const RTBEngine::Reflection::TypeInfo* GetTypeInfo() const override;\n";
-                        h << "\n";
                         h << "    // Reflected properties (Proxy)\n";
                         h << "    float speedRef = 1.0f;\n";
                         h << "\n";
@@ -338,6 +335,10 @@ namespace RTBEditor {
                     {
                         std::ofstream cpp(cppFile);
                         cpp << "#include \"" << className << ".h\"\n";
+                        cpp << "\n";
+                        cpp << "using ThisClass = " << className << ";\n";
+                        cpp << "RTB_REGISTER_COMPONENT(" << className << ")\n";
+                        cpp << "RTB_END_REGISTER(" << className << ")\n";
                         cpp << "\n";
                         cpp << className << "::" << className << "() {}\n";
                         cpp << className << "::~" << className << "() {}\n";
@@ -375,6 +376,61 @@ namespace RTBEditor {
                         }
                         else {
                             // Fallback: open the individual files with the default editor.
+                            ShellExecuteA(nullptr, "open", headerFile.string().c_str(), nullptr, nullptr, SW_SHOW);
+                            ShellExecuteA(nullptr, "open", cppFile.string().c_str(), nullptr, nullptr, SW_SHOW);
+                        }
+                    }
+
+                    selectedPath = headerFile;
+                    renamingPath = headerFile;
+                    strncpy_s(renameBuffer, className.c_str(), sizeof(renameBuffer) - 1);
+                }
+
+                if (ImGui::MenuItem("C++ Class")) {
+                    std::filesystem::path scriptsDir = currentDirectory;
+                    std::filesystem::create_directories(scriptsDir);
+
+                    std::filesystem::path headerFile = scriptsDir / "NewClass.h";
+                    std::filesystem::path cppFile    = scriptsDir / "NewClass.cpp";
+                    int suffix = 1;
+                    while (std::filesystem::exists(headerFile) || std::filesystem::exists(cppFile)) {
+                        std::string name = "NewClass" + std::to_string(suffix++);
+                        headerFile = scriptsDir / (name + ".h");
+                        cppFile    = scriptsDir / (name + ".cpp");
+                    }
+                    std::string className = headerFile.stem().string();
+
+                    // Write .h
+                    {
+                        std::ofstream h(headerFile);
+                        h << "#pragma once\n";
+                        h << "\n";
+                        h << "class " << className << " {\n";
+                        h << "public:\n";
+                        h << "    " << className << "();\n";
+                        h << "    ~" << className << "();\n";
+                        h << "\n";
+                        h << "    " << className << "(const " << className << "&) = delete;\n";
+                        h << "    " << className << "& operator=(const " << className << "&) = delete;\n";
+                        h << "};\n";
+                    }
+
+                    // Write .cpp
+                    {
+                        std::ofstream cpp(cppFile);
+                        cpp << "#include \"" << className << ".h\"\n";
+                        cpp << "\n";
+                        cpp << className << "::" << className << "() {}\n";
+                        cpp << className << "::~" << className << "() {}\n";
+                    }
+
+                    {
+                        std::filesystem::path solutionPath =
+                            std::filesystem::current_path() / "RTBEngineEditor.sln";
+
+                        if (std::filesystem::exists(solutionPath)) {
+                            ShellExecuteA(nullptr, "open", solutionPath.string().c_str(), nullptr, nullptr, SW_SHOW);
+                        } else {
                             ShellExecuteA(nullptr, "open", headerFile.string().c_str(), nullptr, nullptr, SW_SHOW);
                             ShellExecuteA(nullptr, "open", cppFile.string().c_str(), nullptr, nullptr, SW_SHOW);
                         }

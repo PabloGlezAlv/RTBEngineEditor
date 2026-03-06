@@ -274,30 +274,7 @@ namespace RTBEditor {
         // Launch MSBuild in a background thread. It will compile and copy the DLL,
         // and we will load it back on the main thread once finished.
         compileThread = std::thread([this, vcxprojPath]() {
-            namespace fs = std::filesystem;
-
             ScriptCompileResult result = BuildSystem::CompileScripts(vcxprojPath);
-
-            if (result == ScriptCompileResult::Success) {
-                fs::path projectRoot = fs::current_path();
-                fs::path buildDllPath = projectRoot / "GameScripts" / "x64" / "Debug" / "GameScripts.dll";
-                fs::path binDirDebug = projectRoot / "x64" / "Debug";
-                fs::path targetDllPath = binDirDebug / "GameScripts.dll";
-
-                try {
-                    if (fs::exists(buildDllPath)) {
-                        if (!fs::exists(binDirDebug)) {
-                            fs::create_directories(binDirDebug);
-                        }
-                        fs::copy_file(buildDllPath, targetDllPath, fs::copy_options::overwrite_existing);
-                    }
-                }
-                catch (const std::exception& e) {
-                    RTBEngine::Core::Logger::GetInstance().Error(
-                        std::string("EditorApplication::OnCompileScripts - Failed to copy GameScripts.dll: ") + e.what());
-                }
-            }
-
             compileJobResult.store(static_cast<int>(result), std::memory_order_release);
             compileJobDone.store(true, std::memory_order_release);
         });

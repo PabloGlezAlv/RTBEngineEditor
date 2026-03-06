@@ -27,7 +27,8 @@ namespace RTBEditor {
     enum class ScriptCompileResult {
         Success,
         MSBuildNotFound,
-        CompileError
+        CompileError,
+        Failure
     };
 
     class BuildSystem {
