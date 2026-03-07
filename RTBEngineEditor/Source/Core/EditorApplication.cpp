@@ -27,6 +27,23 @@ namespace RTBEditor {
 
         engineApp->SetIsRunning(true);
 
+        // Load GameScripts.dll before loading the scene so script component types are
+        // registered in time for the SceneLoader to instantiate them.
+        {
+            namespace fs = std::filesystem;
+            fs::path projectRoot = fs::current_path();
+            fs::path binDirDebug = projectRoot / "x64" / "Debug";
+            fs::path binDllPath = binDirDebug / "GameScripts.dll";
+            fs::path legacyPath = projectRoot / "GameScripts.dll";
+
+            if (fs::exists(binDllPath)) {
+                RTBEngine::Scripting::ScriptManager::GetInstance().LoadScripts(binDllPath.string());
+            }
+            else if (fs::exists(legacyPath)) {
+                RTBEngine::Scripting::ScriptManager::GetInstance().LoadScripts(legacyPath.string());
+            }
+        }
+
         // Load Project Settings
         project = std::make_unique<Project>();
         if (project->Load("MyProject.rtbproj")) {
@@ -61,24 +78,6 @@ namespace RTBEditor {
             sm.ClearSceneDirty();
             uiLayer->GetMenuBar()->SetSceneDirty(false);
         });
-
-        // Load GameScripts.dll if it already exists from a previous compilation.
-        // Prefer the editor binary folder (x64/Debug) where all engine DLLs live,
-        // so the script DLL can resolve its dependencies.
-        {
-            namespace fs = std::filesystem;
-            fs::path projectRoot = fs::current_path();
-            fs::path binDirDebug = projectRoot / "x64" / "Debug";
-            fs::path binDllPath = binDirDebug / "GameScripts.dll";
-            fs::path legacyPath = projectRoot / "GameScripts.dll";
-
-            if (fs::exists(binDllPath)) {
-                RTBEngine::Scripting::ScriptManager::GetInstance().LoadScripts(binDllPath.string());
-            }
-            else if (fs::exists(legacyPath)) {
-                RTBEngine::Scripting::ScriptManager::GetInstance().LoadScripts(legacyPath.string());
-            }
-        }
 
         isRunning = true;
         return true;
@@ -127,7 +126,21 @@ namespace RTBEditor {
                 fs::path targetDllPath = binDirDebug / "GameScripts.dll";
 
                 if (fs::exists(targetDllPath)) {
+                    // Save the scene path before LoadScripts, which calls UnloadCurrentScene
+                    // internally and clears activeScenePath.
+                    auto& sm = RTBEngine::ECS::SceneManager::GetInstance();
+                    std::string activePath = sm.GetActiveScenePath();
+
                     RTBEngine::Scripting::ScriptManager::GetInstance().LoadScripts(targetDllPath.string());
+
+                    // Reload the scene so existing GameObjects get fresh script component
+                    // instances from the new DLL. The old instances have dangling vtables.
+                    if (!activePath.empty()) {
+                        sm.LoadScene(activePath);
+                    }
+                    // Scene was reloaded — bail out of Update now. Any component pointers
+                    // from before LoadScripts are dangling and must not be touched.
+                    return;
                 }
             }
         }

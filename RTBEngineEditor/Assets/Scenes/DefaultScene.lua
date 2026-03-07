@@ -229,7 +229,7 @@ function CreateScene()
                 }
             },
             {
-                name = "Cube",
+                name = "CubeTest",
                 uuid = "8FB4850C-0A3A-41D9-866E-BB98439FE7DD",
                 position = Vector3(-2.03, 1.10, 0.00),
                 scale = Vector3(1.22, 1.22, 1.22),
@@ -239,6 +239,9 @@ function CreateScene()
                         meshRef = "Default/Models/sphere.obj",
                         textureRef = nil,
                         colorRef = Color(1.00, 1.00, 1.00, 1.00)
+                    },
+                    {
+                        type = "NewComponent"
                     },
                 }
             },

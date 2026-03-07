@@ -2,7 +2,6 @@
 
 using ThisClass = NewComponent;
 RTB_REGISTER_COMPONENT(NewComponent)
-    RTB_PROPERTY(speedRef)
 RTB_END_REGISTER(NewComponent)
 
 NewComponent::NewComponent() {}
