@@ -10,6 +10,7 @@
 #include <RTBEngine/Math/Quaternions/Quaternion.h>
 #include <RTBEngine/ECS/SceneManager.h>
 #include <RTBEngine/ECS/Scene.h>
+#include <RTBEngine/ECS/MissingComponent.h>
 #include <RTBEngine/Reflection/TypeInfo.h>
 #include <RTBEngine/Core/ResourceManager.h>
 #include <RTBEngine/UI/UIElement.h>
@@ -189,10 +190,33 @@ namespace RTBEditor {
             const RTBEngine::Reflection::TypeInfo* typeInfo = component->GetTypeInfo();
             const char* typeName = component->GetTypeName();
 
+            // Missing component — display warning header
+            auto* missing = dynamic_cast<RTBEngine::ECS::MissingComponent*>(component.get());
+            if (missing) {
+                ImGui::PushID(component.get());
+                std::string header = "Missing: " + missing->GetMissingTypeName();
+                ImGui::PushStyleColor(ImGuiCol_Header,        ImVec4(0.6f, 0.1f, 0.1f, 1.0f));
+                ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.7f, 0.2f, 0.2f, 1.0f));
+                ImGui::PushStyleColor(ImGuiCol_HeaderActive,  ImVec4(0.8f, 0.2f, 0.2f, 1.0f));
+                bool open = ImGui::CollapsingHeader(header.c_str(), ImGuiTreeNodeFlags_DefaultOpen);
+                ImGui::PopStyleColor(3);
+                if (ImGui::BeginPopupContextItem("ComponentSettings")) {
+                    if (ImGui::MenuItem("Remove Component")) {
+                        componentsToRemove.push_back(component.get());
+                    }
+                    ImGui::EndPopup();
+                }
+                if (open) {
+                    ImGui::TextDisabled("Script '%s' could not be found.", missing->GetMissingTypeName().c_str());
+                }
+                ImGui::PopID();
+                continue;
+            }
+
             ImGui::PushID(component.get());
             std::string displayName = FormatTypeName(typeName);
             bool open = ImGui::CollapsingHeader(displayName.c_str(), ImGuiTreeNodeFlags_DefaultOpen);
-            
+
             // Context menu for component
             if (ImGui::BeginPopupContextItem("ComponentSettings")) {
                 if (ImGui::MenuItem("Remove Component")) {

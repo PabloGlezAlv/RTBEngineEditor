@@ -240,9 +240,6 @@ function CreateScene()
                         textureRef = nil,
                         colorRef = Color(1.00, 1.00, 1.00, 1.00)
                     },
-                    {
-                        type = "NewComponent"
-                    },
                 }
             },
         }

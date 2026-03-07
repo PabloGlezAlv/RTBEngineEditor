@@ -119,6 +119,10 @@ namespace RTBEditor {
             ScriptCompileResult result =
                 static_cast<ScriptCompileResult>(compileJobResult.load(std::memory_order_acquire));
 
+            if (result != ScriptCompileResult::Success) {
+                pendingScenePath.clear();
+            }
+
             if (result == ScriptCompileResult::Success) {
                 namespace fs = std::filesystem;
                 fs::path projectRoot = fs::current_path();
@@ -126,17 +130,13 @@ namespace RTBEditor {
                 fs::path targetDllPath = binDirDebug / "GameScripts.dll";
 
                 if (fs::exists(targetDllPath)) {
-                    // Save the scene path before LoadScripts, which calls UnloadCurrentScene
-                    // internally and clears activeScenePath.
-                    auto& sm = RTBEngine::ECS::SceneManager::GetInstance();
-                    std::string activePath = sm.GetActiveScenePath();
-
                     RTBEngine::Scripting::ScriptManager::GetInstance().LoadScripts(targetDllPath.string());
 
-                    // Reload the scene so existing GameObjects get fresh script component
-                    // instances from the new DLL. The old instances have dangling vtables.
-                    if (!activePath.empty()) {
-                        sm.LoadScene(activePath);
+                    // Reload using pendingScenePath saved in OnCompileScripts before UnloadScripts
+                    // cleared activeScenePath.
+                    if (!pendingScenePath.empty()) {
+                        RTBEngine::ECS::SceneManager::GetInstance().LoadScene(pendingScenePath);
+                        pendingScenePath.clear();
                     }
                     // Scene was reloaded — bail out of Update now. Any component pointers
                     // from before LoadScripts are dangling and must not be touched.
@@ -272,7 +272,20 @@ namespace RTBEditor {
 
         auto& scriptManager = RTBEngine::Scripting::ScriptManager::GetInstance();
 
-        // Unload current DLL before recompiling so MSBuild can overwrite the file
+        // Save scene path and auto-save to disk BEFORE UnloadScripts clears everything.
+        // UnloadScripts -> UnloadCurrentScene clears activeScenePath, so we must capture
+        // it here while the scene is still loaded.
+        {
+            auto& sm = RTBEngine::ECS::SceneManager::GetInstance();
+            pendingScenePath = sm.GetActiveScenePath();
+            if (!pendingScenePath.empty() && sm.GetActiveScene()) {
+                RTBEngine::Scripting::SceneSaver::SaveScene(sm.GetActiveScene(), pendingScenePath);
+                sm.ClearSceneDirty();
+            }
+        }
+
+        // Unload current DLL before recompiling so MSBuild can overwrite the file.
+        // This also calls UnloadCurrentScene internally.
         scriptManager.UnloadScripts();
 
         // Ensure previous job is finished

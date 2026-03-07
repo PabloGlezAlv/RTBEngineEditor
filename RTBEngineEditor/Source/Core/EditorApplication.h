@@ -48,6 +48,7 @@ namespace RTBEditor {
         std::thread compileThread;
         std::atomic<bool> compileJobDone{ false };
         std::atomic<int> compileJobResult{ 0 };
+        std::string pendingScenePath;
     };
 
 }
