@@ -41,6 +41,7 @@ namespace RTBEditor {
                           std::function<void()> onCompileScripts);
         void SetEditorState(EditorState s) { context.state = s; }
         RTBEngine::ECS::GameObject* GetSelectedGameObject() const { return context.selectedGameObject; }
+        void SetSelectedGameObject(RTBEngine::ECS::GameObject* go) { context.selectedGameObject = go; }
         void OpenBuildDialog();
 
     private:

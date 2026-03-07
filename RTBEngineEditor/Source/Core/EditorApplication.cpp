@@ -179,6 +179,10 @@ namespace RTBEditor {
     void EditorApplication::OnStop() {
         state = EditorState::Edit;
 
+        // Clear selection before scene reload to avoid dangling pointer crashes.
+        if (uiLayer)
+            uiLayer->SetSelectedGameObject(nullptr);
+
         // Clear physics world before reloading so btRigidBody/btCollisionObject
         // from the play session are removed before their GameObjects are destroyed.
         if (engineApp)
