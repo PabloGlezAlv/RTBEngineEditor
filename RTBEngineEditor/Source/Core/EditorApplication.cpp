@@ -161,8 +161,14 @@ namespace RTBEditor {
     }
 
     void EditorApplication::OnPlay() {
+        // Reset and re-initialize physics for the current scene before entering Play
+        RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
+        if (scene && engineApp) {
+            engineApp->ResetPhysics();
+            engineApp->InitializePhysicsForScene(scene);
+        }
+
         state = EditorState::Play;
-        // Focus the Game window when playing
         ImGui::SetWindowFocus("Game");
     }
 
@@ -172,12 +178,16 @@ namespace RTBEditor {
 
     void EditorApplication::OnStop() {
         state = EditorState::Edit;
-        
+
+        // Clear physics world before reloading so btRigidBody/btCollisionObject
+        // from the play session are removed before their GameObjects are destroyed.
+        if (engineApp)
+            engineApp->ResetPhysics();
+
         if (project) {
             RTBEngine::ECS::SceneManager::GetInstance().LoadScene(project->GetStartScene());
         } else {
-            // Fallback
-             RTBEngine::ECS::SceneManager::GetInstance().LoadScene("Default/Scenes/DefaultScene.lua");
+            RTBEngine::ECS::SceneManager::GetInstance().LoadScene("Default/Scenes/DefaultScene.lua");
         }
     }
 

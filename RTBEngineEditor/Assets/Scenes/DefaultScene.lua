@@ -7,7 +7,7 @@ function CreateScene()
             {
                 name = "MainCamera",
                 uuid = "0E7CE370-7C0E-45A8-89CA-AD7A3E70C216",
-                position = Vector3(-0.00, 1.00, 4.94),
+                position = Vector3(-0.00, 0.35, 4.99),
                 rotation = Quaternion.FromEulerAngles(-0.00, 180.00, -0.00),
                 components = {
                     {
@@ -15,7 +15,7 @@ function CreateScene()
                         fov = 45.00,
                         nearClip = 0.10,
                         farClip = 100.00,
-                        projectionType = 0,
+                        projectionType = "Perspective",
                         orthographicSize = 3.50,
                         syncWithTransform = true,
                         isMainCamera = true
@@ -34,7 +34,7 @@ function CreateScene()
                 components = {
                     {
                         type = "LightComponent",
-                        lightType = 0,
+                        lightType = "Directional",
                         color = Color(1.00, 1.00, 1.00, 1.00),
                         intensity = 0.50,
                         range = 10.00,
@@ -52,7 +52,7 @@ function CreateScene()
                 components = {
                     {
                         type = "LightComponent",
-                        lightType = 1,
+                        lightType = "Directional",
                         color = Color(0.20, 0.50, 1.00, 1.00),
                         intensity = 1.00,
                         range = 10.00,
@@ -70,7 +70,7 @@ function CreateScene()
                 components = {
                     {
                         type = "LightComponent",
-                        lightType = 2,
+                        lightType = "Directional",
                         color = Color(1.00, 0.00, 0.00, 50.00),
                         intensity = 50.00,
                         range = 10.00,
@@ -117,7 +117,7 @@ function CreateScene()
                                 text = "RTBEngine Demo",
                                 color = Color(1.00, 1.00, 1.00, 1.00),
                                 fontSize = 28.00,
-                                alignment = 0,
+                                alignment = "Left",
                                 font = nil,
                                 isVisible = true,
                                 raycastTarget = false,
@@ -164,7 +164,7 @@ function CreateScene()
                                         text = "PULSAR",
                                         color = Color(1.00, 1.00, 1.00, 1.00),
                                         fontSize = 16.00,
-                                        alignment = 1,
+                                        alignment = "Left",
                                         font = nil,
                                         isVisible = true,
                                         raycastTarget = false,
@@ -191,6 +191,18 @@ function CreateScene()
                         textureRef = nil,
                         colorRef = Color(1.00, 1.00, 1.00, 1.00)
                     },
+                    {
+                        type = "BoxColliderComponent",
+                        size = Vector3(1.00, 1.00, 1.00),
+                        isTrigger = false
+                    },
+                    {
+                        type = "RigidBodyComponent",
+                        mass = 1.00,
+                        friction = 0.50,
+                        restitution = 0.00,
+                        bodyType = "Static"
+                    },
                 }
             },
             {
@@ -203,6 +215,18 @@ function CreateScene()
                         meshRef = "Default/Models/cube.obj",
                         textureRef = nil,
                         colorRef = Color(1.00, 1.00, 1.00, 1.00)
+                    },
+                    {
+                        type = "BoxColliderComponent",
+                        size = Vector3(1.00, 1.00, 1.00),
+                        isTrigger = false
+                    },
+                    {
+                        type = "RigidBodyComponent",
+                        mass = 1.00,
+                        friction = 0.50,
+                        restitution = 0.00,
+                        bodyType = "Dynamic"
                     },
                 }
             },
