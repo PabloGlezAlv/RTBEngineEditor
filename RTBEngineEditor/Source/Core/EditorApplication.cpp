@@ -237,6 +237,11 @@ namespace RTBEditor {
                     sceneView->GetGridRenderer()->Render(editorCamera);
                 }
 
+                // Render collider wireframe for selected object
+                if (sceneView->GetColliderRenderer()) {
+                    sceneView->GetColliderRenderer()->RenderSelection(editorCamera, uiLayer->GetSelectedGameObject());
+                }
+
                 framebuffer->Unbind();
             }
         }

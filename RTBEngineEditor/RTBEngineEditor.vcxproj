@@ -111,6 +111,7 @@ if exist "$(ProjectDir)MyProject.rtbproj" xcopy /y /d "$(ProjectDir)MyProject.rt
     <ClCompile Include="Source\UI\Panels\ToolbarPanel.cpp" />
     <ClCompile Include="Source\UI\Panels\GameViewPanel.cpp" />
     <ClCompile Include="Source\Rendering\EditorGridRenderer.cpp" />
+    <ClCompile Include="Source\Rendering\ColliderRenderer.cpp" />
     <ClCompile Include="Source\Utils\RaycastUtils.cpp" />
     <ClCompile Include="ThirdParty\ImGuizmo-1.83\ImGuizmo.cpp" />
     <ClCompile Include="ThirdParty\ImGui\imgui.cpp" />
@@ -138,6 +139,7 @@ if exist "$(ProjectDir)MyProject.rtbproj" xcopy /y /d "$(ProjectDir)MyProject.rt
     <ClInclude Include="Source\UI\Panels\ToolbarPanel.h" />
     <ClInclude Include="Source\UI\Panels\GameViewPanel.h" />
     <ClInclude Include="Source\Rendering\EditorGridRenderer.h" />
+    <ClInclude Include="Source\Rendering\ColliderRenderer.h" />
     <ClInclude Include="Source\Utils\RaycastUtils.h" />
     <ClInclude Include="ThirdParty\ImGuizmo-1.83\ImGuizmo.h" />
     <ClInclude Include="ThirdParty\ImGui\imgui.h" />

@@ -31,6 +31,9 @@ namespace RTBEditor {
 
         // Create grid renderer
         gridRenderer = std::make_unique<EditorGridRenderer>();
+
+        // Create collider renderer
+        colliderRenderer = std::make_unique<ColliderRenderer>();
     }
 
     SceneViewPanel::~SceneViewPanel() {}

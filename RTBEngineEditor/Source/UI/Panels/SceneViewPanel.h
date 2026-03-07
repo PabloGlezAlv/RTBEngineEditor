@@ -3,6 +3,7 @@
 #include <RTBEngine/Rendering/FrameBuffer.h>
 #include <RTBEngine/Rendering/Camera.h>
 #include "../../Rendering/EditorGridRenderer.h"
+#include "../../Rendering/ColliderRenderer.h"
 #include "../../Utils/RaycastUtils.h"
 #include <memory>
 
@@ -30,6 +31,9 @@ namespace RTBEditor {
         // Grid renderer access
         EditorGridRenderer* GetGridRenderer() const { return gridRenderer.get(); }
 
+        // Collider renderer access
+        ColliderRenderer* GetColliderRenderer() const { return colliderRenderer.get(); }
+
         // Check if the panel is focused/hovered
         bool IsFocused() const { return isFocused; }
         bool IsHovered() const { return isHovered; }
@@ -50,6 +54,7 @@ namespace RTBEditor {
         std::unique_ptr<RTBEngine::Rendering::Framebuffer> framebuffer;
         RTBEngine::Rendering::Camera editorCamera;
         std::unique_ptr<EditorGridRenderer> gridRenderer;
+        std::unique_ptr<ColliderRenderer> colliderRenderer;
 
         // Viewport state
         int viewportWidth = 0;

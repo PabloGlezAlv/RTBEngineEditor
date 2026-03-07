@@ -238,7 +238,7 @@ function CreateScene()
                 components = {
                     {
                         type = "MeshRenderer",
-                        meshRef = nil,
+                        meshRef = "Assets/Models/walking.fbx",
                         textureRef = nil,
                         colorRef = Color(1.00, 1.00, 1.00, 1.00)
                     },
@@ -261,8 +261,20 @@ function CreateScene()
                     {
                         type = "MeshRenderer",
                         meshRef = "Default/Models/sphere.obj",
-                        textureRef = nil,
+                        textureRef = "Assets/Textures/testTexture.png",
                         colorRef = Color(1.00, 1.00, 1.00, 1.00)
+                    },
+                    {
+                        type = "BoxColliderComponent",
+                        size = Vector3(1.00, 1.00, 1.00),
+                        isTrigger = false
+                    },
+                    {
+                        type = "RigidBodyComponent",
+                        mass = 1.00,
+                        friction = 0.50,
+                        restitution = 0.00,
+                        bodyType = "Dynamic"
                     },
                 }
             },
