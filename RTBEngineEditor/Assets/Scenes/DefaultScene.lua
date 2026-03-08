@@ -238,7 +238,7 @@ function CreateScene()
                 components = {
                     {
                         type = "MeshRenderer",
-                        meshRef = "Assets/Models/walking.fbx",
+                        meshRef = nil,
                         textureRef = nil,
                         colorRef = Color(1.00, 1.00, 1.00, 1.00)
                     },

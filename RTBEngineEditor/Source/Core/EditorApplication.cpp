@@ -103,6 +103,8 @@ namespace RTBEditor {
     }
 
     void EditorApplication::Update(float deltaTime) {
+
+
         // Sync dirty flag from SceneManager to menu bar
         uiLayer->GetMenuBar()->SetSceneDirty(
             RTBEngine::ECS::SceneManager::GetInstance().IsSceneDirty()

@@ -128,6 +128,22 @@ namespace RTBEditor {
                         context.selectedAssetPath.clear();
                     }
                 }
+                // Double click — enter folder
+                if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
+                    if (directoryEntry.is_directory() && renamingPath != path) {
+                        currentDirectory /= path.filename();
+                        selectedPath.clear();
+                        renamingPath.clear();
+                        context.selectedAssetPath.clear();
+                    }
+                    else if (!directoryEntry.is_directory()) {
+                        std::string ext = path.extension().string();
+                        for (auto& c : ext) c = std::tolower(c);
+                        if (ext == ".lua") {
+                            context.pendingSceneLoad = path;
+                        }
+                }
+
 
                 // F2 to rename selected item
                 if (isSelected && ImGui::IsWindowFocused() && ImGui::IsKeyPressed(ImGuiKey_F2) && renamingPath != path) {
