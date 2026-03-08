@@ -119,16 +119,7 @@ namespace RTBEditor {
                     }
                 }
 
-                // Double click — enter folder
-                if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
-                    if (directoryEntry.is_directory() && renamingPath != path) {
-                        currentDirectory /= path.filename();
-                        selectedPath.clear();
-                        renamingPath.clear();
-                        context.selectedAssetPath.clear();
-                    }
-                }
-                // Double click — enter folder
+                // Double click — enter folder or open scene
                 if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
                     if (directoryEntry.is_directory() && renamingPath != path) {
                         currentDirectory /= path.filename();
@@ -142,6 +133,7 @@ namespace RTBEditor {
                         if (ext == ".lua") {
                             context.pendingSceneLoad = path;
                         }
+                    }
                 }
 
 

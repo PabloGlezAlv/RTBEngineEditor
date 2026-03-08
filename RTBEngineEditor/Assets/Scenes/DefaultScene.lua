@@ -228,6 +228,10 @@ function CreateScene()
                         restitution = 0.00,
                         bodyType = "Dynamic"
                     },
+                    {
+                        type = "Connector",
+                        targetRef = "8FB4850C-0A3A-41D9-866E-BB98439FE7DD"
+                    },
                 }
             },
             {
@@ -275,6 +279,9 @@ function CreateScene()
                         friction = 0.50,
                         restitution = 0.00,
                         bodyType = "Dynamic"
+                    },
+                    {
+                        type = "Connectable"
                     },
                 }
             },

@@ -2,13 +2,13 @@
 #include <RTBEngine/ECS/Component.h>
 #include <RTBEngine/Reflection/PropertyMacros.h>
 
-class NewComponent : public RTBEngine::ECS::Component {
+class Connector : public RTBEngine::ECS::Component {
 public:
-    NewComponent();
-    ~NewComponent() override;
+    Connector();
+    ~Connector() override;
 
-    NewComponent(const NewComponent&) = delete;
-    NewComponent& operator=(const NewComponent&) = delete;
+    Connector(const Connector&) = delete;
+    Connector& operator=(const Connector&) = delete;
 
     //Loop methods
     void OnAwake() override;
@@ -18,10 +18,8 @@ public:
     void OnDestroy() override;
 
     // Reflected properties (Proxy)
-    float speedRef = 1.0f;
+    RTBEngine::ECS::GameObject* targetRef = nullptr;
 
-    RTB_COMPONENT(NewComponent)
+    RTB_COMPONENT(Connector)
 
-private:
-    float speed = 1.0f;
 };

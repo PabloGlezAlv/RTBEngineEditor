@@ -110,7 +110,7 @@ namespace RTBEditor {
                 }
             }
 
-            if (ImGui::IsMouseDown(0) && ImGui::IsWindowHovered()) {
+            if (ImGui::IsMouseDown(0) && ImGui::IsWindowHovered() && !ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
                 context.selectedGameObject = nullptr;
             }
 
@@ -187,7 +187,8 @@ namespace RTBEditor {
         // Using pointer as ID to ensure uniqueness
         bool opened = ImGui::TreeNodeEx((void*)gameObject, flags, name.c_str());
 
-        if (ImGui::IsItemClicked()) {
+        if (ImGui::IsItemHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Left)
+            && ImGui::GetDragDropPayload() == nullptr) {
             context.selectedGameObject = gameObject;
         }
 
