@@ -1,6 +1,7 @@
 #include "Connector.h"
 #include <RTBEngine/Core/Logger.h>
 #include <RTBEngine/ECS/GameObject.h>
+#include <string>
 
 using ThisClass = Connector;
 RTB_REGISTER_COMPONENT(Connector)
@@ -16,9 +17,7 @@ void Connector::OnStart()
 {
     RTB_INFO("Connector::OnStart");
     if (targetRef) {
-        char buf[256];
-        snprintf(buf, sizeof(buf), "Object connected: %s", targetRef->GetNameCStr());
-        RTB_INFO(buf);
+        RTB_INFO("Object connected: " + targetRef->GetName());
     }
     else {
         RTB_WARN("Connector: no target assigned.");

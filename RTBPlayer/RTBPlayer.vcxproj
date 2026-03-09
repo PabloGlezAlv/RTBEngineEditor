@@ -61,7 +61,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(ProjectDir)..\RTBEngineEditor\RTBEngine_SDK\Include;$(ProjectDir)..\RTBEngineEditor\RTBEngine_SDK\Include\RTBEngine;$(ProjectDir)..\RTBEngineEditor\RTBEngine_SDK\Include\SDL2;$(ProjectDir)..\RTBEngineEditor\RTBEngine_SDK\Include\Bullet;$(ProjectDir)..\RTBEngineEditor\RTBEngine_SDK\Include\ImGui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
@@ -81,7 +81,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(ProjectDir)..\RTBEngineEditor\RTBEngine_SDK\Include;$(ProjectDir)..\RTBEngineEditor\RTBEngine_SDK\Include\RTBEngine;$(ProjectDir)..\RTBEngineEditor\RTBEngine_SDK\Include\SDL2;$(ProjectDir)..\RTBEngineEditor\RTBEngine_SDK\Include\Bullet;$(ProjectDir)..\RTBEngineEditor\RTBEngine_SDK\Include\ImGui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
