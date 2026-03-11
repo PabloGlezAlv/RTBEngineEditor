@@ -15,6 +15,9 @@ namespace RTBEngine {
     namespace Reflection {
         struct PropertyInfo;
     }
+    namespace Animation {
+        class Animator;
+    }
 }
 
 namespace RTBEditor {
@@ -32,6 +35,7 @@ namespace RTBEditor {
         void DrawProperty(RTBEngine::ECS::Component* component, const RTBEngine::Reflection::PropertyInfo& prop);
         std::string FormatTypeName(const char* typeName);
 
+        void DrawAnimatorComponent(RTBEngine::Animation::Animator* animator);
         void DrawCubemapAssetInspector(const std::filesystem::path& cubemapPath);
         void SaveCubemapAsset(const std::filesystem::path& cubemapPath);
         void DrawScriptPreview(const std::filesystem::path& scriptPath);

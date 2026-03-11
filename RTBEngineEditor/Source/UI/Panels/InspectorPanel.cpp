@@ -4,6 +4,7 @@
 #include <Windows.h>
 #include <shellapi.h>
 #include <RTBEngine/ECS/GameObject.h>
+#include <RTBEngine/Animation/Animator.h>
 #include <RTBEngine/Math/Vectors/Vector2.h>
 #include <RTBEngine/Math/Vectors/Vector3.h>
 #include <RTBEngine/Math/Vectors/Vector4.h>
@@ -14,6 +15,7 @@
 #include <RTBEngine/Reflection/TypeInfo.h>
 #include <RTBEngine/Core/ResourceManager.h>
 #include <RTBEngine/UI/UIElement.h>
+#include <RTBEngine/Rendering/ModelLoader.h>
 #include "../DragDropPayloads.h"
 #include "../Modals/AssetBrowserModal.h"
 #include "../../Project/Project.h"
@@ -226,7 +228,9 @@ namespace RTBEditor {
             }
 
             if (open) {
-                if (typeInfo) {
+                if (std::string(typeName) == "Animator") {
+                    DrawAnimatorComponent(static_cast<RTBEngine::Animation::Animator*>(component.get()));
+                } else if (typeInfo) {
                     auto properties = typeInfo->GetInspectorProperties();
                     for (const auto* prop : properties) {
                         DrawProperty(component.get(), *prop);
@@ -715,6 +719,149 @@ namespace RTBEditor {
         }
 
         ImGui::PopID();
+    }
+
+    void InspectorPanel::DrawAnimatorComponent(RTBEngine::Animation::Animator* animator) {
+        bool changed = false;
+
+        //Model path
+        {
+            char buf[1024];
+            memset(buf, 0, sizeof(buf));
+            strncpy_s(buf, sizeof(buf), animator->modelRef.c_str(), _TRUNCATE);
+            if (ImGui::InputText("Model", buf, sizeof(buf))) {
+                animator->modelRef = buf;
+                changed = true;
+            }
+        }
+
+        //Additional models list
+        ImGui::Text("Additional Models");
+        std::vector<int> toRemove;
+        for (int i = 0; i < static_cast<int>(animator->additionalModels.size()); i++) {
+            ImGui::PushID(i);
+            char buf[1024];
+            memset(buf, 0, sizeof(buf));
+            strncpy_s(buf, sizeof(buf), animator->additionalModels[i].c_str(), _TRUNCATE);
+            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - 30.0f);
+            if (ImGui::InputText("##addModel", buf, sizeof(buf))) {
+                animator->additionalModels[i] = buf;
+                changed = true;
+            }
+            ImGui::SameLine();
+            if (ImGui::SmallButton("x")) {
+                toRemove.push_back(i);
+                changed = true;
+            }
+            ImGui::PopID();
+        }
+        for (int i = static_cast<int>(toRemove.size()) - 1; i >= 0; i--) {
+            animator->additionalModels.erase(animator->additionalModels.begin() + toRemove[i]);
+        }
+        if (ImGui::Button("+ Add Model")) {
+            animator->additionalModels.push_back("");
+            changed = true;
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Reload Clips")) {
+            // Reload animation clips from all model paths (meshes from additional files are discarded)
+            auto StripPrefix = [](const std::string& s) -> std::string {
+                size_t pipe = s.find('|');
+                return (pipe != std::string::npos) ? s.substr(pipe + 1) : s;
+            };
+            // Primary model: take clips only, free the re-loaded mesh duplicates
+            if (!animator->modelRef.empty()) {
+                RTBEngine::Rendering::ModelData data = RTBEngine::Rendering::ModelLoader::LoadModelWithAnimations(animator->modelRef);
+                for (const auto& clip : data.animations) {
+                    animator->AddClip(StripPrefix(clip->GetName()), clip);
+                }
+                for (RTBEngine::Rendering::Mesh* mesh : data.meshes) {
+                    delete mesh;
+                }
+            }
+            // Additional models: take clips only, free meshes
+            for (const auto& path : animator->additionalModels) {
+                if (path.empty()) continue;
+                RTBEngine::Rendering::ModelData data = RTBEngine::Rendering::ModelLoader::LoadModelWithAnimations(path);
+                for (const auto& clip : data.animations) {
+                    animator->AddClip(StripPrefix(clip->GetName()), clip);
+                }
+                for (RTBEngine::Rendering::Mesh* mesh : data.meshes) {
+                    delete mesh;
+                }
+            }
+            changed = true;
+        }
+
+        //Default clip combo
+        {
+            std::vector<std::string> clipNames = animator->GetClipNames();
+            std::string currentDefault = animator->defaultClip;
+            const char* previewValue = currentDefault.empty() ? "(none)" : currentDefault.c_str();
+            if (ImGui::BeginCombo("Default Clip", previewValue)) {
+                if (ImGui::Selectable("(none)", currentDefault.empty())) {
+                    animator->defaultClip.clear();
+                    changed = true;
+                }
+                for (const auto& name : clipNames) {
+                    bool isSelected = (name == currentDefault);
+                    if (ImGui::Selectable(name.c_str(), isSelected)) {
+                        animator->defaultClip = name;
+                        changed = true;
+                    }
+                    if (isSelected) ImGui::SetItemDefaultFocus();
+                }
+                ImGui::EndCombo();
+            }
+        }
+
+        //Speed slider
+        if (ImGui::SliderFloat("Speed", &animator->speed, 0.0f, 3.0f)) {
+            animator->SetSpeed(animator->speed);
+            changed = true;
+        }
+
+        //Playing and looping checkboxes
+        if (ImGui::Checkbox("Playing", &animator->playing)) changed = true;
+        ImGui::SameLine();
+        if (ImGui::Checkbox("Looping", &animator->looping)) changed = true;
+
+        //Playback buttons
+        ImGui::Spacing();
+        if (ImGui::Button("Play")) {
+            const std::string& clip = animator->defaultClip.empty()
+                ? animator->GetCurrentClipName()
+                : animator->defaultClip;
+            if (!clip.empty()) animator->Play(clip, animator->looping);
+            changed = true;
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Stop")) {
+            animator->Stop();
+            changed = true;
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Pause")) {
+            animator->Pause();
+            changed = true;
+        }
+
+        //Loaded clips read-only list
+        ImGui::Spacing();
+        ImGui::TextDisabled("Loaded Clips");
+        ImGui::Separator();
+        std::vector<std::string> clipNames = animator->GetClipNames();
+        if (clipNames.empty()) {
+            ImGui::TextDisabled("(none)");
+        } else {
+            for (const auto& name : clipNames) {
+                ImGui::Text("%s", name.c_str());
+            }
+        }
+
+        if (changed) {
+            RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+        }
     }
 
     std::string InspectorPanel::FormatTypeName(const char* typeName) {

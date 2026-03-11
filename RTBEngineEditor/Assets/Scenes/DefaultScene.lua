@@ -182,7 +182,7 @@ function CreateScene()
             {
                 name = "Floor",
                 uuid = "737688CD-BE46-4776-B38D-CA30B01FB6D1",
-                position = Vector3(0.00, -0.05, 0.00),
+                position = Vector3(-0.46, -0.05, 0.00),
                 scale = Vector3(10.00, 0.10, 10.00),
                 components = {
                     {
@@ -250,6 +250,7 @@ function CreateScene()
                         type = "Animator",
                         modelRef = "Assets/Models/walking.fbx",
                         currentClipName = "mixamo.com",
+                        defaultClip = "mixamo.com",
                         speed = 1.00,
                         playing = true,
                         looping = true
@@ -257,7 +258,7 @@ function CreateScene()
                 }
             },
             {
-                name = "CubeTest",
+                name = "SphereTest",
                 uuid = "8FB4850C-0A3A-41D9-866E-BB98439FE7DD",
                 position = Vector3(-2.03, 1.10, 0.00),
                 scale = Vector3(1.22, 1.22, 1.22),
@@ -269,11 +270,6 @@ function CreateScene()
                         colorRef = Color(1.00, 1.00, 1.00, 1.00)
                     },
                     {
-                        type = "BoxColliderComponent",
-                        size = Vector3(1.00, 1.00, 1.00),
-                        isTrigger = false
-                    },
-                    {
                         type = "RigidBodyComponent",
                         mass = 1.00,
                         friction = 0.50,
@@ -282,6 +278,40 @@ function CreateScene()
                     },
                     {
                         type = "Connectable"
+                    },
+                    {
+                        type = "SphereColliderComponent",
+                        radius = 0.80,
+                        centerOffset = Vector3(0.00, 0.00, 0.00),
+                        isTrigger = false
+                    },
+                }
+            },
+            {
+                name = "CharacterMultiAnim",
+                uuid = "C2B03D21-BCCB-4623-BDAE-957423F3BE39",
+                position = Vector3(2.00, 0.00, 2.00),
+                rotation = Quaternion.FromEulerAngles(0.00, -69.24, 0.00),
+                scale = Vector3(0.01, 0.01, 0.01),
+                components = {
+                    {
+                        type = "MeshRenderer",
+                        meshRef = nil,
+                        textureRef = nil,
+                        colorRef = Color(1.00, 1.00, 1.00, 1.00)
+                    },
+                    {
+                        type = "Animator",
+                        modelRef = "Assets/Models/walking.fbx",
+                        currentClipName = "Attack",
+                        defaultClip = "",
+                        speed = 0.74,
+                        playing = true,
+                        looping = true,
+                        additionalModels = {
+                            "Assets/Models/attack.fbx",
+                            "Assets/Models/hit.fbx",
+                        }
                     },
                 }
             },
