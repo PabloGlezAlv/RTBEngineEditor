@@ -109,6 +109,7 @@ if exist "$(ProjectDir)MyProject.rtbproj" xcopy /y /d "$(ProjectDir)MyProject.rt
     <ClCompile Include="Source\UI\Panels\ConsolePanel.cpp" />
     <ClCompile Include="Source\UI\Panels\SceneViewPanel.cpp" />
     <ClCompile Include="Source\UI\Panels\ToolbarPanel.cpp" />
+    <ClCompile Include="Source\UI\Panels\StatsOverlayPanel.cpp" />
     <ClCompile Include="Source\UI\Panels\GameViewPanel.cpp" />
     <ClCompile Include="Source\Rendering\EditorGridRenderer.cpp" />
     <ClCompile Include="Source\Rendering\ColliderRenderer.cpp" />
@@ -137,6 +138,7 @@ if exist "$(ProjectDir)MyProject.rtbproj" xcopy /y /d "$(ProjectDir)MyProject.rt
     <ClInclude Include="Source\UI\Panels\ConsolePanel.h" />
     <ClInclude Include="Source\UI\Panels\SceneViewPanel.h" />
     <ClInclude Include="Source\UI\Panels\ToolbarPanel.h" />
+    <ClInclude Include="Source\UI\Panels\StatsOverlayPanel.h" />
     <ClInclude Include="Source\UI\Panels\GameViewPanel.h" />
     <ClInclude Include="Source\Rendering\EditorGridRenderer.h" />
     <ClInclude Include="Source\Rendering\ColliderRenderer.h" />

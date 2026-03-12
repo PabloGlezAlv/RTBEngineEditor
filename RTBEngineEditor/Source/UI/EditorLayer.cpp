@@ -33,6 +33,7 @@ namespace RTBEditor {
         AddPanel(std::make_unique<InspectorPanel>());
         AddPanel(std::make_unique<ContentBrowserPanel>());
         AddPanel(std::make_unique<ConsolePanel>());
+        AddPanel(std::make_unique<StatsOverlayPanel>());
     }
 
     EditorLayer::~EditorLayer() {}

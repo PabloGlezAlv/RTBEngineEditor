@@ -49,6 +49,9 @@ namespace RTBEditor {
         std::atomic<bool> compileJobDone{ false };
         std::atomic<int> compileJobResult{ 0 };
         std::string pendingScenePath;
+
+        // Stats smoothing
+        float smoothedFps = 0.0f;
     };
 
 }

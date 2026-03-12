@@ -242,7 +242,7 @@ function CreateScene()
                 components = {
                     {
                         type = "MeshRenderer",
-                        meshRef = nil,
+                        meshRef = "Assets/Models/walking.fbx",
                         textureRef = nil,
                         colorRef = Color(1.00, 1.00, 1.00, 1.00)
                     },
@@ -291,7 +291,7 @@ function CreateScene()
                 name = "CharacterMultiAnim",
                 uuid = "C2B03D21-BCCB-4623-BDAE-957423F3BE39",
                 position = Vector3(2.00, 0.00, 2.00),
-                rotation = Quaternion.FromEulerAngles(0.00, -69.24, 0.00),
+                rotation = Quaternion.FromEulerAngles(0.00, 69.24, -0.00),
                 scale = Vector3(0.01, 0.01, 0.01),
                 components = {
                     {
@@ -304,7 +304,7 @@ function CreateScene()
                         type = "Animator",
                         modelRef = "Assets/Models/walking.fbx",
                         currentClipName = "Attack",
-                        defaultClip = "",
+                        defaultClip = "Hit",
                         speed = 0.74,
                         playing = true,
                         looping = true,

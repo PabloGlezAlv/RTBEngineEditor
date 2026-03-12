@@ -7,6 +7,9 @@
 #include <RTBEngine/Rendering/FrameBuffer.h>
 #include <RTBEngine/Scripting/SceneSaver.h>
 #include <RTBEngine/Scripting/ScriptManager.h>
+#include <RTBEngine/ECS/MeshRenderer.h>
+#include <RTBEngine/Audio/AudioSystem.h>
+#include <RTBEngine/Physics/PhysicsWorld.h>
 #include "../UI/Panels/SceneViewPanel.h"
 #include "../Build/BuildSystem.h"
 
@@ -104,6 +107,31 @@ namespace RTBEditor {
 
     void EditorApplication::Update(float deltaTime) {
 
+        // Update smoothed FPS and frame time
+        if (uiLayer) {
+            StatsData& stats = uiLayer->GetContext().stats;
+            float instantFps = (deltaTime > 0.0f) ? (1.0f / deltaTime) : 0.0f;
+            smoothedFps = smoothedFps * 0.9f + instantFps * 0.1f;
+            stats.fps = smoothedFps;
+            stats.frameTimeMs = deltaTime * 1000.0f;
+
+            // ECS / scene counters
+            RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
+            if (scene) {
+                stats.gameObjects = scene->GetActiveGameObjectCount();
+                stats.components = scene->GetActiveComponentCount();
+            }
+
+            // Physics
+            if (engineApp) {
+                RTBEngine::Physics::PhysicsWorld* pw = engineApp->GetPhysicsWorld();
+                stats.physicsBodies = pw ? static_cast<uint32_t>(pw->GetActiveBodyCount()) : 0u;
+            }
+
+            // Audio
+            stats.audioSources = static_cast<uint32_t>(
+                RTBEngine::Audio::AudioSystem::GetInstance().GetActiveSourceCount());
+        }
 
         // Sync dirty flag from SceneManager to menu bar
         uiLayer->GetMenuBar()->SetSceneDirty(
@@ -201,6 +229,13 @@ namespace RTBEditor {
         // Render scene to Scene View Panel framebuffer
         RenderSceneToFramebuffer();
 
+        // Read render stats after all draw calls have been submitted
+        if (uiLayer) {
+            StatsData& stats = uiLayer->GetContext().stats;
+            stats.drawCalls = RTBEngine::ECS::MeshRenderer::GetDrawCallCount();
+            stats.triangles = RTBEngine::ECS::MeshRenderer::GetTriangleCount();
+        }
+
         // Clear the main window
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -221,6 +256,9 @@ namespace RTBEditor {
 
         RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
         if (!scene) return;
+
+        // Reset per-frame render counters before any draw submissions
+        RTBEngine::ECS::MeshRenderer::ResetRenderStats();
 
         // 1. Render Scene View (Editor Camera)
         SceneViewPanel* sceneView = uiLayer->GetSceneViewPanel();

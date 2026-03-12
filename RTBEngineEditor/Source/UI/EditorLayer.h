@@ -4,6 +4,7 @@
 #include "Panels/SceneViewPanel.h"
 #include "Panels/GameViewPanel.h"
 #include "Panels/ToolbarPanel.h"
+#include "Panels/StatsOverlayPanel.h"
 #include "Modals/BuildDialog.h"
 #include "MainMenuBar.h"
 #include <imgui.h>
@@ -42,6 +43,7 @@ namespace RTBEditor {
         void SetEditorState(EditorState s) { context.state = s; }
         RTBEngine::ECS::GameObject* GetSelectedGameObject() const { return context.selectedGameObject; }
         void SetSelectedGameObject(RTBEngine::ECS::GameObject* go) { context.selectedGameObject = go; }
+        EditorContext& GetContext() { return context; }
         void OpenBuildDialog();
 
     private:

@@ -64,8 +64,22 @@ namespace RTBEditor {
              ImGui::EndDisabled();
         }
 
-        // Compile Scripts button — right side of toolbar
+        // Stats toggle button — right side, before compile button
+        float statsButtonWidth = 50.0f;
         float compileButtonWidth = 110.0f;
+        ImGui::SameLine(ImGui::GetWindowContentRegionMax().x - compileButtonWidth - statsButtonWidth - 8.0f);
+
+        if (context.showStatsOverlay) {
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.4f, 0.4f, 0.15f, 1.0f));
+        }
+        if (ImGui::Button("Stats", ImVec2(statsButtonWidth, 0))) {
+            context.showStatsOverlay = !context.showStatsOverlay;
+        }
+        if (context.showStatsOverlay) {
+            ImGui::PopStyleColor();
+        }
+
+        // Compile Scripts button — right side of toolbar
         ImGui::SameLine(ImGui::GetWindowContentRegionMax().x - compileButtonWidth);
 
         bool isCompiling = isCompilingScriptsProvider ? isCompilingScriptsProvider() : false;
