@@ -69,13 +69,14 @@ namespace RTBEditor {
         float compileButtonWidth = 110.0f;
         ImGui::SameLine(ImGui::GetWindowContentRegionMax().x - compileButtonWidth - statsButtonWidth - 8.0f);
 
-        if (context.showStatsOverlay) {
+        bool statsActive = context.showStatsOverlay;
+        if (statsActive) {
             ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.4f, 0.4f, 0.15f, 1.0f));
         }
         if (ImGui::Button("Stats", ImVec2(statsButtonWidth, 0))) {
             context.showStatsOverlay = !context.showStatsOverlay;
         }
-        if (context.showStatsOverlay) {
+        if (statsActive) {
             ImGui::PopStyleColor();
         }
 
