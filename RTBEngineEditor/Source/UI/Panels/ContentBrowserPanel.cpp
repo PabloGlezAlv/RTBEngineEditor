@@ -1,11 +1,13 @@
 #include "ContentBrowserPanel.h"
 #include <imgui.h>
 #include <RTBEngine/Core/ResourceManager.h>
-#include "../../Project/Project.h"
-#include "../DragDropPayloads.h"
 #include <RTBEngine/ECS/Prefab.h>
 #include <RTBEngine/ECS/PrefabRegistry.h>
 #include <RTBEngine/Scripting/PrefabSaver.h>
+#include <RTBEngine/ECS/SceneManager.h>
+#include "../../Project/Project.h"
+#include "../DragDropPayloads.h"
+
 
 #include <fstream>
 #include <sstream>
@@ -280,6 +282,11 @@ namespace RTBEditor {
                 if (prefab) {
                     RTBEngine::Scripting::PrefabSaver::Save(*prefab, savePath.string());
                     RTBEngine::ECS::PrefabRegistry::GetInstance().Register(savePath.string());
+                    
+                    //Used gameobject is now an instance of a prefab
+                    go->SetPrefabName(prefabName);
+                    RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+
                 }
             }
             ImGui::EndDragDropTarget();

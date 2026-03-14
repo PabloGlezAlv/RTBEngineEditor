@@ -1,7 +1,9 @@
 #include "Project.h"
+#include <RTBEngine/ECS/PrefabRegistry.h>
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <filesystem>
 
 namespace RTBEditor {
 
@@ -42,6 +44,11 @@ namespace RTBEditor {
         }
 
         activeProject = this;
+
+        std::filesystem::path assetsDir = projectDirectory / assetDirectory;
+        RTBEngine::ECS::PrefabRegistry::GetInstance().Clear();
+        RTBEngine::ECS::PrefabRegistry::GetInstance().LoadAll(assetsDir.string());
+
         return true;
     }
 

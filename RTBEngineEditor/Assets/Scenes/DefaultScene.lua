@@ -249,7 +249,7 @@ function CreateScene()
                     {
                         type = "Animator",
                         modelRef = "Assets/Models/walking.fbx",
-                        currentClipName = "mixamo.com",
+                        currentClipName = "Walking",
                         defaultClip = "mixamo.com",
                         speed = 1.00,
                         playing = true,
@@ -260,38 +260,22 @@ function CreateScene()
             {
                 name = "SphereTest",
                 uuid = "8FB4850C-0A3A-41D9-866E-BB98439FE7DD",
-                position = Vector3(-2.03, 1.10, 0.00),
+                prefab = "SphereTest",
+                position = Vector3(-2.64, 1.10, 1.15),
                 scale = Vector3(1.22, 1.22, 1.22),
-                components = {
-                    {
-                        type = "MeshRenderer",
-                        meshRef = "Default/Models/sphere.obj",
-                        textureRef = "Assets/Textures/testTexture.png",
-                        colorRef = Color(1.00, 1.00, 1.00, 1.00)
+                overrides = {
+                    components = {
+                        { type = "RigidBodyComponent",
+                            restitution = 0.10,
+                        },
                     },
-                    {
-                        type = "RigidBodyComponent",
-                        mass = 1.00,
-                        friction = 0.50,
-                        restitution = 0.00,
-                        bodyType = "Dynamic"
-                    },
-                    {
-                        type = "Connectable"
-                    },
-                    {
-                        type = "SphereColliderComponent",
-                        radius = 0.80,
-                        centerOffset = Vector3(0.00, 0.00, 0.00),
-                        isTrigger = false
-                    },
-                }
+                },
             },
             {
                 name = "CharacterMultiAnim",
                 uuid = "C2B03D21-BCCB-4623-BDAE-957423F3BE39",
                 position = Vector3(2.00, 0.00, 2.00),
-                rotation = Quaternion.FromEulerAngles(0.00, 69.24, -0.00),
+                rotation = Quaternion.FromEulerAngles(0.00, -69.24, 0.00),
                 scale = Vector3(0.01, 0.01, 0.01),
                 components = {
                     {

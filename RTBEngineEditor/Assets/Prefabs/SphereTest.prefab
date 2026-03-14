@@ -1,16 +1,11 @@
 return {
-    name = "Cube",
+    name = "SphereTest",
     components = {
         {
             type = "MeshRenderer",
-            meshRef = "Default/Models/cube.obj",
-            textureRef = nil,
+            meshRef = "Default/Models/sphere.obj",
+            textureRef = "Assets/Textures/testTexture.png",
             colorRef = Color(1.00, 1.00, 1.00, 1.00)
-        },
-        {
-            type = "BoxColliderComponent",
-            size = Vector3(1.00, 1.00, 1.00),
-            isTrigger = false
         },
         {
             type = "RigidBodyComponent",
@@ -20,8 +15,13 @@ return {
             bodyType = "Dynamic"
         },
         {
-            type = "Connector",
-            targetRef = "8FB4850C-0A3A-41D9-866E-BB98439FE7DD"
+            type = "Connectable"
+        },
+        {
+            type = "SphereColliderComponent",
+            radius = 0.80,
+            centerOffset = Vector3(0.00, 0.00, 0.00),
+            isTrigger = false
         },
     }
 }

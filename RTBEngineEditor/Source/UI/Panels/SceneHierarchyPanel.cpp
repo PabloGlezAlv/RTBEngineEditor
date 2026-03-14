@@ -73,6 +73,11 @@ namespace RTBEditor {
                 ImGui::Button(cubemapLabel.c_str(), ImVec2(ImGui::GetContentRegionAvail().x - 26.0f, 0));
                 ImGui::PopStyleColor();
 
+                // Fill remaining window space to accept drops anywhere
+                ImVec2 available = ImGui::GetContentRegionAvail();
+                if (available.y > 0)
+                    ImGui::Dummy(available);
+
                 // Drop target for cubemap folder
                 if (ImGui::BeginDragDropTarget()) {
                     if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(PAYLOAD_CUBEMAP)) {
