@@ -3,6 +3,10 @@
 #include <RTBEngine/Core/ResourceManager.h>
 #include "../../Project/Project.h"
 #include "../DragDropPayloads.h"
+#include <RTBEngine/ECS/Prefab.h>
+#include <RTBEngine/ECS/PrefabRegistry.h>
+#include <RTBEngine/Scripting/PrefabSaver.h>
+
 #include <fstream>
 #include <sstream>
 #include <Windows.h>
@@ -34,6 +38,7 @@ namespace RTBEditor {
         icons[IconType::Model]   = rm.LoadTexture("Default/Icons/model.png");
         icons[IconType::Image]   = rm.LoadTexture("Default/Icons/image.png");
         icons[IconType::Shader]  = rm.LoadTexture("Default/Icons/shader.png");
+        icons[IconType::Prefab] = rm.LoadTexture("Default/Icons/prefab.png");
 
         // Use folder icon as fallback if dedicated cubemap icon is not present
         RTBEngine::Rendering::Texture* cubemapIcon = rm.LoadTexture("Default/Icons/cubemap.png");
@@ -53,6 +58,8 @@ namespace RTBEditor {
         if (ext == ".obj" || ext == ".fbx") return icons[IconType::Model];
         if (ext == ".png" || ext == ".jpg" || ext == ".tga") return icons[IconType::Image];
         if (ext == ".glsl" || ext == ".vert" || ext == ".frag") return icons[IconType::Shader];
+        if (ext == ".prefab") return icons[IconType::Prefab];
+
 
         return icons[IconType::File];
     }
@@ -200,6 +207,16 @@ namespace RTBEditor {
                         ImGui::SetDragDropPayload(PAYLOAD_FONT, &payload, sizeof(FontPayload));
                         ImGui::Text("Font: %s", filenameString.c_str());
                     }
+                    else if (ext == ".prefab") {
+                        PrefabPayload payload;
+                        std::string relativePath = std::filesystem::relative(path, rootPath).string();
+                        strncpy_s(payload.path, relativePath.c_str(), sizeof(payload.path) - 1);
+                        payload.path[sizeof(payload.path) - 1] = '\0';
+
+                        ImGui::SetDragDropPayload(PAYLOAD_PREFAB, &payload, sizeof(PrefabPayload));
+                        ImGui::Text("Prefab: %s", filenameString.c_str());
+                    }
+
 
                     ImGui::EndDragDropSource();
                 }
@@ -250,6 +267,25 @@ namespace RTBEditor {
                 ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "[Empty Directory]");
             }
         }
+        // Drop target: receive GameObject from Hierarchy to save as Prefab
+        if (ImGui::BeginDragDropTarget()) {
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(PAYLOAD_GAMEOBJECT)) {
+                const GameObjectPayload* data = static_cast<const GameObjectPayload*>(payload->Data);
+                RTBEngine::ECS::GameObject* go = reinterpret_cast<RTBEngine::ECS::GameObject*>(data->gameObjectId);
+
+                std::string prefabName = go->GetName();
+                std::filesystem::path savePath = currentDirectory / (prefabName + ".prefab");
+
+                auto prefab = RTBEngine::ECS::Prefab::CreateFromGameObject(go);
+                if (prefab) {
+                    RTBEngine::Scripting::PrefabSaver::Save(*prefab, savePath.string());
+                    RTBEngine::ECS::PrefabRegistry::GetInstance().Register(savePath.string());
+                }
+            }
+            ImGui::EndDragDropTarget();
+        }
+
+
 
         // Click on empty area deselects
         if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && ImGui::IsWindowHovered() && !ImGui::IsAnyItemHovered()) {

@@ -3,6 +3,8 @@
 #include <RTBEngine/ECS/SceneManager.h>
 #include <RTBEngine/ECS/Scene.h>
 #include <RTBEngine/ECS/MeshRenderer.h>
+#include <RTBEngine/ECS/Prefab.h>
+#include <RTBEngine/ECS/PrefabRegistry.h>
 #include <RTBEngine/Core/ResourceManager.h>
 #include <RTBEngine/Rendering/Cubemap.h>
 #include <RTBEngine/UI/Canvas.h>
@@ -170,6 +172,31 @@ namespace RTBEditor {
             }
         }
 
+        // Drop target on the Hierarchy window: instantiate a Prefab
+        if (ImGui::BeginDragDropTarget()) {
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(PAYLOAD_PREFAB)) {
+                const PrefabPayload* data = static_cast<const PrefabPayload*>(payload->Data);
+
+                std::filesystem::path assetRoot = Project::GetActiveProject()
+                    ? Project::GetActiveProject()->GetAssetDirectory()
+                    : std::filesystem::path("Assets");
+                std::string absolutePath = (assetRoot / data->path).string();
+
+                std::string prefabName = std::filesystem::path(absolutePath).stem().string();
+                RTBEngine::ECS::Prefab* prefab = RTBEngine::ECS::PrefabRegistry::GetInstance().Get(prefabName);
+
+                if (prefab && activeScene) {
+                    RTBEngine::ECS::GameObject* go = prefab->Instantiate(nullptr);
+                    if (go) {
+                        activeScene->AddGameObject(go);
+                        context.selectedGameObject = go;
+                        RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                    }
+                }
+            }
+            ImGui::EndDragDropTarget();
+        }
+
         ImGui::End();
     }
 
@@ -185,7 +212,13 @@ namespace RTBEditor {
         }
 
         // Using pointer as ID to ensure uniqueness
+        if (gameObject->IsPrefabInstance())
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4f, 0.6f, 1.0f, 1.0f));
+
         bool opened = ImGui::TreeNodeEx((void*)gameObject, flags, name.c_str());
+
+        if (gameObject->IsPrefabInstance())
+            ImGui::PopStyleColor();
 
         if (ImGui::IsItemHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Left)
             && ImGui::GetDragDropPayload() == nullptr) {

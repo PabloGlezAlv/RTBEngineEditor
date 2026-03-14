@@ -13,7 +13,8 @@ namespace RTBEditor {
         Model,
         Image,
         Shader,
-        Cubemap
+        Cubemap,
+        Prefab
     };
 
     class ContentBrowserPanel : public EditorPanel {

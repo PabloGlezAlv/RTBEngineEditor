@@ -9,6 +9,7 @@ namespace RTBEditor {
     constexpr const char* PAYLOAD_FONT = "PAYLOAD_FONT";
     constexpr const char* PAYLOAD_CUBEMAP = "PAYLOAD_CUBEMAP";
     constexpr const char* PAYLOAD_GAMEOBJECT = "PAYLOAD_GAMEOBJECT";
+    constexpr const char* PAYLOAD_PREFAB = "PAYLOAD_PREFAB";
 
     // Payload structures
     struct TexturePayload {
@@ -34,4 +35,9 @@ namespace RTBEditor {
     struct GameObjectPayload {
         uint64_t gameObjectId;
     };
+
+    struct PrefabPayload {
+        char path[256];
+    };
+
 }

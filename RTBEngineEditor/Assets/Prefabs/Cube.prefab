@@ -1,0 +1,27 @@
+return {
+    name = "Cube",
+    components = {
+        {
+            type = "MeshRenderer",
+            meshRef = "Default/Models/cube.obj",
+            textureRef = nil,
+            colorRef = Color(1.00, 1.00, 1.00, 1.00)
+        },
+        {
+            type = "BoxColliderComponent",
+            size = Vector3(1.00, 1.00, 1.00),
+            isTrigger = false
+        },
+        {
+            type = "RigidBodyComponent",
+            mass = 1.00,
+            friction = 0.50,
+            restitution = 0.00,
+            bodyType = "Dynamic"
+        },
+        {
+            type = "Connector",
+            targetRef = "8FB4850C-0A3A-41D9-866E-BB98439FE7DD"
+        },
+    }
+}
