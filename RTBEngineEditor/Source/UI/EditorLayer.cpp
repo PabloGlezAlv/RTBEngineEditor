@@ -13,6 +13,8 @@
 #include <algorithm>
 #include <backends/imgui_impl_sdl2.h>
 #include <backends/imgui_impl_opengl3.h>
+#include <RTBEngine/ECS/SceneManager.h>
+#include <RTBEngine/Core/Logger.h>
 
 namespace RTBEditor {
 
@@ -60,6 +62,8 @@ namespace RTBEditor {
         for (auto& panel : panels) {
             panel->OnUIRender(context);
         }
+
+        HandleGlobalShortcuts();
 
         if (buildDialog) {
             buildDialog->Render();
@@ -163,6 +167,134 @@ namespace RTBEditor {
 
     void EditorLayer::OpenBuildDialog() {
         if (buildDialog) buildDialog->Open();
+    }
+
+    void EditorLayer::HandleGlobalShortcuts() {
+        ImGuiIO& io = ImGui::GetIO();
+        if (!io.WantCaptureKeyboard) {
+            return;
+        }
+
+        const bool ctrlDown = io.KeyCtrl;
+
+        if (ctrlDown && ImGui::IsKeyPressed(ImGuiKey_C, false)) {
+            CopySelectionToClipboard();
+        }
+
+        if (ctrlDown && ImGui::IsKeyPressed(ImGuiKey_V, false)) {
+            PasteClipboardIntoScene();
+        }
+    }
+
+    void EditorLayer::CopySelectionToClipboard() {
+        clipboardPrefabs.clear();
+
+        if (context.selectedGameObjects.empty()) {
+            if (context.selectedGameObject) {
+                context.selectedGameObjects.push_back(context.selectedGameObject);
+            } else {
+                return;
+            }
+        }
+
+        for (auto* go : context.selectedGameObjects) {
+            if (!go) continue;
+
+            ClipboardEntry entry;
+            entry.source = go;
+
+            auto& t = go->GetTransform();
+            entry.position = t.GetPosition();
+            entry.rotation = t.GetRotation();
+            entry.scale = t.GetScale();
+
+            // Si es instancia de prefab, usamos snapshot de prefab
+            if (go->IsPrefabInstance()) {
+                auto prefab = RTBEngine::ECS::Prefab::CreateFromGameObject(go);
+                if (prefab) {
+                    entry.prefab = std::move(prefab);
+                    entry.isPrefabInstanceSource = true;
+                }
+            }
+
+            clipboardPrefabs.push_back(std::move(entry));
+        }
+    }
+
+    void EditorLayer::PasteClipboardIntoScene() {
+        if (clipboardPrefabs.empty()) {
+            return;
+        }
+
+        auto* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
+        if (!scene) {
+            return;
+        }
+
+        ClearSelection(context);
+
+        const float positionOffset = 0.5f;
+        int index = 0;
+
+        for (auto& entry : clipboardPrefabs) {
+            RTBEngine::ECS::GameObject* go = nullptr;
+            std::vector<RTBEngine::ECS::GameObject*> childGOs;
+
+            if (entry.prefab) {
+                // Copia basada en prefab o snapshot
+                RTB_INFO(std::string("[PASTE] Instantiating from prefab snapshot '") + (entry.source ? entry.source->GetName() : "unknown") + "'");
+                go = entry.prefab->Instantiate(nullptr, childGOs);
+
+                if (go && !entry.isPrefabInstanceSource) {
+                    // No debe tratarse como instancia de prefab real
+                    go->SetPrefabName("");
+                }
+            } else if (entry.source) {
+                // Copia directa de GameObject NO prefab usando snapshot temporal
+                RTB_INFO(std::string("[PASTE] Instantiating direct copy of GO '") + entry.source->GetName() + "'");
+                auto tempPrefab = RTBEngine::ECS::Prefab::CreateFromGameObject(entry.source);
+                if (tempPrefab) {
+                    go = tempPrefab->Instantiate(nullptr, childGOs);
+                    if (go) {
+                        // Mantener el nombre visible del objeto original
+                        go->SetName(entry.source->GetName());
+                        // No es instancia de prefab
+                        go->SetPrefabName("");
+                    }
+                }
+            }
+
+            if (!go) {
+                RTB_WARN(std::string("[PASTE WARNING] Instantiate returned null GO for clipboard entry"));
+                continue;
+            }
+
+            RTB_INFO(std::string("[PASTE] Added root GO '") + go->GetName() + "' to scene. childGOs.size()=" + std::to_string(childGOs.size()));
+
+            auto& transform = go->GetTransform();
+            transform.SetPosition(entry.position);
+            transform.SetRotation(entry.rotation);
+            transform.SetScale(entry.scale);
+
+            auto posOffset = transform.GetPosition();
+            posOffset.x += positionOffset * index;
+            posOffset.z += positionOffset * index;
+            transform.SetPosition(posOffset);
+
+            scene->AddGameObject(go);
+
+            // Add child GOs to scene so Scene::Render can iterate them
+            for (auto* child : childGOs) {
+                if (child) {
+                    RTB_INFO(std::string("[PASTE] Added child GO '") + child->GetName() + "' to scene");
+                    scene->AddGameObject(child);
+                }
+            }
+
+            ToggleSelection(context, go);
+        }
+
+        RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
     }
 
 }

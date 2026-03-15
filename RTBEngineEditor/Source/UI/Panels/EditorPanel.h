@@ -4,6 +4,8 @@
 #include <filesystem>
 #include <string>
 #include <cstdint>
+#include <vector>
+#include <algorithm>
 
 namespace RTBEditor {
 
@@ -20,12 +22,44 @@ namespace RTBEditor {
 
     struct EditorContext {
         RTBEngine::ECS::GameObject* selectedGameObject = nullptr;
+        std::vector<RTBEngine::ECS::GameObject*> selectedGameObjects;
         EditorState state = EditorState::Edit;
         std::filesystem::path selectedAssetPath;
         std::filesystem::path pendingSceneLoad;
         StatsData stats;
         bool showStatsOverlay = false;
     };
+
+    inline void ClearSelection(EditorContext& context) {
+        context.selectedGameObject = nullptr;
+        context.selectedGameObjects.clear();
+    }
+
+    inline void SetSingleSelection(EditorContext& context, RTBEngine::ECS::GameObject* gameObject) {
+        context.selectedGameObjects.clear();
+        context.selectedGameObject = gameObject;
+        if (gameObject) {
+            context.selectedGameObjects.push_back(gameObject);
+        }
+    }
+
+    inline void ToggleSelection(EditorContext& context, RTBEngine::ECS::GameObject* gameObject) {
+        if (!gameObject) {
+            ClearSelection(context);
+            return;
+        }
+
+        auto it = std::find(context.selectedGameObjects.begin(), context.selectedGameObjects.end(), gameObject);
+        if (it != context.selectedGameObjects.end()) {
+            context.selectedGameObjects.erase(it);
+        } else {
+            context.selectedGameObjects.push_back(gameObject);
+        }
+
+        context.selectedGameObject = context.selectedGameObjects.empty()
+            ? nullptr
+            : context.selectedGameObjects.front();
+    }
 
     class EditorPanel {
     public:

@@ -118,12 +118,46 @@ namespace RTBEditor {
             }
 
             if (ImGui::IsMouseDown(0) && ImGui::IsWindowHovered() && !ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
-                context.selectedGameObject = nullptr;
+                ClearSelection(context);
             }
 
-            // Delete selected GameObject
-            if (ImGui::IsWindowFocused() && ImGui::IsKeyPressed(ImGuiKey_Delete) && context.selectedGameObject) {
-                DeleteGameObject(activeScene, context.selectedGameObject, context);
+            // Delete selected GameObjects (supports multi-selection)
+            if (ImGui::IsWindowFocused() && ImGui::IsKeyPressed(ImGuiKey_Delete)) {
+                if (!context.selectedGameObjects.empty() && activeScene) {
+                    // Build a unique list of roots (no object is a descendant of another selected one)
+                    std::vector<RTBEngine::ECS::GameObject*> roots = context.selectedGameObjects;
+
+                    auto isDescendantOfAnyRoot = [](RTBEngine::ECS::GameObject* candidate,
+                        const std::vector<RTBEngine::ECS::GameObject*>& all) {
+                        for (auto* other : all) {
+                            if (other == candidate) continue;
+                            RTBEngine::ECS::GameObject* p = candidate->GetParent();
+                            while (p) {
+                                if (p == other) return true;
+                                p = p->GetParent();
+                            }
+                        }
+                        return false;
+                    };
+
+                    roots.erase(
+                        std::remove_if(
+                            roots.begin(),
+                            roots.end(),
+                            [&](RTBEngine::ECS::GameObject* go) { return isDescendantOfAnyRoot(go, roots); }),
+                        roots.end());
+
+                    for (auto* go : roots) {
+                        if (go) {
+                            DeleteGameObject(activeScene, go, context);
+                        }
+                    }
+
+                    ClearSelection(context);
+                } else if (context.selectedGameObject && activeScene) {
+                    DeleteGameObject(activeScene, context.selectedGameObject, context);
+                    ClearSelection(context);
+                }
             }
 
             // Parent for newly created objects: same parent as selected, or root if none
@@ -177,8 +211,21 @@ namespace RTBEditor {
             }
         }
 
-        // Drop target on the Hierarchy window: instantiate a Prefab
+        // Invisible drop area covering remaining empty space
+        ImVec2 availableRegion = ImGui::GetContentRegionAvail();
+        float minHeight = 50.0f;
+        if (availableRegion.y < minHeight) availableRegion.y = minHeight;
+        ImGui::InvisibleButton("##HierarchyDropArea", ImVec2(availableRegion.x, availableRegion.y));
+
         if (ImGui::BeginDragDropTarget()) {
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(PAYLOAD_GAMEOBJECT)) {
+                const GameObjectPayload* data = static_cast<const GameObjectPayload*>(payload->Data);
+                RTBEngine::ECS::GameObject* dragged = reinterpret_cast<RTBEngine::ECS::GameObject*>(data->gameObjectId);
+                if (dragged && dragged->GetParent()) {
+                    dragged->SetParent(nullptr);
+                    RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                }
+            }
             if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(PAYLOAD_PREFAB)) {
                 const PrefabPayload* data = static_cast<const PrefabPayload*>(payload->Data);
 
@@ -187,13 +234,16 @@ namespace RTBEditor {
                     : std::filesystem::path("Assets");
                 std::string absolutePath = (assetRoot / data->path).string();
 
-                std::string prefabName = std::filesystem::path(absolutePath).stem().string();
-                RTBEngine::ECS::Prefab* prefab = RTBEngine::ECS::PrefabRegistry::GetInstance().Get(prefabName);
+                RTBEngine::ECS::Prefab* prefab = RTBEngine::ECS::PrefabRegistry::GetInstance().GetByPath(absolutePath);
 
                 if (prefab && activeScene) {
-                    RTBEngine::ECS::GameObject* go = prefab->Instantiate(nullptr);
+                    std::vector<RTBEngine::ECS::GameObject*> childGOs;
+                    RTBEngine::ECS::GameObject* go = prefab->Instantiate(nullptr, childGOs);
                     if (go) {
                         activeScene->AddGameObject(go);
+                        for (auto* child : childGOs) {
+                            if (child) activeScene->AddGameObject(child);
+                        }
                         context.selectedGameObject = go;
                         RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
                     }
@@ -208,7 +258,12 @@ namespace RTBEditor {
     void SceneHierarchyPanel::DrawGameObjectNode(RTBEngine::ECS::GameObject* gameObject, EditorContext& context) {
         auto& name = gameObject->GetName();
 
-        ImGuiTreeNodeFlags flags = ((context.selectedGameObject == gameObject) ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
+        bool isSelected = std::find(
+            context.selectedGameObjects.begin(),
+            context.selectedGameObjects.end(),
+            gameObject) != context.selectedGameObjects.end();
+
+        ImGuiTreeNodeFlags flags = (isSelected ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
         flags |= ImGuiTreeNodeFlags_SpanAvailWidth;
         
         const auto& children = gameObject->GetChildren();
@@ -227,7 +282,11 @@ namespace RTBEditor {
 
         if (ImGui::IsItemHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Left)
             && ImGui::GetDragDropPayload() == nullptr) {
-            context.selectedGameObject = gameObject;
+            if (ImGui::GetIO().KeyCtrl) {
+                ToggleSelection(context, gameObject);
+            } else {
+                SetSingleSelection(context, gameObject);
+            }
         }
 
         // Drag-and-drop source for GameObject
@@ -239,7 +298,7 @@ namespace RTBEditor {
             ImGui::EndDragDropSource();
         }
 
-        // Drop target: reparent dragged GO under this node
+        // Drop target: reparent GO or instantiate Prefab as child of this node
         if (ImGui::BeginDragDropTarget()) {
             if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(PAYLOAD_GAMEOBJECT)) {
                 const GameObjectPayload* data = static_cast<const GameObjectPayload*>(payload->Data);
@@ -258,6 +317,31 @@ namespace RTBEditor {
                     RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
                 }
             }
+
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(PAYLOAD_PREFAB)) {
+                const PrefabPayload* data = static_cast<const PrefabPayload*>(payload->Data);
+
+                std::filesystem::path assetRoot = Project::GetActiveProject()
+                    ? Project::GetActiveProject()->GetAssetDirectory()
+                    : std::filesystem::path("Assets");
+                std::string absolutePath = (assetRoot / data->path).string();
+
+                RTBEngine::ECS::Prefab* prefab = RTBEngine::ECS::PrefabRegistry::GetInstance().GetByPath(absolutePath);
+                RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
+                if (prefab && scene) {
+                    std::vector<RTBEngine::ECS::GameObject*> childGOs;
+                    RTBEngine::ECS::GameObject* go = prefab->Instantiate(gameObject, childGOs);
+                    if (go) {
+                        scene->AddGameObject(go);
+                        for (auto* child : childGOs) {
+                            if (child) scene->AddGameObject(child);
+                        }
+                        context.selectedGameObject = go;
+                        RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                    }
+                }
+            }
+
             ImGui::EndDragDropTarget();
         }
 

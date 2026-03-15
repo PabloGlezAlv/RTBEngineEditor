@@ -22,6 +22,7 @@
 #include <fstream>
 #include <sstream>
 #include <filesystem>
+#include <algorithm>
 
 namespace RTBEditor {
 
@@ -34,23 +35,39 @@ namespace RTBEditor {
     void InspectorPanel::OnUIRender(EditorContext& context) {
         ImGui::Begin("Inspector");
 
-        // Validate that the selected GO still exists in the active scene
-        if (context.selectedGameObject) {
-            auto* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
-            bool alive = false;
-            if (scene) {
+        // Validate that the selected GOs still exist in the active scene
+        auto* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
+        if (scene) {
+            auto existsInScene = [scene](RTBEngine::ECS::GameObject* go) {
+                if (!go) return false;
                 for (const auto& obj : scene->GetGameObjects()) {
-                    if (obj.get() == context.selectedGameObject) { alive = true; break; }
+                    if (obj.get() == go) return true;
                 }
+                return false;
+            };
+
+            // Clean multi-selection list
+            context.selectedGameObjects.erase(
+                std::remove_if(
+                    context.selectedGameObjects.begin(),
+                    context.selectedGameObjects.end(),
+                    [&](RTBEngine::ECS::GameObject* go) { return !existsInScene(go); }),
+                context.selectedGameObjects.end());
+
+            // Ensure primary selection is valid
+            if (!existsInScene(context.selectedGameObject)) {
+                context.selectedGameObject = context.selectedGameObjects.empty()
+                    ? nullptr
+                    : context.selectedGameObjects.front();
             }
-            if (!alive) {
-                context.selectedGameObject = nullptr;
-                componentsToRemove.clear();
-                cachedRotationTarget = nullptr;
-            }
+        } else {
+            ClearSelection(context);
         }
 
-        if (context.selectedGameObject) {
+        if (context.selectedGameObjects.size() > 1) {
+            ImGui::Text("Multiple GameObjects selected.");
+            ImGui::TextDisabled("Modo multi-objeto: la edicion de propiedades no esta disponible.");
+        } else if (context.selectedGameObject) {
             auto& name = context.selectedGameObject->GetName();
             
             char buffer[256];
@@ -61,6 +78,16 @@ namespace RTBEditor {
                 RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
             }
 
+            if (context.selectedGameObject->IsPrefabInstance()) {
+                ImGui::Spacing();
+                ImGui::TextColored(ImVec4(0.4f, 0.6f, 1.0f, 1.0f), "Prefab: %s", context.selectedGameObject->GetPrefabName().c_str());
+                ImGui::SameLine();
+                if (ImGui::Button("Unlink")) {
+                    context.selectedGameObject->SetPrefabName("");
+                    RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                }
+                ImGui::Spacing();
+            }
 
             ImGui::Separator();
 

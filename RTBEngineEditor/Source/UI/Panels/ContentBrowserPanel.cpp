@@ -223,6 +223,26 @@ namespace RTBEditor {
                     ImGui::EndDragDropSource();
                 }
 
+                // Drop target: accept GameObject on any item to save as Prefab
+                if (ImGui::BeginDragDropTarget()) {
+                    if (const ImGuiPayload* dropPayload = ImGui::AcceptDragDropPayload(PAYLOAD_GAMEOBJECT)) {
+                        const GameObjectPayload* data = static_cast<const GameObjectPayload*>(dropPayload->Data);
+                        RTBEngine::ECS::GameObject* go = reinterpret_cast<RTBEngine::ECS::GameObject*>(data->gameObjectId);
+
+                        std::string prefabName = go->GetName();
+                        std::filesystem::path savePath = currentDirectory / (prefabName + ".prefab");
+
+                        auto prefab = RTBEngine::ECS::Prefab::CreateFromGameObject(go);
+                        if (prefab) {
+                            RTBEngine::Scripting::PrefabSaver::Save(*prefab, savePath.string());
+                            RTBEngine::ECS::PrefabRegistry::GetInstance().Register(savePath.string());
+
+                            go->SetPrefabName(prefabName);
+                            RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                        }
+                    }
+                    ImGui::EndDragDropTarget();
+                }
 
                 // Inline rename
                 if (renamingPath == path) {

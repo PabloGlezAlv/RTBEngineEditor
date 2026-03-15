@@ -246,7 +246,16 @@ namespace RTBEditor {
             }
         }
 
-        context.selectedGameObject = closestObject;
+        if (!closestObject) {
+            ClearSelection(context);
+            return;
+        }
+
+        if (ImGui::GetIO().KeyCtrl) {
+            ToggleSelection(context, closestObject);
+        } else {
+            SetSingleSelection(context, closestObject);
+        }
     }
 
     void SceneViewPanel::HandleGizmo(EditorContext& context) {
