@@ -4,6 +4,7 @@
 namespace RTBEditor {
     // Payload type identifiers
     constexpr const char* PAYLOAD_TEXTURE = "PAYLOAD_TEXTURE";
+    constexpr const char* PAYLOAD_TEXTURE_PTR = "PAYLOAD_TEXTURE_PTR";
     constexpr const char* PAYLOAD_MESH = "PAYLOAD_MESH";
     constexpr const char* PAYLOAD_AUDIOCLIP = "PAYLOAD_AUDIOCLIP";
     constexpr const char* PAYLOAD_FONT = "PAYLOAD_FONT";
@@ -38,6 +39,11 @@ namespace RTBEditor {
 
     struct PrefabPayload {
         char path[256];
+    };
+
+    // Carries a raw Texture* for embedded textures that have no file path
+    struct TexturePtrPayload {
+        void* texturePtr;
     };
 
 }

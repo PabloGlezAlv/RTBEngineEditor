@@ -189,7 +189,8 @@ function CreateScene()
                         type = "MeshRenderer",
                         meshRef = "Default/Models/cube.obj",
                         textureRef = nil,
-                        colorRef = Color(1.00, 1.00, 1.00, 1.00)
+                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                        meshIndex = 0
                     },
                     {
                         type = "BoxColliderComponent",
@@ -214,7 +215,8 @@ function CreateScene()
                         type = "MeshRenderer",
                         meshRef = "Default/Models/cube.obj",
                         textureRef = nil,
-                        colorRef = Color(1.00, 1.00, 1.00, 1.00)
+                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                        meshIndex = 0
                     },
                     {
                         type = "BoxColliderComponent",
@@ -235,39 +237,18 @@ function CreateScene()
                 }
             },
             {
-                name = "Character",
-                uuid = "E3D87585-8C8B-4639-9B1B-520E44A062F9",
-                position = Vector3(-0.04, 0.00, 0.00),
-                scale = Vector3(0.01, 0.01, 0.01),
-                components = {
-                    {
-                        type = "MeshRenderer",
-                        meshRef = "Assets/Models/walking.fbx",
-                        textureRef = nil,
-                        colorRef = Color(1.00, 1.00, 1.00, 1.00)
-                    },
-                    {
-                        type = "Animator",
-                        modelRef = "Assets/Models/walking.fbx",
-                        currentClipName = "Walking",
-                        defaultClip = "Walking",
-                        speed = 1.00,
-                        playing = true,
-                        looping = true
-                    },
-                }
-            },
-            {
                 name = "SphereTest",
                 uuid = "8FB4850C-0A3A-41D9-866E-BB98439FE7DD",
-                position = Vector3(-4.57, 1.10, 1.15),
+                position = Vector3(-1.87, 1.10, 1.15),
+                rotation = Quaternion.FromEulerAngles(0.00, -53.00, 0.00),
                 scale = Vector3(1.22, 1.22, 1.22),
                 components = {
                     {
                         type = "MeshRenderer",
                         meshRef = "Default/Models/sphere.obj",
                         textureRef = "Assets/Textures/testTexture.png",
-                        colorRef = Color(1.00, 1.00, 1.00, 1.00)
+                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                        meshIndex = 0
                     },
                     {
                         type = "RigidBodyComponent",
@@ -288,596 +269,33 @@ function CreateScene()
                 }
             },
             {
-                name = "CharacterMultiAnim",
-                uuid = "C2B03D21-BCCB-4623-BDAE-957423F3BE39",
-                position = Vector3(2.00, 0.00, 2.00),
-                rotation = Quaternion.FromEulerAngles(0.00, 69.24, -0.00),
+                name = "walking",
+                uuid = "8966660D-4271-4351-ACD3-A327BA53C977",
                 scale = Vector3(0.01, 0.01, 0.01),
                 components = {
                     {
-                        type = "MeshRenderer",
-                        meshRef = "Assets/Models/walking.fbx",
-                        textureRef = nil,
-                        colorRef = Color(1.00, 1.00, 1.00, 1.00)
-                    },
-                    {
                         type = "Animator",
                         modelRef = "Assets/Models/walking.fbx",
-                        currentClipName = "Attack",
-                        defaultClip = "Hit",
-                        speed = 0.74,
-                        playing = true,
-                        looping = true,
-                        additionalModels = {
-                            "Assets/Models/attack.fbx",
-                            "Assets/Models/hit.fbx",
+                        currentClipName = "Walking",
+                        defaultClip = "Walking",
+                        speed = 1.00,
+                        playing = false,
+                        looping = true
+                    },
+                },
+                children = {
+                    {
+                        name = "MutantMesh",
+                        uuid = "51A917D6-D19A-426E-AD18-168BAD944D41",
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/Models/walking.fbx",
+                                textureRef = "Assets/Models/walking_mutant_M.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                meshIndex = 0
+                            },
                         }
-                    },
-                }
-            },
-            {
-                name = "Character",
-                uuid = "01164FFD-CC4A-4AC5-B136-38D65E6494B7",
-                position = Vector3(-1.94, 0.00, 0.00),
-                scale = Vector3(0.01, 0.01, 0.01),
-                components = {
-                    {
-                        type = "MeshRenderer",
-                        meshRef = "Assets/Models/walking.fbx",
-                        textureRef = nil,
-                        colorRef = Color(1.00, 1.00, 1.00, 1.00)
-                    },
-                    {
-                        type = "Animator",
-                        modelRef = "Assets/Models/walking.fbx",
-                        currentClipName = "Walking",
-                        defaultClip = "Walking",
-                        speed = 1.00,
-                        playing = true,
-                        looping = true
-                    },
-                }
-            },
-            {
-                name = "Character",
-                uuid = "A37A22DA-E9E6-43B7-BCFB-7194EDFDFBA7",
-                position = Vector3(-3.04, 0.00, 0.00),
-                scale = Vector3(0.01, 0.01, 0.01),
-                components = {
-                    {
-                        type = "MeshRenderer",
-                        meshRef = "Assets/Models/walking.fbx",
-                        textureRef = nil,
-                        colorRef = Color(1.00, 1.00, 1.00, 1.00)
-                    },
-                    {
-                        type = "Animator",
-                        modelRef = "Assets/Models/walking.fbx",
-                        currentClipName = "Walking",
-                        defaultClip = "Walking",
-                        speed = 1.00,
-                        playing = true,
-                        looping = true
-                    },
-                }
-            },
-            {
-                name = "Character",
-                uuid = "992181D6-F860-4EE5-8CC8-126E21520808",
-                position = Vector3(-4.64, 0.00, 0.00),
-                scale = Vector3(0.01, 0.01, 0.01),
-                components = {
-                    {
-                        type = "MeshRenderer",
-                        meshRef = "Assets/Models/walking.fbx",
-                        textureRef = nil,
-                        colorRef = Color(1.00, 1.00, 1.00, 1.00)
-                    },
-                    {
-                        type = "Animator",
-                        modelRef = "Assets/Models/walking.fbx",
-                        currentClipName = "Walking",
-                        defaultClip = "Walking",
-                        speed = 1.00,
-                        playing = true,
-                        looping = true
-                    },
-                }
-            },
-            {
-                name = "Character",
-                uuid = "E05A347A-C148-4859-BBCE-2F44B5400156",
-                position = Vector3(-6.34, 0.00, 0.00),
-                scale = Vector3(0.01, 0.01, 0.01),
-                components = {
-                    {
-                        type = "MeshRenderer",
-                        meshRef = "Assets/Models/walking.fbx",
-                        textureRef = nil,
-                        colorRef = Color(1.00, 1.00, 1.00, 1.00)
-                    },
-                    {
-                        type = "Animator",
-                        modelRef = "Assets/Models/walking.fbx",
-                        currentClipName = "Walking",
-                        defaultClip = "Walking",
-                        speed = 1.00,
-                        playing = true,
-                        looping = true
-                    },
-                }
-            },
-            {
-                name = "Character",
-                uuid = "F713E660-94AA-4137-BE38-953ABAB23ABF",
-                position = Vector3(-6.34, 0.00, -0.70),
-                scale = Vector3(0.01, 0.01, 0.01),
-                components = {
-                    {
-                        type = "MeshRenderer",
-                        meshRef = "Assets/Models/walking.fbx",
-                        textureRef = nil,
-                        colorRef = Color(1.00, 1.00, 1.00, 1.00)
-                    },
-                    {
-                        type = "Animator",
-                        modelRef = "Assets/Models/walking.fbx",
-                        currentClipName = "Walking",
-                        defaultClip = "Walking",
-                        speed = 1.00,
-                        playing = true,
-                        looping = true
-                    },
-                }
-            },
-            {
-                name = "Character",
-                uuid = "1DE66719-F406-4EC7-8437-14FA8C78DB27",
-                position = Vector3(-5.64, 0.00, -0.70),
-                scale = Vector3(0.01, 0.01, 0.01),
-                components = {
-                    {
-                        type = "MeshRenderer",
-                        meshRef = "Assets/Models/walking.fbx",
-                        textureRef = nil,
-                        colorRef = Color(1.00, 1.00, 1.00, 1.00)
-                    },
-                    {
-                        type = "Animator",
-                        modelRef = "Assets/Models/walking.fbx",
-                        currentClipName = "Walking",
-                        defaultClip = "Walking",
-                        speed = 1.00,
-                        playing = true,
-                        looping = true
-                    },
-                }
-            },
-            {
-                name = "Character",
-                uuid = "272722B5-4BD2-493E-BD56-6228722ED5FE",
-                position = Vector3(-4.04, 0.00, -0.70),
-                scale = Vector3(0.01, 0.01, 0.01),
-                components = {
-                    {
-                        type = "MeshRenderer",
-                        meshRef = "Assets/Models/walking.fbx",
-                        textureRef = nil,
-                        colorRef = Color(1.00, 1.00, 1.00, 1.00)
-                    },
-                    {
-                        type = "Animator",
-                        modelRef = "Assets/Models/walking.fbx",
-                        currentClipName = "Walking",
-                        defaultClip = "Walking",
-                        speed = 1.00,
-                        playing = true,
-                        looping = true
-                    },
-                }
-            },
-            {
-                name = "Character",
-                uuid = "1AE1CC90-6840-4236-9AA9-5D4CC20A0E40",
-                position = Vector3(-2.84, 0.00, -0.70),
-                scale = Vector3(0.01, 0.01, 0.01),
-                components = {
-                    {
-                        type = "MeshRenderer",
-                        meshRef = "Assets/Models/walking.fbx",
-                        textureRef = nil,
-                        colorRef = Color(1.00, 1.00, 1.00, 1.00)
-                    },
-                    {
-                        type = "Animator",
-                        modelRef = "Assets/Models/walking.fbx",
-                        currentClipName = "Walking",
-                        defaultClip = "Walking",
-                        speed = 1.00,
-                        playing = true,
-                        looping = true
-                    },
-                }
-            },
-            {
-                name = "Character",
-                uuid = "3EB536E7-9522-4CD3-9A76-5EAD539E59B0",
-                position = Vector3(-1.94, 0.00, -0.70),
-                scale = Vector3(0.01, 0.01, 0.01),
-                components = {
-                    {
-                        type = "MeshRenderer",
-                        meshRef = "Assets/Models/walking.fbx",
-                        textureRef = nil,
-                        colorRef = Color(1.00, 1.00, 1.00, 1.00)
-                    },
-                    {
-                        type = "Animator",
-                        modelRef = "Assets/Models/walking.fbx",
-                        currentClipName = "Walking",
-                        defaultClip = "Walking",
-                        speed = 1.00,
-                        playing = true,
-                        looping = true
-                    },
-                }
-            },
-            {
-                name = "Character",
-                uuid = "E7B2DA5F-BF1D-4356-9D2C-3B655966244A",
-                position = Vector3(-0.34, 0.00, -0.70),
-                scale = Vector3(0.01, 0.01, 0.01),
-                components = {
-                    {
-                        type = "MeshRenderer",
-                        meshRef = "Assets/Models/walking.fbx",
-                        textureRef = nil,
-                        colorRef = Color(1.00, 1.00, 1.00, 1.00)
-                    },
-                    {
-                        type = "Animator",
-                        modelRef = "Assets/Models/walking.fbx",
-                        currentClipName = "Walking",
-                        defaultClip = "Walking",
-                        speed = 1.00,
-                        playing = true,
-                        looping = true
-                    },
-                }
-            },
-            {
-                name = "Character",
-                uuid = "02FD3CC1-CB76-42B7-AC31-D495BB12ECE1",
-                position = Vector3(-0.34, 0.00, -1.70),
-                scale = Vector3(0.01, 0.01, 0.01),
-                components = {
-                    {
-                        type = "MeshRenderer",
-                        meshRef = "Assets/Models/walking.fbx",
-                        textureRef = nil,
-                        colorRef = Color(1.00, 1.00, 1.00, 1.00)
-                    },
-                    {
-                        type = "Animator",
-                        modelRef = "Assets/Models/walking.fbx",
-                        currentClipName = "Walking",
-                        defaultClip = "Walking",
-                        speed = 1.00,
-                        playing = true,
-                        looping = true
-                    },
-                }
-            },
-            {
-                name = "Character",
-                uuid = "3A43E170-DEE4-4526-BD08-C21A39812EA2",
-                position = Vector3(-1.34, 0.00, -1.70),
-                scale = Vector3(0.01, 0.01, 0.01),
-                components = {
-                    {
-                        type = "MeshRenderer",
-                        meshRef = "Assets/Models/walking.fbx",
-                        textureRef = nil,
-                        colorRef = Color(1.00, 1.00, 1.00, 1.00)
-                    },
-                    {
-                        type = "Animator",
-                        modelRef = "Assets/Models/walking.fbx",
-                        currentClipName = "Walking",
-                        defaultClip = "Walking",
-                        speed = 1.00,
-                        playing = true,
-                        looping = true
-                    },
-                }
-            },
-            {
-                name = "Character",
-                uuid = "49F491A5-3B69-49E3-91E2-97A79EF46287",
-                position = Vector3(-2.14, 0.00, -1.70),
-                scale = Vector3(0.01, 0.01, 0.01),
-                components = {
-                    {
-                        type = "MeshRenderer",
-                        meshRef = "Assets/Models/walking.fbx",
-                        textureRef = nil,
-                        colorRef = Color(1.00, 1.00, 1.00, 1.00)
-                    },
-                    {
-                        type = "Animator",
-                        modelRef = "Assets/Models/walking.fbx",
-                        currentClipName = "Walking",
-                        defaultClip = "Walking",
-                        speed = 1.00,
-                        playing = true,
-                        looping = true
-                    },
-                }
-            },
-            {
-                name = "Character",
-                uuid = "0875B2C0-12BC-41D7-8DCA-9C6D9B87574F",
-                position = Vector3(-3.14, 0.00, -1.70),
-                scale = Vector3(0.01, 0.01, 0.01),
-                components = {
-                    {
-                        type = "MeshRenderer",
-                        meshRef = "Assets/Models/walking.fbx",
-                        textureRef = nil,
-                        colorRef = Color(1.00, 1.00, 1.00, 1.00)
-                    },
-                    {
-                        type = "Animator",
-                        modelRef = "Assets/Models/walking.fbx",
-                        currentClipName = "Walking",
-                        defaultClip = "Walking",
-                        speed = 1.00,
-                        playing = true,
-                        looping = true
-                    },
-                }
-            },
-            {
-                name = "Character",
-                uuid = "2F390F59-F275-4F35-81B5-52C55E454710",
-                position = Vector3(-4.14, 0.00, -1.70),
-                scale = Vector3(0.01, 0.01, 0.01),
-                components = {
-                    {
-                        type = "MeshRenderer",
-                        meshRef = "Assets/Models/walking.fbx",
-                        textureRef = nil,
-                        colorRef = Color(1.00, 1.00, 1.00, 1.00)
-                    },
-                    {
-                        type = "Animator",
-                        modelRef = "Assets/Models/walking.fbx",
-                        currentClipName = "Walking",
-                        defaultClip = "Walking",
-                        speed = 1.00,
-                        playing = true,
-                        looping = true
-                    },
-                }
-            },
-            {
-                name = "Character",
-                uuid = "4034DF85-779B-458C-8B32-6E5C0BA521A9",
-                position = Vector3(-4.94, 0.00, -1.70),
-                scale = Vector3(0.01, 0.01, 0.01),
-                components = {
-                    {
-                        type = "MeshRenderer",
-                        meshRef = "Assets/Models/walking.fbx",
-                        textureRef = nil,
-                        colorRef = Color(1.00, 1.00, 1.00, 1.00)
-                    },
-                    {
-                        type = "Animator",
-                        modelRef = "Assets/Models/walking.fbx",
-                        currentClipName = "Walking",
-                        defaultClip = "Walking",
-                        speed = 1.00,
-                        playing = true,
-                        looping = true
-                    },
-                }
-            },
-            {
-                name = "Character",
-                uuid = "7E57FDCA-EA6C-4896-BA15-085E3FA28B57",
-                position = Vector3(-6.14, 0.00, -1.70),
-                scale = Vector3(0.01, 0.01, 0.01),
-                components = {
-                    {
-                        type = "MeshRenderer",
-                        meshRef = "Assets/Models/walking.fbx",
-                        textureRef = nil,
-                        colorRef = Color(1.00, 1.00, 1.00, 1.00)
-                    },
-                    {
-                        type = "Animator",
-                        modelRef = "Assets/Models/walking.fbx",
-                        currentClipName = "Walking",
-                        defaultClip = "Walking",
-                        speed = 1.00,
-                        playing = true,
-                        looping = true
-                    },
-                }
-            },
-            {
-                name = "Character",
-                uuid = "61394A72-98DA-4B43-A92A-547220F3F5F7",
-                position = Vector3(-5.94, 0.00, -3.10),
-                scale = Vector3(0.01, 0.01, 0.01),
-                components = {
-                    {
-                        type = "MeshRenderer",
-                        meshRef = "Assets/Models/walking.fbx",
-                        textureRef = nil,
-                        colorRef = Color(1.00, 1.00, 1.00, 1.00)
-                    },
-                    {
-                        type = "Animator",
-                        modelRef = "Assets/Models/walking.fbx",
-                        currentClipName = "Walking",
-                        defaultClip = "Walking",
-                        speed = 1.00,
-                        playing = true,
-                        looping = true
-                    },
-                }
-            },
-            {
-                name = "Character",
-                uuid = "56709BD3-B970-4194-8781-92D8FDFF3856",
-                position = Vector3(-4.04, 0.00, -3.10),
-                scale = Vector3(0.01, 0.01, 0.01),
-                components = {
-                    {
-                        type = "MeshRenderer",
-                        meshRef = "Assets/Models/walking.fbx",
-                        textureRef = nil,
-                        colorRef = Color(1.00, 1.00, 1.00, 1.00)
-                    },
-                    {
-                        type = "Animator",
-                        modelRef = "Assets/Models/walking.fbx",
-                        currentClipName = "Walking",
-                        defaultClip = "Walking",
-                        speed = 1.00,
-                        playing = true,
-                        looping = true
-                    },
-                }
-            },
-            {
-                name = "SphereTest",
-                uuid = "7BD36968-3613-49E3-B986-F233E5710893",
-                position = Vector3(-2.64, 1.10, 1.15),
-                scale = Vector3(1.22, 1.22, 1.22),
-                components = {
-                    {
-                        type = "MeshRenderer",
-                        meshRef = "Default/Models/sphere.obj",
-                        textureRef = "Assets/Textures/testTexture.png",
-                        colorRef = Color(1.00, 1.00, 1.00, 1.00)
-                    },
-                    {
-                        type = "RigidBodyComponent",
-                        mass = 1.00,
-                        friction = 0.50,
-                        restitution = 0.10,
-                        bodyType = "Dynamic"
-                    },
-                    {
-                        type = "Connectable"
-                    },
-                    {
-                        type = "SphereColliderComponent",
-                        radius = 0.80,
-                        centerOffset = Vector3(0.00, 0.00, 0.00),
-                        isTrigger = false
-                    },
-                }
-            },
-            {
-                name = "SphereTest",
-                uuid = "437310A5-043C-440D-8A9C-A4B6ED30D59F",
-                position = Vector3(-3.97, 1.10, 2.45),
-                scale = Vector3(1.22, 1.22, 1.22),
-                components = {
-                    {
-                        type = "MeshRenderer",
-                        meshRef = "Default/Models/sphere.obj",
-                        textureRef = "Assets/Textures/testTexture.png",
-                        colorRef = Color(1.00, 1.00, 1.00, 1.00)
-                    },
-                    {
-                        type = "RigidBodyComponent",
-                        mass = 1.00,
-                        friction = 0.50,
-                        restitution = 0.10,
-                        bodyType = "Dynamic"
-                    },
-                    {
-                        type = "Connectable"
-                    },
-                    {
-                        type = "SphereColliderComponent",
-                        radius = 0.80,
-                        centerOffset = Vector3(0.00, 0.00, 0.00),
-                        isTrigger = false
-                    },
-                }
-            },
-            {
-                name = "Character",
-                uuid = "A490A324-479F-4598-9068-90885A9105EC",
-                position = Vector3(-2.94, 0.00, -3.10),
-                scale = Vector3(0.01, 0.01, 0.01),
-                components = {
-                    {
-                        type = "MeshRenderer",
-                        meshRef = "Assets/Models/walking.fbx",
-                        textureRef = nil,
-                        colorRef = Color(1.00, 1.00, 1.00, 1.00)
-                    },
-                    {
-                        type = "Animator",
-                        modelRef = "Assets/Models/walking.fbx",
-                        currentClipName = "Walking",
-                        defaultClip = "Walking",
-                        speed = 1.00,
-                        playing = true,
-                        looping = true
-                    },
-                }
-            },
-            {
-                name = "Character",
-                uuid = "079EE1EA-23DE-4E61-86A8-FD9B2AA26A59",
-                position = Vector3(-1.34, 0.00, -3.10),
-                scale = Vector3(0.01, 0.01, 0.01),
-                components = {
-                    {
-                        type = "MeshRenderer",
-                        meshRef = "Assets/Models/walking.fbx",
-                        textureRef = nil,
-                        colorRef = Color(1.00, 1.00, 1.00, 1.00)
-                    },
-                    {
-                        type = "Animator",
-                        modelRef = "Assets/Models/walking.fbx",
-                        currentClipName = "Walking",
-                        defaultClip = "Walking",
-                        speed = 1.00,
-                        playing = true,
-                        looping = true
-                    },
-                }
-            },
-            {
-                name = "Character",
-                uuid = "451D1C0F-051B-449A-9666-ECD1E65C62F2",
-                position = Vector3(0.36, 0.00, -3.10),
-                scale = Vector3(0.01, 0.01, 0.01),
-                components = {
-                    {
-                        type = "MeshRenderer",
-                        meshRef = "Assets/Models/walking.fbx",
-                        textureRef = nil,
-                        colorRef = Color(1.00, 1.00, 1.00, 1.00)
-                    },
-                    {
-                        type = "Animator",
-                        modelRef = "Assets/Models/walking.fbx",
-                        currentClipName = "Walking",
-                        defaultClip = "Walking",
-                        speed = 1.00,
-                        playing = true,
-                        looping = true
                     },
                 }
             },

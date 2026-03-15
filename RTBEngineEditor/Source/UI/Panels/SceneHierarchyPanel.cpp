@@ -7,6 +7,8 @@
 #include <RTBEngine/ECS/PrefabRegistry.h>
 #include <RTBEngine/Core/ResourceManager.h>
 #include <RTBEngine/Rendering/Cubemap.h>
+#include <RTBEngine/Rendering/ModelLoader.h>
+#include <RTBEngine/Rendering/FbxBinding.h>
 #include <RTBEngine/UI/Canvas.h>
 #include <RTBEngine/UI/Elements/UIButton.h>
 #include <RTBEngine/UI/Elements/UIContainer.h>
@@ -245,6 +247,28 @@ namespace RTBEditor {
                             if (child) activeScene->AddGameObject(child);
                         }
                         context.selectedGameObject = go;
+                        RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                    }
+                }
+            }
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(PAYLOAD_MESH)) {
+                const MeshPayload* data = static_cast<const MeshPayload*>(payload->Data);
+
+                std::filesystem::path assetRoot = Project::GetActiveProject()
+                    ? Project::GetActiveProject()->GetAssetDirectory()
+                    : std::filesystem::path("Assets");
+                std::string absolutePath = (assetRoot / data->path).string();
+
+                if (activeScene) {
+                    auto& resources = RTBEngine::Core::ResourceManager::GetInstance();
+                    RTBEngine::Rendering::ModelData modelData =
+                        RTBEngine::Rendering::ModelLoader::LoadModelWithAnimations(absolutePath);
+                    resources.RegisterMeshes(absolutePath, modelData.meshes);
+
+                    RTBEngine::ECS::GameObject* root =
+                        RTBEngine::Rendering::BuildFbxHierarchy(activeScene, modelData, absolutePath, resources);
+                    if (root) {
+                        context.selectedGameObject = root;
                         RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
                     }
                 }

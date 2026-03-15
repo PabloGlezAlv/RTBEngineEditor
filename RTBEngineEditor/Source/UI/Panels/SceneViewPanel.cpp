@@ -205,15 +205,15 @@ namespace RTBEditor {
             RTBEngine::ECS::MeshRenderer* meshRenderer = obj->GetComponent<RTBEngine::ECS::MeshRenderer>();
             if (!meshRenderer) continue;
 
-            const auto& meshes = meshRenderer->GetMeshes();
-            if (meshes.empty()) continue;
+            RTBEngine::Rendering::Mesh* singleMesh = meshRenderer->GetMesh();
+            if (!singleMesh) continue;
 
-            // Calculate world-space AABB from all meshes
+            // Calculate world-space AABB from this mesh
             RTBEngine::Math::Vector3 worldMin(std::numeric_limits<float>::max());
             RTBEngine::Math::Vector3 worldMax(std::numeric_limits<float>::lowest());
 
-            for (RTBEngine::Rendering::Mesh* mesh : meshes) {
-                if (!mesh) continue;
+            {
+                RTBEngine::Rendering::Mesh* mesh = singleMesh;
 
                 RTBEngine::Math::Vector3 meshMin = mesh->GetAABBMin();
                 RTBEngine::Math::Vector3 meshMax = mesh->GetAABBMax();
@@ -280,9 +280,9 @@ namespace RTBEditor {
         RTBEngine::Math::Matrix4 viewMatrix = editorCamera.GetViewMatrix();
         RTBEngine::Math::Matrix4 projMatrix = editorCamera.GetProjectionMatrix();
 
-        // Get transform of selected object
+        // Get transform of selected object — gizmo always works in world space
         RTBEngine::ECS::Transform& transform = context.selectedGameObject->GetTransform();
-        RTBEngine::Math::Matrix4 modelMatrix = transform.GetModelMatrix();
+        RTBEngine::Math::Matrix4 worldMatrix = context.selectedGameObject->GetWorldMatrix();
 
         // Determine operation
         ImGuizmo::OPERATION operation;
@@ -296,25 +296,31 @@ namespace RTBEditor {
         // Determine mode
         ImGuizmo::MODE mode = gizmoLocalMode ? ImGuizmo::LOCAL : ImGuizmo::WORLD;
 
-        // Manipulate the object
+        // Manipulate the object in world space
         bool manipulated = ImGuizmo::Manipulate(
             viewMatrix.GetData(),
             projMatrix.GetData(),
             operation,
             mode,
-            modelMatrix.GetData()
+            worldMatrix.GetData()
         );
 
-        // If the gizmo was manipulated, update the transform
+        // If the gizmo was manipulated, convert world result back to local space
         if (manipulated && ImGuizmo::IsUsing()) {
-            // Decompose the matrix to get position, rotation, scale
+            RTBEngine::ECS::GameObject* parentGO = context.selectedGameObject->GetParent();
+            RTBEngine::Math::Matrix4 localMatrix = worldMatrix;
+
+            if (parentGO) {
+                // localMatrix = parentWorld^-1 * newWorldMatrix
+                localMatrix = parentGO->GetWorldMatrix().Inverse() * worldMatrix;
+            }
+
             float position[3], rotation[3], scale[3];
-            ImGuizmo::DecomposeMatrixToComponents(modelMatrix.GetData(), position, rotation, scale);
+            ImGuizmo::DecomposeMatrixToComponents(localMatrix.GetData(), position, rotation, scale);
 
             // ImGuizmo returns degrees; Transform::SetRotation expects radians
             constexpr float kDeg2Rad = 3.14159265f / 180.0f;
 
-            // Update the transform
             transform.SetPosition(RTBEngine::Math::Vector3(position[0], position[1], position[2]));
             transform.SetRotation(RTBEngine::Math::Vector3(
                 rotation[0] * kDeg2Rad,
@@ -322,8 +328,7 @@ namespace RTBEditor {
                 rotation[2] * kDeg2Rad
             ));
             transform.SetScale(RTBEngine::Math::Vector3(scale[0], scale[1], scale[2]));
-            
-            // Notify components that something has changed
+
             for (auto& comp : context.selectedGameObject->GetComponents()) {
                 if (comp) comp->OnValidate();
             }

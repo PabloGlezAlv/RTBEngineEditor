@@ -39,6 +39,7 @@ namespace RTBEditor {
         void DrawCubemapAssetInspector(const std::filesystem::path& cubemapPath);
         void SaveCubemapAsset(const std::filesystem::path& cubemapPath);
         void DrawScriptPreview(const std::filesystem::path& scriptPath);
+        void DrawFbxAssetInspector(const std::filesystem::path& fbxPath);
 
         std::vector<RTBEngine::ECS::Component*> componentsToRemove;
         std::unique_ptr<AssetBrowserModal> assetBrowserModal;
@@ -55,6 +56,7 @@ namespace RTBEditor {
         // Cached state for the script preview
         std::filesystem::path scriptPreviewPath;
         std::string scriptPreviewContent;
+
     };
 
 }

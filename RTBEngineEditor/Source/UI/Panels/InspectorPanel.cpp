@@ -130,6 +130,8 @@ namespace RTBEditor {
                 DrawCubemapAssetInspector(context.selectedAssetPath);
             } else if (ext == ".h" || ext == ".cpp") {
                 DrawScriptPreview(context.selectedAssetPath);
+            } else if (ext == ".fbx" || ext == ".obj" || ext == ".gltf" || ext == ".glb") {
+                DrawFbxAssetInspector(context.selectedAssetPath);
             }
         } else {
             ImGui::Text("Select a GameObject to see its properties.");
@@ -183,22 +185,25 @@ namespace RTBEditor {
             if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen)) {
                 auto& transform = gameObject->GetTransform();
 
-                RTBEngine::Math::Vector3 pos = transform.GetPosition();
-                if (ImGui::DragFloat3("Position", (float*)&pos, 0.1f)) {
-                    transform.SetPosition(pos);
+                // Local position — offset relative to parent
+                RTBEngine::Math::Vector3 localPos = transform.GetPosition();
+                if (ImGui::DragFloat3("Position", (float*)&localPos, 0.1f)) {
+                    transform.SetPosition(localPos);
                     RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
                 }
 
+                // Local rotation — angles relative to parent axes
                 constexpr float kRad2Deg = 180.0f / 3.14159265f;
                 constexpr float kDeg2Rad = 3.14159265f / 180.0f;
+                RTBEngine::Math::Quaternion localRot = transform.GetRotation();
                 if (cachedRotationTarget != gameObject) {
                     cachedRotationTarget = gameObject;
-                    RTBEngine::Math::Vector3 r = transform.GetRotation().ToEulerAngles();
+                    RTBEngine::Math::Vector3 r = localRot.ToEulerAngles();
                     cachedRotationDeg = RTBEngine::Math::Vector3(r.x * kRad2Deg, r.y * kRad2Deg, r.z * kRad2Deg);
                 }
                 if (ImGui::DragFloat3("Rotation", (float*)&cachedRotationDeg, 0.5f, 0.0f, 0.0f, "%.1f°")) {
-                    RTBEngine::Math::Vector3 newRad(cachedRotationDeg.x * kDeg2Rad, cachedRotationDeg.y * kDeg2Rad, cachedRotationDeg.z * kDeg2Rad);
-                    transform.SetRotation(newRad);
+                    RTBEngine::Math::Vector3 newLocalRad(cachedRotationDeg.x * kDeg2Rad, cachedRotationDeg.y * kDeg2Rad, cachedRotationDeg.z * kDeg2Rad);
+                    transform.SetRotation(RTBEngine::Math::Quaternion::FromEulerAngles(newLocalRad));
                     RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
                 }
                 if (!ImGui::IsItemActive()) {
@@ -206,9 +211,10 @@ namespace RTBEditor {
                     cachedRotationDeg = RTBEngine::Math::Vector3(r.x * kRad2Deg, r.y * kRad2Deg, r.z * kRad2Deg);
                 }
 
-                RTBEngine::Math::Vector3 scale = transform.GetScale();
-                if (ImGui::DragFloat3("Scale", (float*)&scale, 0.1f)) {
-                    transform.SetScale(scale);
+                // Local scale — real world scale = localScale * parent.worldScale (handled by engine)
+                RTBEngine::Math::Vector3 localScale = transform.GetScale();
+                if (ImGui::DragFloat3("Scale", (float*)&localScale, 0.01f)) {
+                    transform.SetScale(localScale);
                     RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
                 }
             }
@@ -380,7 +386,7 @@ namespace RTBEditor {
 
                 ImGui::PopStyleColor(4); // Pop text color + button colors
 
-                // Drag-and-drop target for textures
+                // Drag-and-drop target for textures (file path or embedded pointer)
                 if (ImGui::BeginDragDropTarget()) {
                     if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(PAYLOAD_TEXTURE)) {
                         const TexturePayload* payloadData = (const TexturePayload*)payload->Data;
@@ -388,6 +394,13 @@ namespace RTBEditor {
                         auto* texture = RTBEngine::Core::ResourceManager::GetInstance().LoadTexture(fullPath);
                         if (texture) {
                             *texPtr = texture;
+                            changed = true;
+                        }
+                    }
+                    if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(PAYLOAD_TEXTURE_PTR)) {
+                        const TexturePtrPayload* payloadData = (const TexturePtrPayload*)payload->Data;
+                        if (payloadData->texturePtr) {
+                            *texPtr = payloadData->texturePtr;
                             changed = true;
                         }
                     }
@@ -1084,5 +1097,14 @@ namespace RTBEditor {
             ImVec2(available.x, available.y - 4.0f),
             ImGuiInputTextFlags_ReadOnly
         );
+    }
+
+    void InspectorPanel::DrawFbxAssetInspector(const std::filesystem::path& fbxPath)
+    {
+        ImGui::Text("%s", fbxPath.filename().string().c_str());
+        ImGui::Separator();
+        ImGui::Spacing();
+        ImGui::TextDisabled("Click the model in the Content Browser");
+        ImGui::TextDisabled("to expand and drag its textures.");
     }
 }

@@ -5,8 +5,12 @@
 #include <RTBEngine/ECS/PrefabRegistry.h>
 #include <RTBEngine/Scripting/PrefabSaver.h>
 #include <RTBEngine/ECS/SceneManager.h>
+#include <RTBEngine/Rendering/ModelLoader.h>
 #include "../../Project/Project.h"
 #include "../DragDropPayloads.h"
+
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include <stb_image_write.h>
 
 
 #include <fstream>
@@ -66,6 +70,94 @@ namespace RTBEditor {
         return icons[IconType::File];
     }
 
+    void ContentBrowserPanel::LoadFbxTextures(const std::filesystem::path& fbxPath)
+    {
+        expandedFbxPath = fbxPath;
+        expandedFbxTextures.clear();
+
+        std::filesystem::path assetRoot = Project::GetActiveProject()
+            ? Project::GetActiveProject()->GetAssetDirectory()
+            : std::filesystem::path("Assets");
+
+        std::string fullPath = fbxPath.string();
+        for (char& c : fullPath) if (c == '\\') c = '/';
+
+        RTBEngine::Rendering::ModelData modelData =
+            RTBEngine::Rendering::ModelLoader::LoadModelWithAnimations(fullPath);
+
+        if (modelData.embeddedTextures.empty()) return;
+
+        auto& rm = RTBEngine::Core::ResourceManager::GetInstance();
+        std::filesystem::path fbxDir = fbxPath.parent_path();
+        std::string fbxStem = fbxPath.stem().string();
+
+        // Build a name per embedded texture from material data
+        // materials[i].embeddedTextureIndex points into embeddedTextures
+        std::vector<std::string> texNames(modelData.embeddedTextures.size());
+        for (size_t i = 0; i < modelData.materials.size(); i++) {
+            int idx = modelData.materials[i].embeddedTextureIndex;
+            if (idx < 0 || idx >= (int)texNames.size()) continue;
+            if (!texNames[idx].empty()) continue;
+            std::string matName = modelData.materials[i].name;
+            // Sanitize name for filesystem
+            for (char& c : matName) if (c == '/' || c == '\\' || c == ':' || c == '*' || c == '?' || c == '"' || c == '<' || c == '>' || c == '|') c = '_';
+            texNames[idx] = matName.empty() ? ("tex_" + std::to_string(idx)) : matName;
+        }
+
+        for (size_t i = 0; i < modelData.embeddedTextures.size(); i++) {
+            const auto& embTex = modelData.embeddedTextures[i];
+            std::string name = texNames[i].empty() ? (fbxStem + "_tex" + std::to_string(i)) : (fbxStem + "_" + texNames[i]);
+
+            // Detect actual image format from compressed data header
+            std::string ext = ".png";
+            if (embTex.isCompressed && embTex.data.size() >= 4) {
+                const unsigned char* hdr = embTex.data.data();
+                if (hdr[0] == 0xFF && hdr[1] == 0xD8) {
+                    ext = ".jpg";
+                }
+            }
+
+            std::filesystem::path outPath = fbxDir / (name + ext);
+
+            // Check for previously extracted file with wrong extension
+            std::filesystem::path altPath = fbxDir / (name + (ext == ".jpg" ? ".png" : ".jpg"));
+            if (!std::filesystem::exists(outPath) && std::filesystem::exists(altPath)) {
+                outPath = altPath;
+            }
+
+            // Write to disk only if it doesn't exist yet
+            if (!std::filesystem::exists(outPath)) {
+                bool written = false;
+                if (embTex.isCompressed) {
+                    // Raw compressed bytes (JPG or PNG) — write with matching extension
+                    std::ofstream f(outPath, std::ios::binary);
+                    if (f.is_open()) {
+                        f.write(reinterpret_cast<const char*>(embTex.data.data()), embTex.data.size());
+                        written = f.good();
+                    }
+                } else {
+                    // Uncompressed RGBA — encode as PNG via stb_image_write
+                    written = stbi_write_png(outPath.string().c_str(),
+                        embTex.width, embTex.height, embTex.channels,
+                        embTex.data.data(), embTex.width * embTex.channels) != 0;
+                }
+                if (!written) continue;
+            }
+
+            // Load via ResourceManager so it's cached with its path
+            std::string relPath = std::filesystem::relative(outPath, assetRoot).string();
+            for (char& c : relPath) if (c == '\\') c = '/';
+            RTBEngine::Rendering::Texture* tex = rm.LoadTexture("Assets/" + relPath);
+            if (!tex) continue;
+
+            FbxEmbeddedTexture entry;
+            entry.texture = tex;
+            entry.name = name;
+            entry.diskPath = relPath;
+            expandedFbxTextures.push_back(entry);
+        }
+    }
+
     void ContentBrowserPanel::OnUIRender(EditorContext& context) {
         ImGui::Begin("Content Browser");
 
@@ -78,6 +170,8 @@ namespace RTBEditor {
                 selectedPath.clear();
                 renamingPath.clear();
                 context.selectedAssetPath.clear();
+                expandedFbxPath.clear();
+                expandedFbxTextures.clear();
             }
             ImGui::SameLine();
         }
@@ -120,9 +214,19 @@ namespace RTBEditor {
                     // Expose asset files to the Inspector via context
                     std::string clickedExt = path.extension().string();
                     for (auto& c : clickedExt) c = std::tolower(c);
-                    if (clickedExt == ".cubemap" || clickedExt == ".h" || clickedExt == ".cpp") {
+                    if (clickedExt == ".cubemap" || clickedExt == ".h" || clickedExt == ".cpp" ||
+                        clickedExt == ".fbx" || clickedExt == ".obj" || clickedExt == ".gltf" || clickedExt == ".glb") {
                         context.selectedAssetPath = path;
                         context.selectedGameObject = nullptr;
+                        // Toggle FBX texture expansion
+                        if (clickedExt == ".fbx" || clickedExt == ".obj" || clickedExt == ".gltf" || clickedExt == ".glb") {
+                            if (expandedFbxPath == path) {
+                                expandedFbxPath.clear();
+                                expandedFbxTextures.clear();
+                            } else {
+                                LoadFbxTextures(path);
+                            }
+                        }
                     } else {
                         context.selectedAssetPath.clear();
                     }
@@ -135,6 +239,8 @@ namespace RTBEditor {
                         selectedPath.clear();
                         renamingPath.clear();
                         context.selectedAssetPath.clear();
+                        expandedFbxPath.clear();
+                        expandedFbxTextures.clear();
                     }
                     else if (!directoryEntry.is_directory()) {
                         std::string ext = path.extension().string();
@@ -277,11 +383,54 @@ namespace RTBEditor {
                         renamingPath.clear();
                     }
                 } else {
-                    ImGui::TextWrapped("%s", filenameString.c_str());
+                    // Show expand arrow indicator for FBX files that have embedded textures
+                    std::string fileExt = path.extension().string();
+                    for (auto& c : fileExt) c = std::tolower(c);
+                    bool isMeshFile = (fileExt == ".fbx" || fileExt == ".obj" || fileExt == ".gltf" || fileExt == ".glb");
+                    bool isExpanded = (expandedFbxPath == path && !expandedFbxTextures.empty());
+                    if (isMeshFile) {
+                        ImGui::TextWrapped("%s %s", isExpanded ? "v" : ">", filenameString.c_str());
+                    } else {
+                        ImGui::TextWrapped("%s", filenameString.c_str());
+                    }
                 }
 
                 ImGui::NextColumn();
                 ImGui::PopID();
+
+                // Draw embedded texture sub-items right after the expanded FBX
+                if (expandedFbxPath == path && !expandedFbxTextures.empty()) {
+                    for (size_t ti = 0; ti < expandedFbxTextures.size(); ti++) {
+                        const auto& entry = expandedFbxTextures[ti];
+                        std::string subId = "##fbxtex_" + std::to_string(ti);
+
+                        ImGui::PushID(subId.c_str());
+
+                        // Slightly tinted background to visually group them under the FBX
+                        ImTextureID subTexID = (ImTextureID)(intptr_t)entry.texture->GetID();
+                        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.15f, 0.15f, 0.25f, 1.0f));
+                        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.25f, 0.35f, 0.6f, 1.0f));
+                        ImGui::ImageButton(subId.c_str(), subTexID,
+                            ImVec2(thumbnailSize, thumbnailSize), ImVec2(0, 1), ImVec2(1, 0));
+                        ImGui::PopStyleColor(2);
+
+                        // Drag source — standard TexturePayload with real disk path
+                        if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None)) {
+                            TexturePayload payload;
+                            strncpy_s(payload.path, entry.diskPath.c_str(), sizeof(payload.path) - 1);
+                            payload.path[sizeof(payload.path) - 1] = '\0';
+                            ImGui::SetDragDropPayload(PAYLOAD_TEXTURE, &payload, sizeof(TexturePayload));
+                            ImGui::Image(subTexID, ImVec2(32.0f, 32.0f), ImVec2(0, 1), ImVec2(1, 0));
+                            ImGui::SameLine();
+                            ImGui::Text("%s", entry.name.c_str());
+                            ImGui::EndDragDropSource();
+                        }
+
+                        ImGui::TextWrapped("%s", entry.name.c_str());
+                        ImGui::NextColumn();
+                        ImGui::PopID();
+                    }
+                }
             }
 
             if (isEmpty) {
