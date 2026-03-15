@@ -128,6 +128,8 @@ namespace RTBEditor {
             for (auto& c : ext) c = std::tolower(c);
             if (ext == ".cubemap") {
                 DrawCubemapAssetInspector(context.selectedAssetPath);
+            } else if (ext == ".texture") {
+                DrawTextureAssetInspector(context.selectedAssetPath);
             } else if (ext == ".h" || ext == ".cpp") {
                 DrawScriptPreview(context.selectedAssetPath);
             } else if (ext == ".fbx" || ext == ".obj" || ext == ".gltf" || ext == ".glb") {
@@ -391,7 +393,11 @@ namespace RTBEditor {
                     if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(PAYLOAD_TEXTURE)) {
                         const TexturePayload* payloadData = (const TexturePayload*)payload->Data;
                         std::string fullPath = std::string("Assets/") + payloadData->path;
-                        auto* texture = RTBEngine::Core::ResourceManager::GetInstance().LoadTexture(fullPath);
+                        // .texture assets carry flip metadata; raw images use default flip
+                        auto& rm = RTBEngine::Core::ResourceManager::GetInstance();
+                        auto* texture = (fullPath.size() > 8 && fullPath.substr(fullPath.size() - 8) == ".texture")
+                            ? rm.LoadTextureAsset(fullPath)
+                            : rm.LoadTexture(fullPath);
                         if (texture) {
                             *texPtr = texture;
                             changed = true;
@@ -412,11 +418,18 @@ namespace RTBEditor {
                     assetBrowserModal->Open(
                         AssetType::Texture,
                         [texPtr](const std::string& path) {
-                            auto* tex = RTBEngine::Core::ResourceManager::GetInstance().LoadTexture("Assets/" + path);
+                            auto& rm = RTBEngine::Core::ResourceManager::GetInstance();
+                            std::string fullPath = "Assets/" + path;
+                            auto* tex = (fullPath.size() > 8 && fullPath.substr(fullPath.size() - 8) == ".texture")
+                                ? rm.LoadTextureAsset(fullPath)
+                                : rm.LoadTexture(fullPath);
                             if (tex) { *texPtr = tex; RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty(); }
                         },
                         [texPtr](const std::string& path) {
-                            auto* tex = RTBEngine::Core::ResourceManager::GetInstance().LoadTexture(path);
+                            auto& rm = RTBEngine::Core::ResourceManager::GetInstance();
+                            auto* tex = (path.size() > 8 && path.substr(path.size() - 8) == ".texture")
+                                ? rm.LoadTextureAsset(path)
+                                : rm.LoadTexture(path);
                             if (tex) { *texPtr = tex; RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty(); }
                         }
                     );
@@ -1040,6 +1053,143 @@ namespace RTBEditor {
         for (int i = 0; i < 6; ++i) {
             file << faceKeys[i] << "=" << cubemapFaces[i] << "\n";
         }
+    }
+
+    void InspectorPanel::DrawTextureAssetInspector(const std::filesystem::path& texturePath) {
+        // Reload cached data when a different file is selected
+        if (textureEditorPath != texturePath) {
+            textureEditorPath = texturePath;
+            textureAssetImage.clear();
+            textureAssetFlip = true;
+
+            std::ifstream file(texturePath);
+            if (file.is_open()) {
+                std::string line;
+                while (std::getline(file, line)) {
+                    if (line.empty() || line[0] == '#') continue;
+                    auto sep = line.find('=');
+                    if (sep == std::string::npos) continue;
+                    std::string key = line.substr(0, sep);
+                    std::string value = line.substr(sep + 1);
+                    auto trim = [](std::string& s) {
+                        size_t start = s.find_first_not_of(" \t\r\n");
+                        size_t end = s.find_last_not_of(" \t\r\n");
+                        s = (start == std::string::npos) ? "" : s.substr(start, end - start + 1);
+                    };
+                    trim(key);
+                    trim(value);
+                    if (key == "image") textureAssetImage = value;
+                    else if (key == "flip") textureAssetFlip = (value == "true" || value == "1");
+                }
+            }
+        }
+
+        ImGui::Text("Texture Asset");
+        ImGui::Text("%s", texturePath.filename().string().c_str());
+        ImGui::Separator();
+        ImGui::Spacing();
+
+        //Image path
+        bool changed = false;
+        {
+            ImGui::Text("Image:");
+            ImGui::SameLine();
+
+            bool hasImage = !textureAssetImage.empty();
+            ImGui::PushStyleColor(ImGuiCol_Text, hasImage
+                ? ImVec4(0.4f, 0.8f, 0.4f, 1.0f)
+                : ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.2f, 0.5f, 0.8f, 0.3f));
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.2f, 0.5f, 0.8f, 0.5f));
+
+            std::string label = (hasImage
+                ? std::filesystem::path(textureAssetImage).filename().string()
+                : std::string("[None]")) + "##TextureAssetImage";
+            ImGui::Button(label.c_str(), ImVec2(ImGui::GetContentRegionAvail().x - 52.0f, 0));
+            ImGui::PopStyleColor(4);
+
+            // Drag-drop target for image files
+            if (ImGui::BeginDragDropTarget()) {
+                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(PAYLOAD_TEXTURE)) {
+                    const TexturePayload* data = static_cast<const TexturePayload*>(payload->Data);
+                    std::filesystem::path assetRoot = Project::GetActiveProject()
+                        ? Project::GetActiveProject()->GetAssetDirectory()
+                        : std::filesystem::path("Assets");
+                    std::string fullPath = (assetRoot / data->path).string();
+                    for (char& c : fullPath) if (c == '\\') c = '/';
+                    textureAssetImage = fullPath;
+                    changed = true;
+                }
+                ImGui::EndDragDropTarget();
+            }
+
+            ImGui::SameLine();
+            if (ImGui::SmallButton("...##BrowseTexImage")) {
+                assetBrowserModal->Open(
+                    AssetType::Texture,
+                    [this](const std::string& path) {
+                        std::filesystem::path assetRoot = Project::GetActiveProject()
+                            ? Project::GetActiveProject()->GetAssetDirectory()
+                            : std::filesystem::path("Assets");
+                        std::string fullPath = (assetRoot / path).string();
+                        for (char& c : fullPath) if (c == '\\') c = '/';
+                        textureAssetImage = fullPath;
+                        SaveTextureAsset(textureEditorPath);
+                    },
+                    [this](const std::string& path) {
+                        std::string fullPath = path;
+                        for (char& c : fullPath) if (c == '\\') c = '/';
+                        textureAssetImage = fullPath;
+                        SaveTextureAsset(textureEditorPath);
+                    }
+                );
+            }
+
+            ImGui::SameLine();
+            if (ImGui::SmallButton("X##ClearTexImage")) {
+                textureAssetImage.clear();
+                changed = true;
+            }
+        }
+
+        ImGui::Spacing();
+
+        //Flip vertically
+        if (ImGui::Checkbox("Flip Vertically", &textureAssetFlip)) {
+            changed = true;
+        }
+
+        ImGui::Spacing();
+        if (ImGui::Button("Save", ImVec2(ImGui::GetContentRegionAvail().x, 0)) || changed) {
+            SaveTextureAsset(texturePath);
+        }
+
+        // Preview the actual image if available
+        if (!textureAssetImage.empty()) {
+            auto* tex = RTBEngine::Core::ResourceManager::GetInstance().GetTexture(textureAssetImage);
+            if (!tex) {
+                tex = RTBEngine::Core::ResourceManager::GetInstance().LoadTexture(textureAssetImage, textureAssetFlip);
+            }
+            if (tex) {
+                ImGui::Spacing();
+                ImGui::Separator();
+                ImGui::Text("Preview:");
+                float previewSize = ImGui::GetContentRegionAvail().x;
+                float aspect = (float)tex->GetWidth() / (float)tex->GetHeight();
+                ImGui::Image((ImTextureID)(intptr_t)tex->GetID(),
+                    ImVec2(previewSize, previewSize / aspect),
+                    ImVec2(0, 1), ImVec2(1, 0));
+            }
+        }
+    }
+
+    void InspectorPanel::SaveTextureAsset(const std::filesystem::path& texturePath) {
+        std::ofstream file(texturePath);
+        if (!file.is_open()) return;
+
+        file << "image=" << textureAssetImage << "\n";
+        file << "flip=" << (textureAssetFlip ? "true" : "false") << "\n";
     }
 
     void InspectorPanel::DrawScriptPreview(const std::filesystem::path& scriptPath) {

@@ -35,7 +35,7 @@ namespace RTBEditor {
     std::vector<std::string> AssetBrowserModal::GetFilterExtensions() {
         switch (filterType) {
         case AssetType::Texture:
-            return { ".png", ".jpg", ".jpeg", ".tga", ".dds", ".bmp" };
+            return { ".png", ".jpg", ".jpeg", ".tga", ".dds", ".bmp", ".texture" };
         case AssetType::Mesh:
             return { ".fbx", ".obj", ".gltf", ".glb" };
         case AssetType::AudioClip:

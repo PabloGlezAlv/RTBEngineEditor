@@ -291,7 +291,7 @@ function CreateScene()
                             {
                                 type = "MeshRenderer",
                                 meshRef = "Assets/Models/walking.fbx",
-                                textureRef = "Assets/Models/walking_mutant_M.png",
+                                textureRef = "Assets/Models/walking_mutant_M.texture",
                                 colorRef = Color(1.00, 1.00, 1.00, 1.00),
                                 meshIndex = 0
                             },

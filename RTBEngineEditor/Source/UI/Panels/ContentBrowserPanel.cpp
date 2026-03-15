@@ -65,7 +65,7 @@ namespace RTBEditor {
         if (ext == ".png" || ext == ".jpg" || ext == ".tga") return icons[IconType::Image];
         if (ext == ".glsl" || ext == ".vert" || ext == ".frag") return icons[IconType::Shader];
         if (ext == ".prefab") return icons[IconType::Prefab];
-
+        if (ext == ".texture") return icons[IconType::Image];
 
         return icons[IconType::File];
     }
@@ -144,16 +144,32 @@ namespace RTBEditor {
                 if (!written) continue;
             }
 
-            // Load via ResourceManager so it's cached with its path
+            // Create a .texture asset file with flip=false for FBX embedded textures
             std::string relPath = std::filesystem::relative(outPath, assetRoot).string();
             for (char& c : relPath) if (c == '\\') c = '/';
-            RTBEngine::Rendering::Texture* tex = rm.LoadTexture("Assets/" + relPath);
+            std::string fullImagePath = (assetRoot / relPath).string();
+            for (char& c : fullImagePath) if (c == '\\') c = '/';
+
+            std::filesystem::path textureAssetPath = outPath;
+            textureAssetPath.replace_extension(".texture");
+            if (!std::filesystem::exists(textureAssetPath)) {
+                std::ofstream tf(textureAssetPath);
+                if (tf.is_open()) {
+                    tf << "image=" << fullImagePath << "\n";
+                    tf << "flip=false\n";
+                }
+            }
+
+            // Load via the .texture asset so flip=false is applied
+            std::string textureAssetRelPath = std::filesystem::relative(textureAssetPath, assetRoot).string();
+            for (char& c : textureAssetRelPath) if (c == '\\') c = '/';
+            RTBEngine::Rendering::Texture* tex = rm.LoadTextureAsset("Assets/" + textureAssetRelPath);
             if (!tex) continue;
 
             FbxEmbeddedTexture entry;
             entry.texture = tex;
             entry.name = name;
-            entry.diskPath = relPath;
+            entry.diskPath = textureAssetRelPath;
             expandedFbxTextures.push_back(entry);
         }
     }
@@ -214,7 +230,7 @@ namespace RTBEditor {
                     // Expose asset files to the Inspector via context
                     std::string clickedExt = path.extension().string();
                     for (auto& c : clickedExt) c = std::tolower(c);
-                    if (clickedExt == ".cubemap" || clickedExt == ".h" || clickedExt == ".cpp" ||
+                    if (clickedExt == ".cubemap" || clickedExt == ".texture" || clickedExt == ".h" || clickedExt == ".cpp" ||
                         clickedExt == ".fbx" || clickedExt == ".obj" || clickedExt == ".gltf" || clickedExt == ".glb") {
                         context.selectedAssetPath = path;
                         context.selectedGameObject = nullptr;
@@ -314,6 +330,15 @@ namespace RTBEditor {
 
                         ImGui::SetDragDropPayload(PAYLOAD_FONT, &payload, sizeof(FontPayload));
                         ImGui::Text("Font: %s", filenameString.c_str());
+                    }
+                    else if (ext == ".texture") {
+                        TexturePayload payload;
+                        std::string relativePath = std::filesystem::relative(path, rootPath).string();
+                        strncpy_s(payload.path, relativePath.c_str(), sizeof(payload.path) - 1);
+                        payload.path[sizeof(payload.path) - 1] = '\0';
+
+                        ImGui::SetDragDropPayload(PAYLOAD_TEXTURE, &payload, sizeof(TexturePayload));
+                        ImGui::Text("Texture: %s", filenameString.c_str());
                     }
                     else if (ext == ".prefab") {
                         PrefabPayload payload;
@@ -711,6 +736,20 @@ namespace RTBEditor {
                     f << "bottom=\n";
                     f << "front=\n";
                     f << "back=\n";
+                    selectedPath = newFile;
+                    renamingPath = newFile;
+                    strncpy_s(renameBuffer, newFile.stem().string().c_str(), sizeof(renameBuffer) - 1);
+                }
+
+                if (ImGui::MenuItem("Texture Asset")) {
+                    std::filesystem::path newFile = currentDirectory / "NewTexture.texture";
+                    int suffix = 1;
+                    while (std::filesystem::exists(newFile)) {
+                        newFile = currentDirectory / ("NewTexture" + std::to_string(suffix++) + ".texture");
+                    }
+                    std::ofstream f(newFile);
+                    f << "image=\n";
+                    f << "flip=true\n";
                     selectedPath = newFile;
                     renamingPath = newFile;
                     strncpy_s(renameBuffer, newFile.stem().string().c_str(), sizeof(renameBuffer) - 1);

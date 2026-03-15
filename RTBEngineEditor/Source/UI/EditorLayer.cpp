@@ -241,8 +241,6 @@ namespace RTBEditor {
             std::vector<RTBEngine::ECS::GameObject*> childGOs;
 
             if (entry.prefab) {
-                // Copia basada en prefab o snapshot
-                RTB_INFO(std::string("[PASTE] Instantiating from prefab snapshot '") + (entry.source ? entry.source->GetName() : "unknown") + "'");
                 go = entry.prefab->Instantiate(nullptr, childGOs);
 
                 if (go && !entry.isPrefabInstanceSource) {
@@ -250,8 +248,6 @@ namespace RTBEditor {
                     go->SetPrefabName("");
                 }
             } else if (entry.source) {
-                // Copia directa de GameObject NO prefab usando snapshot temporal
-                RTB_INFO(std::string("[PASTE] Instantiating direct copy of GO '") + entry.source->GetName() + "'");
                 auto tempPrefab = RTBEngine::ECS::Prefab::CreateFromGameObject(entry.source);
                 if (tempPrefab) {
                     go = tempPrefab->Instantiate(nullptr, childGOs);
@@ -264,12 +260,15 @@ namespace RTBEditor {
                 }
             }
 
-            if (!go) {
-                RTB_WARN(std::string("[PASTE WARNING] Instantiate returned null GO for clipboard entry"));
-                continue;
+            // Clear prefab name on all child GOs when not a real prefab instance
+            if (!entry.isPrefabInstanceSource) {
+                for (auto* child : childGOs) {
+                    if (child)
+                        child->SetPrefabName("");
+                }
             }
 
-            RTB_INFO(std::string("[PASTE] Added root GO '") + go->GetName() + "' to scene. childGOs.size()=" + std::to_string(childGOs.size()));
+            if (!go) continue;
 
             auto& transform = go->GetTransform();
             transform.SetPosition(entry.position);
@@ -285,10 +284,7 @@ namespace RTBEditor {
 
             // Add child GOs to scene so Scene::Render can iterate them
             for (auto* child : childGOs) {
-                if (child) {
-                    RTB_INFO(std::string("[PASTE] Added child GO '") + child->GetName() + "' to scene");
-                    scene->AddGameObject(child);
-                }
+                if (child) scene->AddGameObject(child);
             }
 
             ToggleSelection(context, go);

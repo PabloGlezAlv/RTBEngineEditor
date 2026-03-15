@@ -1,0 +1,28 @@
+return {
+    name = "walking",
+    components = {
+        {
+            type = "Animator",
+            modelRef = "Assets/Models/walking.fbx",
+            currentClipName = "Walking",
+            defaultClip = "Walking",
+            speed = 1.00,
+            playing = false,
+            looping = true
+        },
+    },
+    children = {
+        {
+            name = "MutantMesh",
+            components = {
+                {
+                    type = "MeshRenderer",
+                    meshRef = "Assets/Models/walking.fbx",
+                    textureRef = "Assets/Models/walking_mutant_M.png",
+                    colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                    meshIndex = 0
+                },
+            },
+        },
+    },
+}
