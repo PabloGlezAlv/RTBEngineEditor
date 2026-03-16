@@ -205,28 +205,34 @@ namespace RTBEditor {
             RTBEngine::ECS::MeshRenderer* meshRenderer = obj->GetComponent<RTBEngine::ECS::MeshRenderer>();
             if (!meshRenderer) continue;
 
-            RTBEngine::Rendering::Mesh* singleMesh = meshRenderer->GetMesh();
-            if (!singleMesh) continue;
+            // Collect all meshes to test (multi-mesh or single)
+            std::vector<RTBEngine::Rendering::Mesh*> meshesToTest;
+            if (meshRenderer->IsMultiMesh()) {
+                meshesToTest = meshRenderer->GetMeshes();
+            }
+            else {
+                RTBEngine::Rendering::Mesh* singleMesh = meshRenderer->GetMesh();
+                if (singleMesh) meshesToTest.push_back(singleMesh);
+            }
+            if (meshesToTest.empty()) continue;
 
-            // Calculate world-space AABB from this mesh
+            // Calculate world-space AABB as union of all meshes
             RTBEngine::Math::Vector3 worldMin(std::numeric_limits<float>::max());
             RTBEngine::Math::Vector3 worldMax(std::numeric_limits<float>::lowest());
 
-            {
-                RTBEngine::Rendering::Mesh* mesh = singleMesh;
+            RTBEngine::ECS::Transform& transform = obj->GetTransform();
+            RTBEngine::Math::Vector3 position = transform.GetPosition();
+            RTBEngine::Math::Vector3 scale = transform.GetScale();
+
+            for (RTBEngine::Rendering::Mesh* mesh : meshesToTest) {
+                if (!mesh) continue;
 
                 RTBEngine::Math::Vector3 meshMin = mesh->GetAABBMin();
                 RTBEngine::Math::Vector3 meshMax = mesh->GetAABBMax();
 
-                // Transform AABB by object transform
-                RTBEngine::ECS::Transform& transform = obj->GetTransform();
-                RTBEngine::Math::Vector3 position = transform.GetPosition();
-                RTBEngine::Math::Vector3 scale = transform.GetScale();
-
                 RTBEngine::Math::Vector3 transformedMin = position + meshMin * scale;
                 RTBEngine::Math::Vector3 transformedMax = position + meshMax * scale;
 
-                // Expand world AABB
                 worldMin.x = std::min(worldMin.x, transformedMin.x);
                 worldMin.y = std::min(worldMin.y, transformedMin.y);
                 worldMin.z = std::min(worldMin.z, transformedMin.z);

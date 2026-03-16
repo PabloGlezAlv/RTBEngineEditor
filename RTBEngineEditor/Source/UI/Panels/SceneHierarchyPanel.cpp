@@ -296,13 +296,20 @@ namespace RTBEditor {
         }
 
         // Using pointer as ID to ensure uniqueness
-        if (gameObject->IsPrefabInstance())
+        int styleColorCount = 0;
+        if (gameObject->IsTransient()) {
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 0.6f, 0.6f, 0.7f));
+            styleColorCount++;
+        }
+        else if (gameObject->IsPrefabInstance()) {
             ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4f, 0.6f, 1.0f, 1.0f));
+            styleColorCount++;
+        }
 
         bool opened = ImGui::TreeNodeEx((void*)gameObject, flags, name.c_str());
 
-        if (gameObject->IsPrefabInstance())
-            ImGui::PopStyleColor();
+        if (styleColorCount > 0)
+            ImGui::PopStyleColor(styleColorCount);
 
         if (ImGui::IsItemHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Left)
             && ImGui::GetDragDropPayload() == nullptr) {

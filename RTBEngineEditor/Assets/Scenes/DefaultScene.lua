@@ -190,7 +190,8 @@ function CreateScene()
                         meshRef = "Default/Models/cube.obj",
                         textureRef = nil,
                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                        meshIndex = 0
+                        meshIndex = 0,
+                        multiMesh = false
                     },
                     {
                         type = "BoxColliderComponent",
@@ -216,7 +217,8 @@ function CreateScene()
                         meshRef = "Default/Models/cube.obj",
                         textureRef = nil,
                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                        meshIndex = 0
+                        meshIndex = 0,
+                        multiMesh = false
                     },
                     {
                         type = "BoxColliderComponent",
@@ -248,7 +250,8 @@ function CreateScene()
                         meshRef = "Default/Models/sphere.obj",
                         textureRef = "Assets/Textures/testTexture.png",
                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                        meshIndex = 0
+                        meshIndex = 0,
+                        multiMesh = false
                     },
                     {
                         type = "RigidBodyComponent",
@@ -270,7 +273,7 @@ function CreateScene()
             },
             {
                 name = "walking",
-                uuid = "8966660D-4271-4351-ACD3-A327BA53C977",
+                uuid = "756AA98E-0539-4562-83C0-760D03A7B4B4",
                 scale = Vector3(0.01, 0.01, 0.01),
                 components = {
                     {
@@ -280,23 +283,22 @@ function CreateScene()
                         defaultClip = "Walking",
                         speed = 1.00,
                         playing = false,
-                        looping = true
+                        looping = true,
+                        additionalModels = {
+                            "Assets/Models/attack.fbx",
+                            "Assets/Models/hit.fbx",
+                        }
+                    },
+                    {
+                        type = "MeshRenderer",
+                        meshRef = "Assets/Models/walking.fbx",
+                        textureRef = nil,
+                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                        meshIndex = 0,
+                        multiMesh = false
                     },
                 },
                 children = {
-                    {
-                        name = "MutantMesh",
-                        uuid = "51A917D6-D19A-426E-AD18-168BAD944D41",
-                        components = {
-                            {
-                                type = "MeshRenderer",
-                                meshRef = "Assets/Models/walking.fbx",
-                                textureRef = "Assets/Models/walking_mutant_M.texture",
-                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                meshIndex = 0
-                            },
-                        }
-                    },
                 }
             },
         }
