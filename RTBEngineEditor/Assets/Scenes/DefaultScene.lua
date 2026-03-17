@@ -298,14 +298,45 @@ function CreateScene()
                         meshIndex = 0,
                         multiMesh = false
                     },
-                },
-                children = {
                 }
             },
             {
                 name = "SphereTest",
                 uuid = "B1A1E446-8B0B-4117-8C4C-4913A00864DA",
                 position = Vector3(-3.67, 1.10, 1.15),
+                rotation = Quaternion.FromEulerAngles(0.00, -53.00, 0.00),
+                scale = Vector3(1.22, 1.22, 1.22),
+                components = {
+                    {
+                        type = "MeshRenderer",
+                        meshRef = "Default/Models/sphere.obj",
+                        textureRef = "Assets/Textures/testTexture.png",
+                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                        meshIndex = 0,
+                        multiMesh = false
+                    },
+                    {
+                        type = "RigidBodyComponent",
+                        mass = 1.00,
+                        friction = 0.50,
+                        restitution = 0.10,
+                        bodyType = "Dynamic"
+                    },
+                    {
+                        type = "Connectable"
+                    },
+                    {
+                        type = "SphereColliderComponent",
+                        radius = 0.80,
+                        centerOffset = Vector3(0.00, 0.00, 0.00),
+                        isTrigger = false
+                    },
+                }
+            },
+            {
+                name = "SphereTest",
+                uuid = "2E5FD2F6-252B-43F9-8D30-1043F0373064",
+                position = Vector3(3.23, 1.10, 1.15),
                 rotation = Quaternion.FromEulerAngles(0.00, -53.00, 0.00),
                 scale = Vector3(1.22, 1.22, 1.22),
                 components = {

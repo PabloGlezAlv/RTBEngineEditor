@@ -175,6 +175,10 @@ namespace RTBEditor {
             return;
         }
 
+        if (io.WantTextInput) {
+            return;
+        }
+
         const bool ctrlDown = io.KeyCtrl;
 
         if (ctrlDown && ImGui::IsKeyPressed(ImGuiKey_C, false)) {
