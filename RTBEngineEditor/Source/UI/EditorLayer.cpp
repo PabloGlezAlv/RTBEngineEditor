@@ -206,6 +206,8 @@ namespace RTBEditor {
 
             ClipboardEntry entry;
             entry.source = go;
+            entry.baseName = go->GetName();
+            entry.pasteCount = 0;
 
             auto& t = go->GetTransform();
             entry.position = t.GetPosition();
@@ -273,6 +275,9 @@ namespace RTBEditor {
             }
 
             if (!go) continue;
+
+            entry.pasteCount++;
+            go->SetName(entry.baseName + " (" + std::to_string(entry.pasteCount) + ")");
 
             auto& transform = go->GetTransform();
             transform.SetPosition(entry.position);

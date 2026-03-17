@@ -29,6 +29,8 @@ namespace RTBEditor {
         RTBEngine::Math::Vector3 position;
         RTBEngine::Math::Quaternion rotation;
         RTBEngine::Math::Vector3 scale;
+        std::string baseName;
+        int pasteCount = 0;
     };
 
     class EditorLayer {
