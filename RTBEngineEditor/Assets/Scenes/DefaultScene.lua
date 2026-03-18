@@ -8,7 +8,7 @@ function CreateScene()
                 name = "MainCamera",
                 uuid = "0E7CE370-7C0E-45A8-89CA-AD7A3E70C216",
                 position = Vector3(-0.00, 0.35, 4.99),
-                rotation = Quaternion.FromEulerAngles(-0.00, 180.00, -0.00),
+                rotation = Quaternion.FromEulerAngles(0.00, 180.00, -0.00),
                 components = {
                     {
                         type = "CameraComponent",
@@ -210,7 +210,7 @@ function CreateScene()
             {
                 name = "Cube",
                 uuid = "64B0D534-9E35-4D68-A32D-CFFCC1F5E1F3",
-                position = Vector3(2.00, 1.00, 0.00),
+                position = Vector3(2.00, 1.01, 0.00),
                 components = {
                     {
                         type = "MeshRenderer",
@@ -242,7 +242,7 @@ function CreateScene()
                 name = "SphereTest",
                 uuid = "8FB4850C-0A3A-41D9-866E-BB98439FE7DD",
                 position = Vector3(-1.87, 1.10, 1.15),
-                rotation = Quaternion.FromEulerAngles(0.00, -53.00, 0.00),
+                rotation = Quaternion.FromEulerAngles(0.00, 53.00, 0.00),
                 scale = Vector3(1.22, 1.22, 1.22),
                 components = {
                     {
@@ -272,39 +272,10 @@ function CreateScene()
                 }
             },
             {
-                name = "walking",
-                uuid = "756AA98E-0539-4562-83C0-760D03A7B4B4",
-                position = Vector3(0.01, 0.00, 0.00),
-                scale = Vector3(0.01, 0.01, 0.01),
-                components = {
-                    {
-                        type = "Animator",
-                        modelRef = "Assets/Models/walking.fbx",
-                        currentClipName = "Walking",
-                        defaultClip = "Walking",
-                        speed = 1.00,
-                        playing = false,
-                        looping = true,
-                        additionalModels = {
-                            "Assets/Models/attack.fbx",
-                            "Assets/Models/hit.fbx",
-                        }
-                    },
-                    {
-                        type = "MeshRenderer",
-                        meshRef = "Assets/Models/walking.fbx",
-                        textureRef = nil,
-                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                        meshIndex = 0,
-                        multiMesh = false
-                    },
-                }
-            },
-            {
                 name = "SphereTest",
                 uuid = "B1A1E446-8B0B-4117-8C4C-4913A00864DA",
                 position = Vector3(-3.67, 1.10, 1.15),
-                rotation = Quaternion.FromEulerAngles(0.00, -53.00, 0.00),
+                rotation = Quaternion.FromEulerAngles(0.00, 53.00, 0.00),
                 scale = Vector3(1.22, 1.22, 1.22),
                 components = {
                     {
@@ -337,7 +308,7 @@ function CreateScene()
                 name = "SphereTest",
                 uuid = "2E5FD2F6-252B-43F9-8D30-1043F0373064",
                 position = Vector3(3.23, 1.10, 1.15),
-                rotation = Quaternion.FromEulerAngles(0.00, -53.00, 0.00),
+                rotation = Quaternion.FromEulerAngles(0.00, 53.00, 0.00),
                 scale = Vector3(1.22, 1.22, 1.22),
                 components = {
                     {
@@ -364,6 +335,59 @@ function CreateScene()
                         centerOffset = Vector3(0.00, 0.00, 0.00),
                         isTrigger = false
                     },
+                }
+            },
+            {
+                name = "walking",
+                uuid = "753770D2-B00E-4859-B7D3-5ABF1249B014",
+                scale = Vector3(0.01, 0.01, 0.01),
+                components = {
+                    {
+                        type = "Animator",
+                        modelRef = "Assets/Models/walking.fbx",
+                        currentClipName = "Walking",
+                        defaultClip = "Walking",
+                        speed = 1.00,
+                        playing = false,
+                        looping = true
+                    },
+                    {
+                        type = "MeshRenderer",
+                        meshRef = "Assets/Models/walking.fbx",
+                        textureRef = "Assets/Models/walking_mutant_M.texture",
+                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                        meshIndex = 0,
+                        multiMesh = false
+                    },
+                },
+                children = {
+                }
+            },
+            {
+                name = "walking (1)",
+                uuid = "1D322E34-046F-43FA-97C6-E31514D8BACB",
+                position = Vector3(-1.60, 0.00, 0.00),
+                scale = Vector3(0.01, 0.01, 0.01),
+                components = {
+                    {
+                        type = "Animator",
+                        modelRef = "Assets/Models/walking.fbx",
+                        currentClipName = "Walking",
+                        defaultClip = "Walking",
+                        speed = 1.00,
+                        playing = false,
+                        looping = true
+                    },
+                    {
+                        type = "MeshRenderer",
+                        meshRef = "Assets/Models/walking.fbx",
+                        textureRef = "Assets/Models/walking_mutant_M.texture",
+                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                        meshIndex = 0,
+                        multiMesh = false
+                    },
+                },
+                children = {
                 }
             },
         }

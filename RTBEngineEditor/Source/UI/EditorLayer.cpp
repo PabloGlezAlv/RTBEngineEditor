@@ -214,13 +214,11 @@ namespace RTBEditor {
             entry.rotation = t.GetRotation();
             entry.scale = t.GetScale();
 
-            // Si es instancia de prefab, usamos snapshot de prefab
-            if (go->IsPrefabInstance()) {
-                auto prefab = RTBEngine::ECS::Prefab::CreateFromGameObject(go);
-                if (prefab) {
-                    entry.prefab = std::move(prefab);
-                    entry.isPrefabInstanceSource = true;
-                }
+            // Always snapshot at copy time to avoid dangling source pointers
+            auto prefab = RTBEngine::ECS::Prefab::CreateFromGameObject(go);
+            if (prefab) {
+                entry.prefab = std::move(prefab);
+                entry.isPrefabInstanceSource = go->IsPrefabInstance();
             }
 
             clipboardPrefabs.push_back(std::move(entry));
