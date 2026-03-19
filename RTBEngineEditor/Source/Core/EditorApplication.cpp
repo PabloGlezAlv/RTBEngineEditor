@@ -55,10 +55,10 @@ namespace RTBEditor {
 
         // Initialize UI Layer
         uiLayer = std::make_unique<EditorLayer>();
-        uiLayer->Initialize(engineApp->GetWindow()->GetSDLWindow(), engineApp->GetImGuiContext());
+        uiLayer->Initialize(engineApp->GetImGuiContext());
 
         uiLayer->SetupToolbar(
-            [this]() { OnPlay(); },
+            [this]() { TryPlay(); },
             [this]() { OnPause(); },
             [this]() { OnStop(); },
             [this]() { return GetState(); },
@@ -68,18 +68,27 @@ namespace RTBEditor {
 
         // Set up menu bar callbacks
         uiLayer->GetMenuBar()->SetBuildCallback([this]() {
-            uiLayer->OpenBuildDialog();
+            TryBuild();
         });
 
         uiLayer->GetMenuBar()->SetExitCallback([this]() {
-            isRunning = false;
+            TryExit();
         });
+
+        uiLayer->SetRenderPopupCallback([this]() {
+            RenderUnsavedScenePopup();
+            });
 
         uiLayer->GetMenuBar()->SetSaveSceneCallback([this]() {
             auto& sm = RTBEngine::ECS::SceneManager::GetInstance();
             RTBEngine::Scripting::SceneSaver::SaveScene(sm.GetActiveScene(), sm.GetActiveScenePath());
             sm.ClearSceneDirty();
             uiLayer->GetMenuBar()->SetSceneDirty(false);
+        });
+
+        // Intercept window close button so the editor can show the unsaved-scene popup
+        engineApp->SetOnQuitRequested([this]() {
+            TryExit();
         });
 
         isRunning = true;
@@ -97,7 +106,9 @@ namespace RTBEditor {
             RTBEngine::Input::InputManager::GetInstance().Update();
             engineApp->ProcessInput();
             if (engineApp->GetWindow()->GetShouldClose()) {
-                isRunning = false;
+                std::cout << "Close window" << std::endl;
+                engineApp->GetWindow()->SetShouldClose(false);
+                TryExit();
             }
 
             Update(deltaTime);
@@ -212,6 +223,88 @@ namespace RTBEditor {
             RTBEngine::ECS::SceneManager::GetInstance().LoadScene(project->GetStartScene());
         } else {
             RTBEngine::ECS::SceneManager::GetInstance().LoadScene("Default/Scenes/DefaultScene.lua");
+        }
+    }
+
+    void EditorApplication::TryPlay() {
+        if (RTBEngine::ECS::SceneManager::GetInstance().IsSceneDirty()) {
+            pendingAction = PendingAction::Play;
+            showUnsavedScenePopup = true;
+        }
+        else {
+            OnPlay();
+        }
+    }
+
+    void EditorApplication::TryBuild() {
+        if (RTBEngine::ECS::SceneManager::GetInstance().IsSceneDirty()) {
+            pendingAction = PendingAction::Build;
+            showUnsavedScenePopup = true;
+        }
+        else {
+            uiLayer->OpenBuildDialog();
+        }
+    }
+
+    void EditorApplication::TryExit() {
+        if (RTBEngine::ECS::SceneManager::GetInstance().IsSceneDirty()) {
+            pendingAction = PendingAction::Exit;
+            showUnsavedScenePopup = true;
+        }
+        else {
+            isRunning = false;
+        }
+    }
+
+    void EditorApplication::ExecutePendingAction() {
+        switch (pendingAction) {
+        case PendingAction::Play:  OnPlay(); break;
+        case PendingAction::Build: uiLayer->OpenBuildDialog(); break;
+        case PendingAction::Exit:  isRunning = false; break;
+        case PendingAction::None:  break;
+        }
+        pendingAction = PendingAction::None;
+    }
+
+    void EditorApplication::RenderUnsavedScenePopup() {
+        if (showUnsavedScenePopup) {
+            ImGui::OpenPopup("Scene is not saved");
+            showUnsavedScenePopup = false;
+        }
+
+        bool popupOpen = true;
+        if (ImGui::BeginPopupModal("Scene is not saved", &popupOpen,
+            ImGuiWindowFlags_AlwaysAutoResize)) {
+            ImGui::Text("The current scene has unsaved changes.");
+            ImGui::Text("What would you like to do?");
+            ImGui::Spacing();
+
+            if (ImGui::Button("Save")) {
+                auto& sm = RTBEngine::ECS::SceneManager::GetInstance();
+                RTBEngine::Scripting::SceneSaver::SaveScene(
+                    sm.GetActiveScene(), sm.GetActiveScenePath());
+                sm.ClearSceneDirty();
+                uiLayer->GetMenuBar()->SetSceneDirty(false);
+                ExecutePendingAction();
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Ignore")) {
+                ExecutePendingAction();
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Cancel")) {
+                pendingAction = PendingAction::None;
+                ImGui::CloseCurrentPopup();
+            }
+
+            ImGui::EndPopup();
+        }
+
+        // Si el usuario cerró con la X, limpiar la acción pendiente
+        if (!popupOpen) {
+            pendingAction = PendingAction::None;
         }
     }
 

@@ -8,7 +8,7 @@ function CreateScene()
                 name = "MainCamera",
                 uuid = "0E7CE370-7C0E-45A8-89CA-AD7A3E70C216",
                 position = Vector3(-0.00, 0.35, 4.99),
-                rotation = Quaternion.FromEulerAngles(0.00, 180.00, -0.00),
+                rotation = Quaternion.FromEulerAngles(-0.00, -180.00, -0.00),
                 components = {
                     {
                         type = "CameraComponent",
@@ -340,6 +340,7 @@ function CreateScene()
             {
                 name = "walking",
                 uuid = "753770D2-B00E-4859-B7D3-5ABF1249B014",
+                position = Vector3(-0.04, 0.06, 0.00),
                 scale = Vector3(0.01, 0.01, 0.01),
                 components = {
                     {

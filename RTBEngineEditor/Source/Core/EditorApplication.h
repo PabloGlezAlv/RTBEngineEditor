@@ -11,6 +11,8 @@ namespace RTBEditor {
 
 #include "EditorTypes.h"
 
+    enum class PendingAction { None, Play, Build, Exit };
+
     class EditorApplication {
     public:
         EditorApplication();
@@ -21,9 +23,13 @@ namespace RTBEditor {
         void Shutdown();
 
         // Play/Pause/Stop controls
-        void OnPlay();
+        void OnPlay(); 
         void OnStop();
         void OnPause();
+
+        void TryPlay();
+        void TryBuild();
+        void TryExit();
 
         // Script compilation
         void OnCompileScripts();
@@ -36,6 +42,8 @@ namespace RTBEditor {
         void Render();
         void RenderSceneToFramebuffer();
 
+        void ExecutePendingAction();
+        void RenderUnsavedScenePopup();
     private:
         std::unique_ptr<RTBEngine::Core::Application> engineApp;
         std::unique_ptr<EditorLayer> uiLayer;
@@ -52,6 +60,9 @@ namespace RTBEditor {
 
         // Stats smoothing
         float smoothedFps = 0.0f;
+
+        PendingAction pendingAction = PendingAction::None;
+        bool showUnsavedScenePopup = false;
     };
 
 }

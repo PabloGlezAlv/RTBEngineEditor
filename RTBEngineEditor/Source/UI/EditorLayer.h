@@ -38,7 +38,7 @@ namespace RTBEditor {
         EditorLayer();
         ~EditorLayer();
 
-        void Initialize(SDL_Window* window, void* imguiContext = nullptr);
+        void Initialize(void* imguiContext = nullptr);
         void Begin();
         void End();
         void OnUIRender();
@@ -54,6 +54,7 @@ namespace RTBEditor {
                           std::function<bool()> isCompilingScriptsProvider,
                           std::function<void()> onCompileScripts);
         void SetEditorState(EditorState s) { context.state = s; }
+        void SetRenderPopupCallback(std::function<void()> cb) {renderPopupCallback = cb;}
         RTBEngine::ECS::GameObject* GetSelectedGameObject() const { return context.selectedGameObject; }
         void SetSelectedGameObject(RTBEngine::ECS::GameObject* go) { context.selectedGameObject = go; }
         EditorContext& GetContext() { return context; }
@@ -72,7 +73,9 @@ namespace RTBEditor {
         GameViewPanel* gameViewPanel = nullptr;
         bool isDockspaceOpen = true;
 
-        std::vector<ClipboardEntry> clipboardPrefabs;
+        std::vector<ClipboardEntry> clipboardPrefabs; 
+        
+        std::function<void()> renderPopupCallback;
 
         void HandleGlobalShortcuts();
         void CopySelectionToClipboard();

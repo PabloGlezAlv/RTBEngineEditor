@@ -40,7 +40,7 @@ namespace RTBEditor {
 
     EditorLayer::~EditorLayer() {}
 
-    void EditorLayer::Initialize(SDL_Window* window, void* imguiContext) {
+    void EditorLayer::Initialize(void* imguiContext) {
         if (imguiContext) {
             ImGui::SetCurrentContext((ImGuiContext*)imguiContext);
         }
@@ -67,6 +67,10 @@ namespace RTBEditor {
 
         if (buildDialog) {
             buildDialog->Render();
+        }
+
+        if (renderPopupCallback) {
+            renderPopupCallback();
         }
     }
 
