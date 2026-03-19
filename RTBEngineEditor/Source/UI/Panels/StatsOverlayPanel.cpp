@@ -33,6 +33,7 @@ namespace RTBEditor {
             ImGui::Separator();
             ImGui::Text("Draw Calls   %u", s.drawCalls);
             ImGui::Text("Triangles    %u", s.triangles);
+            ImGui::Text("Culled       %u", s.culledObjects);
             ImGui::Separator();
             ImGui::Text("GameObjects  %u", s.gameObjects);
             ImGui::Text("Components   %u", s.components);

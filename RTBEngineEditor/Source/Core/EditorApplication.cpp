@@ -224,6 +224,7 @@ namespace RTBEditor {
             StatsData& stats = uiLayer->GetContext().stats;
             stats.drawCalls = RTBEngine::ECS::MeshRenderer::GetDrawCallCount();
             stats.triangles = RTBEngine::ECS::MeshRenderer::GetTriangleCount();
+            stats.culledObjects = RTBEngine::ECS::MeshRenderer::GetCulledObjectCount();
         }
 
         // Clear the main window

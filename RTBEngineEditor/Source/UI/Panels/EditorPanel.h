@@ -14,6 +14,7 @@ namespace RTBEditor {
         float frameTimeMs = 0.0f;
         uint32_t drawCalls = 0;
         uint32_t triangles = 0;
+        uint32_t culledObjects = 0;
         uint32_t gameObjects = 0;
         uint32_t components = 0;
         uint32_t physicsBodies = 0;
