@@ -49,10 +49,34 @@ namespace RTBEditor {
             return BuildResult::PlayerNotFound;
         }
 
+        // Compile user scripts before copying DLLs
+        if (onProgress) onProgress("Compiling scripts...", 0.25f);
+        {
+            namespace fs = std::filesystem;
+            fs::path gameScriptsVcxproj = fs::current_path() / "GameScripts" / "GameScripts.vcxproj";
+            if (fs::exists(gameScriptsVcxproj)) {
+                auto scriptResult = CompileScripts(gameScriptsVcxproj.string(), "Release");
+                if (scriptResult != ScriptCompileResult::Success) {
+                    RTB_WARN("BuildSystem: Failed to compile GameScripts — user components won't be available");
+                }
+            }
+        }
+
         if (onProgress) onProgress("Copying DLLs...", 0.3f);
         if (!CopyDLLs(settings.outputDirectory)) {
             RTB_ERROR("Build failed: Could not copy DLLs");
             return BuildResult::CopyFailed;
+        }
+
+        // Copy compiled GameScripts.dll to output
+        {
+            namespace fs = std::filesystem;
+            fs::path compiledDll = fs::current_path() / "x64" / "Release" / "GameScripts.dll";
+            if (fs::exists(compiledDll)) {
+                fs::copy_file(compiledDll, settings.outputDirectory / "GameScripts.dll",
+                    fs::copy_options::overwrite_existing);
+                RTB_INFO("BuildSystem: Copied GameScripts.dll to output");
+            }
         }
 
         if (onProgress) onProgress("Copying Default Folder...", 0.5f);
