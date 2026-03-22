@@ -1,7 +1,7 @@
 #include "GameConfig.h"
+#include <RTBEngine/Core/Logger.h>
 #include <fstream>
 #include <sstream>
-#include <iostream>
 
 namespace RTBPlayer {
 
@@ -11,7 +11,7 @@ namespace RTBPlayer {
     bool GameConfig::Load(const std::string& path) {
         std::ifstream file(path);
         if (!file.is_open()) {
-            std::cerr << "Warning: Could not open " << path << ", using defaults" << std::endl;
+            RTB_WARN("Could not open " + path + ", using defaults");
             return false;
         }
 

@@ -1,5 +1,6 @@
 #include "Project.h"
 #include <RTBEngine/ECS/PrefabRegistry.h>
+#include <RTBEngine/Core/Logger.h>
 #include <fstream>
 #include <sstream>
 #include <filesystem>
@@ -23,7 +24,7 @@ namespace RTBEditor {
     bool Project::Load(const std::filesystem::path& path) {
         std::ifstream file(path);
         if (!file.is_open()) {
-            std::cerr << "Failed to open project file: " << path << std::endl;
+            RTB_ERROR("Failed to open project file: " + path.string());
             return false;
         }
 

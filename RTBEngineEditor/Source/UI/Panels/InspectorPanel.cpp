@@ -181,6 +181,13 @@ namespace RTBEditor {
                     uiElement->SyncRectTransform();
                     RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
                 }
+
+                float rot = uiElement->rotation;
+                if (ImGui::DragFloat("Rotation", &rot, 0.5f)) {
+                    uiElement->rotation = rot;
+                    uiElement->SyncRectTransform();
+                    RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                }
             }
         } else {
             // Transform Component (3D — shown for non-UI objects)

@@ -121,7 +121,7 @@ namespace RTBEditor {
             return true;
         }
         catch (const std::exception& e) {
-            std::cerr << "Error creating directory: " << e.what() << std::endl;
+            RTB_ERROR(std::string("Error creating directory: ") + e.what());
             return false;
         }
     }
@@ -132,7 +132,7 @@ namespace RTBEditor {
             auto playerPath = sdkPath / "Bin/RTBPlayer.exe";
 
             if (!std::filesystem::exists(playerPath)) {
-                std::cerr << "RTBPlayer not found at: " << playerPath << std::endl;
+                RTB_ERROR("RTBPlayer not found at: " + playerPath.string());
                 return false;
             }
 
@@ -141,7 +141,7 @@ namespace RTBEditor {
             return true;
         }
         catch (const std::exception& e) {
-            std::cerr << "Error copying player: " << e.what() << std::endl;
+            RTB_ERROR(std::string("Error copying player: ") + e.what());
             return false;
         }
     }
@@ -159,7 +159,7 @@ namespace RTBEditor {
             return true;
         }
         catch (const std::exception& e) {
-            std::cerr << "Error copying DLLs: " << e.what() << std::endl;
+            RTB_ERROR(std::string("Error copying DLLs: ") + e.what());
             return false;
         }
     }
@@ -179,7 +179,7 @@ namespace RTBEditor {
             return true;
         }
         catch (const std::exception& e) {
-            std::cerr << "Error copying Default folder: " << e.what() << std::endl;
+            RTB_ERROR(std::string("Error copying Default folder: ") + e.what());
             return false;
         }
     }
@@ -199,7 +199,7 @@ namespace RTBEditor {
             return true;
         }
         catch (const std::exception& e) {
-            std::cerr << "Error copying Assets folder: " << e.what() << std::endl;
+            RTB_ERROR(std::string("Error copying Assets folder: ") + e.what());
             return false;
         }
     }
@@ -225,7 +225,7 @@ namespace RTBEditor {
             return true;
         }
         catch (const std::exception& e) {
-            std::cerr << "Error writing config: " << e.what() << std::endl;
+            RTB_ERROR(std::string("Error writing config: ") + e.what());
             return false;
         }
     }

@@ -30,7 +30,7 @@ function CreateScene()
             {
                 name = "Directional Light",
                 uuid = "48103FD7-E1F1-4AAB-8127-C0C2ED5B4111",
-                rotation = Quaternion.FromEulerAngles(44.73, -30.46, -5.59),
+                rotation = Quaternion.FromEulerAngles(33.67, -42.63, -31.84),
                 components = {
                     {
                         type = "LightComponent",
