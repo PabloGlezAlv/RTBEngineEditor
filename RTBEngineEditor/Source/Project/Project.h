@@ -15,6 +15,8 @@ namespace RTBEditor {
 
         const std::string& GetName() const { return name; }
         const std::string& GetStartScene() const { return startScene; }
+        const std::string& GetLastOpenScene() const { return lastOpenScene; }
+        void SetLastOpenScene(const std::string& path) { lastOpenScene = path; }
         const std::filesystem::path& GetProjectDirectory() const { return projectDirectory; }
         const std::filesystem::path& GetAssetDirectory() const { return assetDirectory; }
 
@@ -23,6 +25,7 @@ namespace RTBEditor {
     private:
         std::string name = "New Project";
         std::string startScene = "Default/Scenes/DefaultScene.lua";
+        std::string lastOpenScene;
         std::filesystem::path projectDirectory;
         std::filesystem::path assetDirectory = "Assets";
 

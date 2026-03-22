@@ -4,6 +4,7 @@
 #include <memory>
 #include <thread>
 #include <atomic>
+#include <filesystem>
 #include "../UI/EditorLayer.h"
 #include "../Project/Project.h"
 
@@ -11,7 +12,7 @@ namespace RTBEditor {
 
 #include "EditorTypes.h"
 
-    enum class PendingAction { None, Play, Build, Exit };
+    enum class PendingAction { None, Play, Build, Exit, OpenScene };
 
     class EditorApplication {
     public:
@@ -30,6 +31,7 @@ namespace RTBEditor {
         void TryPlay();
         void TryBuild();
         void TryExit();
+        void TryOpenScene(const std::filesystem::path& path);
 
         // Script compilation
         void OnCompileScripts();
@@ -44,6 +46,7 @@ namespace RTBEditor {
 
         void ExecutePendingAction();
         void RenderUnsavedScenePopup();
+        void OnOpenScene();
     private:
         std::unique_ptr<RTBEngine::Core::Application> engineApp;
         std::unique_ptr<EditorLayer> uiLayer;
@@ -57,6 +60,7 @@ namespace RTBEditor {
         std::atomic<bool> compileJobDone{ false };
         std::atomic<int> compileJobResult{ 0 };
         std::string pendingScenePath;
+        std::filesystem::path pendingOpenScenePath;
 
         // Stats smoothing
         float smoothedFps = 0.0f;

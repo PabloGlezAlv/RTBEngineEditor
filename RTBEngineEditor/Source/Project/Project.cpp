@@ -38,6 +38,7 @@ namespace RTBEditor {
                 if (std::getline(is_line, value)) {
                     if (key == "Name") name = value;
                     else if (key == "StartScene") startScene = value;
+                    else if (key == "LastOpenScene") lastOpenScene = value;
                     else if (key == "AssetDirectory") assetDirectory = value;
                 }
             }
@@ -58,6 +59,8 @@ namespace RTBEditor {
 
         file << "Name=" << name << "\n";
         file << "StartScene=" << startScene << "\n";
+        if (!lastOpenScene.empty())
+            file << "LastOpenScene=" << lastOpenScene << "\n";
         file << "AssetDirectory=" << assetDirectory.string() << "\n";
 
         return true;

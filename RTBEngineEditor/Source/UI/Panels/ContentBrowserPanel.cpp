@@ -5,6 +5,8 @@
 #include <RTBEngine/ECS/PrefabRegistry.h>
 #include <RTBEngine/Scripting/PrefabSaver.h>
 #include <RTBEngine/ECS/SceneManager.h>
+#include <RTBEngine/ECS/Scene.h>
+#include <RTBEngine/Scripting/SceneSaver.h>
 #include <RTBEngine/Rendering/ModelLoader.h>
 #include "../../Project/Project.h"
 #include "../DragDropPayloads.h"
@@ -387,6 +389,24 @@ namespace RTBEditor {
                             std::filesystem::path newPath = path.parent_path() / (newName + path.extension().string());
                             if (!std::filesystem::exists(newPath)) {
                                 std::filesystem::rename(path, newPath);
+                                // When renaming a .lua scene that is currently loaded, update its internal name
+                                {
+                                    std::string ext = path.extension().string();
+                                    for (auto& c : ext) c = std::tolower(c);
+                                    if (ext == ".lua") {
+                                        auto& sm = RTBEngine::ECS::SceneManager::GetInstance();
+                                        // Compare against the old path (before rename) since that is still in activeScenePath
+                                        if (sm.GetActiveScenePath() == path.string()) {
+                                            RTBEngine::ECS::Scene* scene = sm.GetActiveScene();
+                                            if (scene) {
+                                                scene->SetName(newName);
+                                                sm.SetActiveScenePath(newPath.string());
+                                                RTBEngine::Scripting::SceneSaver::SaveScene(scene, newPath.string());
+                                                sm.ClearSceneDirty();
+                                            }
+                                        }
+                                    }
+                                }
                                 // When renaming a .h, also rename the companion .cpp and update the .vcxproj
                                 if (path.extension() == ".h") {
                                     std::filesystem::path oldCpp = path.parent_path() / (path.stem().string() + ".cpp");

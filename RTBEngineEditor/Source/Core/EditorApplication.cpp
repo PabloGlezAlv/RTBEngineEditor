@@ -50,7 +50,9 @@ namespace RTBEditor {
         // Load Project Settings
         project = std::make_unique<Project>();
         if (project->Load("MyProject.rtbproj")) {
-            RTBEngine::ECS::SceneManager::GetInstance().LoadScene(project->GetStartScene());
+            const std::string& lastOpen = project->GetLastOpenScene();
+            const std::string& sceneToLoad = !lastOpen.empty() ? lastOpen : project->GetStartScene();
+            RTBEngine::ECS::SceneManager::GetInstance().LoadScene(sceneToLoad);
         }
 
         // Initialize UI Layer
@@ -149,6 +151,13 @@ namespace RTBEditor {
             RTBEngine::ECS::SceneManager::GetInstance().IsSceneDirty()
         );
 
+        // Consume scene open request from Content Browser double-click
+        if (!uiLayer->GetContext().pendingSceneLoad.empty() && state == EditorState::Edit) {
+            std::filesystem::path requested = uiLayer->GetContext().pendingSceneLoad;
+            uiLayer->GetContext().pendingSceneLoad.clear();
+            TryOpenScene(requested);
+        }
+
         // If an async script compilation finished, join the worker and reload the DLL.
         if (isCompilingScripts && compileJobDone.load(std::memory_order_acquire)) {
             if (compileThread.joinable()) {
@@ -226,6 +235,31 @@ namespace RTBEditor {
         }
     }
 
+    void EditorApplication::TryOpenScene(const std::filesystem::path& path) {
+        pendingOpenScenePath = path;
+        if (RTBEngine::ECS::SceneManager::GetInstance().IsSceneDirty()) {
+            pendingAction = PendingAction::OpenScene;
+            showUnsavedScenePopup = true;
+        }
+        else {
+            OnOpenScene();
+        }
+    }
+
+    void EditorApplication::OnOpenScene() {
+        if (pendingOpenScenePath.empty()) return;
+
+        if (uiLayer)
+            uiLayer->SetSelectedGameObject(nullptr);
+        if (engineApp)
+            engineApp->ResetPhysics();
+
+        RTBEngine::ECS::SceneManager::GetInstance().LoadScene(
+            pendingOpenScenePath.string());
+
+        pendingOpenScenePath.clear();
+    }
+
     void EditorApplication::TryPlay() {
         if (RTBEngine::ECS::SceneManager::GetInstance().IsSceneDirty()) {
             pendingAction = PendingAction::Play;
@@ -260,8 +294,9 @@ namespace RTBEditor {
         switch (pendingAction) {
         case PendingAction::Play:  OnPlay(); break;
         case PendingAction::Build: uiLayer->OpenBuildDialog(); break;
-        case PendingAction::Exit:  isRunning = false; break;
-        case PendingAction::None:  break;
+        case PendingAction::Exit:      isRunning = false; break;
+        case PendingAction::OpenScene: OnOpenScene(); break;
+        case PendingAction::None:      break;
         }
         pendingAction = PendingAction::None;
     }
@@ -450,6 +485,15 @@ namespace RTBEditor {
     }
 
     void EditorApplication::Shutdown() {
+        // Persist the last open scene so it reopens on next editor launch
+        if (project) {
+            const std::string& lastScene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScenePath();
+            if (!lastScene.empty()) {
+                project->SetLastOpenScene(lastScene);
+                project->Save("MyProject.rtbproj");
+            }
+        }
+
         // Unload GameScripts.dll before destroying the engine to avoid dangling pointers
         RTBEngine::Scripting::ScriptManager::GetInstance().UnloadScripts();
 
