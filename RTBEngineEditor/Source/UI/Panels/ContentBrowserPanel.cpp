@@ -395,8 +395,13 @@ namespace RTBEditor {
                                     for (auto& c : ext) c = std::tolower(c);
                                     if (ext == ".lua") {
                                         auto& sm = RTBEngine::ECS::SceneManager::GetInstance();
-                                        // Compare against the old path (before rename) since that is still in activeScenePath
-                                        if (sm.GetActiveScenePath() == path.string()) {
+                                        // Both paths may be relative or absolute with different separators.
+                                        // Resolve both to absolute canonical paths for a reliable comparison.
+                                        namespace fs = std::filesystem;
+                                        fs::path oldAbsolute = fs::absolute(path);
+                                        fs::path activeAbsolute = fs::absolute(fs::path(sm.GetActiveScenePath()));
+                                        fs::path newAbsolute = fs::absolute(newPath);
+                                        if (oldAbsolute == activeAbsolute) {
                                             RTBEngine::ECS::Scene* scene = sm.GetActiveScene();
                                             if (scene) {
                                                 scene->SetName(newName);

@@ -1,7 +1,6 @@
 #include "EditorApplication.h"
 #include <imgui.h>
 #include <GL/glew.h>
-#include <iostream>
 #include <filesystem>
 #include <RTBEngine/ECS/SceneManager.h>
 #include <RTBEngine/Rendering/FrameBuffer.h>
@@ -108,7 +107,6 @@ namespace RTBEditor {
             RTBEngine::Input::InputManager::GetInstance().Update();
             engineApp->ProcessInput();
             if (engineApp->GetWindow()->GetShouldClose()) {
-                std::cout << "Close window" << std::endl;
                 engineApp->GetWindow()->SetShouldClose(false);
                 TryExit();
             }
@@ -201,8 +199,13 @@ namespace RTBEditor {
     }
 
     void EditorApplication::OnPlay() {
+        auto& sm = RTBEngine::ECS::SceneManager::GetInstance();
+
+        // Remember which scene was open so OnStop can restore it
+        scenePathBeforePlay = sm.GetActiveScenePath();
+
         // Reset and re-initialize physics for the current scene before entering Play
-        RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
+        RTBEngine::ECS::Scene* scene = sm.GetActiveScene();
         if (scene && engineApp) {
             engineApp->ResetPhysics();
             engineApp->InitializePhysicsForScene(scene);
@@ -228,11 +231,11 @@ namespace RTBEditor {
         if (engineApp)
             engineApp->ResetPhysics();
 
-        if (project) {
-            RTBEngine::ECS::SceneManager::GetInstance().LoadScene(project->GetStartScene());
-        } else {
-            RTBEngine::ECS::SceneManager::GetInstance().LoadScene("Default/Scenes/DefaultScene.lua");
-        }
+        const std::string& sceneToRestore = !scenePathBeforePlay.empty()
+            ? scenePathBeforePlay
+            : (project ? project->GetStartScene() : std::string("Default/Scenes/DefaultScene.lua"));
+        RTBEngine::ECS::SceneManager::GetInstance().LoadScene(sceneToRestore);
+        scenePathBeforePlay.clear();
     }
 
     void EditorApplication::TryOpenScene(const std::filesystem::path& path) {

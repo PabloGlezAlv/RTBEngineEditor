@@ -1,0 +1,159 @@
+function CreateScene()
+    return {
+        name = "MainMenu",
+        skyboxEnabled = true,
+        skybox = "Assets/Cubemap/NewCubemap.cubemap",
+        gameObjects = {
+            {
+                name = "Main Camera",
+                uuid = "198966E8-23E3-4EC4-9F05-BEB0810D1A43",
+                position = Vector3(0.30, 1.00, -5.00),
+                components = {
+                    {
+                        type = "CameraComponent",
+                        fov = 60.00,
+                        nearClip = 0.10,
+                        farClip = 1000.00,
+                        projectionType = "Perspective",
+                        orthographicSize = 10.00,
+                        syncWithTransform = true,
+                        isMainCamera = false
+                    },
+                    {
+                        type = "FreeLookCamera",
+                        moveSpeed = 5.00,
+                        lookSpeed = 0.10,
+                        rotationSpeed = 90.00
+                    },
+                }
+            },
+            {
+                name = "Directional Light",
+                uuid = "48103FD7-E1F1-4AAB-8127-C0C2ED5B4111",
+                rotation = Quaternion.FromEulerAngles(44.73, -30.46, -5.59),
+                components = {
+                    {
+                        type = "LightComponent",
+                        lightType = "Directional",
+                        color = Color(1.00, 1.00, 1.00, 1.00),
+                        intensity = 1.00,
+                        range = 10.00,
+                        spotAngle = 45.00,
+                        spotInnerAngle = 30.00,
+                        syncPosition = true,
+                        syncDirection = true
+                    },
+                }
+            },
+            {
+                name = "Canvas",
+                uuid = "073830E4-5E61-4968-B33A-433B8A60D77C",
+                components = {
+                    {
+                        type = "Canvas"
+                    },
+                },
+                children = {
+                    {
+                        name = "Button",
+                        uuid = "2E0ED540-A92F-40A9-B2E7-4906659B3E6E",
+                        components = {
+                            {
+                                type = "UIPanel",
+                                backgroundColor = Color(1.00, 1.00, 1.00, 0.50),
+                                borderColor = Color(1.00, 1.00, 1.00, 1.00),
+                                borderThickness = 1.00,
+                                hasBorder = false,
+                                isVisible = true,
+                                raycastTarget = true,
+                                anchorMin = Vector2(0.50, 0.50),
+                                anchorMax = Vector2(0.50, 0.50),
+                                anchoredPosition = Vector2(0.00, 0.00),
+                                sizeDelta = Vector2(160.00, 40.00)
+                            },
+                            {
+                                type = "UIButton",
+                                normalColor = Color(1.00, 1.00, 1.00, 0.23),
+                                hoveredColor = Color(0.90, 0.90, 0.90, 0.44),
+                                pressedColor = Color(0.70, 0.70, 0.70, 1.00),
+                                disabledColor = Color(0.50, 0.50, 0.50, 0.50),
+                                interactable = true
+                            },
+                        },
+                        children = {
+                            {
+                                name = "Text",
+                                uuid = "6C243A1E-F469-47BE-9CB9-7DAC1471F31F",
+                                components = {
+                                    {
+                                        type = "UIText",
+                                        text = "Play",
+                                        color = Color(1.00, 1.00, 1.00, 1.00),
+                                        fontSize = 16.00,
+                                        alignment = "Center",
+                                        font = nil,
+                                        isVisible = true,
+                                        raycastTarget = false,
+                                        anchorMin = Vector2(0.00, 0.00),
+                                        anchorMax = Vector2(1.00, 1.00),
+                                        anchoredPosition = Vector2(0.00, 0.00),
+                                        sizeDelta = Vector2(0.00, 0.00)
+                                    },
+                                }
+                            },
+                        }
+                    },
+                    {
+                        name = "Button (1)",
+                        uuid = "6F093F7A-8C5E-47AE-B7DA-84C929A60009",
+                        components = {
+                            {
+                                type = "UIPanel",
+                                backgroundColor = Color(1.00, 1.00, 1.00, 0.50),
+                                borderColor = Color(1.00, 1.00, 1.00, 1.00),
+                                borderThickness = 1.00,
+                                hasBorder = false,
+                                isVisible = true,
+                                raycastTarget = true,
+                                anchorMin = Vector2(0.50, 0.50),
+                                anchorMax = Vector2(0.50, 0.50),
+                                anchoredPosition = Vector2(0.00, -78.00),
+                                sizeDelta = Vector2(160.00, 40.00)
+                            },
+                            {
+                                type = "UIButton",
+                                normalColor = Color(1.00, 1.00, 1.00, 0.23),
+                                hoveredColor = Color(0.90, 0.90, 0.90, 0.44),
+                                pressedColor = Color(0.70, 0.70, 0.70, 1.00),
+                                disabledColor = Color(0.50, 0.50, 0.50, 0.50),
+                                interactable = true
+                            },
+                        },
+                        children = {
+                            {
+                                name = "Text",
+                                uuid = "6C4B352B-BAFB-4A6C-806C-2E24DB7CB30B",
+                                components = {
+                                    {
+                                        type = "UIText",
+                                        text = "Exit",
+                                        color = Color(1.00, 1.00, 1.00, 1.00),
+                                        fontSize = 16.00,
+                                        alignment = "Center",
+                                        font = nil,
+                                        isVisible = true,
+                                        raycastTarget = false,
+                                        anchorMin = Vector2(0.00, 0.00),
+                                        anchorMax = Vector2(1.00, 1.00),
+                                        anchoredPosition = Vector2(0.00, 0.00),
+                                        sizeDelta = Vector2(0.00, 0.00)
+                                    },
+                                }
+                            },
+                        }
+                    },
+                }
+            },
+        }
+    }
+end

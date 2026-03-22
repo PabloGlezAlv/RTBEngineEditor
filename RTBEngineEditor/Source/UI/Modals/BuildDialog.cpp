@@ -2,7 +2,6 @@
 #include <imgui.h>
 #include <Windows.h>
 #include <shobjidl.h>
-#include <iostream>
 
 namespace RTBEditor {
 

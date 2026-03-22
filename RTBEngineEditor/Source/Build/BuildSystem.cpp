@@ -1,6 +1,5 @@
 #include "BuildSystem.h"
 #include <fstream>
-#include <iostream>
 #include <RTBEngine/Core/Logger.h>
 
 // --- MSBuild invocation notes ---

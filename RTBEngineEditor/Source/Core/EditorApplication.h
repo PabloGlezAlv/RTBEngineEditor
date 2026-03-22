@@ -60,6 +60,7 @@ namespace RTBEditor {
         std::atomic<bool> compileJobDone{ false };
         std::atomic<int> compileJobResult{ 0 };
         std::string pendingScenePath;
+        std::string scenePathBeforePlay;
         std::filesystem::path pendingOpenScenePath;
 
         // Stats smoothing

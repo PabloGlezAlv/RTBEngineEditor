@@ -2,7 +2,6 @@
 #include <RTBEngine/ECS/PrefabRegistry.h>
 #include <fstream>
 #include <sstream>
-#include <iostream>
 #include <filesystem>
 
 namespace RTBEditor {
