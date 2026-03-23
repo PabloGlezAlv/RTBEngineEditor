@@ -188,6 +188,13 @@ namespace RTBEditor {
                     uiElement->SyncRectTransform();
                     RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
                 }
+
+                RTBEngine::Math::Vector2 scl = uiElement->scale;
+                if (ImGui::DragFloat2("Scale", (float*)&scl, 0.01f)) {
+                    uiElement->scale = scl;
+                    uiElement->SyncRectTransform();
+                    RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                }
             }
         } else {
             // Transform Component (3D — shown for non-UI objects)
@@ -286,7 +293,7 @@ namespace RTBEditor {
     }
 
     void InspectorPanel::DrawProperty(RTBEngine::ECS::Component* component, const RTBEngine::Reflection::PropertyInfo& prop) {
-        void* data = (char*)component + prop.offset;
+        void* data = (char*)component->GetActualObject() + prop.offset;
         bool changed = false;
         
         ImGui::PushID(prop.name.c_str());
