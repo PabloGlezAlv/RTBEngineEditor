@@ -1,5 +1,7 @@
 #include <Windows.h>
 #include <RTBEngine/Reflection/TypeInfo.h>
+#include "../../../RTBEngine/RTBEngine/Engine/Scripting/ScriptBridgeABI.h"
+#include <cstring>
 
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)
 {
@@ -9,19 +11,6 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserv
 // ABI-safe descriptor structs — only POD types, no STL across the module boundary.
 // The EXE and DLL may have separate CRT heaps (/MT), so std::string / std::vector
 // must never be passed by value or reference between them.
-
-struct RTBPropertyDesc {
-    const char* name;           // property name (points into DLL string literals)
-    const char* displayName;
-    int         type;           // cast of RTBEngine::Reflection::PropertyType
-    size_t      offset;
-    size_t      size;
-    int         flags;          // cast of RTBEngine::Reflection::PropertyFlags
-    float       rangeMin;
-    float       rangeMax;
-    int         hasRange;
-    const char* componentTypeName; // for ComponentRef properties
-};
 
 struct RTBTypeDesc {
     const char* typeName;
@@ -37,6 +26,12 @@ struct ScriptTypeEntry {
 };
 static ScriptTypeEntry s_scriptTypes[256];
 static int s_scriptTypeCount = 0;
+struct ScriptPropertyEntry {
+    const char*     ownerType;
+    RTBPropertyDesc desc;
+};
+static ScriptPropertyEntry s_scriptProps[4096];
+static int s_scriptPropCount = 0;
 
 extern "C" void RTBScripts_RegisterLocalType(const char* typeName, const RTBEngine::Reflection::TypeInfo* info)
 {
@@ -45,6 +40,16 @@ extern "C" void RTBScripts_RegisterLocalType(const char* typeName, const RTBEngi
         s_scriptTypes[s_scriptTypeCount].typeInfo  = info;
         ++s_scriptTypeCount;
     }
+}
+
+extern "C" void RTBScripts_RegisterLocalProperty(const char* ownerType, const RTBPropertyDesc* desc)
+{
+    if (!ownerType || !desc) return;
+    if (s_scriptPropCount >= 4096) return;
+
+    s_scriptProps[s_scriptPropCount].ownerType = ownerType;
+    s_scriptProps[s_scriptPropCount].desc = *desc;
+    ++s_scriptPropCount;
 }
 
 // Called by the editor after loading this DLL.
@@ -60,19 +65,11 @@ static void BridgeTypeInfo(const ScriptTypeEntry& entry, BridgeCallbacks* cb)
 {
     cb->beginType(entry.typeName, reinterpret_cast<void*>(const_cast<RTBEngine::Reflection::TypeInfo*>(entry.typeInfo)));
 
-    for (const auto& prop : entry.typeInfo->GetProperties()) {
-        RTBPropertyDesc desc{};
-        desc.name              = prop.name.c_str();
-        desc.displayName       = prop.displayName.c_str();
-        desc.type              = static_cast<int>(prop.type);
-        desc.offset            = prop.offset;
-        desc.size              = prop.size;
-        desc.flags             = static_cast<int>(prop.flags);
-        desc.rangeMin          = prop.range ? prop.range->minValue : 0.0f;
-        desc.rangeMax          = prop.range ? prop.range->maxValue : 1.0f;
-        desc.hasRange          = prop.range ? 1 : 0;
-        desc.componentTypeName = prop.componentTypeName.c_str();
-        cb->propCallback(&desc);
+    for (int i = 0; i < s_scriptPropCount; ++i) {
+        const ScriptPropertyEntry& prop = s_scriptProps[i];
+        if (!prop.ownerType || !entry.typeName) continue;
+        if (std::strcmp(prop.ownerType, entry.typeName) != 0) continue;
+        cb->propCallback(&prop.desc);
     }
 
     cb->endType();

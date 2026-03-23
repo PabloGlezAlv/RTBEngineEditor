@@ -62,6 +62,7 @@
     </Link>
     <PostBuildEvent>
       <Command>xcopy /y /d "$(ProjectDir)RTBEngine_SDK\Bin\*.dll" "$(OutDir)"
+if exist "$(ProjectDir)..\..\RTBEngine\RTBEngine\x64\Debug\RTBEngine.dll" xcopy /y "$(ProjectDir)..\..\RTBEngine\RTBEngine\x64\Debug\RTBEngine.dll" "$(OutDir)"
 xcopy /y /d /e /i "$(ProjectDir)Default" "$(OutDir)Default"
 xcopy /y /d /e /i "$(ProjectDir)Assets" "$(OutDir)Assets"
 if exist "$(ProjectDir)MyProject.rtbproj" xcopy /y /d "$(ProjectDir)MyProject.rtbproj" "$(OutDir)"</Command>
@@ -88,6 +89,7 @@ if exist "$(ProjectDir)MyProject.rtbproj" xcopy /y /d "$(ProjectDir)MyProject.rt
     </Link>
     <PostBuildEvent>
       <Command>xcopy /y /d "$(ProjectDir)RTBEngine_SDK\Bin\*.dll" "$(OutDir)"
+if exist "$(ProjectDir)..\..\RTBEngine\RTBEngine\x64\Release\RTBEngine.dll" xcopy /y "$(ProjectDir)..\..\RTBEngine\RTBEngine\x64\Release\RTBEngine.dll" "$(OutDir)"
 xcopy /y /d /e /i "$(ProjectDir)Default" "$(OutDir)Default"
 xcopy /y /d /e /i "$(ProjectDir)Assets" "$(OutDir)Assets"
 if exist "$(ProjectDir)MyProject.rtbproj" xcopy /y /d "$(ProjectDir)MyProject.rtbproj" "$(OutDir)"</Command>

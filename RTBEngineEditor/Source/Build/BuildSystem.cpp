@@ -27,6 +27,11 @@
 
 namespace RTBEditor {
 
+    std::filesystem::path BuildSystem::GetCompiledScriptsDllPath(const std::string& configuration)
+    {
+        return std::filesystem::current_path() / "x64" / configuration / "GameScripts.dll";
+    }
+
     BuildResult BuildSystem::Build(const BuildSettings& settings, ProgressCallback onProgress) {
         RTB_INFO("Starting build process for game: " + settings.gameName);
         if (onProgress) onProgress("Starting build...", 0.0f);
@@ -70,7 +75,7 @@ namespace RTBEditor {
         // Copy compiled GameScripts.dll to output
         {
             namespace fs = std::filesystem;
-            fs::path compiledDll = fs::current_path() / "x64" / "Release" / "GameScripts.dll";
+            fs::path compiledDll = GetCompiledScriptsDllPath("Release");
             if (fs::exists(compiledDll)) {
                 fs::copy_file(compiledDll, settings.outputDirectory / "GameScripts.dll",
                     fs::copy_options::overwrite_existing);
@@ -276,6 +281,12 @@ namespace RTBEditor {
         }
 
         RTB_INFO("CompileScripts: GameScripts compiled successfully.");
+        const std::filesystem::path outputDll = GetCompiledScriptsDllPath(configuration);
+        if (!std::filesystem::exists(outputDll)) {
+            RTB_ERROR("CompileScripts: Build succeeded but expected DLL not found at '" + outputDll.string() + "'");
+            return ScriptCompileResult::Failure;
+        }
+        RTB_INFO("CompileScripts: Output DLL at '" + outputDll.string() + "'");
         return ScriptCompileResult::Success;
     }
 

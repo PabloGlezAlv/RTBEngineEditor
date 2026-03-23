@@ -37,6 +37,7 @@ namespace RTBEditor {
 
         static BuildResult Build(const BuildSettings& settings, ProgressCallback onProgress = nullptr);
         static std::string GetResultMessage(BuildResult result);
+        static std::filesystem::path GetCompiledScriptsDllPath(const std::string& configuration = "Debug");
 
         // Invokes MSBuild to compile GameScripts.vcxproj into GameScripts.dll
         static ScriptCompileResult CompileScripts(const std::string& vcxprojPath, const std::string& configuration = "Debug");

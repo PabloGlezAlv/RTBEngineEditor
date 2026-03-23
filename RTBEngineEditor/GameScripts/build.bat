@@ -12,6 +12,7 @@ if not "%~1"=="" set CONFIGURATION=%~1
 set "VSWHERE=%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe"
 if not exist "%VSWHERE%" (
     echo [ERROR] vswhere.exe not found. Is Visual Studio installed?
+    pause
     exit /b 1
 )
 
@@ -21,6 +22,7 @@ for /f "usebackq tokens=*" %%i in (`"%VSWHERE%" -latest -requires Microsoft.Comp
 )
 
 echo [ERROR] MSBuild.exe not found.
+pause
 exit /b 1
 
 :found_msbuild
@@ -30,11 +32,11 @@ echo [INFO] Compiling GameScripts (%CONFIGURATION%^|x64)...
 
 if %ERRORLEVEL% neq 0 (
     echo [ERROR] Compilation FAILED!
+    pause
     exit /b %ERRORLEVEL%
 )
 
-echo [INFO] Compilation SUCCESSFUL!
 echo [INFO] GameScripts.dll has been successfully replaced in the target directory.
 
-endlocal
+pause
 exit /b 0

@@ -30,7 +30,7 @@ function CreateScene()
             {
                 name = "Directional Light",
                 uuid = "48103FD7-E1F1-4AAB-8127-C0C2ED5B4111",
-                rotation = Quaternion.FromEulerAngles(33.67, -42.63, -31.84),
+                rotation = Quaternion.FromEulerAngles(43.89, -31.83, -11.20),
                 components = {
                     {
                         type = "LightComponent",
@@ -77,7 +77,26 @@ function CreateScene()
                                 hoveredColor = Color(0.90, 0.90, 0.90, 0.44),
                                 pressedColor = Color(0.70, 0.70, 0.70, 1.00),
                                 disabledColor = Color(0.50, 0.50, 0.50, 0.50),
-                                interactable = true
+                                interactable = true,
+                                enableDefaultHoverVisuals = false
+                            },
+                            {
+                                type = "ButtonStyleEvents"
+                            },
+                            {
+                                type = "ButtonStyle",
+                                backgroundPanel = "2E0ED540-A92F-40A9-B2E7-4906659B3E6E/UIPanel",
+                                label = "6C243A1E-F469-47BE-9CB9-7DAC1471F31F/UIText",
+                                normalPanelColor = Color(0.20, 0.20, 0.20, 1.00),
+                                normalTextColor = Color(1.00, 1.00, 1.00, 1.00),
+                                hoverPanelColor = Color(0.35, 0.35, 0.65, 1.00),
+                                hoverTextColor = Color(1.00, 1.00, 0.60, 1.00),
+                                hoverScaleBoost = 1.08,
+                                hoverRotationDeg = 2.00,
+                                clickPanelColor = Color(0.15, 0.15, 0.45, 1.00),
+                                clickTextColor = Color(0.80, 0.80, 1.00, 1.00),
+                                clickScaleBoost = 0.92,
+                                animationTimeSec = 1.00
                             },
                         },
                         children = {
@@ -126,7 +145,8 @@ function CreateScene()
                                 hoveredColor = Color(0.90, 0.90, 0.90, 0.44),
                                 pressedColor = Color(0.70, 0.70, 0.70, 1.00),
                                 disabledColor = Color(0.50, 0.50, 0.50, 0.50),
-                                interactable = true
+                                interactable = true,
+                                enableDefaultHoverVisuals = true
                             },
                         },
                         children = {

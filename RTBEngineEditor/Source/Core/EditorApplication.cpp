@@ -34,8 +34,7 @@ namespace RTBEditor {
         {
             namespace fs = std::filesystem;
             fs::path projectRoot = fs::current_path();
-            fs::path binDirDebug = projectRoot / "x64" / "Debug";
-            fs::path binDllPath = binDirDebug / "GameScripts.dll";
+            fs::path binDllPath = BuildSystem::GetCompiledScriptsDllPath("Debug");
             fs::path legacyPath = projectRoot / "GameScripts.dll";
 
             if (fs::exists(binDllPath)) {
@@ -173,9 +172,7 @@ namespace RTBEditor {
 
             if (result == ScriptCompileResult::Success) {
                 namespace fs = std::filesystem;
-                fs::path projectRoot = fs::current_path();
-                fs::path binDirDebug = projectRoot / "x64" / "Debug";
-                fs::path targetDllPath = binDirDebug / "GameScripts.dll";
+                fs::path targetDllPath = BuildSystem::GetCompiledScriptsDllPath("Debug");
 
                 if (fs::exists(targetDllPath)) {
                     RTBEngine::Scripting::ScriptManager::GetInstance().LoadScripts(targetDllPath.string());
