@@ -293,7 +293,7 @@ namespace RTBEditor {
     }
 
     void InspectorPanel::DrawProperty(RTBEngine::ECS::Component* component, const RTBEngine::Reflection::PropertyInfo& prop) {
-        void* data = (char*)component->GetActualObject() + prop.offset;
+        void* data = prop.GetMutableData(component);
         bool changed = false;
         
         ImGui::PushID(prop.name.c_str());

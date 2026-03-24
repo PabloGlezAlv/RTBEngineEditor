@@ -1,13 +1,9 @@
 #include "ButtonStyle.h"
 #include <RTBEngine/Core/Logger.h>
 #include <RTBEngine/ECS/GameObject.h>
-#include <RTBEngine/UI/UIElement.h>
+#include <RTBEngine/UI/Elements/UIButton.h>
 #include <algorithm>
-#include <cmath>
 
-// ============================================================================
-//  ButtonStyle — registration & implementation
-// ============================================================================
 using ThisClass = ButtonStyle;
 
 RTB_REGISTER_COMPONENT(ButtonStyle)
@@ -27,34 +23,128 @@ RTB_END_REGISTER(ButtonStyle)
 
 void ButtonStyle::OnAwake()
 {
-    if (auto* go = GetOwner()) {
-        // Avoid RTTI/dynamic_cast across module boundaries when resolving engine components.
-        for (const auto& comp : go->GetComponents()) {
-            if (!comp) continue;
-            if (std::string(comp->GetTypeName()) == "UIElement") {
-                auto* uiEl = static_cast<RTBEngine::UI::UIElement*>(comp->GetActualObject());
-                if (uiEl) {
-                    baseScale = uiEl->scale;
-                    baseRotation = uiEl->rotation;
-                }
-                break;
-            }
-        }
-    }
+    currentState      = State::Normal;
+    baseScale         = RTBEngine::Math::Vector2(1.0f, 1.0f);
+    baseRotation      = 0.0f;
     currentScale      = baseScale;
     currentRotation   = baseRotation;
     currentPanelColor = normalPanelColor;
     currentTextColor  = normalTextColor;
+    baseTransformCaptured = false;
+    defaultUIButtonVisualsDisabled = false;
+    warnedMissingPanel = false;
+}
 
-    RTB_INFO(
-        "ButtonStyle::OnAwake - panel=" + std::string(backgroundPanel ? "OK" : "NULL") +
-        " label=" + std::string(label ? "OK" : "NULL") +
-        " baseScale=(" + std::to_string(baseScale.x) + "," + std::to_string(baseScale.y) + ")" +
-        " animTimeSec=" + std::to_string(animationTimeSec));
+void ButtonStyle::OnStart()
+{
+    RefreshBindings();
+    CaptureBaseVisualTransform();
+    if (!backgroundPanel && !warnedMissingPanel) {
+        RTB_WARN("ButtonStyle: missing backgroundPanel reference; scale and rotation animation are disabled.");
+        warnedMissingPanel = true;
+    }
+    ApplyCurrentVisuals();
+}
+
+void ButtonStyle::OnValidate()
+{
+    RefreshBindings();
+    CaptureBaseVisualTransform();
+    ApplyCurrentVisuals();
+}
+
+void ButtonStyle::RefreshBindings()
+{
+    auto* go = GetOwner();
+    if (!go) {
+        return;
+    }
+
+    if (!backgroundPanel) {
+        for (const auto& comp : go->GetComponents()) {
+            if (!comp) continue;
+            if (std::string(comp->GetTypeName()) == "UIPanel") {
+                backgroundPanel = static_cast<RTBEngine::UI::UIPanel*>(comp->GetActualObject());
+                break;
+            }
+        }
+    }
+
+    if (!label) {
+        for (auto* child : go->GetChildren()) {
+            if (!child) continue;
+            for (const auto& comp : child->GetComponents()) {
+                if (!comp) continue;
+                if (std::string(comp->GetTypeName()) == "UIText") {
+                    label = static_cast<RTBEngine::UI::UIText*>(comp->GetActualObject());
+                    break;
+                }
+            }
+            if (label) {
+                break;
+            }
+        }
+    }
+
+    if (!defaultUIButtonVisualsDisabled) {
+        for (const auto& comp : go->GetComponents()) {
+            if (!comp) continue;
+            if (std::string(comp->GetTypeName()) == "UIButton") {
+                auto* button = static_cast<RTBEngine::UI::UIButton*>(comp->GetActualObject());
+                if (button) {
+                    button->enableDefaultHoverVisuals = false;
+                }
+                defaultUIButtonVisualsDisabled = true;
+                break;
+            }
+        }
+    }
+
+    if (backgroundPanel) {
+        warnedMissingPanel = false;
+    }
+}
+
+void ButtonStyle::CaptureBaseVisualTransform()
+{
+    if (baseTransformCaptured || !backgroundPanel) {
+        return;
+    }
+
+    baseScale = backgroundPanel->scale;
+    baseRotation = backgroundPanel->rotation;
+    currentScale = baseScale;
+    currentRotation = baseRotation;
+    baseTransformCaptured = true;
+}
+
+void ButtonStyle::ApplyCurrentVisuals()
+{
+    if (backgroundPanel) {
+        backgroundPanel->backgroundColor = currentPanelColor;
+        backgroundPanel->scale = currentScale;
+        backgroundPanel->rotation = currentRotation;
+    }
+
+    if (label) {
+        label->color = currentTextColor;
+    }
+}
+
+void ButtonStyle::SetState(State nextState)
+{
+    currentState = nextState;
 }
 
 void ButtonStyle::OnUpdate(float deltaTime)
 {
+    RefreshBindings();
+    CaptureBaseVisualTransform();
+    if (!backgroundPanel && !warnedMissingPanel) {
+        RTB_WARN("ButtonStyle: missing backgroundPanel reference; scale and rotation animation are disabled.");
+        warnedMissingPanel = true;
+    }
+
     RTBEngine::Math::Vector2 targetScale;
     float                    targetRotation;
     RTBEngine::Math::Vector4 targetPanelColor;
@@ -89,39 +179,31 @@ void ButtonStyle::OnUpdate(float deltaTime)
     currentPanelColor = LerpV4(currentPanelColor, targetPanelColor, t);
     currentTextColor  = LerpV4(currentTextColor,  targetTextColor,  t);
 
-    if (backgroundPanel)
-    {
-        backgroundPanel->backgroundColor = currentPanelColor;
-        backgroundPanel->scale           = currentScale;
-        backgroundPanel->rotation        = currentRotation;
-    }
-    if (label)
-    {
-        // The label is usually a child of the panel and already follows panel transform.
-        // Only animate text color here to avoid double-scaling/rotating.
-        label->color = currentTextColor;
-    }
+    ApplyCurrentVisuals();
 }
 
-void ButtonStyle::NotifyEnter()
+void ButtonStyle::OnPointerEnter(const RTBEngine::UI::PointerEventData&)
 {
-    currentState = State::Hover;
-    RTB_INFO("ButtonStyle::NotifyEnter");
+    SetState(State::Hover);
 }
-void ButtonStyle::NotifyExit()
+
+void ButtonStyle::OnPointerExit(const RTBEngine::UI::PointerEventData&)
 {
-    currentState = State::Normal;
-    RTB_INFO("ButtonStyle::NotifyExit");
+    SetState(State::Normal);
 }
-void ButtonStyle::NotifyDown()
+
+void ButtonStyle::OnPointerDown(const RTBEngine::UI::PointerEventData&)
 {
-    currentState = State::Pressed;
-    RTB_INFO("ButtonStyle::NotifyDown");
+    SetState(State::Pressed);
 }
-void ButtonStyle::NotifyUp()
+
+void ButtonStyle::OnPointerUp(const RTBEngine::UI::PointerEventData&)
 {
-    currentState = State::Normal;
-    RTB_INFO("ButtonStyle::NotifyUp");
+    SetState(State::Hover);
+}
+
+void ButtonStyle::OnPointerClick(const RTBEngine::UI::PointerEventData&)
+{
 }
 
 float ButtonStyle::LerpF(float a, float b, float t)
@@ -136,50 +218,3 @@ RTBEngine::Math::Vector4 ButtonStyle::LerpV4(const RTBEngine::Math::Vector4& a, 
 {
     return RTBEngine::Math::Vector4(LerpF(a.x, b.x, t), LerpF(a.y, b.y, t), LerpF(a.z, b.z, t), LerpF(a.w, b.w, t));
 }
-
-// ============================================================================
-//  ButtonStyleEvents — registration & implementation
-// ============================================================================
-// No reflected properties — just the component boilerplate
-RTB_REGISTER_COMPONENT(ButtonStyleEvents)
-RTB_END_REGISTER(ButtonStyleEvents)
-
-void ButtonStyleEvents::OnAwake()
-{
-    style = nullptr;
-    auto* go = GetOwner();
-    if (!go) return;
-
-    // Avoid RTTI/dynamic_cast across module boundaries when resolving sibling scripts.
-    for (const auto& comp : go->GetComponents()) {
-        if (!comp) continue;
-        if (std::string(comp->GetTypeName()) == "ButtonStyle") {
-            style = static_cast<ButtonStyle*>(comp->GetActualObject());
-            break;
-        }
-    }
-
-    RTB_INFO("ButtonStyleEvents::OnAwake - style=" + std::string(style ? "OK" : "NULL"));
-}
-
-void ButtonStyleEvents::OnPointerEnter(const RTBEngine::UI::PointerEventData&)
-{
-    RTB_INFO("ButtonStyleEvents::OnPointerEnter");
-    if (style) style->NotifyEnter();
-}
-void ButtonStyleEvents::OnPointerExit (const RTBEngine::UI::PointerEventData&)
-{
-    RTB_INFO("ButtonStyleEvents::OnPointerExit");
-    if (style) style->NotifyExit();
-}
-void ButtonStyleEvents::OnPointerDown (const RTBEngine::UI::PointerEventData&)
-{
-    RTB_INFO("ButtonStyleEvents::OnPointerDown");
-    if (style) style->NotifyDown();
-}
-void ButtonStyleEvents::OnPointerUp   (const RTBEngine::UI::PointerEventData&)
-{
-    RTB_INFO("ButtonStyleEvents::OnPointerUp");
-    if (style) style->NotifyUp();
-}
-void ButtonStyleEvents::OnPointerClick(const RTBEngine::UI::PointerEventData&) { /* extensible */ }

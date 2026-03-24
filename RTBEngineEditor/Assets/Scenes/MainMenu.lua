@@ -30,7 +30,7 @@ function CreateScene()
             {
                 name = "Directional Light",
                 uuid = "48103FD7-E1F1-4AAB-8127-C0C2ED5B4111",
-                rotation = Quaternion.FromEulerAngles(43.89, -31.83, -11.20),
+                rotation = Quaternion.FromEulerAngles(-38.24, -38.78, -25.82),
                 components = {
                     {
                         type = "LightComponent",
@@ -79,9 +79,6 @@ function CreateScene()
                                 disabledColor = Color(0.50, 0.50, 0.50, 0.50),
                                 interactable = true,
                                 enableDefaultHoverVisuals = false
-                            },
-                            {
-                                type = "ButtonStyleEvents"
                             },
                             {
                                 type = "ButtonStyle",
