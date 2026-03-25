@@ -3,6 +3,7 @@
 #include <imgui_internal.h>
 #include <Windows.h>
 #include <shellapi.h>
+#include <RTBEngine/Core/Logger.h>
 #include <RTBEngine/ECS/GameObject.h>
 #include <RTBEngine/Animation/Animator.h>
 #include <RTBEngine/Math/Vectors/Vector2.h>
@@ -25,6 +26,34 @@
 #include <algorithm>
 
 namespace RTBEditor {
+
+    namespace {
+        std::string MakeAssetReference(const std::filesystem::path& relativePath) {
+            Project* project = Project::GetActiveProject();
+            if (project) {
+                return project->GetAssetReferencePath(relativePath);
+            }
+            return (std::filesystem::path("Assets") / relativePath).lexically_normal().generic_string();
+        }
+
+        void OpenGameScriptsProjectOrFile(const std::filesystem::path& fileToOpen) {
+            Project* project = Project::GetActiveProject();
+            const std::filesystem::path scriptsProjectPath =
+                project ? project->GetGameScriptsProjectPath() : std::filesystem::path();
+
+            if (!scriptsProjectPath.empty() && std::filesystem::exists(scriptsProjectPath)) {
+                ShellExecuteA(nullptr, "open", scriptsProjectPath.string().c_str(), nullptr, nullptr, SW_SHOW);
+                return;
+            }
+
+            RTB_ERROR("GameScripts project not found at: " +
+                (scriptsProjectPath.empty() ? std::string("<empty path>") : scriptsProjectPath.string()));
+
+            if (!fileToOpen.empty()) {
+                ShellExecuteA(nullptr, "open", fileToOpen.string().c_str(), nullptr, nullptr, SW_SHOW);
+            }
+        }
+    }
 
     InspectorPanel::InspectorPanel() {
         assetBrowserModal = std::make_unique<AssetBrowserModal>();
@@ -1006,12 +1035,7 @@ namespace RTBEditor {
                 if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(PAYLOAD_TEXTURE)) {
                     const TexturePayload* data = static_cast<const TexturePayload*>(payload->Data);
 
-                    std::filesystem::path assetRoot = Project::GetActiveProject()
-                        ? Project::GetActiveProject()->GetAssetDirectory()
-                        : std::filesystem::path("Assets");
-                    std::string fullPath = (assetRoot / data->path).string();
-                    for (char& c : fullPath) if (c == '\\') c = '/';
-                    cubemapFaces[i] = fullPath;
+                    cubemapFaces[i] = MakeAssetReference(data->path);
                     changed = true;
                 }
                 ImGui::EndDragDropTarget();
@@ -1026,13 +1050,7 @@ namespace RTBEditor {
                 assetBrowserModal->Open(
                     AssetType::Texture,
                     [this, capturedIndex](const std::string& path) {
-                        // path is relative to Assets/
-                        std::filesystem::path assetRoot = Project::GetActiveProject()
-                            ? Project::GetActiveProject()->GetAssetDirectory()
-                            : std::filesystem::path("Assets");
-                        std::string fullPath = (assetRoot / path).string();
-                        for (char& c : fullPath) if (c == '\\') c = '/';
-                        cubemapFaces[capturedIndex] = fullPath;
+                        cubemapFaces[capturedIndex] = MakeAssetReference(path);
                         SaveCubemapAsset(cubemapEditorPath);
                     },
                     [this, capturedIndex](const std::string& path) {
@@ -1127,12 +1145,7 @@ namespace RTBEditor {
             if (ImGui::BeginDragDropTarget()) {
                 if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(PAYLOAD_TEXTURE)) {
                     const TexturePayload* data = static_cast<const TexturePayload*>(payload->Data);
-                    std::filesystem::path assetRoot = Project::GetActiveProject()
-                        ? Project::GetActiveProject()->GetAssetDirectory()
-                        : std::filesystem::path("Assets");
-                    std::string fullPath = (assetRoot / data->path).string();
-                    for (char& c : fullPath) if (c == '\\') c = '/';
-                    textureAssetImage = fullPath;
+                    textureAssetImage = MakeAssetReference(data->path);
                     changed = true;
                 }
                 ImGui::EndDragDropTarget();
@@ -1143,12 +1156,7 @@ namespace RTBEditor {
                 assetBrowserModal->Open(
                     AssetType::Texture,
                     [this](const std::string& path) {
-                        std::filesystem::path assetRoot = Project::GetActiveProject()
-                            ? Project::GetActiveProject()->GetAssetDirectory()
-                            : std::filesystem::path("Assets");
-                        std::string fullPath = (assetRoot / path).string();
-                        for (char& c : fullPath) if (c == '\\') c = '/';
-                        textureAssetImage = fullPath;
+                        textureAssetImage = MakeAssetReference(path);
                         SaveTextureAsset(textureEditorPath);
                     },
                     [this](const std::string& path) {
@@ -1231,22 +1239,7 @@ namespace RTBEditor {
         // Open script in the associated C++ project/solution so that includes and
         // IntelliSense work correctly, falling back to just the file if needed.
         if (ImGui::Button("Open in Editor")) {
-            std::filesystem::path solutionPath =
-                std::filesystem::current_path() / "RTBEngineEditor.sln";
-
-            if (std::filesystem::exists(solutionPath)) {
-                ShellExecuteA(
-                    nullptr,
-                    "open",
-                    solutionPath.string().c_str(),
-                    nullptr,
-                    nullptr,
-                    SW_SHOW
-                );
-            }
-            else {
-                ShellExecuteA(nullptr, "open", scriptPath.string().c_str(), nullptr, nullptr, SW_SHOW);
-            }
+            OpenGameScriptsProjectOrFile(scriptPath);
         }
 
         ImGui::Spacing();

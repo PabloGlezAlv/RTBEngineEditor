@@ -65,6 +65,14 @@
 if exist "$(ProjectDir)..\..\RTBEngine\RTBEngine\x64\Debug\RTBEngine.dll" xcopy /y "$(ProjectDir)..\..\RTBEngine\RTBEngine\x64\Debug\RTBEngine.dll" "$(OutDir)"
 xcopy /y /d /e /i "$(ProjectDir)Default" "$(OutDir)Default"
 xcopy /y /d /e /i "$(ProjectDir)Assets" "$(OutDir)Assets"
+if exist "$(ProjectDir)GameScripts.dll" xcopy /y /d "$(ProjectDir)GameScripts.dll" "$(OutDir)"
+if exist "$(OutDir)GameScripts" rmdir /s /q "$(OutDir)GameScripts"
+if not exist "$(OutDir)GameScripts" mkdir "$(OutDir)GameScripts"
+if exist "$(ProjectDir)GameScripts\build.bat" xcopy /y /d "$(ProjectDir)GameScripts\build.bat" "$(OutDir)GameScripts\"
+if exist "$(ProjectDir)GameScripts\dllmain.cpp" xcopy /y /d "$(ProjectDir)GameScripts\dllmain.cpp" "$(OutDir)GameScripts\"
+if exist "$(ProjectDir)GameScripts\GameScripts.vcxproj" xcopy /y /d "$(ProjectDir)GameScripts\GameScripts.vcxproj" "$(OutDir)GameScripts\"
+if exist "$(ProjectDir)GameScripts\GameScripts.vcxproj.user" xcopy /y /d "$(ProjectDir)GameScripts\GameScripts.vcxproj.user" "$(OutDir)GameScripts\"
+if exist "$(ProjectDir)RTBEngine_SDK" xcopy /y /d /e /i "$(ProjectDir)RTBEngine_SDK" "$(OutDir)RTBEngine_SDK"
 if exist "$(ProjectDir)MyProject.rtbproj" xcopy /y /d "$(ProjectDir)MyProject.rtbproj" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -92,6 +100,14 @@ if exist "$(ProjectDir)MyProject.rtbproj" xcopy /y /d "$(ProjectDir)MyProject.rt
 if exist "$(ProjectDir)..\..\RTBEngine\RTBEngine\x64\Release\RTBEngine.dll" xcopy /y "$(ProjectDir)..\..\RTBEngine\RTBEngine\x64\Release\RTBEngine.dll" "$(OutDir)"
 xcopy /y /d /e /i "$(ProjectDir)Default" "$(OutDir)Default"
 xcopy /y /d /e /i "$(ProjectDir)Assets" "$(OutDir)Assets"
+if exist "$(ProjectDir)GameScripts.dll" xcopy /y /d "$(ProjectDir)GameScripts.dll" "$(OutDir)"
+if exist "$(OutDir)GameScripts" rmdir /s /q "$(OutDir)GameScripts"
+if not exist "$(OutDir)GameScripts" mkdir "$(OutDir)GameScripts"
+if exist "$(ProjectDir)GameScripts\build.bat" xcopy /y /d "$(ProjectDir)GameScripts\build.bat" "$(OutDir)GameScripts\"
+if exist "$(ProjectDir)GameScripts\dllmain.cpp" xcopy /y /d "$(ProjectDir)GameScripts\dllmain.cpp" "$(OutDir)GameScripts\"
+if exist "$(ProjectDir)GameScripts\GameScripts.vcxproj" xcopy /y /d "$(ProjectDir)GameScripts\GameScripts.vcxproj" "$(OutDir)GameScripts\"
+if exist "$(ProjectDir)GameScripts\GameScripts.vcxproj.user" xcopy /y /d "$(ProjectDir)GameScripts\GameScripts.vcxproj.user" "$(OutDir)GameScripts\"
+if exist "$(ProjectDir)RTBEngine_SDK" xcopy /y /d /e /i "$(ProjectDir)RTBEngine_SDK" "$(OutDir)RTBEngine_SDK"
 if exist "$(ProjectDir)MyProject.rtbproj" xcopy /y /d "$(ProjectDir)MyProject.rtbproj" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>

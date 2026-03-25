@@ -810,7 +810,7 @@ if (ImGui::Button("Save Cubemap Asset"))
 
 ### Script Preview
 
-When `context.selectedAssetPath` ends with `.h` or `.cpp`, the Inspector shows the first 40 lines of the file with syntax-highlighted text and an "Open in Visual Studio" button that launches the `.sln` file.
+When `context.selectedAssetPath` ends with `.h` or `.cpp`, the Inspector shows the first 40 lines of the file with syntax-highlighted text and an "Open in Editor" button that opens the active project's `GameScripts.vcxproj` (falling back to the selected file if the project file is missing).
 
 ### FormatTypeName
 
@@ -1677,14 +1677,15 @@ void Rotator::OnDestroy() {}
 
 ### Adding to the vcxproj
 
-The `GameScripts` Visual Studio project must include the new `.h` and `.cpp` files. Add them via the Visual Studio Solution Explorer or by editing the `.vcxproj` XML manually.
+The `GameScripts` Visual Studio project auto-discovers `Assets/Scripts/**/*.h` and `Assets/Scripts/**/*.cpp`, so new script files appear in the project without manual `.vcxproj` edits.
 
 ### Compiling and Hot-Reloading
 
 1. Click **Compile Scripts** in the Toolbar.
-2. The editor invokes MSBuild on `GameScripts.vcxproj`.
+2. The editor invokes MSBuild on the active project's `GameScripts.vcxproj`.
 3. On success, the old `GameScripts.dll` is unloaded (`FreeLibrary`), the new one is loaded (`LoadLibrary`), and the static initializers re-register all component types.
-4. Components already in the scene keep their serialized property values (scene is reloaded from disk after stop, or properties are re-applied on next load).
+4. The `GameScripts` project also mirrors the rebuilt DLL to the project root, so exported builds can pick up a freshly recompiled `GameScripts.dll` without manual file copies.
+5. Components already in the scene keep their serialized property values (scene is reloaded from disk after stop, or properties are re-applied on next load).
 
 ### DLL Boundary Rules for Scripts
 
@@ -2012,9 +2013,9 @@ startScene=Assets/Scenes/Main.lua
 
 1. Ensure all scenes, assets, and scripts are saved and compiled.
 2. **File → Build** (`Ctrl+B`).
-3. Enter game name, output directory, and start scene.
+3. Enter game name and output directory.
 4. Set window dimensions.
-5. Click **Build**. The progress dialog shows each step.
+5. Click **Build**. The build copies the runtime files plus `Assets`, `Default`, and the compiled `GameScripts.dll`.
 6. Navigate to the output directory. Run `{GameName}.exe`.
 
 ### Opening a Different Scene

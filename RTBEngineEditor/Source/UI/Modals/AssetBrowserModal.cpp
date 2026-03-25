@@ -8,7 +8,7 @@ namespace RTBEditor {
 
     AssetBrowserModal::AssetBrowserModal() {
         if (Project::GetActiveProject()) {
-            assetsDirectory = Project::GetActiveProject()->GetAssetDirectory();
+            assetsDirectory = Project::GetActiveProject()->GetAssetRootPath();
         } else {
             assetsDirectory = "Assets";
         }
@@ -23,6 +23,12 @@ namespace RTBEditor {
 
     void AssetBrowserModal::Open(AssetType type, std::function<void(const std::string&)> onAssetSelected,
         std::function<void(const std::string&)> onDefaultAssetSelected) {
+        if (Project::GetActiveProject()) {
+            assetsDirectory = Project::GetActiveProject()->GetAssetRootPath();
+        } else {
+            assetsDirectory = "Assets";
+        }
+        rootDirectory = assetsDirectory;
         filterType = type;
         callback = onAssetSelected;
         defaultCallback = onDefaultAssetSelected;

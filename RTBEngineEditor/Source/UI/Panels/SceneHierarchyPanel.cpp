@@ -22,6 +22,13 @@
 
 namespace RTBEditor {
 
+    namespace {
+        std::filesystem::path GetAssetRootPath() {
+            Project* project = Project::GetActiveProject();
+            return project ? project->GetAssetRootPath() : std::filesystem::path("Assets");
+        }
+    }
+
     SceneHierarchyPanel::SceneHierarchyPanel() {}
     SceneHierarchyPanel::~SceneHierarchyPanel() {}
 
@@ -85,9 +92,7 @@ namespace RTBEditor {
                     if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(PAYLOAD_CUBEMAP)) {
                         const CubemapPayload* data = static_cast<const CubemapPayload*>(payload->Data);
 
-                        std::filesystem::path assetRoot = Project::GetActiveProject()
-                            ? Project::GetActiveProject()->GetAssetDirectory()
-                            : std::filesystem::path("Assets");
+                        std::filesystem::path assetRoot = GetAssetRootPath();
                         std::string absolutePath = (assetRoot / data->path).string();
 
                         RTBEngine::Rendering::Cubemap* cubemap =
@@ -231,9 +236,7 @@ namespace RTBEditor {
             if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(PAYLOAD_PREFAB)) {
                 const PrefabPayload* data = static_cast<const PrefabPayload*>(payload->Data);
 
-                std::filesystem::path assetRoot = Project::GetActiveProject()
-                    ? Project::GetActiveProject()->GetAssetDirectory()
-                    : std::filesystem::path("Assets");
+                std::filesystem::path assetRoot = GetAssetRootPath();
                 std::string absolutePath = (assetRoot / data->path).string();
 
                 RTBEngine::ECS::Prefab* prefab = RTBEngine::ECS::PrefabRegistry::GetInstance().GetByPath(absolutePath);
@@ -254,9 +257,7 @@ namespace RTBEditor {
             if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(PAYLOAD_MESH)) {
                 const MeshPayload* data = static_cast<const MeshPayload*>(payload->Data);
 
-                std::filesystem::path assetRoot = Project::GetActiveProject()
-                    ? Project::GetActiveProject()->GetAssetDirectory()
-                    : std::filesystem::path("Assets");
+                std::filesystem::path assetRoot = GetAssetRootPath();
                 std::string absolutePath = (assetRoot / data->path).string();
 
                 if (activeScene) {
@@ -352,9 +353,7 @@ namespace RTBEditor {
             if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(PAYLOAD_PREFAB)) {
                 const PrefabPayload* data = static_cast<const PrefabPayload*>(payload->Data);
 
-                std::filesystem::path assetRoot = Project::GetActiveProject()
-                    ? Project::GetActiveProject()->GetAssetDirectory()
-                    : std::filesystem::path("Assets");
+                std::filesystem::path assetRoot = GetAssetRootPath();
                 std::string absolutePath = (assetRoot / data->path).string();
 
                 RTBEngine::ECS::Prefab* prefab = RTBEngine::ECS::PrefabRegistry::GetInstance().GetByPath(absolutePath);

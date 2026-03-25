@@ -1,5 +1,6 @@
 #include "ContentBrowserPanel.h"
 #include <imgui.h>
+#include <RTBEngine/Core/Logger.h>
 #include <RTBEngine/Core/ResourceManager.h>
 #include <RTBEngine/ECS/Prefab.h>
 #include <RTBEngine/ECS/PrefabRegistry.h>
@@ -22,9 +23,46 @@
 
 namespace RTBEditor {
 
+    namespace {
+        std::filesystem::path GetAssetRootPath() {
+            Project* project = Project::GetActiveProject();
+            return project ? project->GetAssetRootPath() : std::filesystem::path("Assets");
+        }
+
+        std::string MakeAssetReference(const std::filesystem::path& relativePath) {
+            Project* project = Project::GetActiveProject();
+            if (project) {
+                return project->GetAssetReferencePath(relativePath);
+            }
+            return (std::filesystem::path("Assets") / relativePath).lexically_normal().generic_string();
+        }
+
+        void OpenGameScriptsProjectOrFiles(const std::filesystem::path& primaryFile,
+            const std::filesystem::path& secondaryFallback = {}) {
+            Project* project = Project::GetActiveProject();
+            const std::filesystem::path scriptsProjectPath =
+                project ? project->GetGameScriptsProjectPath() : std::filesystem::path();
+
+            if (!scriptsProjectPath.empty() && std::filesystem::exists(scriptsProjectPath)) {
+                ShellExecuteA(nullptr, "open", scriptsProjectPath.string().c_str(), nullptr, nullptr, SW_SHOW);
+                return;
+            }
+
+            RTB_ERROR("GameScripts project not found at: " +
+                (scriptsProjectPath.empty() ? std::string("<empty path>") : scriptsProjectPath.string()));
+
+            if (!primaryFile.empty()) {
+                ShellExecuteA(nullptr, "open", primaryFile.string().c_str(), nullptr, nullptr, SW_SHOW);
+            }
+            if (!secondaryFallback.empty()) {
+                ShellExecuteA(nullptr, "open", secondaryFallback.string().c_str(), nullptr, nullptr, SW_SHOW);
+            }
+        }
+    }
+
     ContentBrowserPanel::ContentBrowserPanel() {
         if (Project::GetActiveProject()) {
-            currentDirectory = Project::GetActiveProject()->GetAssetDirectory();
+            currentDirectory = Project::GetActiveProject()->GetAssetRootPath();
         } else {
             currentDirectory = "Assets";
         }
@@ -77,9 +115,7 @@ namespace RTBEditor {
         expandedFbxPath = fbxPath;
         expandedFbxTextures.clear();
 
-        std::filesystem::path assetRoot = Project::GetActiveProject()
-            ? Project::GetActiveProject()->GetAssetDirectory()
-            : std::filesystem::path("Assets");
+        std::filesystem::path assetRoot = GetAssetRootPath();
 
         std::string fullPath = fbxPath.string();
         for (char& c : fullPath) if (c == '\\') c = '/';
@@ -147,10 +183,8 @@ namespace RTBEditor {
             }
 
             // Create a .texture asset file with flip=false for FBX embedded textures
-            std::string relPath = std::filesystem::relative(outPath, assetRoot).string();
-            for (char& c : relPath) if (c == '\\') c = '/';
-            std::string fullImagePath = (assetRoot / relPath).string();
-            for (char& c : fullImagePath) if (c == '\\') c = '/';
+            std::filesystem::path relativeImagePath = std::filesystem::relative(outPath, assetRoot);
+            std::string fullImagePath = MakeAssetReference(relativeImagePath);
 
             std::filesystem::path textureAssetPath = outPath;
             textureAssetPath.replace_extension(".texture");
@@ -163,9 +197,8 @@ namespace RTBEditor {
             }
 
             // Load via the .texture asset so flip=false is applied
-            std::string textureAssetRelPath = std::filesystem::relative(textureAssetPath, assetRoot).string();
-            for (char& c : textureAssetRelPath) if (c == '\\') c = '/';
-            RTBEngine::Rendering::Texture* tex = rm.LoadTextureAsset("Assets/" + textureAssetRelPath);
+            std::string textureAssetRelPath = std::filesystem::relative(textureAssetPath, assetRoot).generic_string();
+            RTBEngine::Rendering::Texture* tex = rm.LoadTextureAsset(MakeAssetReference(textureAssetRelPath));
             if (!tex) continue;
 
             FbxEmbeddedTexture entry;
@@ -179,7 +212,7 @@ namespace RTBEditor {
     void ContentBrowserPanel::OnUIRender(EditorContext& context) {
         ImGui::Begin("Content Browser");
 
-        const std::filesystem::path rootPath = Project::GetActiveProject() ? Project::GetActiveProject()->GetAssetDirectory() : "Assets";
+        const std::filesystem::path rootPath = GetAssetRootPath();
 
         // Breadcrumbs & Navigation
         if (currentDirectory != rootPath) {
@@ -264,7 +297,7 @@ namespace RTBEditor {
                         std::string ext = path.extension().string();
                         for (auto& c : ext) c = std::tolower(c);
                         if (ext == ".lua") {
-                            context.pendingSceneLoad = path;
+                            context.pendingSceneLoad = MakeAssetReference(std::filesystem::relative(path, rootPath));
                         }
                     }
                 }
@@ -627,29 +660,7 @@ namespace RTBEditor {
                     // No need to register files explicitly in GameScripts.vcxproj:
                     // it compiles all C++ files under Assets automatically.
 
-                    // Open the C++ project/solution instead of just the files so that
-                    // includes, IntelliSense and build settings are all correctly configured.
-                    // Prefer the RTBEngineEditor solution, which already contains GameScripts.vcxproj.
-                    {
-                        std::filesystem::path solutionPath =
-                            std::filesystem::current_path() / "RTBEngineEditor.sln";
-
-                        if (std::filesystem::exists(solutionPath)) {
-                            ShellExecuteA(
-                                nullptr,
-                                "open",
-                                solutionPath.string().c_str(),
-                                nullptr,
-                                nullptr,
-                                SW_SHOW
-                            );
-                        }
-                        else {
-                            // Fallback: open the individual files with the default editor.
-                            ShellExecuteA(nullptr, "open", headerFile.string().c_str(), nullptr, nullptr, SW_SHOW);
-                            ShellExecuteA(nullptr, "open", cppFile.string().c_str(), nullptr, nullptr, SW_SHOW);
-                        }
-                    }
+                    OpenGameScriptsProjectOrFiles(headerFile, cppFile);
 
                     selectedPath = headerFile;
                     renamingPath = headerFile;
@@ -694,17 +705,7 @@ namespace RTBEditor {
                         cpp << className << "::~" << className << "() {}\n";
                     }
 
-                    {
-                        std::filesystem::path solutionPath =
-                            std::filesystem::current_path() / "RTBEngineEditor.sln";
-
-                        if (std::filesystem::exists(solutionPath)) {
-                            ShellExecuteA(nullptr, "open", solutionPath.string().c_str(), nullptr, nullptr, SW_SHOW);
-                        } else {
-                            ShellExecuteA(nullptr, "open", headerFile.string().c_str(), nullptr, nullptr, SW_SHOW);
-                            ShellExecuteA(nullptr, "open", cppFile.string().c_str(), nullptr, nullptr, SW_SHOW);
-                        }
-                    }
+                    OpenGameScriptsProjectOrFiles(headerFile, cppFile);
 
                     selectedPath = headerFile;
                     renamingPath = headerFile;

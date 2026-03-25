@@ -1,6 +1,7 @@
 #include "BuildSystem.h"
 #include <fstream>
 #include <RTBEngine/Core/Logger.h>
+#include "../Project/Project.h"
 
 // --- MSBuild invocation notes ---
 //
@@ -25,16 +26,27 @@
 //   If the editor is launched outside a VS shell, the PATH may not include MSBuild —
 //   in that case we could use vswhere.exe to locate it, but for now we rely on PATH.
 
+namespace {
+    namespace fs = std::filesystem;
+}
+
 namespace RTBEditor {
 
     std::filesystem::path BuildSystem::GetCompiledScriptsDllPath(const std::string& configuration)
     {
-        return std::filesystem::current_path() / "x64" / configuration / "GameScripts.dll";
+        const Project* project = Project::GetActiveProject();
+        return project ? project->GetGameScriptsDllPath(configuration) : std::filesystem::path();
     }
 
     BuildResult BuildSystem::Build(const BuildSettings& settings, ProgressCallback onProgress) {
         RTB_INFO("Starting build process for game: " + settings.gameName);
         if (onProgress) onProgress("Starting build...", 0.0f);
+
+        const Project* project = Project::GetActiveProject();
+        if (!project) {
+            RTB_ERROR("Build failed: No active project loaded");
+            return BuildResult::NoProjectLoaded;
+        }
 
         if (settings.outputDirectory.empty()) {
             RTB_ERROR("Build failed: Output directory is empty");
@@ -56,8 +68,7 @@ namespace RTBEditor {
         // Compile user scripts before copying DLLs
         if (onProgress) onProgress("Compiling scripts...", 0.25f);
         {
-            namespace fs = std::filesystem;
-            fs::path gameScriptsVcxproj = fs::current_path() / "GameScripts" / "GameScripts.vcxproj";
+            fs::path gameScriptsVcxproj = project->GetGameScriptsProjectPath();
             if (fs::exists(gameScriptsVcxproj)) {
                 auto scriptResult = CompileScripts(gameScriptsVcxproj.string(), "Release");
                 if (scriptResult != ScriptCompileResult::Success) {
@@ -74,7 +85,6 @@ namespace RTBEditor {
 
         // Copy compiled GameScripts.dll to output
         {
-            namespace fs = std::filesystem;
             fs::path compiledDll = GetCompiledScriptsDllPath("Release");
             if (fs::exists(compiledDll)) {
                 fs::copy_file(compiledDll, settings.outputDirectory / "GameScripts.dll",
@@ -134,6 +144,10 @@ namespace RTBEditor {
     bool BuildSystem::CopyPlayerExecutable(const std::filesystem::path& outputDir, const std::string& gameName) {
         try {
             auto sdkPath = GetSDKPath();
+            if (sdkPath.empty()) {
+                RTB_ERROR("RTBPlayer copy failed: No active project SDK path available");
+                return false;
+            }
             auto playerPath = sdkPath / "Bin/RTBPlayer.exe";
 
             if (!std::filesystem::exists(playerPath)) {
@@ -154,6 +168,10 @@ namespace RTBEditor {
     bool BuildSystem::CopyDLLs(const std::filesystem::path& outputDir) {
         try {
             auto sdkPath = GetSDKPath();
+            if (sdkPath.empty()) {
+                RTB_ERROR("DLL copy failed: No active project SDK path available");
+                return false;
+            }
             auto binPath = sdkPath / "Bin";
 
             for (const auto& entry : std::filesystem::directory_iterator(binPath)) {
@@ -172,6 +190,10 @@ namespace RTBEditor {
     bool BuildSystem::CopyDefaultFolder(const std::filesystem::path& outputDir) {
         try {
             auto sdkPath = GetSDKPath();
+            if (sdkPath.empty()) {
+                RTB_ERROR("Default folder copy failed: No active project SDK path available");
+                return false;
+            }
             auto defaultPath = sdkPath / "Default";
             auto destPath = outputDir / "Default";
 
@@ -191,8 +213,13 @@ namespace RTBEditor {
 
     bool BuildSystem::CopyAssetsFolder(const std::filesystem::path& outputDir) {
         try {
-            // Assuming Assets are in current working directory of the editor
-            auto assetsPath = std::filesystem::current_path() / "Assets";
+            const Project* project = Project::GetActiveProject();
+            if (!project) {
+                RTB_ERROR("Assets copy failed: No active project loaded");
+                return false;
+            }
+
+            auto assetsPath = project->GetAssetRootPath();
             auto destPath = outputDir / "Assets";
 
             if (std::filesystem::exists(assetsPath)) {
@@ -236,9 +263,8 @@ namespace RTBEditor {
     }
 
     std::filesystem::path BuildSystem::GetSDKPath() {
-        // Assuming RTBEngine_SDK is relative to the editor executable or project root
-        // Adjust this if SDK is located elsewhere
-        return std::filesystem::current_path() / "RTBEngine_SDK";
+        const Project* project = Project::GetActiveProject();
+        return project ? project->GetSDKPath() : std::filesystem::path();
     }
 
     ScriptCompileResult BuildSystem::CompileScripts(const std::string& vcxprojPath, const std::string& configuration)
@@ -282,6 +308,10 @@ namespace RTBEditor {
 
         RTB_INFO("CompileScripts: GameScripts compiled successfully.");
         const std::filesystem::path outputDll = GetCompiledScriptsDllPath(configuration);
+        if (outputDll.empty()) {
+            RTB_ERROR("CompileScripts: No active project loaded to resolve GameScripts.dll output path");
+            return ScriptCompileResult::Failure;
+        }
         if (!std::filesystem::exists(outputDll)) {
             RTB_ERROR("CompileScripts: Build succeeded but expected DLL not found at '" + outputDll.string() + "'");
             return ScriptCompileResult::Failure;

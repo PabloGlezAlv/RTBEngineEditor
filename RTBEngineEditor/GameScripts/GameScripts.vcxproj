@@ -43,8 +43,7 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <!-- Route all outputs to the editor binary folder so .dll, .pdb and .lib
-       all land in the same directory and MSBuild has no path conflict. -->
+  <!-- Route all outputs to the shared x64 folder and mirror the DLL to the project root so the exported runtime can pick it up immediately. -->
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(ProjectDir)..\x64\Debug\</OutDir>
     <IntDir>$(ProjectDir)x64\Debug\</IntDir>
@@ -53,7 +52,6 @@
     <OutDir>$(ProjectDir)..\x64\Release\</OutDir>
     <IntDir>$(ProjectDir)x64\Release\</IntDir>
   </PropertyGroup>
-  <!-- DEBUG x64 -->
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -61,20 +59,20 @@
       <PreprocessorDefinitions>_DEBUG;GAMESCRIPTS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\RTBEngine_SDK\Include;$(ProjectDir)..\RTBEngine_SDK\Include\RTBEngine;$(ProjectDir)..\RTBEngine_SDK\Include\Bullet;$(ProjectDir)..\..\Assets\Scripts;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\RTBEngine_SDK\Include;$(ProjectDir)..\RTBEngine_SDK\Include\RTBEngine;$(ProjectDir)..\RTBEngine_SDK\Include\Bullet;$(ProjectDir)..\Assets\Scripts;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <!-- Write per-file PDBs to IntDir so the linker PDB is the only one in OutDir -->
       <ProgramDataBaseFileName>$(IntDir)$(TargetName).pdb</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <!-- No PDB generated for the linked DLL — avoids lock conflict when hot-reloading -->
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(ProjectDir)..\RTBEngine_SDK\Lib\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>RTBEngine.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>copy /Y "$(TargetPath)" "$(ProjectDir)..\GameScripts.dll"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
-  <!-- RELEASE x64 -->
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -84,7 +82,7 @@
       <PreprocessorDefinitions>NDEBUG;GAMESCRIPTS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\RTBEngine_SDK\Include;$(ProjectDir)..\RTBEngine_SDK\Include\RTBEngine;$(ProjectDir)..\RTBEngine_SDK\Include\Bullet;$(ProjectDir)..\..\Assets\Scripts;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\RTBEngine_SDK\Include;$(ProjectDir)..\RTBEngine_SDK\Include\RTBEngine;$(ProjectDir)..\RTBEngine_SDK\Include\Bullet;$(ProjectDir)..\Assets\Scripts;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -93,16 +91,16 @@
       <AdditionalLibraryDirectories>$(ProjectDir)..\RTBEngine_SDK\Lib\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>RTBEngine.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>copy /Y "$(TargetPath)" "$(ProjectDir)..\GameScripts.dll"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
-  <!-- Compile all C++ scripts under Assets/Scripts automatically so the editor
-       doesn't need to add/remove individual entries when creating/deleting scripts -->
+  <!-- Pick up all user scripts automatically so creating new classes in Assets/Scripts does not require manual vcxproj edits. -->
   <ItemGroup>
+    <ClInclude Include="..\Assets\Scripts\**\*.h" />
     <ClCompile Include="dllmain.cpp" />
-    <!-- Any .cpp created by the editor under Assets/Scripts will be picked up automatically -->
     <ClCompile Include="..\Assets\Scripts\**\*.cpp" />
   </ItemGroup>
-
-  <!-- Import default C++ build targets so the 'Build' target exists -->
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

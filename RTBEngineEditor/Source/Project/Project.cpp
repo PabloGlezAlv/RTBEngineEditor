@@ -9,11 +9,7 @@ namespace RTBEditor {
 
     Project* Project::activeProject = nullptr;
 
-    Project::Project() {
-        if (!activeProject) {
-            activeProject = this;
-        }
-    }
+    Project::Project() {}
 
     Project::~Project() {
         if (activeProject == this) {
@@ -22,13 +18,20 @@ namespace RTBEditor {
     }
 
     bool Project::Load(const std::filesystem::path& path) {
-        std::ifstream file(path);
+        const std::filesystem::path absolutePath = std::filesystem::absolute(path).lexically_normal();
+        std::ifstream file(absolutePath);
         if (!file.is_open()) {
-            RTB_ERROR("Failed to open project file: " + path.string());
+            RTB_ERROR("Failed to open project file: " + absolutePath.string());
             return false;
         }
 
-        projectDirectory = path.parent_path();
+        name = "New Project";
+        startScene = "Default/Scenes/DefaultScene.lua";
+        lastOpenScene.clear();
+        projectFilePath = absolutePath;
+        projectDirectory = projectFilePath.parent_path();
+        assetDirectory = "Assets";
+
         std::string line;
         while (std::getline(file, line)) {
             std::istringstream is_line(line);
@@ -39,22 +42,26 @@ namespace RTBEditor {
                     if (key == "Name") name = value;
                     else if (key == "StartScene") startScene = value;
                     else if (key == "LastOpenScene") lastOpenScene = value;
-                    else if (key == "AssetDirectory") assetDirectory = value;
+                    else if (key == "AssetDirectory") assetDirectory = std::filesystem::path(value);
                 }
             }
         }
 
         activeProject = this;
 
-        std::filesystem::path assetsDir = projectDirectory / assetDirectory;
         RTBEngine::ECS::PrefabRegistry::GetInstance().Clear();
-        RTBEngine::ECS::PrefabRegistry::GetInstance().LoadAll(assetsDir.string());
+        RTBEngine::ECS::PrefabRegistry::GetInstance().LoadAll(GetAssetRootPath().string());
 
         return true;
     }
 
     bool Project::Save(const std::filesystem::path& path) {
-        std::ofstream file(path);
+        std::filesystem::path savePath = path.empty() ? projectFilePath : std::filesystem::absolute(path).lexically_normal();
+        if (savePath.empty()) {
+            return false;
+        }
+
+        std::ofstream file(savePath);
         if (!file.is_open()) return false;
 
         file << "Name=" << name << "\n";
@@ -63,7 +70,51 @@ namespace RTBEditor {
             file << "LastOpenScene=" << lastOpenScene << "\n";
         file << "AssetDirectory=" << assetDirectory.string() << "\n";
 
+        projectFilePath = savePath;
+        projectDirectory = projectFilePath.parent_path();
+
         return true;
+    }
+
+    std::filesystem::path Project::GetAssetRootPath() const {
+        if (projectDirectory.empty()) {
+            return assetDirectory;
+        }
+        return (projectDirectory / assetDirectory).lexically_normal();
+    }
+
+    std::filesystem::path Project::ResolveAssetPath(const std::filesystem::path& relativePath) const {
+        return (GetAssetRootPath() / relativePath).lexically_normal();
+    }
+
+    std::string Project::GetAssetReferencePath(const std::filesystem::path& relativePath) const {
+        return (assetDirectory / relativePath).lexically_normal().generic_string();
+    }
+
+    std::filesystem::path Project::GetGameScriptsProjectPath() const {
+        if (projectDirectory.empty()) {
+            return {};
+        }
+        return (projectDirectory / "GameScripts" / "GameScripts.vcxproj").lexically_normal();
+    }
+
+    std::filesystem::path Project::GetGameScriptsDllPath(const std::string& configuration) const {
+        if (projectDirectory.empty()) {
+            return {};
+        }
+        const std::filesystem::path configurationDll =
+            (projectDirectory / "x64" / configuration / "GameScripts.dll").lexically_normal();
+        if (std::filesystem::exists(configurationDll)) {
+            return configurationDll;
+        }
+        return (projectDirectory / "GameScripts.dll").lexically_normal();
+    }
+
+    std::filesystem::path Project::GetSDKPath() const {
+        if (projectDirectory.empty()) {
+            return {};
+        }
+        return (projectDirectory / "RTBEngine_SDK").lexically_normal();
     }
 
 }

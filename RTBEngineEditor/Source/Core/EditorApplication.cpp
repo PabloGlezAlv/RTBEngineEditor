@@ -29,25 +29,21 @@ namespace RTBEditor {
 
         engineApp->SetIsRunning(true);
 
-        // Load GameScripts.dll before loading the scene so script component types are
-        // registered in time for the SceneLoader to instantiate them.
-        {
-            namespace fs = std::filesystem;
-            fs::path projectRoot = fs::current_path();
-            fs::path binDllPath = BuildSystem::GetCompiledScriptsDllPath("Debug");
-            fs::path legacyPath = projectRoot / "GameScripts.dll";
-
-            if (fs::exists(binDllPath)) {
-                RTBEngine::Scripting::ScriptManager::GetInstance().LoadScripts(binDllPath.string());
-            }
-            else if (fs::exists(legacyPath)) {
-                RTBEngine::Scripting::ScriptManager::GetInstance().LoadScripts(legacyPath.string());
-            }
-        }
-
         // Load Project Settings
         project = std::make_unique<Project>();
         if (project->Load("MyProject.rtbproj")) {
+            namespace fs = std::filesystem;
+            fs::path scriptsDllPath = project->GetGameScriptsDllPath("Debug");
+
+            // Load GameScripts.dll before loading the scene so script component types are
+            // registered in time for the SceneLoader to instantiate them.
+            if (fs::exists(scriptsDllPath)) {
+                RTBEngine::Scripting::ScriptManager::GetInstance().LoadScripts(scriptsDllPath.string());
+            }
+            else {
+                RTB_WARN("GameScripts.dll not found at: " + scriptsDllPath.string());
+            }
+
             const std::string& lastOpen = project->GetLastOpenScene();
             const std::string& sceneToLoad = !lastOpen.empty() ? lastOpen : project->GetStartScene();
             RTBEngine::ECS::SceneManager::GetInstance().LoadScene(sceneToLoad);
@@ -443,10 +439,11 @@ namespace RTBEditor {
         if (isCompilingScripts)
             return;
 
-        namespace fs = std::filesystem;
+        if (!project || Project::GetActiveProject() != project.get())
+            return;
 
         // Path to GameScripts.vcxproj — relative to the editor working directory
-        std::string vcxprojPath = (fs::current_path() / "GameScripts" / "GameScripts.vcxproj").string();
+        const std::filesystem::path vcxprojPath = project->GetGameScriptsProjectPath();
 
         auto& scriptManager = RTBEngine::Scripting::ScriptManager::GetInstance();
 
@@ -478,7 +475,7 @@ namespace RTBEditor {
         // Launch MSBuild in a background thread. It will compile and copy the DLL,
         // and we will load it back on the main thread once finished.
         compileThread = std::thread([this, vcxprojPath]() {
-            ScriptCompileResult result = BuildSystem::CompileScripts(vcxprojPath);
+            ScriptCompileResult result = BuildSystem::CompileScripts(vcxprojPath.string());
             compileJobResult.store(static_cast<int>(result), std::memory_order_release);
             compileJobDone.store(true, std::memory_order_release);
         });
@@ -486,12 +483,12 @@ namespace RTBEditor {
 
     void EditorApplication::Shutdown() {
         // Persist the last open scene so it reopens on next editor launch
-        if (project) {
+        if (project && Project::GetActiveProject() == project.get()) {
             const std::string& lastScene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScenePath();
             if (!lastScene.empty()) {
                 project->SetLastOpenScene(lastScene);
-                project->Save("MyProject.rtbproj");
             }
+            project->Save();
         }
 
         // Unload GameScripts.dll before destroying the engine to avoid dangling pointers
