@@ -7,9 +7,9 @@
 #include <RTBEngine/UI/EventSystem/IPointerClickHandler.h>
 #include <RTBEngine/UI/Elements/UIPanel.h>
 #include <RTBEngine/UI/Elements/UIText.h>
-#include <RTBEngine/Math/Vectors/Vector2.h>
-#include <RTBEngine/Math/Vectors/Vector4.h>
+#include <RTBEngine/Math/Math.h>
 #include <RTBEngine/Reflection/PropertyMacros.h>
+#include <RTBEngine/Scripting/LatentActions.h>
 
 namespace RTBEngine {
     namespace UI {
@@ -55,6 +55,7 @@ public:
     virtual void OnAwake() override;
     virtual void OnStart() override;
     virtual void OnUpdate(float deltaTime) override;
+    virtual void OnDestroy() override;
     virtual void OnValidate() override;
 
     virtual void OnPointerEnter(const RTBEngine::UI::PointerEventData&) override;
@@ -74,16 +75,25 @@ private:
     float                    currentRotation = 0.0f;
     RTBEngine::Math::Vector4 currentPanelColor;
     RTBEngine::Math::Vector4 currentTextColor;
+    RTBEngine::Scripting::LatentActionRunner latentRunner;
+    RTBEngine::Scripting::LatentActionHandle activeTransition;
     bool                     baseTransformCaptured = false;
     bool                     defaultUIButtonVisualsDisabled = false;
     bool                     warnedMissingPanel = false;
 
     void RefreshBindings();
     void CaptureBaseVisualTransform();
+    void ResolveTargetVisuals(State state,
+                              RTBEngine::Math::Vector2& outScale,
+                              float& outRotation,
+                              RTBEngine::Math::Vector4& outPanelColor,
+                              RTBEngine::Math::Vector4& outTextColor) const;
     void ApplyCurrentVisuals();
+    void StartTransition(State nextState);
+    void StopTransition();
+    void FinishTransition(const RTBEngine::Math::Vector2& finalScale,
+                          float finalRotation,
+                          const RTBEngine::Math::Vector4& finalPanelColor,
+                          const RTBEngine::Math::Vector4& finalTextColor);
     void SetState(State nextState);
-
-    static float LerpF(float a, float b, float t);
-    static RTBEngine::Math::Vector2 LerpV2(const RTBEngine::Math::Vector2& a, const RTBEngine::Math::Vector2& b, float t);
-    static RTBEngine::Math::Vector4 LerpV4(const RTBEngine::Math::Vector4& a, const RTBEngine::Math::Vector4& b, float t);
 };

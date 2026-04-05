@@ -33,24 +33,36 @@ void ButtonStyle::OnAwake()
     baseTransformCaptured = false;
     defaultUIButtonVisualsDisabled = false;
     warnedMissingPanel = false;
+    activeTransition = {};
+    SetUpdateTickEnabled(false);
 }
 
 void ButtonStyle::OnStart()
 {
+    StopTransition();
     RefreshBindings();
+    baseTransformCaptured = false;
     CaptureBaseVisualTransform();
     if (!backgroundPanel && !warnedMissingPanel) {
         RTB_WARN("ButtonStyle: missing backgroundPanel reference; scale and rotation animation are disabled.");
         warnedMissingPanel = true;
     }
+    SetState(State::Normal);
+    ResolveTargetVisuals(currentState, currentScale, currentRotation, currentPanelColor, currentTextColor);
     ApplyCurrentVisuals();
+    SetUpdateTickEnabled(false);
 }
 
 void ButtonStyle::OnValidate()
 {
+    StopTransition();
     RefreshBindings();
+    baseTransformCaptured = false;
     CaptureBaseVisualTransform();
+    SetState(State::Normal);
+    ResolveTargetVisuals(currentState, currentScale, currentRotation, currentPanelColor, currentTextColor);
     ApplyCurrentVisuals();
+    SetUpdateTickEnabled(false);
 }
 
 void ButtonStyle::RefreshBindings()
@@ -118,6 +130,35 @@ void ButtonStyle::CaptureBaseVisualTransform()
     baseTransformCaptured = true;
 }
 
+void ButtonStyle::ResolveTargetVisuals(State state,
+                                       RTBEngine::Math::Vector2& outScale,
+                                       float& outRotation,
+                                       RTBEngine::Math::Vector4& outPanelColor,
+                                       RTBEngine::Math::Vector4& outTextColor) const
+{
+    switch (state)
+    {
+    case State::Hover:
+        outScale      = RTBEngine::Math::Vector2(baseScale.x * hoverScaleBoost, baseScale.y * hoverScaleBoost);
+        outRotation   = baseRotation + hoverRotationDeg;
+        outPanelColor = hoverPanelColor;
+        outTextColor  = hoverTextColor;
+        break;
+    case State::Pressed:
+        outScale      = RTBEngine::Math::Vector2(baseScale.x * clickScaleBoost, baseScale.y * clickScaleBoost);
+        outRotation   = baseRotation + hoverRotationDeg;
+        outPanelColor = clickPanelColor;
+        outTextColor  = clickTextColor;
+        break;
+    default:
+        outScale      = baseScale;
+        outRotation   = baseRotation;
+        outPanelColor = normalPanelColor;
+        outTextColor  = normalTextColor;
+        break;
+    }
+}
+
 void ButtonStyle::ApplyCurrentVisuals()
 {
     if (backgroundPanel) {
@@ -138,6 +179,46 @@ void ButtonStyle::SetState(State nextState)
 
 void ButtonStyle::OnUpdate(float deltaTime)
 {
+    latentRunner.Tick(deltaTime);
+
+    if (!latentRunner.HasActiveActions()) {
+        activeTransition = {};
+        SetUpdateTickEnabled(false);
+    }
+}
+
+void ButtonStyle::OnDestroy()
+{
+    StopTransition();
+    SetUpdateTickEnabled(false);
+}
+
+void ButtonStyle::OnPointerEnter(const RTBEngine::UI::PointerEventData&)
+{
+    StartTransition(State::Hover);
+}
+
+void ButtonStyle::OnPointerExit(const RTBEngine::UI::PointerEventData&)
+{
+    StartTransition(State::Normal);
+}
+
+void ButtonStyle::OnPointerDown(const RTBEngine::UI::PointerEventData&)
+{
+    StartTransition(State::Pressed);
+}
+
+void ButtonStyle::OnPointerUp(const RTBEngine::UI::PointerEventData&)
+{
+    StartTransition(State::Hover);
+}
+
+void ButtonStyle::OnPointerClick(const RTBEngine::UI::PointerEventData&)
+{
+}
+
+void ButtonStyle::StartTransition(State nextState)
+{
     RefreshBindings();
     CaptureBaseVisualTransform();
     if (!backgroundPanel && !warnedMissingPanel) {
@@ -145,76 +226,71 @@ void ButtonStyle::OnUpdate(float deltaTime)
         warnedMissingPanel = true;
     }
 
+    const RTBEngine::Math::Vector2 startScale = currentScale;
+    const float startRotation = currentRotation;
+    const RTBEngine::Math::Vector4 startPanelColor = currentPanelColor;
+    const RTBEngine::Math::Vector4 startTextColor = currentTextColor;
+
+    SetState(nextState);
+
     RTBEngine::Math::Vector2 targetScale;
-    float                    targetRotation;
+    float targetRotation = 0.0f;
     RTBEngine::Math::Vector4 targetPanelColor;
     RTBEngine::Math::Vector4 targetTextColor;
+    ResolveTargetVisuals(currentState, targetScale, targetRotation, targetPanelColor, targetTextColor);
 
-    switch (currentState)
-    {
-    case State::Hover:
-        targetScale      = RTBEngine::Math::Vector2(baseScale.x * hoverScaleBoost, baseScale.y * hoverScaleBoost);
-        targetRotation   = baseRotation + hoverRotationDeg;
-        targetPanelColor = hoverPanelColor;
-        targetTextColor  = hoverTextColor;
-        break;
-    case State::Pressed:
-        targetScale      = RTBEngine::Math::Vector2(baseScale.x * clickScaleBoost, baseScale.y * clickScaleBoost);
-        targetRotation   = baseRotation + hoverRotationDeg;
-        targetPanelColor = clickPanelColor;
-        targetTextColor  = clickTextColor;
-        break;
-    default:
-        targetScale      = baseScale;
-        targetRotation   = baseRotation;
-        targetPanelColor = normalPanelColor;
-        targetTextColor  = normalTextColor;
-        break;
+    StopTransition();
+
+    if (animationTimeSec <= 0.0f) {
+        FinishTransition(targetScale, targetRotation, targetPanelColor, targetTextColor);
+        SetUpdateTickEnabled(false);
+        return;
     }
 
     const float safeAnimationTime = std::max(0.001f, animationTimeSec);
-    float t = std::min(1.0f, deltaTime / safeAnimationTime);
-    currentScale      = LerpV2(currentScale,      targetScale,      t);
-    currentRotation   = LerpF (currentRotation,   targetRotation,   t);
-    currentPanelColor = LerpV4(currentPanelColor, targetPanelColor, t);
-    currentTextColor  = LerpV4(currentTextColor,  targetTextColor,  t);
+    activeTransition = latentRunner.Play(
+        RTBEngine::Scripting::LatentSequence()
+            .Tween(safeAnimationTime,
+                [this, startScale, startRotation, startPanelColor, startTextColor, targetScale, targetRotation, targetPanelColor, targetTextColor](float t) {
+                    currentScale      = RTBEngine::Math::Lerp(startScale,      targetScale,      t);
+                    currentRotation   = RTBEngine::Math::Lerp(startRotation,   targetRotation,   t);
+                    currentPanelColor = RTBEngine::Math::Lerp(startPanelColor, targetPanelColor, t);
+                    currentTextColor  = RTBEngine::Math::Lerp(startTextColor,  targetTextColor,  t);
+                    ApplyCurrentVisuals();
+                },
+                [this, targetScale, targetRotation, targetPanelColor, targetTextColor]() {
+                    FinishTransition(targetScale, targetRotation, targetPanelColor, targetTextColor);
+                })
+    );
 
+    if (!activeTransition.IsValid()) {
+        FinishTransition(targetScale, targetRotation, targetPanelColor, targetTextColor);
+        SetUpdateTickEnabled(false);
+        return;
+    }
+
+    SetUpdateTickEnabled(true);
+}
+
+void ButtonStyle::StopTransition()
+{
+    if (activeTransition.IsValid()) {
+        latentRunner.Stop(activeTransition);
+        activeTransition = {};
+    } else if (latentRunner.HasActiveActions()) {
+        latentRunner.StopAll();
+    }
+}
+
+void ButtonStyle::FinishTransition(const RTBEngine::Math::Vector2& finalScale,
+                                   float finalRotation,
+                                   const RTBEngine::Math::Vector4& finalPanelColor,
+                                   const RTBEngine::Math::Vector4& finalTextColor)
+{
+    currentScale = finalScale;
+    currentRotation = finalRotation;
+    currentPanelColor = finalPanelColor;
+    currentTextColor = finalTextColor;
+    activeTransition = {};
     ApplyCurrentVisuals();
-}
-
-void ButtonStyle::OnPointerEnter(const RTBEngine::UI::PointerEventData&)
-{
-    SetState(State::Hover);
-}
-
-void ButtonStyle::OnPointerExit(const RTBEngine::UI::PointerEventData&)
-{
-    SetState(State::Normal);
-}
-
-void ButtonStyle::OnPointerDown(const RTBEngine::UI::PointerEventData&)
-{
-    SetState(State::Pressed);
-}
-
-void ButtonStyle::OnPointerUp(const RTBEngine::UI::PointerEventData&)
-{
-    SetState(State::Hover);
-}
-
-void ButtonStyle::OnPointerClick(const RTBEngine::UI::PointerEventData&)
-{
-}
-
-float ButtonStyle::LerpF(float a, float b, float t)
-{
-    return a + (b - a) * t;
-}
-RTBEngine::Math::Vector2 ButtonStyle::LerpV2(const RTBEngine::Math::Vector2& a, const RTBEngine::Math::Vector2& b, float t)
-{
-    return RTBEngine::Math::Vector2(LerpF(a.x, b.x, t), LerpF(a.y, b.y, t));
-}
-RTBEngine::Math::Vector4 ButtonStyle::LerpV4(const RTBEngine::Math::Vector4& a, const RTBEngine::Math::Vector4& b, float t)
-{
-    return RTBEngine::Math::Vector4(LerpF(a.x, b.x, t), LerpF(a.y, b.y, t), LerpF(a.z, b.z, t), LerpF(a.w, b.w, t));
 }
