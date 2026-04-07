@@ -1,6 +1,6 @@
 #include <Windows.h>
 #include <RTBEngine/Reflection/TypeInfo.h>
-#include "../../../RTBEngine/RTBEngine/Engine/Scripting/ScriptBridgeABI.h"
+#include <RTBEngine/Scripting/ScriptBridgeABI.h>
 #include <cstring>
 
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)
