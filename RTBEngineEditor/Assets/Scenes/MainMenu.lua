@@ -88,12 +88,15 @@ function CreateScene()
                                 normalTextColor = Color(1.00, 1.00, 1.00, 1.00),
                                 hoverPanelColor = Color(0.35, 0.35, 0.65, 1.00),
                                 hoverTextColor = Color(1.00, 1.00, 0.60, 1.00),
-                                hoverScaleBoost = 1.08,
-                                hoverRotationDeg = 2.00,
+                                hoverScaleBoost = 1.06,
+                                hoverRotationDeg = 0.00,
                                 clickPanelColor = Color(0.15, 0.15, 0.45, 1.00),
-                                clickTextColor = Color(0.80, 0.80, 1.00, 1.00),
-                                clickScaleBoost = 0.92,
-                                animationTimeSec = 1.00
+                                clickTextColor = Color(0.86, 0.86, 0.92, 1.00),
+                                clickScaleBoost = 0.96,
+                                hoverInTimeSec = 0.12,
+                                hoverOutTimeSec = 0.18,
+                                pressInTimeSec = 0.08,
+                                pressOutTimeSec = 0.12
                             },
                         },
                         children = {
