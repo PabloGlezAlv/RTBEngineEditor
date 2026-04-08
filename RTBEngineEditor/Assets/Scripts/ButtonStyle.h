@@ -30,7 +30,6 @@ public:
 
     // Inspector-exposed references
     RTBEngine::UI::UIPanel* backgroundPanel = nullptr;
-    RTBEngine::UI::UIText*  label           = nullptr;
 
     // Normal state
     RTBEngine::Math::Vector4 normalPanelColor = RTBEngine::Math::Vector4(0.2f, 0.2f, 0.2f, 1.0f);
@@ -73,7 +72,6 @@ private:
 
     RTBEngine::Math::Vector2 baseScale    = RTBEngine::Math::Vector2(1.0f, 1.0f);
     float                    baseRotation = 0.0f;
-    float                    baseLabelVisualScale = 1.0f;
 
     RTBEngine::Math::Vector2 currentScale;
     float                    currentRotation = 0.0f;

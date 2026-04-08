@@ -17,7 +17,6 @@ namespace {
 
 RTB_REGISTER_COMPONENT(ButtonStyle)
     RTB_PROPERTY_COMPONENT(backgroundPanel, UIPanel)
-    RTB_PROPERTY_COMPONENT(label, UIText)
     RTB_PROPERTY_COLOR(normalPanelColor)
     RTB_PROPERTY_COLOR(normalTextColor)
     RTB_PROPERTY_COLOR(hoverPanelColor)
@@ -38,7 +37,6 @@ void ButtonStyle::OnAwake()
     currentState      = State::Normal;
     baseScale         = RTBEngine::Math::Vector2(1.0f, 1.0f);
     baseRotation      = 0.0f;
-    baseLabelVisualScale = 1.0f;
     currentScale      = baseScale;
     currentRotation   = baseRotation;
     currentPanelColor = normalPanelColor;
@@ -103,31 +101,7 @@ void ButtonStyle::RefreshBindings()
         }
     }
 
-    if (!label) {
-        for (const auto& comp : go->GetComponents()) {
-            if (!comp) continue;
-            if (std::string(comp->GetTypeName()) == "UIText") {
-                label = static_cast<RTBEngine::UI::UIText*>(comp->GetActualObject());
-                break;
-            }
-        }
-    }
 
-    if (!label) {
-        for (auto* child : go->GetChildren()) {
-            if (!child) continue;
-            for (const auto& comp : child->GetComponents()) {
-                if (!comp) continue;
-                if (std::string(comp->GetTypeName()) == "UIText") {
-                    label = static_cast<RTBEngine::UI::UIText*>(comp->GetActualObject());
-                    break;
-                }
-            }
-            if (label) {
-                break;
-            }
-        }
-    }
 
     if (!defaultUIButtonVisualsDisabled) {
         for (const auto& comp : go->GetComponents()) {
@@ -175,9 +149,6 @@ void ButtonStyle::CaptureBaseVisualTransform()
 
     baseScale = backgroundPanel->GetVisualScale();
     baseRotation = backgroundPanel->GetVisualRotationOffset();
-    if (label) {
-        baseLabelVisualScale = label->GetVisualScaleMultiplier();
-    }
     currentScale = baseScale;
     currentRotation = baseRotation;
     baseTransformCaptured = true;
@@ -262,14 +233,6 @@ void ButtonStyle::ApplyCurrentVisuals()
         backgroundPanel->SetBackgroundColor(currentPanelColor);
         backgroundPanel->SetVisualScale(currentScale);
         backgroundPanel->SetVisualRotationOffset(currentRotation);
-    }
-
-    if (label) {
-        label->SetColor(currentTextColor);
-        const float scaleFactorX = (std::fabs(baseScale.x) > 0.0001f) ? (currentScale.x / baseScale.x) : currentScale.x;
-        const float scaleFactorY = (std::fabs(baseScale.y) > 0.0001f) ? (currentScale.y / baseScale.y) : currentScale.y;
-        const float uniformScaleFactor = 0.5f * (scaleFactorX + scaleFactorY);
-        label->SetVisualScaleMultiplier(baseLabelVisualScale * uniformScaleFactor);
     }
 }
 
