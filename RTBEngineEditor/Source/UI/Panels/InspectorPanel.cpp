@@ -183,47 +183,48 @@ namespace RTBEditor {
         if (uiElement) {
             // Rect Transform (replaces Transform for UI objects)
             if (ImGui::CollapsingHeader("Rect Transform", ImGuiTreeNodeFlags_DefaultOpen)) {
-                RTBEngine::Math::Vector2 pos = uiElement->anchoredPosition;
+                RTBEngine::Math::Vector2 pos = uiElement->GetAnchoredPosition();
                 if (ImGui::DragFloat2("Position", (float*)&pos, 1.0f)) {
-                    uiElement->anchoredPosition = pos;
-                    uiElement->SyncRectTransform();
+                    uiElement->SetAnchoredPosition(pos);
                     RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
                 }
 
-                RTBEngine::Math::Vector2 size = uiElement->sizeDelta;
+                RTBEngine::Math::Vector2 size = uiElement->GetSizeDelta();
                 if (ImGui::DragFloat2("Size", (float*)&size, 1.0f)) {
-                    uiElement->sizeDelta = size;
-                    uiElement->SyncRectTransform();
+                    uiElement->SetSizeDelta(size);
                     RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
                 }
 
-                RTBEngine::Math::Vector2 anchorMin = uiElement->anchorMin;
+                RTBEngine::Math::Vector2 anchorMin = uiElement->GetAnchorMin();
                 if (ImGui::DragFloat2("Anchor Min", (float*)&anchorMin, 0.01f, 0.0f, 1.0f)) {
-                    uiElement->anchorMin = anchorMin;
-                    uiElement->SyncRectTransform();
+                    uiElement->SetAnchorMin(anchorMin);
                     RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
                 }
 
-                RTBEngine::Math::Vector2 anchorMax = uiElement->anchorMax;
+                RTBEngine::Math::Vector2 anchorMax = uiElement->GetAnchorMax();
                 if (ImGui::DragFloat2("Anchor Max", (float*)&anchorMax, 0.01f, 0.0f, 1.0f)) {
-                    uiElement->anchorMax = anchorMax;
-                    uiElement->SyncRectTransform();
+                    uiElement->SetAnchorMax(anchorMax);
                     RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
                 }
 
-                float rot = uiElement->rotation;
+                RTBEngine::Math::Vector2 pivot = uiElement->GetPivot();
+                if (ImGui::DragFloat2("Pivot", (float*)&pivot, 0.01f, 0.0f, 1.0f)) {
+                    uiElement->SetPivot(pivot);
+                    RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                }
+
+                float rot = uiElement->GetRotation();
                 if (ImGui::DragFloat("Rotation", &rot, 0.5f)) {
-                    uiElement->rotation = rot;
-                    uiElement->SyncRectTransform();
+                    uiElement->SetRotation(rot);
                     RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
                 }
 
-                RTBEngine::Math::Vector2 scl = uiElement->scale;
+                RTBEngine::Math::Vector2 scl = uiElement->GetScale();
                 if (ImGui::DragFloat2("Scale", (float*)&scl, 0.01f)) {
-                    uiElement->scale = scl;
-                    uiElement->SyncRectTransform();
+                    uiElement->SetScale(scl);
                     RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
                 }
+
             }
         } else {
             // Transform Component (3D — shown for non-UI objects)

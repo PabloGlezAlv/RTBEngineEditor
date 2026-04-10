@@ -446,10 +446,10 @@ namespace RTBEditor {
         if (parent) go->SetParent(parent);
 
         auto* uiText = new RTBEngine::UI::UIText();
-        uiText->anchorMin        = RTBEngine::Math::Vector2(0.5f, 0.5f);
-        uiText->anchorMax        = RTBEngine::Math::Vector2(0.5f, 0.5f);
-        uiText->anchoredPosition = RTBEngine::Math::Vector2(0.0f, 0.0f);
-        uiText->sizeDelta        = RTBEngine::Math::Vector2(160.0f, 30.0f);
+        uiText->SetAnchorMin(RTBEngine::Math::Vector2(0.5f, 0.5f));
+        uiText->SetAnchorMax(RTBEngine::Math::Vector2(0.5f, 0.5f));
+        uiText->SetAnchoredPosition(RTBEngine::Math::Vector2(0.0f, 0.0f));
+        uiText->SetSizeDelta(RTBEngine::Math::Vector2(160.0f, 30.0f));
         uiText->SetText("Text");
         uiText->SetAlignment(RTBEngine::UI::TextAlignment::Center);
         go->AddComponent(uiText);
@@ -465,10 +465,10 @@ namespace RTBEditor {
         if (parent) buttonGO->SetParent(parent);
 
         auto* uiPanel = new RTBEngine::UI::UIPanel();
-        uiPanel->anchorMin        = RTBEngine::Math::Vector2(0.5f, 0.5f);
-        uiPanel->anchorMax        = RTBEngine::Math::Vector2(0.5f, 0.5f);
-        uiPanel->anchoredPosition = RTBEngine::Math::Vector2(0.0f, 0.0f);
-        uiPanel->sizeDelta        = RTBEngine::Math::Vector2(160.0f, 40.0f);
+        uiPanel->SetAnchorMin(RTBEngine::Math::Vector2(0.5f, 0.5f));
+        uiPanel->SetAnchorMax(RTBEngine::Math::Vector2(0.5f, 0.5f));
+        uiPanel->SetAnchoredPosition(RTBEngine::Math::Vector2(0.0f, 0.0f));
+        uiPanel->SetSizeDelta(RTBEngine::Math::Vector2(160.0f, 40.0f));
         buttonGO->AddComponent(uiPanel);
 
         // UIPanel must be added first so UIButton::OnAwake() finds it via GetComponent<UIPanel>()
@@ -482,10 +482,10 @@ namespace RTBEditor {
         textGO->SetParent(buttonGO);
 
         auto* uiText = new RTBEngine::UI::UIText();
-        uiText->anchorMin        = RTBEngine::Math::Vector2(0.0f, 0.0f);
-        uiText->anchorMax        = RTBEngine::Math::Vector2(1.0f, 1.0f);
-        uiText->anchoredPosition = RTBEngine::Math::Vector2(0.0f, 0.0f);
-        uiText->sizeDelta        = RTBEngine::Math::Vector2(0.0f, 0.0f);
+        uiText->SetAnchorMin(RTBEngine::Math::Vector2(0.0f, 0.0f));
+        uiText->SetAnchorMax(RTBEngine::Math::Vector2(1.0f, 1.0f));
+        uiText->SetAnchoredPosition(RTBEngine::Math::Vector2(0.0f, 0.0f));
+        uiText->SetSizeDelta(RTBEngine::Math::Vector2(0.0f, 0.0f));
         uiText->SetText("Button");
         uiText->SetAlignment(RTBEngine::UI::TextAlignment::Center);
         textGO->AddComponent(uiText);

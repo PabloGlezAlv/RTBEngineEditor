@@ -3,8 +3,7 @@
 #include <RTBEngine/ECS/GameObject.h>
 #include <RTBEngine/UI/Elements/UIButton.h>
 #include <algorithm>
-#include <cmath>
-#include <string>
+#include <cstring>
 
 using ThisClass = ButtonStyle;
 
@@ -13,10 +12,38 @@ namespace {
     constexpr float kDefaultHoverOutTimeSec = 0.18f;
     constexpr float kDefaultPressInTimeSec = 0.08f;
     constexpr float kDefaultPressOutTimeSec = 0.12f;
+
+    template<typename T>
+    T* FindFirstComponentInHierarchy(RTBEngine::ECS::GameObject* object, const char* expectedTypeName)
+    {
+        if (!object) {
+            return nullptr;
+        }
+
+        for (const auto& comp : object->GetComponents()) {
+            if (!comp) {
+                continue;
+            }
+
+            const char* typeName = comp->GetTypeName();
+            if (typeName && expectedTypeName && std::strcmp(typeName, expectedTypeName) == 0) {
+                return static_cast<T*>(comp.get());
+            }
+        }
+
+        for (RTBEngine::ECS::GameObject* child : object->GetChildren()) {
+            if (auto* typed = FindFirstComponentInHierarchy<T>(child, expectedTypeName)) {
+                return typed;
+            }
+        }
+
+        return nullptr;
+    }
 }
 
 RTB_REGISTER_COMPONENT(ButtonStyle)
     RTB_PROPERTY_COMPONENT(backgroundPanel, UIPanel)
+    RTB_PROPERTY_COMPONENT(label, UIText)
     RTB_PROPERTY_COLOR(normalPanelColor)
     RTB_PROPERTY_COLOR(normalTextColor)
     RTB_PROPERTY_COLOR(hoverPanelColor)
@@ -34,16 +61,17 @@ RTB_END_REGISTER(ButtonStyle)
 
 void ButtonStyle::OnAwake()
 {
-    currentState      = State::Normal;
-    baseScale         = RTBEngine::Math::Vector2(1.0f, 1.0f);
-    baseRotation      = 0.0f;
-    currentScale      = baseScale;
-    currentRotation   = baseRotation;
+    currentState = State::Normal;
+    baseScale = RTBEngine::Math::Vector2(1.0f, 1.0f);
+    baseRotation = 0.0f;
+    currentScale = baseScale;
+    currentRotation = baseRotation;
     currentPanelColor = normalPanelColor;
-    currentTextColor  = normalTextColor;
+    currentTextColor = normalTextColor;
     baseTransformCaptured = false;
     defaultUIButtonVisualsDisabled = false;
     warnedMissingPanel = false;
+    warnedMissingLabel = false;
     isPointerOver = false;
     isPressed = false;
     activeTransition = {};
@@ -57,10 +85,6 @@ void ButtonStyle::OnStart()
     RefreshBindings();
     baseTransformCaptured = false;
     CaptureBaseVisualTransform();
-    if (!backgroundPanel && !warnedMissingPanel) {
-        RTB_WARN("ButtonStyle: missing backgroundPanel reference; scale and rotation animation are disabled.");
-        warnedMissingPanel = true;
-    }
     isPointerOver = false;
     isPressed = false;
     SetState(State::Normal);
@@ -93,24 +117,32 @@ void ButtonStyle::RefreshBindings()
 
     if (!backgroundPanel) {
         for (const auto& comp : go->GetComponents()) {
-            if (!comp) continue;
-            if (std::string(comp->GetTypeName()) == "UIPanel") {
-                backgroundPanel = static_cast<RTBEngine::UI::UIPanel*>(comp->GetActualObject());
+            if (!comp) {
+                continue;
+            }
+
+            const char* typeName = comp->GetTypeName();
+            if (typeName && std::strcmp(typeName, "UIPanel") == 0) {
+                backgroundPanel = static_cast<RTBEngine::UI::UIPanel*>(comp.get());
                 break;
             }
         }
     }
 
-
+    if (!label) {
+        label = FindFirstComponentInHierarchy<RTBEngine::UI::UIText>(go, "UIText");
+    }
 
     if (!defaultUIButtonVisualsDisabled) {
         for (const auto& comp : go->GetComponents()) {
-            if (!comp) continue;
-            if (std::string(comp->GetTypeName()) == "UIButton") {
-                auto* button = static_cast<RTBEngine::UI::UIButton*>(comp->GetActualObject());
-                if (button) {
-                    button->enableDefaultHoverVisuals = false;
-                }
+            if (!comp) {
+                continue;
+            }
+
+            const char* typeName = comp->GetTypeName();
+            if (typeName && std::strcmp(typeName, "UIButton") == 0) {
+                auto* button = static_cast<RTBEngine::UI::UIButton*>(comp.get());
+                button->enableDefaultHoverVisuals = false;
                 defaultUIButtonVisualsDisabled = true;
                 break;
             }
@@ -119,6 +151,16 @@ void ButtonStyle::RefreshBindings()
 
     if (backgroundPanel) {
         warnedMissingPanel = false;
+    } else if (!warnedMissingPanel) {
+        RTB_WARN("ButtonStyle: missing backgroundPanel reference; panel visuals are disabled.");
+        warnedMissingPanel = true;
+    }
+
+    if (label) {
+        warnedMissingLabel = false;
+    } else if (!warnedMissingLabel) {
+        RTB_WARN("ButtonStyle: missing label reference; text color animation is disabled.");
+        warnedMissingLabel = true;
     }
 }
 
@@ -147,8 +189,8 @@ void ButtonStyle::CaptureBaseVisualTransform()
         return;
     }
 
-    baseScale = backgroundPanel->GetVisualScale();
-    baseRotation = backgroundPanel->GetVisualRotationOffset();
+    baseScale = backgroundPanel->GetScale();
+    baseRotation = backgroundPanel->GetRotation();
     currentScale = baseScale;
     currentRotation = baseRotation;
     baseTransformCaptured = true;
@@ -163,20 +205,20 @@ void ButtonStyle::ResolveTargetVisuals(State state,
     switch (state)
     {
     case State::Hover:
-        outScale      = RTBEngine::Math::Vector2(baseScale.x * hoverScaleBoost, baseScale.y * hoverScaleBoost);
-        outRotation   = baseRotation;
+        outScale = RTBEngine::Math::Vector2(baseScale.x * hoverScaleBoost, baseScale.y * hoverScaleBoost);
+        outRotation = baseRotation + hoverRotationDeg;
         outPanelColor = hoverPanelColor;
         outTextColor  = hoverTextColor;
         break;
     case State::Pressed:
-        outScale      = RTBEngine::Math::Vector2(baseScale.x * clickScaleBoost, baseScale.y * clickScaleBoost);
-        outRotation   = baseRotation;
+        outScale = RTBEngine::Math::Vector2(baseScale.x * clickScaleBoost, baseScale.y * clickScaleBoost);
+        outRotation = baseRotation;
         outPanelColor = clickPanelColor;
         outTextColor  = clickTextColor;
         break;
     default:
-        outScale      = baseScale;
-        outRotation   = baseRotation;
+        outScale = baseScale;
+        outRotation = baseRotation;
         outPanelColor = normalPanelColor;
         outTextColor  = normalTextColor;
         break;
@@ -231,8 +273,11 @@ void ButtonStyle::ApplyCurrentVisuals()
 {
     if (backgroundPanel) {
         backgroundPanel->SetBackgroundColor(currentPanelColor);
-        backgroundPanel->SetVisualScale(currentScale);
-        backgroundPanel->SetVisualRotationOffset(currentRotation);
+        backgroundPanel->SetScale(currentScale);
+        backgroundPanel->SetRotation(currentRotation);
+    }
+    if (label) {
+        label->SetColor(currentTextColor);
     }
 }
 
@@ -254,6 +299,12 @@ void ButtonStyle::OnUpdate(float deltaTime)
 void ButtonStyle::OnDestroy()
 {
     StopTransition();
+    SetState(State::Normal);
+    currentScale = baseScale;
+    currentRotation = baseRotation;
+    currentPanelColor = normalPanelColor;
+    currentTextColor = normalTextColor;
+    ApplyCurrentVisuals();
     SetUpdateTickEnabled(false);
 }
 
@@ -291,15 +342,11 @@ void ButtonStyle::StartTransition(State nextState)
     NormalizeTimingProperties();
     RefreshBindings();
     CaptureBaseVisualTransform();
-    if (!backgroundPanel && !warnedMissingPanel) {
-        RTB_WARN("ButtonStyle: missing backgroundPanel reference; scale and rotation animation are disabled.");
-        warnedMissingPanel = true;
-    }
 
     const RTBEngine::Math::Vector2 startScale = currentScale;
     const float startRotation = currentRotation;
     const RTBEngine::Math::Vector4 startPanelColor = currentPanelColor;
-    const RTBEngine::Math::Vector4 startTextColor = currentTextColor;
+    const RTBEngine::Math::Vector4 startTextColor  = currentTextColor;
 
     const State previousState = currentState;
     SetState(nextState);
@@ -325,8 +372,8 @@ void ButtonStyle::StartTransition(State nextState)
             .Tween(safeAnimationTime,
                 [this, previousState, nextState, startScale, startRotation, startPanelColor, startTextColor, targetScale, targetRotation, targetPanelColor, targetTextColor](float t) {
                     const float easedT = EaseTransitionProgress(previousState, nextState, t);
-                    currentScale      = RTBEngine::Math::Lerp(startScale,      targetScale,      easedT);
-                    currentRotation   = RTBEngine::Math::Lerp(startRotation,   targetRotation,   easedT);
+                    currentScale = RTBEngine::Math::Lerp(startScale, targetScale, easedT);
+                    currentRotation = RTBEngine::Math::Lerp(startRotation, targetRotation, easedT);
                     currentPanelColor = RTBEngine::Math::Lerp(startPanelColor, targetPanelColor, easedT);
                     currentTextColor  = RTBEngine::Math::Lerp(startTextColor,  targetTextColor,  easedT);
                     ApplyCurrentVisuals();

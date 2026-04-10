@@ -30,6 +30,8 @@ public:
 
     // Inspector-exposed references
     RTBEngine::UI::UIPanel* backgroundPanel = nullptr;
+    // Optional. Auto-bound from the owner's hierarchy when missing; if no UIText exists, text color animation is skipped and a warning is logged.
+    RTBEngine::UI::UIText* label = nullptr;
 
     // Normal state
     RTBEngine::Math::Vector4 normalPanelColor = RTBEngine::Math::Vector4(0.2f, 0.2f, 0.2f, 1.0f);
@@ -70,10 +72,9 @@ private:
     enum class State { Normal, Hover, Pressed };
     State currentState = State::Normal;
 
-    RTBEngine::Math::Vector2 baseScale    = RTBEngine::Math::Vector2(1.0f, 1.0f);
+    RTBEngine::Math::Vector2 baseScale = RTBEngine::Math::Vector2(1.0f, 1.0f);
     float                    baseRotation = 0.0f;
-
-    RTBEngine::Math::Vector2 currentScale;
+    RTBEngine::Math::Vector2 currentScale = RTBEngine::Math::Vector2(1.0f, 1.0f);
     float                    currentRotation = 0.0f;
     RTBEngine::Math::Vector4 currentPanelColor;
     RTBEngine::Math::Vector4 currentTextColor;
@@ -82,6 +83,7 @@ private:
     bool                     baseTransformCaptured = false;
     bool                     defaultUIButtonVisualsDisabled = false;
     bool                     warnedMissingPanel = false;
+    bool                     warnedMissingLabel = false;
     bool                     isPointerOver = false;
     bool                     isPressed = false;
 

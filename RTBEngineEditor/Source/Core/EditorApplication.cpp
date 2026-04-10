@@ -2,6 +2,7 @@
 #include <imgui.h>
 #include <GL/glew.h>
 #include <filesystem>
+#include <vector>
 #include <RTBEngine/ECS/SceneManager.h>
 #include <RTBEngine/Rendering/FrameBuffer.h>
 #include <RTBEngine/Scripting/SceneSaver.h>
@@ -11,6 +12,43 @@
 #include <RTBEngine/Physics/PhysicsWorld.h>
 #include "../UI/Panels/SceneViewPanel.h"
 #include "../Build/BuildSystem.h"
+
+namespace {
+    namespace fs = std::filesystem;
+
+    fs::path ResolveProjectFilePath(const fs::path& projectFileName) {
+        const fs::path currentDir = fs::current_path();
+
+        std::vector<fs::path> searchDirs;
+        for (fs::path dir = currentDir;; dir = dir.parent_path()) {
+            searchDirs.push_back(dir);
+
+            const fs::path parent = dir.parent_path();
+            if (parent == dir) {
+                break;
+            }
+        }
+
+        for (const fs::path& dir : searchDirs) {
+            const fs::path candidate = (dir / projectFileName).lexically_normal();
+            if (!fs::exists(candidate)) {
+                continue;
+            }
+
+            // Prefer the real editor source root when running from x64/Debug or x64/Release.
+            if (fs::exists(dir / "RTBEngineEditor.vcxproj") || fs::exists(dir / "Source")) {
+                return candidate;
+            }
+        }
+
+        const fs::path localCandidate = (currentDir / projectFileName).lexically_normal();
+        if (fs::exists(localCandidate)) {
+            return localCandidate;
+        }
+
+        return fs::absolute(projectFileName).lexically_normal();
+    }
+}
 
 namespace RTBEditor {
 
@@ -31,8 +69,10 @@ namespace RTBEditor {
 
         // Load Project Settings
         project = std::make_unique<Project>();
-        if (project->Load("MyProject.rtbproj")) {
-            namespace fs = std::filesystem;
+        const fs::path projectFilePath = ResolveProjectFilePath("MyProject.rtbproj");
+        RTB_INFO("EditorApplication: Loading project from " + projectFilePath.string());
+
+        if (project->Load(projectFilePath)) {
             fs::path scriptsDllPath = project->GetGameScriptsDllPath("Debug");
 
             // Load GameScripts.dll before loading the scene so script component types are
