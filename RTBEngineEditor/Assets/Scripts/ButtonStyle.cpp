@@ -3,7 +3,6 @@
 #include <RTBEngine/ECS/GameObject.h>
 #include <RTBEngine/UI/Elements/UIButton.h>
 #include <algorithm>
-#include <cstring>
 
 using ThisClass = ButtonStyle;
 
@@ -12,33 +11,6 @@ namespace {
     constexpr float kDefaultHoverOutTimeSec = 0.18f;
     constexpr float kDefaultPressInTimeSec = 0.08f;
     constexpr float kDefaultPressOutTimeSec = 0.12f;
-
-    template<typename T>
-    T* FindFirstComponentInHierarchy(RTBEngine::ECS::GameObject* object, const char* expectedTypeName)
-    {
-        if (!object) {
-            return nullptr;
-        }
-
-        for (const auto& comp : object->GetComponents()) {
-            if (!comp) {
-                continue;
-            }
-
-            const char* typeName = comp->GetTypeName();
-            if (typeName && expectedTypeName && std::strcmp(typeName, expectedTypeName) == 0) {
-                return static_cast<T*>(comp.get());
-            }
-        }
-
-        for (RTBEngine::ECS::GameObject* child : object->GetChildren()) {
-            if (auto* typed = FindFirstComponentInHierarchy<T>(child, expectedTypeName)) {
-                return typed;
-            }
-        }
-
-        return nullptr;
-    }
 }
 
 RTB_REGISTER_COMPONENT(ButtonStyle)
@@ -116,36 +88,18 @@ void ButtonStyle::RefreshBindings()
     }
 
     if (!backgroundPanel) {
-        for (const auto& comp : go->GetComponents()) {
-            if (!comp) {
-                continue;
-            }
-
-            const char* typeName = comp->GetTypeName();
-            if (typeName && std::strcmp(typeName, "UIPanel") == 0) {
-                backgroundPanel = static_cast<RTBEngine::UI::UIPanel*>(comp.get());
-                break;
-            }
-        }
+        backgroundPanel = go->GetComponent<RTBEngine::UI::UIPanel>();
     }
 
     if (!label) {
-        label = FindFirstComponentInHierarchy<RTBEngine::UI::UIText>(go, "UIText");
+        label = go->GetComponent<RTBEngine::UI::UIText>();
     }
 
     if (!defaultUIButtonVisualsDisabled) {
-        for (const auto& comp : go->GetComponents()) {
-            if (!comp) {
-                continue;
-            }
-
-            const char* typeName = comp->GetTypeName();
-            if (typeName && std::strcmp(typeName, "UIButton") == 0) {
-                auto* button = static_cast<RTBEngine::UI::UIButton*>(comp.get());
-                button->enableDefaultHoverVisuals = false;
-                defaultUIButtonVisualsDisabled = true;
-                break;
-            }
+        auto* button = go->GetComponent<RTBEngine::UI::UIButton>();
+        if (button) {
+            button->enableDefaultHoverVisuals = false;
+            defaultUIButtonVisualsDisabled = true;
         }
     }
 
@@ -340,7 +294,6 @@ void ButtonStyle::OnPointerClick(const RTBEngine::UI::PointerEventData&)
 void ButtonStyle::StartTransition(State nextState)
 {
     NormalizeTimingProperties();
-    RefreshBindings();
     CaptureBaseVisualTransform();
 
     const RTBEngine::Math::Vector2 startScale = currentScale;
