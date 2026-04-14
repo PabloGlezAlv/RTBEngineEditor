@@ -9,7 +9,7 @@ namespace RTBEditor {
     struct BuildSettings {
         std::string gameName = "MyGame";
         std::filesystem::path outputDirectory;
-        std::string startScene;
+        std::string startScene = "Assets/Scenes/DefaultScene.lua";
         int windowWidth = 1280;
         int windowHeight = 720;
         bool fullscreen = false;
@@ -19,6 +19,7 @@ namespace RTBEditor {
         Success,
         NoProjectLoaded,
         InvalidOutputDirectory,
+        InvalidStartScene,
         PlayerNotFound,
         CopyFailed,
         ConfigWriteFailed

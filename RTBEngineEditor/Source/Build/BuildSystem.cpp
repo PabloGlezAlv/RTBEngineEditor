@@ -2,6 +2,8 @@
 #include <fstream>
 #include <RTBEngine/Core/Logger.h>
 #include "../Project/Project.h"
+#include <algorithm>
+#include <cctype>
 
 // --- MSBuild invocation notes ---
 //
@@ -28,6 +30,32 @@
 
 namespace {
     namespace fs = std::filesystem;
+
+    std::string NormalizeReferencePath(const std::string& path) {
+        return fs::path(path).lexically_normal().generic_string();
+    }
+
+    bool IsValidStartSceneReference(const RTBEditor::Project& project, const std::string& sceneReference) {
+        const std::string normalized = NormalizeReferencePath(sceneReference);
+        if (normalized.empty()) {
+            return false;
+        }
+
+        std::string ext = fs::path(normalized).extension().string();
+        std::transform(ext.begin(), ext.end(), ext.begin(),
+            [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+        if (ext != ".lua") {
+            return false;
+        }
+
+        const std::string assetPrefix = project.GetAssetDirectory().lexically_normal().generic_string();
+        if (normalized.rfind(assetPrefix + "/", 0) != 0) {
+            return false;
+        }
+
+        const fs::path scenePath = (project.GetProjectDirectory() / normalized).lexically_normal();
+        return fs::exists(scenePath) && fs::is_regular_file(scenePath);
+    }
 }
 
 namespace RTBEditor {
@@ -51,6 +79,11 @@ namespace RTBEditor {
         if (settings.outputDirectory.empty()) {
             RTB_ERROR("Build failed: Output directory is empty");
             return BuildResult::InvalidOutputDirectory;
+        }
+
+        if (!IsValidStartSceneReference(*project, settings.startScene)) {
+            RTB_ERROR("Build failed: Invalid start scene '" + settings.startScene + "'");
+            return BuildResult::InvalidStartScene;
         }
 
         if (onProgress) onProgress("Creating directory structure...", 0.1f);
@@ -121,6 +154,7 @@ namespace RTBEditor {
         case BuildResult::Success: return "Build Successful";
         case BuildResult::NoProjectLoaded: return "No Project Loaded";
         case BuildResult::InvalidOutputDirectory: return "Invalid Output Directory";
+        case BuildResult::InvalidStartScene: return "Invalid Start Scene";
         case BuildResult::PlayerNotFound: return "Player Executable Not Found";
         case BuildResult::CopyFailed: return "File Copy Failed";
         case BuildResult::ConfigWriteFailed: return "Config Write Failed";
@@ -251,7 +285,7 @@ namespace RTBEditor {
             cfgFile << "Fullscreen=" << (settings.fullscreen ? "true" : "false") << "\n\n";
 
             cfgFile << "[Scene]\n";
-            cfgFile << "StartScene=" << (settings.startScene.empty() ? "Assets/Scenes/DefaultScene.lua" : settings.startScene) << "\n";
+            cfgFile << "StartScene=" << NormalizeReferencePath(settings.startScene) << "\n";
 
             cfgFile.close();
             return true;

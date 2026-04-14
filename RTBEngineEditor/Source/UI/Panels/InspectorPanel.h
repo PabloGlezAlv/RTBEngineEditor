@@ -33,6 +33,9 @@ namespace RTBEditor {
     private:
         void DrawComponents(RTBEngine::ECS::GameObject* gameObject);
         void DrawProperty(RTBEngine::ECS::Component* component, const RTBEngine::Reflection::PropertyInfo& prop);
+        bool DrawSceneStringProperty(RTBEngine::ECS::Component* component,
+                                     const RTBEngine::Reflection::PropertyInfo& prop,
+                                     std::string* value);
         std::string FormatTypeName(const char* typeName);
 
         void DrawAnimatorComponent(RTBEngine::Animation::Animator* animator);

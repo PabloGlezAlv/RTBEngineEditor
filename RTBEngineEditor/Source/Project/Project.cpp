@@ -9,6 +9,12 @@ namespace RTBEditor {
 
     Project* Project::activeProject = nullptr;
 
+    namespace {
+        std::string NormalizeProjectPath(const std::string& path) {
+            return std::filesystem::path(path).lexically_normal().generic_string();
+        }
+    }
+
     Project::Project() {}
 
     Project::~Project() {
@@ -26,7 +32,7 @@ namespace RTBEditor {
         }
 
         name = "New Project";
-        startScene = "Default/Scenes/DefaultScene.lua";
+        startScene = "Assets/Scenes/DefaultScene.lua";
         lastOpenScene.clear();
         projectFilePath = absolutePath;
         projectDirectory = projectFilePath.parent_path();
@@ -40,8 +46,8 @@ namespace RTBEditor {
                 std::string value;
                 if (std::getline(is_line, value)) {
                     if (key == "Name") name = value;
-                    else if (key == "StartScene") startScene = value;
-                    else if (key == "LastOpenScene") lastOpenScene = value;
+                    else if (key == "StartScene") startScene = NormalizeProjectPath(value);
+                    else if (key == "LastOpenScene") lastOpenScene = NormalizeProjectPath(value);
                     else if (key == "AssetDirectory") assetDirectory = std::filesystem::path(value);
                 }
             }
@@ -53,6 +59,14 @@ namespace RTBEditor {
         RTBEngine::ECS::PrefabRegistry::GetInstance().LoadAll(GetAssetRootPath().string());
 
         return true;
+    }
+
+    void Project::SetStartScene(const std::string& path) {
+        startScene = NormalizeProjectPath(path);
+    }
+
+    void Project::SetLastOpenScene(const std::string& path) {
+        lastOpenScene = NormalizeProjectPath(path);
     }
 
     bool Project::Save(const std::filesystem::path& path) {

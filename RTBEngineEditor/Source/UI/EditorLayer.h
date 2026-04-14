@@ -56,7 +56,8 @@ namespace RTBEditor {
         void SetEditorState(EditorState s) { context.state = s; }
         void SetRenderPopupCallback(std::function<void()> cb) {renderPopupCallback = cb;}
         RTBEngine::ECS::GameObject* GetSelectedGameObject() const { return context.selectedGameObject; }
-        void SetSelectedGameObject(RTBEngine::ECS::GameObject* go) { context.selectedGameObject = go; }
+        void SetSelectedGameObject(RTBEngine::ECS::GameObject* go) { SetSingleSelection(context, go); }
+        void ClearSelection();
         EditorContext& GetContext() { return context; }
         void OpenBuildDialog();
 

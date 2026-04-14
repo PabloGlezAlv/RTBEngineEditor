@@ -384,6 +384,15 @@ namespace RTBEditor {
                         ImGui::SetDragDropPayload(PAYLOAD_PREFAB, &payload, sizeof(PrefabPayload));
                         ImGui::Text("Prefab: %s", filenameString.c_str());
                     }
+                    else if (ext == ".lua") {
+                        ScenePayload payload;
+                        std::string relativePath = std::filesystem::relative(path, rootPath).string();
+                        strncpy_s(payload.path, relativePath.c_str(), sizeof(payload.path) - 1);
+                        payload.path[sizeof(payload.path) - 1] = '\0';
+
+                        ImGui::SetDragDropPayload(PAYLOAD_SCENE, &payload, sizeof(ScenePayload));
+                        ImGui::Text("Scene: %s", filenameString.c_str());
+                    }
 
 
                     ImGui::EndDragDropSource();

@@ -2,6 +2,7 @@
 
 #include <string>
 #include <functional>
+#include <vector>
 #include "../../Build/BuildSystem.h" // Rel path, check include
 
 namespace RTBEditor {
@@ -16,6 +17,9 @@ namespace RTBEditor {
 
     private:
         void DrawDirectorySelector();
+        void DrawStartSceneSelector();
+        void RefreshAvailableScenes();
+        bool IsSelectedStartSceneValid() const;
         void OnBuild();
 
     private:
@@ -27,6 +31,10 @@ namespace RTBEditor {
         bool isBuilding = false;
         float buildProgress = 0.0f;
         std::string statusMessage;
+
+        std::vector<std::string> availableScenes;
+        int selectedStartSceneIndex = -1;
+        std::string selectedStartScene;
     };
 
 }

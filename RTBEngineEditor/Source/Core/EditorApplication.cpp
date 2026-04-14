@@ -221,13 +221,25 @@ namespace RTBEditor {
                     }
                     // Scene was reloaded — bail out of Update now. Any component pointers
                     // from before LoadScripts are dangling and must not be touched.
+                    if (uiLayer) {
+                        uiLayer->ClearSelection();
+                    }
                     return;
                 }
             }
         }
 
         if (state == EditorState::Play) {
+            RTBEngine::ECS::Scene* sceneBeforeUpdate =
+                RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
+
             engineApp->Update(deltaTime);
+
+            RTBEngine::ECS::Scene* sceneAfterUpdate =
+                RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
+            if (sceneBeforeUpdate != sceneAfterUpdate && uiLayer) {
+                uiLayer->ClearSelection();
+            }
         }
     }
 
@@ -255,9 +267,11 @@ namespace RTBEditor {
     void EditorApplication::OnStop() {
         state = EditorState::Edit;
 
+        RTBEngine::ECS::SceneManager::GetInstance().ClearPendingSceneLoad();
+
         // Clear selection before scene reload to avoid dangling pointer crashes.
         if (uiLayer)
-            uiLayer->SetSelectedGameObject(nullptr);
+            uiLayer->ClearSelection();
 
         // Clear physics world before reloading so btRigidBody/btCollisionObject
         // from the play session are removed before their GameObjects are destroyed.
@@ -266,7 +280,7 @@ namespace RTBEditor {
 
         const std::string& sceneToRestore = !scenePathBeforePlay.empty()
             ? scenePathBeforePlay
-            : (project ? project->GetStartScene() : std::string("Default/Scenes/DefaultScene.lua"));
+            : (project ? project->GetStartScene() : std::string("Assets/Scenes/DefaultScene.lua"));
         RTBEngine::ECS::SceneManager::GetInstance().LoadScene(sceneToRestore);
         scenePathBeforePlay.clear();
     }
@@ -286,7 +300,7 @@ namespace RTBEditor {
         if (pendingOpenScenePath.empty()) return;
 
         if (uiLayer)
-            uiLayer->SetSelectedGameObject(nullptr);
+            uiLayer->ClearSelection();
         if (engineApp)
             engineApp->ResetPhysics();
 
@@ -412,6 +426,8 @@ namespace RTBEditor {
         RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
         if (!scene) return;
 
+        PruneSelectionToScene(uiLayer->GetContext(), scene);
+
         // Reset per-frame render counters before any draw submissions
         RTBEngine::ECS::MeshRenderer::ResetRenderStats();
 
@@ -499,6 +515,10 @@ namespace RTBEditor {
             }
         }
 
+        if (uiLayer) {
+            uiLayer->ClearSelection();
+        }
+
         // Unload current DLL before recompiling so MSBuild can overwrite the file.
         // This also calls UnloadCurrentScene internally.
         scriptManager.UnloadScripts();
@@ -522,9 +542,15 @@ namespace RTBEditor {
     }
 
     void EditorApplication::Shutdown() {
+        RTBEngine::ECS::SceneManager::GetInstance().ClearPendingSceneLoad();
+
         // Persist the last open scene so it reopens on next editor launch
         if (project && Project::GetActiveProject() == project.get()) {
-            const std::string& lastScene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScenePath();
+            const std::string& activeScenePath = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScenePath();
+            const std::string& lastScene =
+                (state != EditorState::Edit && !scenePathBeforePlay.empty())
+                    ? scenePathBeforePlay
+                    : activeScenePath;
             if (!lastScene.empty()) {
                 project->SetLastOpenScene(lastScene);
             }

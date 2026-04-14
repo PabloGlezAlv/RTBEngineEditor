@@ -35,6 +35,15 @@ namespace RTBEditor {
         currentDirectory = rootDirectory;
         isOpen = true;
         atRoot = true;
+
+        if (filterType == AssetType::Scene) {
+            const std::filesystem::path scenesDirectory = assetsDirectory / "Scenes";
+            if (std::filesystem::exists(scenesDirectory) &&
+                std::filesystem::is_directory(scenesDirectory)) {
+                currentDirectory = scenesDirectory;
+                atRoot = false;
+            }
+        }
     }
 
 
@@ -48,6 +57,8 @@ namespace RTBEditor {
             return { ".wav", ".mp3", ".ogg" };
         case AssetType::Font:
             return { ".ttf", ".otf" };
+        case AssetType::Scene:
+            return { ".lua" };
         case AssetType::Any:
         default:
             return {};
@@ -99,6 +110,7 @@ namespace RTBEditor {
                 filterType == AssetType::Texture ? "Textures" :
                 filterType == AssetType::Mesh ? "Meshes" :
                 filterType == AssetType::AudioClip ? "Audio Clips" :
+                filterType == AssetType::Scene ? "Scenes" :
                 filterType == AssetType::Font ? "Fonts" : "All Files");
             ImGui::Separator();
 

@@ -56,6 +56,10 @@ namespace RTBEditor {
     }
 
     void EditorLayer::OnUIRender() {
+        PruneSelectionToScene(
+            context,
+            RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene());
+
         SetupDockspace();
 
         // Render all registered panels
@@ -173,6 +177,10 @@ namespace RTBEditor {
         if (buildDialog) buildDialog->Open();
     }
 
+    void EditorLayer::ClearSelection() {
+        RTBEditor::ClearSelection(context);
+    }
+
     void EditorLayer::HandleGlobalShortcuts() {
         ImGuiIO& io = ImGui::GetIO();
         if (!io.WantCaptureKeyboard) {
@@ -239,7 +247,7 @@ namespace RTBEditor {
             return;
         }
 
-        ClearSelection(context);
+        RTBEditor::ClearSelection(context);
 
         const float positionOffset = 0.5f;
         int index = 0;

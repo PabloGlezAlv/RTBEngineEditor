@@ -98,6 +98,10 @@ function CreateScene()
                                 pressInTimeSec = 0.08,
                                 pressOutTimeSec = 0.12
                             },
+                            {
+                                type = "SceneChangeButton",
+                                scenePath = "Assets/Scenes/DefaultScene.lua"
+                            },
                         },
                         children = {
                             {

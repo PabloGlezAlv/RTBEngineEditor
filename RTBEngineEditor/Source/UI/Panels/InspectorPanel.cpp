@@ -36,6 +36,13 @@ namespace RTBEditor {
             return (std::filesystem::path("Assets") / relativePath).lexically_normal().generic_string();
         }
 
+        bool IsScenePathProperty(RTBEngine::ECS::Component* component,
+                                 const RTBEngine::Reflection::PropertyInfo& prop) {
+            return component &&
+                prop.name == "scenePath" &&
+                std::string(component->GetTypeName()) == "SceneChangeButton";
+        }
+
         void OpenGameScriptsProjectOrFile(const std::filesystem::path& fileToOpen) {
             Project* project = Project::GetActiveProject();
             const std::filesystem::path scriptsProjectPath =
@@ -322,6 +329,72 @@ namespace RTBEditor {
         }
     }
 
+    bool InspectorPanel::DrawSceneStringProperty(RTBEngine::ECS::Component* component,
+                                                 const RTBEngine::Reflection::PropertyInfo& prop,
+                                                 std::string* value) {
+        if (!value) {
+            return false;
+        }
+
+        bool changed = false;
+
+        const char* labelName = prop.displayName == "scenePath"
+            ? "Scene"
+            : prop.displayName.c_str();
+        ImGui::Text("%s:", labelName);
+        ImGui::SameLine();
+
+        const bool hasScene = !value->empty();
+        ImGui::PushStyleColor(
+            ImGuiCol_Text,
+            hasScene ? ImVec4(0.4f, 0.8f, 0.4f, 1.0f) : ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.2f, 0.5f, 0.8f, 0.3f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.2f, 0.5f, 0.8f, 0.5f));
+
+        const std::string label = (hasScene ? *value : std::string("[None]")) + "##SceneDropArea";
+        ImGui::Button(label.c_str(), ImVec2(220, 0));
+
+        ImGui::PopStyleColor(4);
+
+        if (ImGui::IsItemHovered()) {
+            ImGui::SetTooltip("%s", hasScene ? value->c_str() : "Drop a .lua scene here.");
+        }
+
+        if (ImGui::BeginDragDropTarget()) {
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(PAYLOAD_SCENE)) {
+                const ScenePayload* payloadData = static_cast<const ScenePayload*>(payload->Data);
+                *value = MakeAssetReference(payloadData->path);
+                changed = true;
+            }
+            ImGui::EndDragDropTarget();
+        }
+
+        ImGui::SameLine();
+        if (ImGui::SmallButton("...##SelectScene")) {
+            assetBrowserModal->Open(
+                AssetType::Scene,
+                [component, value](const std::string& path) {
+                    *value = MakeAssetReference(path);
+                    component->OnValidate();
+                    RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                },
+                [component, value](const std::string& path) {
+                    *value = std::filesystem::path(path).lexically_normal().generic_string();
+                    component->OnValidate();
+                    RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                });
+        }
+
+        ImGui::SameLine();
+        if (ImGui::SmallButton("X##ClearScene")) {
+            value->clear();
+            changed = true;
+        }
+
+        return changed;
+    }
+
     void InspectorPanel::DrawProperty(RTBEngine::ECS::Component* component, const RTBEngine::Reflection::PropertyInfo& prop) {
         void* data = prop.GetMutableData(component);
         bool changed = false;
@@ -376,12 +449,16 @@ namespace RTBEditor {
             }
             case RTBEngine::Reflection::PropertyType::String: {
                 std::string* val = (std::string*)data;
-                char buffer[1024];
-                memset(buffer, 0, sizeof(buffer));
-                strncpy_s(buffer, sizeof(buffer), val->c_str(), _TRUNCATE);
-                if (ImGui::InputText(prop.displayName.c_str(), buffer, sizeof(buffer))) {
-                    *val = buffer;
-                    changed = true;
+                if (IsScenePathProperty(component, prop)) {
+                    changed |= DrawSceneStringProperty(component, prop, val);
+                } else {
+                    char buffer[1024];
+                    memset(buffer, 0, sizeof(buffer));
+                    strncpy_s(buffer, sizeof(buffer), val->c_str(), _TRUNCATE);
+                    if (ImGui::InputText(prop.displayName.c_str(), buffer, sizeof(buffer))) {
+                        *val = buffer;
+                        changed = true;
+                    }
                 }
                 break;
             }

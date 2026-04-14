@@ -1,5 +1,6 @@
 #pragma once
 #include <RTBEngine/ECS/GameObject.h>
+#include <RTBEngine/ECS/Scene.h>
 #include "../../Core/EditorTypes.h"
 #include <filesystem>
 #include <string>
@@ -34,6 +35,52 @@ namespace RTBEditor {
     inline void ClearSelection(EditorContext& context) {
         context.selectedGameObject = nullptr;
         context.selectedGameObjects.clear();
+    }
+
+    inline bool IsGameObjectInScene(const RTBEngine::ECS::Scene* scene,
+                                    const RTBEngine::ECS::GameObject* gameObject) {
+        if (!scene || !gameObject) {
+            return false;
+        }
+
+        const auto& gameObjects = scene->GetGameObjects();
+        return std::any_of(gameObjects.begin(), gameObjects.end(),
+            [gameObject](const std::unique_ptr<RTBEngine::ECS::GameObject>& obj) {
+                return obj.get() == gameObject;
+            });
+    }
+
+    inline void PruneSelectionToScene(EditorContext& context,
+                                      const RTBEngine::ECS::Scene* scene) {
+        if (!scene) {
+            ClearSelection(context);
+            return;
+        }
+
+        context.selectedGameObjects.erase(
+            std::remove_if(
+                context.selectedGameObjects.begin(),
+                context.selectedGameObjects.end(),
+                [scene](RTBEngine::ECS::GameObject* gameObject) {
+                    return !IsGameObjectInScene(scene, gameObject);
+                }),
+            context.selectedGameObjects.end());
+
+        if (context.selectedGameObject &&
+            !IsGameObjectInScene(scene, context.selectedGameObject)) {
+            context.selectedGameObject = nullptr;
+        }
+
+        if (!context.selectedGameObject && !context.selectedGameObjects.empty()) {
+            context.selectedGameObject = context.selectedGameObjects.front();
+        }
+
+        if (context.selectedGameObject &&
+            std::find(context.selectedGameObjects.begin(),
+                      context.selectedGameObjects.end(),
+                      context.selectedGameObject) == context.selectedGameObjects.end()) {
+            context.selectedGameObjects.push_back(context.selectedGameObject);
+        }
     }
 
     inline void SetSingleSelection(EditorContext& context, RTBEngine::ECS::GameObject* gameObject) {

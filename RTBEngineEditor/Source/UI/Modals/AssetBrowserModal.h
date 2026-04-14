@@ -11,6 +11,7 @@ namespace RTBEditor {
         Mesh,
         AudioClip,
         Font,
+        Scene,
         Any
     };
 
