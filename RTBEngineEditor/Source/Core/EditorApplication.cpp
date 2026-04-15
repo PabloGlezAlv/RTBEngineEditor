@@ -7,6 +7,7 @@
 #include <RTBEngine/Rendering/FrameBuffer.h>
 #include <RTBEngine/Scripting/SceneSaver.h>
 #include <RTBEngine/Scripting/ScriptManager.h>
+#include <RTBEngine/Core/Window.h>
 #include <RTBEngine/ECS/MeshRenderer.h>
 #include <RTBEngine/Audio/AudioSystem.h>
 #include <RTBEngine/Physics/PhysicsWorld.h>
@@ -152,6 +153,12 @@ namespace RTBEditor {
     }
 
     void EditorApplication::Update(float deltaTime) {
+        if (RTBEngine::Core::Application::ConsumeQuitRequest()) {
+            if (state == EditorState::Play || state == EditorState::Pause) {
+                OnStop();
+            }
+            return;
+        }
 
         // Update smoothed FPS and frame time
         if (uiLayer) {
@@ -235,6 +242,11 @@ namespace RTBEditor {
 
             engineApp->Update(deltaTime);
 
+            if (RTBEngine::Core::Application::ConsumeQuitRequest()) {
+                OnStop();
+                return;
+            }
+
             RTBEngine::ECS::Scene* sceneAfterUpdate =
                 RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
             if (sceneBeforeUpdate != sceneAfterUpdate && uiLayer) {
@@ -244,6 +256,8 @@ namespace RTBEditor {
     }
 
     void EditorApplication::OnPlay() {
+        RTBEngine::Core::Application::ClearQuitRequest();
+
         auto& sm = RTBEngine::ECS::SceneManager::GetInstance();
 
         // Remember which scene was open so OnStop can restore it
@@ -267,6 +281,7 @@ namespace RTBEditor {
     void EditorApplication::OnStop() {
         state = EditorState::Edit;
 
+        RTBEngine::Core::Application::ClearQuitRequest();
         RTBEngine::ECS::SceneManager::GetInstance().ClearPendingSceneLoad();
 
         // Clear selection before scene reload to avoid dangling pointer crashes.

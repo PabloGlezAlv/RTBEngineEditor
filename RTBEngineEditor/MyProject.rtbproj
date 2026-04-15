@@ -1,4 +1,4 @@
 Name=RTBEngine Demo
-StartScene=Assets/Scenes/DefaultScene.lua
+StartScene=Assets/Scenes/MainMenu.lua
 LastOpenScene=Assets/Scenes/MainMenu.lua
 AssetDirectory=Assets

@@ -1,5 +1,4 @@
 #include <Windows.h>
-#include <RTBEngine/Reflection/TypeInfo.h>
 #include <RTBEngine/Scripting/ScriptBridgeABI.h>
 #include <cstring>
 
@@ -17,12 +16,11 @@ struct RTBTypeDesc {
     int         propertyCount;
 };
 
-// Script-local registry: stores each script component's type name and TypeInfo pointer.
+// Script-local registry: stores each script component's POD type descriptor.
 // Populated by RTB_END_REGISTER via RTBScripts_RegisterLocalType() during DLL load.
 // Uses fixed-size arrays — no heap allocation, no STL, no cross-heap issues.
 struct ScriptTypeEntry {
-    const char*                                    typeName; // points to #ClassName string literal
-    const RTBEngine::Reflection::TypeInfo*         typeInfo;
+    RTBScriptTypeDesc desc;
 };
 static ScriptTypeEntry s_scriptTypes[256];
 static int s_scriptTypeCount = 0;
@@ -33,11 +31,10 @@ struct ScriptPropertyEntry {
 static ScriptPropertyEntry s_scriptProps[4096];
 static int s_scriptPropCount = 0;
 
-extern "C" void RTBScripts_RegisterLocalType(const char* typeName, const RTBEngine::Reflection::TypeInfo* info)
+extern "C" void RTBScripts_RegisterLocalType(const RTBScriptTypeDesc* desc)
 {
-    if (s_scriptTypeCount < 256) {
-        s_scriptTypes[s_scriptTypeCount].typeName = typeName;
-        s_scriptTypes[s_scriptTypeCount].typeInfo  = info;
+    if (desc && s_scriptTypeCount < 256) {
+        s_scriptTypes[s_scriptTypeCount].desc = *desc;
         ++s_scriptTypeCount;
     }
 }
@@ -63,12 +60,12 @@ struct BridgeCallbacks {
 
 static void BridgeTypeInfo(const ScriptTypeEntry& entry, BridgeCallbacks* cb)
 {
-    cb->beginType(entry.typeName, reinterpret_cast<void*>(const_cast<RTBEngine::Reflection::TypeInfo*>(entry.typeInfo)));
+    cb->beginType(entry.desc.typeName, reinterpret_cast<void*>(const_cast<RTBScriptTypeDesc*>(&entry.desc)));
 
     for (int i = 0; i < s_scriptPropCount; ++i) {
         const ScriptPropertyEntry& prop = s_scriptProps[i];
-        if (!prop.ownerType || !entry.typeName) continue;
-        if (std::strcmp(prop.ownerType, entry.typeName) != 0) continue;
+        if (!prop.ownerType || !entry.desc.typeName) continue;
+        if (std::strcmp(prop.ownerType, entry.desc.typeName) != 0) continue;
         cb->propCallback(&prop.desc);
     }
 
