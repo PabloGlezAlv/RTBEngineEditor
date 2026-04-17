@@ -437,19 +437,21 @@ namespace RTBEditor {
                                     for (auto& c : ext) c = std::tolower(c);
                                     if (ext == ".lua") {
                                         auto& sm = RTBEngine::ECS::SceneManager::GetInstance();
-                                        // Both paths may be relative or absolute with different separators.
-                                        // Resolve both to absolute canonical paths for a reliable comparison.
+                                        auto& resources = RTBEngine::Core::ResourceManager::GetInstance();
                                         namespace fs = std::filesystem;
-                                        fs::path oldAbsolute = fs::absolute(path);
-                                        fs::path activeAbsolute = fs::absolute(fs::path(sm.GetActiveScenePath()));
-                                        fs::path newAbsolute = fs::absolute(newPath);
+                                        fs::path assetRoot = GetAssetRootPath();
+                                        fs::path oldAbsolute = fs::path(resources.ResolvePathForRead(path.string())).lexically_normal();
+                                        fs::path activeAbsolute = fs::path(resources.ResolvePathForRead(sm.GetActiveScenePath())).lexically_normal();
                                         if (oldAbsolute == activeAbsolute) {
                                             RTBEngine::ECS::Scene* scene = sm.GetActiveScene();
                                             if (scene) {
+                                                fs::path newRelative = fs::relative(newPath, assetRoot);
+                                                std::string newScenePath = MakeAssetReference(newRelative);
                                                 scene->SetName(newName);
-                                                sm.SetActiveScenePath(newPath.string());
-                                                RTBEngine::Scripting::SceneSaver::SaveScene(scene, newPath.string());
-                                                sm.ClearSceneDirty();
+                                                sm.SetActiveScenePath(newScenePath);
+                                                if (RTBEngine::Scripting::SceneSaver::SaveScene(scene, newScenePath)) {
+                                                    sm.ClearSceneDirty();
+                                                }
                                             }
                                         }
                                     }

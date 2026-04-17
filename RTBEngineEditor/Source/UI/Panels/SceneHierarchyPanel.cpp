@@ -27,6 +27,14 @@ namespace RTBEditor {
             Project* project = Project::GetActiveProject();
             return project ? project->GetAssetRootPath() : std::filesystem::path("Assets");
         }
+
+        std::string MakeAssetReference(const std::filesystem::path& relativePath) {
+            Project* project = Project::GetActiveProject();
+            if (project) {
+                return project->GetAssetReferencePath(relativePath);
+            }
+            return (std::filesystem::path("Assets") / relativePath).lexically_normal().generic_string();
+        }
     }
 
     SceneHierarchyPanel::SceneHierarchyPanel() {}
@@ -91,12 +99,10 @@ namespace RTBEditor {
                 if (ImGui::BeginDragDropTarget()) {
                     if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(PAYLOAD_CUBEMAP)) {
                         const CubemapPayload* data = static_cast<const CubemapPayload*>(payload->Data);
-
-                        std::filesystem::path assetRoot = GetAssetRootPath();
-                        std::string absolutePath = (assetRoot / data->path).string();
+                        std::string assetPath = MakeAssetReference(data->path);
 
                         RTBEngine::Rendering::Cubemap* cubemap =
-                            RTBEngine::Core::ResourceManager::GetInstance().LoadCubemapAsset(absolutePath);
+                            RTBEngine::Core::ResourceManager::GetInstance().LoadCubemapAsset(assetPath);
                         if (cubemap) {
                             activeScene->SetSkyboxCubemap(cubemap);
                             RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
@@ -256,18 +262,16 @@ namespace RTBEditor {
             }
             if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(PAYLOAD_MESH)) {
                 const MeshPayload* data = static_cast<const MeshPayload*>(payload->Data);
-
-                std::filesystem::path assetRoot = GetAssetRootPath();
-                std::string absolutePath = (assetRoot / data->path).string();
+                const std::string assetPath = MakeAssetReference(data->path);
 
                 if (activeScene) {
                     auto& resources = RTBEngine::Core::ResourceManager::GetInstance();
                     RTBEngine::Rendering::ModelData modelData =
-                        RTBEngine::Rendering::ModelLoader::LoadModelWithAnimations(absolutePath);
-                    resources.RegisterMeshes(absolutePath, modelData.meshes);
+                        RTBEngine::Rendering::ModelLoader::LoadModelWithAnimations(assetPath);
+                    resources.RegisterMeshes(assetPath, modelData.meshes);
 
                     RTBEngine::ECS::GameObject* root =
-                        RTBEngine::Rendering::BuildFbxHierarchy(activeScene, modelData, absolutePath, resources);
+                        RTBEngine::Rendering::BuildFbxHierarchy(activeScene, modelData, assetPath, resources);
                     if (root) {
                         context.selectedGameObject = root;
                         RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();

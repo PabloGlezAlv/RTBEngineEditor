@@ -1,6 +1,6 @@
 # RTBEngineEditor
 
-A visual game editor for **RTBEngine**, built in **C++17** using **ImGui** for the entire UI with a docking-based multi-panel layout. The editor consumes the engine as a static library (via `RTBEngine_SDK`) and adds an additional layer of tooling on top: scene authoring, property inspection, asset browsing, real-time play testing, and game build export.
+A visual game editor for **RTBEngine**, built in **C++17** using **ImGui** for the entire UI with a docking-based multi-panel layout. The editor consumes the engine through `RTBEngine_SDK` (`RTBEngine.lib` plus `RTBEngine.dll`) and adds an additional layer of tooling on top: scene authoring, property inspection, asset browsing, real-time play testing, and game build export.
 
 ---
 
@@ -294,6 +294,11 @@ This guard ensures:
 1. Scene loads only happen in Edit mode.
 2. Loading the already-active scene is a no-op.
 3. The selection is cleared before the scene changes to avoid stale pointers.
+4. If the scene changes while Play is running, the editor clears the current selection so the Inspector and gizmo state do not hold dangling references.
+
+### Stop Behavior
+
+When Play or Pause is stopped, the editor restores the original scene that was open when Play started. Runtime scene changes are discarded, selection is cleared, and the editor returns to the pre-Play scene instead of keeping the transient runtime scene.
 
 ### Rendering to Framebuffers
 
@@ -1413,6 +1418,8 @@ Window:             [1280] x [720]   [ ] Fullscreen
                               [Build] [Cancel]
 ```
 
+The `Start Scene` field is chosen from the project scenes and persisted back into the project file before the build runs. The same value is written to `game.cfg` so the exported player starts in the selected scene.
+
 The "Browse..." button invokes the Windows shell dialog:
 
 ```cpp
@@ -1550,6 +1557,7 @@ startScene=Assets/Scenes/Main.lua
 ```
 
 This file is read by `RTBPlayer.exe` at startup to configure the `ApplicationConfig`.
+The editor writes the selected start scene in `Assets/Scenes/X.lua` form, using forward slashes and without silently switching to another scene.
 
 ### Result Codes
 
@@ -1606,6 +1614,8 @@ This section describes the complete workflow for creating, editing, and hot-relo
 ### Overview
 
 Script components live in `Assets/Scripts/` and are compiled into `GameScripts.dll`. The editor loads this DLL at startup and whenever the **Compile Scripts** button is pressed. The DLL registers its component types via `RTB_REGISTER_COMPONENT` static initializers, making them visible in the **Add Component** popup and serializable in scene files.
+
+The script bridge is now ABI-safe: scripts pass plain descriptors to the engine, and the engine builds its own reflected metadata internally. Because of that, the SDK and `GameScripts.dll` need to be rebuilt after changes to the bridge, reflection macros, or public script headers.
 
 ### Creating a Component
 
@@ -1675,6 +1685,23 @@ void Rotator::OnFixedUpdate(float fixedDeltaTime) {}
 void Rotator::OnDestroy() {}
 ```
 
+### UI Scene Buttons
+
+The editor includes script components for main-menu style actions:
+
+- `SceneChangeButton` exposes a `scenePath` field in the Inspector and requests a scene load when clicked. It is used by the `Play` button in `Assets/Scenes/MainMenu.lua`.
+- The script checks the local `UIButton` state first. If the button is not interactable, it does nothing.
+- `ButtonStyle` stays visual-only. It should not contain scene loading logic.
+
+`SceneChangeButton` is assigned directly to a scene through its reflected field, so you do not need to type the path manually when placing the component.
+
+### Application Quit Button
+
+`ApplicationQuitButton` mirrors a Unity-style `Application.Quit` action:
+
+- In runtime, it requests the application to close.
+- In editor Play or Pause, it requests the editor to stop execution instead of closing the editor process.
+
 ### Adding to the vcxproj
 
 The `GameScripts` Visual Studio project auto-discovers `Assets/Scripts/**/*.h` and `Assets/Scripts/**/*.cpp`, so new script files appear in the project without manual `.vcxproj` edits.
@@ -1686,10 +1713,11 @@ The `GameScripts` Visual Studio project auto-discovers `Assets/Scripts/**/*.h` a
 3. On success, the old `GameScripts.dll` is unloaded (`FreeLibrary`), the new one is loaded (`LoadLibrary`), and the static initializers re-register all component types.
 4. The `GameScripts` project also mirrors the rebuilt DLL to the project root, so exported builds can pick up a freshly recompiled `GameScripts.dll` without manual file copies.
 5. Components already in the scene keep their serialized property values (scene is reloaded from disk after stop, or properties are re-applied on next load).
+6. If you touch the script bridge, reflection macros, or public engine headers used by scripts, rebuild the SDK first and then rebuild `GameScripts`.
 
 ### DLL Boundary Rules for Scripts
 
-`GameScripts.dll` is compiled with `/MTd` (static CRT). The engine uses a different CRT. Violating boundary rules causes heap corruption and crashes.
+`GameScripts.dll` is compiled against the SDK headers, but the engine and scripts still need to respect the DLL boundary. Avoid moving ownership of STL objects across that line. The bridge is designed around plain data so the engine can rebuild its own metadata safely.
 
 **Never do:**
 ```cpp
@@ -1722,6 +1750,7 @@ RTB_INFO(msg);
 - `std::vector<T>` (by value or reference)
 - Any `std::unique_ptr`, `std::shared_ptr`
 - Lambda captures that hold STL objects
+- SDL types in public script-facing headers. SDL stays inside the engine implementation; script code should not need to include it.
 
 ### Component Lifecycle in Scene Loading
 
@@ -1947,6 +1976,7 @@ startScene=Assets/Scenes/Main.lua
 ```
 
 `assetDirectory` is derived from `projectDirectory + "/Assets"`.
+`startScene` is normalized to `Assets/Scenes/X.lua` form with forward slashes when it is stored by the editor or written into build settings.
 
 ### Usage in Editor
 
@@ -1954,6 +1984,7 @@ startScene=Assets/Scenes/Main.lua
 - If no project file exists, default values are used.
 - `Project::Save()` is called when the user selects File → Save Project (not yet exposed in the menu; future feature).
 - `BuildSystem::Build()` reads `Project::GetActive()->startScene` as the default value for `BuildSettings::startScene`.
+- The selected start scene is persisted in the project file and reused by Build Settings.
 
 ---
 
@@ -2023,6 +2054,12 @@ startScene=Assets/Scenes/Main.lua
 - Double-click any `.lua` file in **Content Browser**.
 - The editor switches to that scene on the next frame (only in Edit mode).
 - If the currently open scene has unsaved changes, they are **discarded** — save first.
+
+### Main Menu Scene Buttons
+
+- The `Play` button in `Assets/Scenes/MainMenu.lua` uses `SceneChangeButton` to request `Assets/Scenes/DefaultScene.lua`.
+- Scene-switching buttons should call into the engine through the scene request API instead of loading scenes directly from script logic.
+- Do not put scene loading behavior in `ButtonStyle`; keep it for presentation only.
 
 ### Debugging Physics
 

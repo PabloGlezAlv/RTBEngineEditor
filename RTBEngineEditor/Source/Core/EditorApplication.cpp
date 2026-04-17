@@ -70,10 +70,13 @@ namespace RTBEditor {
 
         // Load Project Settings
         project = std::make_unique<Project>();
+        auto& resources = RTBEngine::Core::ResourceManager::GetInstance();
+        resources.SetAssetRootPath({});
         const fs::path projectFilePath = ResolveProjectFilePath("MyProject.rtbproj");
         RTB_INFO("EditorApplication: Loading project from " + projectFilePath.string());
 
         if (project->Load(projectFilePath)) {
+            resources.SetAssetRootPath(project->GetAssetRootPath());
             fs::path scriptsDllPath = project->GetGameScriptsDllPath("Debug");
 
             // Load GameScripts.dll before loading the scene so script component types are
@@ -118,9 +121,10 @@ namespace RTBEditor {
 
         uiLayer->GetMenuBar()->SetSaveSceneCallback([this]() {
             auto& sm = RTBEngine::ECS::SceneManager::GetInstance();
-            RTBEngine::Scripting::SceneSaver::SaveScene(sm.GetActiveScene(), sm.GetActiveScenePath());
-            sm.ClearSceneDirty();
-            uiLayer->GetMenuBar()->SetSceneDirty(false);
+            if (RTBEngine::Scripting::SceneSaver::SaveScene(sm.GetActiveScene(), sm.GetActiveScenePath())) {
+                sm.ClearSceneDirty();
+                uiLayer->GetMenuBar()->SetSceneDirty(false);
+            }
         });
 
         // Intercept window close button so the editor can show the unsaved-scene popup
@@ -381,12 +385,13 @@ namespace RTBEditor {
 
             if (ImGui::Button("Save")) {
                 auto& sm = RTBEngine::ECS::SceneManager::GetInstance();
-                RTBEngine::Scripting::SceneSaver::SaveScene(
-                    sm.GetActiveScene(), sm.GetActiveScenePath());
-                sm.ClearSceneDirty();
-                uiLayer->GetMenuBar()->SetSceneDirty(false);
-                ExecutePendingAction();
-                ImGui::CloseCurrentPopup();
+                if (RTBEngine::Scripting::SceneSaver::SaveScene(
+                    sm.GetActiveScene(), sm.GetActiveScenePath())) {
+                    sm.ClearSceneDirty();
+                    uiLayer->GetMenuBar()->SetSceneDirty(false);
+                    ExecutePendingAction();
+                    ImGui::CloseCurrentPopup();
+                }
             }
             ImGui::SameLine();
             if (ImGui::Button("Ignore")) {
@@ -525,8 +530,9 @@ namespace RTBEditor {
             auto& sm = RTBEngine::ECS::SceneManager::GetInstance();
             pendingScenePath = sm.GetActiveScenePath();
             if (!pendingScenePath.empty() && sm.GetActiveScene()) {
-                RTBEngine::Scripting::SceneSaver::SaveScene(sm.GetActiveScene(), pendingScenePath);
-                sm.ClearSceneDirty();
+                if (RTBEngine::Scripting::SceneSaver::SaveScene(sm.GetActiveScene(), pendingScenePath)) {
+                    sm.ClearSceneDirty();
+                }
             }
         }
 

@@ -1,0 +1,583 @@
+return {
+    name = "Player",
+    position = Vector3(5.00, 0.00, 0.00),
+    scale = Vector3(0.01, 0.01, 0.01),
+    components = {
+        {
+            type = "Animator",
+            modelRef = "Assets/Models/Player.fbx",
+            currentClipName = "Player",
+            defaultClip = "Player",
+            speed = 1.00,
+            playing = false,
+            looping = true
+        },
+    },
+    children = {
+        {
+            name = "mixamorig:Hips",
+            position = Vector3(0.00, 105.25, 1.77),
+            components = {
+            },
+            children = {
+                {
+                    name = "mixamorig:Spine",
+                    position = Vector3(0.00, 5.25, 0.26),
+                    rotation = Quaternion.FromEulerAngles(-3.61, -0.00, 0.00),
+                    components = {
+                    },
+                    children = {
+                        {
+                            name = "mixamorig:Spine1",
+                            position = Vector3(-0.00, 11.07, -0.00),
+                            rotation = Quaternion.FromEulerAngles(-4.06, -0.00, 0.00),
+                            components = {
+                            },
+                            children = {
+                                {
+                                    name = "mixamorig:Spine2",
+                                    position = Vector3(0.00, 8.14, -0.00),
+                                    rotation = Quaternion.FromEulerAngles(7.68, 0.00, -0.00),
+                                    components = {
+                                    },
+                                    children = {
+                                        {
+                                            name = "mixamorig:Neck",
+                                            position = Vector3(-0.11, 18.92, -3.74),
+                                            components = {
+                                            },
+                                            children = {
+                                                {
+                                                    name = "mixamorig:Head",
+                                                    position = Vector3(0.00, 8.67, 3.32),
+                                                    components = {
+                                                    },
+                                                    children = {
+                                                        {
+                                                            name = "mixamorig:HeadTop_End",
+                                                            position = Vector3(0.00, 18.75, 9.37),
+                                                            components = {
+                                                            },
+                                                        },
+                                                    },
+                                                },
+                                            },
+                                        },
+                                        {
+                                            name = "mixamorig:LeftShoulder",
+                                            position = Vector3(6.34, 14.95, -4.64),
+                                            rotation = Quaternion.FromEulerAngles(-79.32, 89.73, -179.44),
+                                            components = {
+                                            },
+                                            children = {
+                                                {
+                                                    name = "mixamorig:LeftArm",
+                                                    position = Vector3(0.00, 9.14, -0.00),
+                                                    rotation = Quaternion.FromEulerAngles(-10.68, -0.12, 0.32),
+                                                    components = {
+                                                    },
+                                                    children = {
+                                                        {
+                                                            name = "mixamorig:LeftForeArm",
+                                                            position = Vector3(0.00, 24.57, -0.00),
+                                                            rotation = Quaternion.FromEulerAngles(0.00, 0.00, 1.00),
+                                                            components = {
+                                                            },
+                                                            children = {
+                                                                {
+                                                                    name = "mixamorig:LeftHand",
+                                                                    position = Vector3(0.00, 23.10, -0.00),
+                                                                    components = {
+                                                                    },
+                                                                    children = {
+                                                                        {
+                                                                            name = "mixamorig:LeftHandThumb1",
+                                                                            position = Vector3(-2.01, 3.66, 1.52),
+                                                                            rotation = Quaternion.FromEulerAngles(23.59, 12.67, 32.31),
+                                                                            components = {
+                                                                            },
+                                                                            children = {
+                                                                                {
+                                                                                    name = "mixamorig:LeftHandThumb2",
+                                                                                    position = Vector3(0.00, 3.30, -0.00),
+                                                                                    components = {
+                                                                                    },
+                                                                                    children = {
+                                                                                        {
+                                                                                            name = "mixamorig:LeftHandThumb3",
+                                                                                            position = Vector3(-0.00, 3.56, 0.00),
+                                                                                            components = {
+                                                                                            },
+                                                                                            children = {
+                                                                                                {
+                                                                                                    name = "mixamorig:LeftHandThumb4",
+                                                                                                    position = Vector3(0.00, 3.33, -0.00),
+                                                                                                    components = {
+                                                                                                    },
+                                                                                                },
+                                                                                            },
+                                                                                        },
+                                                                                    },
+                                                                                },
+                                                                            },
+                                                                        },
+                                                                        {
+                                                                            name = "mixamorig:LeftHandIndex1",
+                                                                            position = Vector3(-2.33, 11.10, 0.23),
+                                                                            rotation = Quaternion.FromEulerAngles(0.00, 0.00, 0.28),
+                                                                            components = {
+                                                                            },
+                                                                            children = {
+                                                                                {
+                                                                                    name = "mixamorig:LeftHandIndex2",
+                                                                                    position = Vector3(0.00, 2.60, 0.00),
+                                                                                    rotation = Quaternion.FromEulerAngles(0.00, 0.00, 0.25),
+                                                                                    components = {
+                                                                                    },
+                                                                                    children = {
+                                                                                        {
+                                                                                            name = "mixamorig:LeftHandIndex3",
+                                                                                            position = Vector3(-0.00, 2.00, -0.00),
+                                                                                            rotation = Quaternion.FromEulerAngles(0.00, 0.00, 0.11),
+                                                                                            components = {
+                                                                                            },
+                                                                                            children = {
+                                                                                                {
+                                                                                                    name = "mixamorig:LeftHandIndex4",
+                                                                                                    position = Vector3(0.00, 2.46, 0.00),
+                                                                                                    components = {
+                                                                                                    },
+                                                                                                },
+                                                                                            },
+                                                                                        },
+                                                                                    },
+                                                                                },
+                                                                            },
+                                                                        },
+                                                                        {
+                                                                            name = "mixamorig:LeftHandMiddle1",
+                                                                            position = Vector3(-0.00, 11.45, -0.00),
+                                                                            rotation = Quaternion.FromEulerAngles(0.00, 0.00, -0.04),
+                                                                            components = {
+                                                                            },
+                                                                            children = {
+                                                                                {
+                                                                                    name = "mixamorig:LeftHandMiddle2",
+                                                                                    position = Vector3(0.00, 2.90, 0.00),
+                                                                                    rotation = Quaternion.FromEulerAngles(0.00, 0.00, -0.01),
+                                                                                    components = {
+                                                                                    },
+                                                                                    children = {
+                                                                                        {
+                                                                                            name = "mixamorig:LeftHandMiddle3",
+                                                                                            position = Vector3(0.00, 2.00, -0.00),
+                                                                                            rotation = Quaternion.FromEulerAngles(0.00, 0.00, 0.04),
+                                                                                            components = {
+                                                                                            },
+                                                                                            children = {
+                                                                                                {
+                                                                                                    name = "mixamorig:LeftHandMiddle4",
+                                                                                                    position = Vector3(-0.00, 2.29, -0.00),
+                                                                                                    components = {
+                                                                                                    },
+                                                                                                },
+                                                                                            },
+                                                                                        },
+                                                                                    },
+                                                                                },
+                                                                            },
+                                                                        },
+                                                                        {
+                                                                            name = "mixamorig:LeftHandRing1",
+                                                                            position = Vector3(2.25, 10.61, -0.27),
+                                                                            components = {
+                                                                            },
+                                                                            children = {
+                                                                                {
+                                                                                    name = "mixamorig:LeftHandRing2",
+                                                                                    position = Vector3(0.00, 3.00, 0.00),
+                                                                                    rotation = Quaternion.FromEulerAngles(0.00, 0.00, -0.08),
+                                                                                    components = {
+                                                                                    },
+                                                                                    children = {
+                                                                                        {
+                                                                                            name = "mixamorig:LeftHandRing3",
+                                                                                            position = Vector3(0.00, 2.20, -0.00),
+                                                                                            rotation = Quaternion.FromEulerAngles(0.00, 0.00, 0.09),
+                                                                                            components = {
+                                                                                            },
+                                                                                            children = {
+                                                                                                {
+                                                                                                    name = "mixamorig:LeftHandRing4",
+                                                                                                    position = Vector3(0.00, 2.19, 0.00),
+                                                                                                    components = {
+                                                                                                    },
+                                                                                                },
+                                                                                            },
+                                                                                        },
+                                                                                    },
+                                                                                },
+                                                                            },
+                                                                        },
+                                                                        {
+                                                                            name = "mixamorig:LeftHandPinky1",
+                                                                            position = Vector3(4.03, 9.63, 0.34),
+                                                                            rotation = Quaternion.FromEulerAngles(0.00, 0.00, -0.02),
+                                                                            components = {
+                                                                            },
+                                                                            children = {
+                                                                                {
+                                                                                    name = "mixamorig:LeftHandPinky2",
+                                                                                    position = Vector3(0.00, 2.90, 0.00),
+                                                                                    rotation = Quaternion.FromEulerAngles(0.00, 0.00, 0.10),
+                                                                                    components = {
+                                                                                    },
+                                                                                    children = {
+                                                                                        {
+                                                                                            name = "mixamorig:LeftHandPinky3",
+                                                                                            position = Vector3(-0.00, 1.30, -0.00),
+                                                                                            rotation = Quaternion.FromEulerAngles(0.00, 0.00, -0.10),
+                                                                                            components = {
+                                                                                            },
+                                                                                            children = {
+                                                                                                {
+                                                                                                    name = "mixamorig:LeftHandPinky4",
+                                                                                                    position = Vector3(-0.00, 2.01, -0.00),
+                                                                                                    components = {
+                                                                                                    },
+                                                                                                },
+                                                                                            },
+                                                                                        },
+                                                                                    },
+                                                                                },
+                                                                            },
+                                                                        },
+                                                                    },
+                                                                },
+                                                            },
+                                                        },
+                                                    },
+                                                },
+                                            },
+                                        },
+                                        {
+                                            name = "mixamorig:RightShoulder",
+                                            position = Vector3(-6.34, 14.95, -4.64),
+                                            rotation = Quaternion.FromEulerAngles(-79.32, -89.73, 179.44),
+                                            components = {
+                                            },
+                                            children = {
+                                                {
+                                                    name = "mixamorig:RightArm",
+                                                    position = Vector3(-0.00, 9.14, -0.00),
+                                                    rotation = Quaternion.FromEulerAngles(-10.68, 0.12, -0.32),
+                                                    components = {
+                                                    },
+                                                    children = {
+                                                        {
+                                                            name = "mixamorig:RightForeArm",
+                                                            position = Vector3(0.00, 24.57, -0.00),
+                                                            rotation = Quaternion.FromEulerAngles(0.00, -0.00, -1.00),
+                                                            components = {
+                                                            },
+                                                            children = {
+                                                                {
+                                                                    name = "mixamorig:RightHand",
+                                                                    position = Vector3(-0.00, 23.10, 0.00),
+                                                                    components = {
+                                                                    },
+                                                                    children = {
+                                                                        {
+                                                                            name = "mixamorig:RightHandThumb1",
+                                                                            position = Vector3(2.01, 3.66, 1.52),
+                                                                            rotation = Quaternion.FromEulerAngles(23.41, -12.99, -32.43),
+                                                                            components = {
+                                                                            },
+                                                                            children = {
+                                                                                {
+                                                                                    name = "mixamorig:RightHandThumb2",
+                                                                                    position = Vector3(0.00, 3.30, -0.00),
+                                                                                    rotation = Quaternion.FromEulerAngles(-0.01, -0.00, 0.00),
+                                                                                    components = {
+                                                                                    },
+                                                                                    children = {
+                                                                                        {
+                                                                                            name = "mixamorig:RightHandThumb3",
+                                                                                            position = Vector3(0.00, 3.56, -0.00),
+                                                                                            rotation = Quaternion.FromEulerAngles(0.01, 0.00, 0.00),
+                                                                                            components = {
+                                                                                            },
+                                                                                            children = {
+                                                                                                {
+                                                                                                    name = "mixamorig:RightHandThumb4",
+                                                                                                    position = Vector3(0.00, 3.33, -0.00),
+                                                                                                    components = {
+                                                                                                    },
+                                                                                                },
+                                                                                            },
+                                                                                        },
+                                                                                    },
+                                                                                },
+                                                                            },
+                                                                        },
+                                                                        {
+                                                                            name = "mixamorig:RightHandIndex1",
+                                                                            position = Vector3(2.33, 11.10, 0.23),
+                                                                            rotation = Quaternion.FromEulerAngles(0.00, 0.00, -0.28),
+                                                                            components = {
+                                                                            },
+                                                                            children = {
+                                                                                {
+                                                                                    name = "mixamorig:RightHandIndex2",
+                                                                                    position = Vector3(0.00, 2.60, -0.00),
+                                                                                    rotation = Quaternion.FromEulerAngles(0.00, -0.00, -0.25),
+                                                                                    components = {
+                                                                                    },
+                                                                                    children = {
+                                                                                        {
+                                                                                            name = "mixamorig:RightHandIndex3",
+                                                                                            position = Vector3(0.00, 2.00, -0.00),
+                                                                                            rotation = Quaternion.FromEulerAngles(0.02, -0.00, -0.11),
+                                                                                            components = {
+                                                                                            },
+                                                                                            children = {
+                                                                                                {
+                                                                                                    name = "mixamorig:RightHandIndex4",
+                                                                                                    position = Vector3(-0.00, 2.46, -0.00),
+                                                                                                    components = {
+                                                                                                    },
+                                                                                                },
+                                                                                            },
+                                                                                        },
+                                                                                    },
+                                                                                },
+                                                                            },
+                                                                        },
+                                                                        {
+                                                                            name = "mixamorig:RightHandMiddle1",
+                                                                            position = Vector3(0.00, 11.45, -0.00),
+                                                                            rotation = Quaternion.FromEulerAngles(0.00, 0.00, 0.04),
+                                                                            components = {
+                                                                            },
+                                                                            children = {
+                                                                                {
+                                                                                    name = "mixamorig:RightHandMiddle2",
+                                                                                    position = Vector3(0.00, 2.90, 0.00),
+                                                                                    rotation = Quaternion.FromEulerAngles(0.00, 0.00, 0.01),
+                                                                                    components = {
+                                                                                    },
+                                                                                    children = {
+                                                                                        {
+                                                                                            name = "mixamorig:RightHandMiddle3",
+                                                                                            position = Vector3(0.00, 2.00, 0.00),
+                                                                                            rotation = Quaternion.FromEulerAngles(0.00, -0.00, -0.04),
+                                                                                            components = {
+                                                                                            },
+                                                                                            children = {
+                                                                                                {
+                                                                                                    name = "mixamorig:RightHandMiddle4",
+                                                                                                    position = Vector3(-0.00, 2.29, 0.00),
+                                                                                                    components = {
+                                                                                                    },
+                                                                                                },
+                                                                                            },
+                                                                                        },
+                                                                                    },
+                                                                                },
+                                                                            },
+                                                                        },
+                                                                        {
+                                                                            name = "mixamorig:RightHandRing1",
+                                                                            position = Vector3(-2.25, 10.61, -0.27),
+                                                                            components = {
+                                                                            },
+                                                                            children = {
+                                                                                {
+                                                                                    name = "mixamorig:RightHandRing2",
+                                                                                    position = Vector3(-0.00, 3.00, 0.00),
+                                                                                    rotation = Quaternion.FromEulerAngles(0.00, 0.00, 0.08),
+                                                                                    components = {
+                                                                                    },
+                                                                                    children = {
+                                                                                        {
+                                                                                            name = "mixamorig:RightHandRing3",
+                                                                                            position = Vector3(-0.00, 2.20, 0.00),
+                                                                                            rotation = Quaternion.FromEulerAngles(0.00, -0.00, -0.09),
+                                                                                            components = {
+                                                                                            },
+                                                                                            children = {
+                                                                                                {
+                                                                                                    name = "mixamorig:RightHandRing4",
+                                                                                                    position = Vector3(0.00, 2.19, -0.00),
+                                                                                                    components = {
+                                                                                                    },
+                                                                                                },
+                                                                                            },
+                                                                                        },
+                                                                                    },
+                                                                                },
+                                                                            },
+                                                                        },
+                                                                        {
+                                                                            name = "mixamorig:RightHandPinky1",
+                                                                            position = Vector3(-4.03, 9.63, 0.34),
+                                                                            rotation = Quaternion.FromEulerAngles(0.00, 0.00, 0.02),
+                                                                            components = {
+                                                                            },
+                                                                            children = {
+                                                                                {
+                                                                                    name = "mixamorig:RightHandPinky2",
+                                                                                    position = Vector3(-0.00, 2.90, 0.00),
+                                                                                    rotation = Quaternion.FromEulerAngles(0.00, -0.00, -0.10),
+                                                                                    components = {
+                                                                                    },
+                                                                                    children = {
+                                                                                        {
+                                                                                            name = "mixamorig:RightHandPinky3",
+                                                                                            position = Vector3(-0.00, 1.30, 0.00),
+                                                                                            rotation = Quaternion.FromEulerAngles(0.00, 0.00, 0.10),
+                                                                                            components = {
+                                                                                            },
+                                                                                            children = {
+                                                                                                {
+                                                                                                    name = "mixamorig:RightHandPinky4",
+                                                                                                    position = Vector3(-0.00, 2.01, 0.00),
+                                                                                                    components = {
+                                                                                                    },
+                                                                                                },
+                                                                                            },
+                                                                                        },
+                                                                                    },
+                                                                                },
+                                                                            },
+                                                                        },
+                                                                    },
+                                                                },
+                                                            },
+                                                        },
+                                                    },
+                                                },
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+                {
+                    name = "mixamorig:LeftUpLeg",
+                    position = Vector3(9.69, -5.69, -1.69),
+                    rotation = Quaternion.FromEulerAngles(-1.97, -0.00, -180.00),
+                    components = {
+                    },
+                    children = {
+                        {
+                            name = "mixamorig:LeftLeg",
+                            position = Vector3(-0.00, 43.17, -0.00),
+                            rotation = Quaternion.FromEulerAngles(-8.00, -0.00, 0.00),
+                            components = {
+                            },
+                            children = {
+                                {
+                                    name = "mixamorig:LeftFoot",
+                                    position = Vector3(0.00, 40.82, -0.00),
+                                    rotation = Quaternion.FromEulerAngles(33.88, 7.09, 6.96),
+                                    components = {
+                                    },
+                                    children = {
+                                        {
+                                            name = "mixamorig:LeftToeBase",
+                                            position = Vector3(0.00, 18.00, 0.00),
+                                            rotation = Quaternion.FromEulerAngles(61.49, -1.55, -2.03),
+                                            components = {
+                                            },
+                                            children = {
+                                                {
+                                                    name = "mixamorig:LeftToe_End",
+                                                    position = Vector3(0.00, 13.77, -0.00),
+                                                    components = {
+                                                    },
+                                                },
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+                {
+                    name = "mixamorig:RightUpLeg",
+                    position = Vector3(-9.69, -5.69, -1.69),
+                    rotation = Quaternion.FromEulerAngles(-1.97, -0.00, -180.00),
+                    components = {
+                    },
+                    children = {
+                        {
+                            name = "mixamorig:RightLeg",
+                            position = Vector3(-0.00, 43.17, -0.00),
+                            rotation = Quaternion.FromEulerAngles(-8.00, -0.00, 0.00),
+                            components = {
+                            },
+                            children = {
+                                {
+                                    name = "mixamorig:RightFoot",
+                                    position = Vector3(0.00, 40.82, -0.00),
+                                    rotation = Quaternion.FromEulerAngles(33.88, -7.09, -6.96),
+                                    components = {
+                                    },
+                                    children = {
+                                        {
+                                            name = "mixamorig:RightToeBase",
+                                            position = Vector3(-0.00, 18.00, 0.00),
+                                            rotation = Quaternion.FromEulerAngles(61.49, 1.53, 2.02),
+                                            components = {
+                                            },
+                                            children = {
+                                                {
+                                                    name = "mixamorig:RightToe_End",
+                                                    position = Vector3(-0.00, 13.77, -0.00),
+                                                    components = {
+                                                    },
+                                                },
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        {
+            name = "Maria_J_J_Ong",
+            position = Vector3(-502.34, -9.48, 14.04),
+            scale = Vector3(1.00, 1.00, 0.01),
+            components = {
+                {
+                    type = "MeshRenderer",
+                    meshRef = "Assets/Models/Player.fbx",
+                    textureRef = "Assets/Models/Player_MariaMat.texture",
+                    colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                    meshIndex = 0,
+                    multiMesh = false
+                },
+            },
+        },
+        {
+            name = "Maria_sword",
+            components = {
+                {
+                    type = "MeshRenderer",
+                    meshRef = "Assets/Models/Player.fbx",
+                    textureRef = "Assets/Models/Player_MariaMat.texture",
+                    colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                    meshIndex = 1,
+                    multiMesh = false
+                },
+            },
+        },
+    },
+}
