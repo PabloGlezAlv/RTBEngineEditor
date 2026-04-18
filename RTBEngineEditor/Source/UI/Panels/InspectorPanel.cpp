@@ -24,16 +24,246 @@
 #include <sstream>
 #include <filesystem>
 #include <algorithm>
+#include <cctype>
 
 namespace RTBEditor {
 
     namespace {
+        struct CompatibleFbxScanResult {
+            bool succeeded = false;
+            std::vector<std::string> compatiblePaths;
+            std::string status;
+        };
+
         std::string MakeAssetReference(const std::filesystem::path& relativePath) {
             Project* project = Project::GetActiveProject();
             if (project) {
                 return project->GetAssetReferencePath(relativePath);
             }
             return (std::filesystem::path("Assets") / relativePath).lexically_normal().generic_string();
+        }
+
+        std::string ToLowerCopy(std::string value) {
+            std::transform(value.begin(), value.end(), value.begin(),
+                [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
+            return value;
+        }
+
+        bool HasFbxExtension(const std::filesystem::path& path) {
+            return ToLowerCopy(path.extension().string()) == ".fbx";
+        }
+
+        std::string StripClipVendorPrefix(const std::string& value) {
+            const size_t pipe = value.find('|');
+            return pipe != std::string::npos ? value.substr(pipe + 1) : value;
+        }
+
+        void ReleaseModelMeshes(RTBEngine::Rendering::ModelData& data) {
+            for (RTBEngine::Rendering::Mesh* mesh : data.meshes) {
+                delete mesh;
+            }
+            data.meshes.clear();
+        }
+
+        size_t CountClipMatchesSkeleton(const RTBEngine::Animation::Skeleton* targetSkeleton,
+                                        const RTBEngine::Animation::AnimationClip* clip) {
+            if (!targetSkeleton || !clip) {
+                return 0;
+            }
+
+            size_t matchingBones = 0;
+            for (size_t i = 0; i < targetSkeleton->GetBoneCount(); ++i) {
+                const auto* targetBone = targetSkeleton->GetBone(static_cast<int>(i));
+                if (targetBone && clip->HasBoneAnimation(targetBone->name)) {
+                    ++matchingBones;
+                }
+            }
+
+            return matchingBones;
+        }
+
+        bool IsAnimationDataCompatible(const RTBEngine::Animation::Skeleton* targetSkeleton,
+                                       const RTBEngine::Rendering::ModelData& candidateData,
+                                       std::string* reason = nullptr) {
+            if (!targetSkeleton || targetSkeleton->GetBoneCount() == 0) {
+                if (reason) *reason = "The current model has no skeleton.";
+                return false;
+            }
+            if (candidateData.animations.empty()) {
+                if (reason) *reason = "The candidate FBX has no animations.";
+                return false;
+            }
+
+            const size_t minRequiredMatches = std::min<size_t>(
+                12,
+                std::max<size_t>(3, targetSkeleton->GetBoneCount() / 6));
+
+            size_t bestMatchCount = 0;
+            std::string bestClipName;
+
+            for (const auto& clip : candidateData.animations) {
+                if (!clip) {
+                    continue;
+                }
+
+                const size_t matchingBones = CountClipMatchesSkeleton(targetSkeleton, clip.get());
+                if (matchingBones > bestMatchCount) {
+                    bestMatchCount = matchingBones;
+                    bestClipName = clip->GetName();
+                }
+
+                if (matchingBones >= minRequiredMatches) {
+                    if (reason) {
+                        *reason = "Compatible clip '" + clip->GetName() + "' matches " +
+                            std::to_string(matchingBones) + " bones.";
+                    }
+                    return true;
+                }
+            }
+
+            if (reason) {
+                if (bestClipName.empty()) {
+                    *reason = "No clip in the candidate FBX matched the current skeleton.";
+                } else {
+                    *reason = "Best clip '" + bestClipName + "' only matches " +
+                        std::to_string(bestMatchCount) + " bones.";
+                }
+            }
+            return false;
+        }
+
+        void ReloadAnimatorClips(RTBEngine::Animation::Animator* animator) {
+            if (!animator) {
+                return;
+            }
+
+            animator->ClearClips();
+
+            auto loadClipSource = [animator](const std::string& path) {
+                if (path.empty()) {
+                    return;
+                }
+
+                RTBEngine::Rendering::ModelData data =
+                    RTBEngine::Rendering::ModelLoader::LoadModelWithAnimations(path);
+
+                for (const auto& clip : data.animations) {
+                    animator->AddClip(StripClipVendorPrefix(clip->GetName()), clip);
+                }
+
+                ReleaseModelMeshes(data);
+            };
+
+            loadClipSource(animator->modelRef);
+            for (const auto& path : animator->additionalModels) {
+                loadClipSource(path);
+            }
+
+            if (!animator->defaultClip.empty() && animator->GetClip(animator->defaultClip) == nullptr) {
+                animator->defaultClip.clear();
+            }
+
+            if (!animator->currentClipName.empty() && animator->GetClip(animator->currentClipName) == nullptr) {
+                animator->currentClipName.clear();
+            }
+        }
+
+        CompatibleFbxScanResult FindCompatibleAnimationFbxPaths(const std::string& modelRef) {
+            CompatibleFbxScanResult result;
+
+            Project* project = Project::GetActiveProject();
+            if (!project) {
+                result.status = "No active project loaded.";
+                return result;
+            }
+
+            if (modelRef.empty()) {
+                result.status = "Set a Model first before scanning the project.";
+                return result;
+            }
+
+            RTBEngine::Rendering::ModelData baseData =
+                RTBEngine::Rendering::ModelLoader::LoadModelWithAnimations(modelRef);
+
+            if (!baseData.skeleton || baseData.skeleton->GetBoneCount() == 0) {
+                ReleaseModelMeshes(baseData);
+                result.status = "The current model does not expose a valid skeleton.";
+                return result;
+            }
+
+            const std::string normalizedModelRef =
+                ToLowerCopy(std::filesystem::path(modelRef).lexically_normal().generic_string());
+
+            size_t checkedCount = 0;
+            size_t animationCount = 0;
+
+            std::error_code ec;
+            std::filesystem::recursive_directory_iterator it(
+                project->GetAssetRootPath(),
+                std::filesystem::directory_options::skip_permission_denied,
+                ec);
+            std::filesystem::recursive_directory_iterator end;
+
+            for (; it != end; it.increment(ec)) {
+                if (ec) {
+                    ec.clear();
+                    continue;
+                }
+
+                const auto& entry = *it;
+                if (!entry.is_regular_file(ec) || ec) {
+                    ec.clear();
+                    continue;
+                }
+                if (!HasFbxExtension(entry.path())) {
+                    continue;
+                }
+
+                const std::filesystem::path relativePath =
+                    std::filesystem::relative(entry.path(), project->GetAssetRootPath(), ec);
+                if (ec) {
+                    ec.clear();
+                    continue;
+                }
+
+                const std::string assetRef = project->GetAssetReferencePath(relativePath);
+                if (ToLowerCopy(std::filesystem::path(assetRef).lexically_normal().generic_string()) == normalizedModelRef) {
+                    continue;
+                }
+
+                ++checkedCount;
+
+                RTBEngine::Rendering::ModelData candidateData =
+                    RTBEngine::Rendering::ModelLoader::LoadModelWithAnimations(assetRef);
+
+                if (!candidateData.animations.empty()) {
+                    ++animationCount;
+
+                    if (IsAnimationDataCompatible(baseData.skeleton.get(), candidateData)) {
+                        result.compatiblePaths.push_back(assetRef);
+                    }
+                }
+
+                ReleaseModelMeshes(candidateData);
+            }
+
+            ReleaseModelMeshes(baseData);
+
+            std::sort(result.compatiblePaths.begin(), result.compatiblePaths.end());
+            result.compatiblePaths.erase(
+                std::unique(result.compatiblePaths.begin(), result.compatiblePaths.end()),
+                result.compatiblePaths.end());
+
+            std::ostringstream status;
+            status << "Checked " << checkedCount << " FBX files";
+            if (checkedCount > 0) {
+                status << " (" << animationCount << " with animations)";
+            }
+            status << ". Found " << result.compatiblePaths.size() << " compatible files.";
+
+            result.status = status.str();
+            result.succeeded = true;
+            return result;
         }
 
         bool IsScenePathProperty(RTBEngine::ECS::Component* component,
@@ -898,6 +1128,11 @@ namespace RTBEditor {
     void InspectorPanel::DrawAnimatorComponent(RTBEngine::Animation::Animator* animator) {
         bool changed = false;
 
+        if (animatorScanTarget != animator) {
+            animatorScanTarget = animator;
+            animatorScanStatus.clear();
+        }
+
         //Model path
         {
             char buf[1024];
@@ -905,6 +1140,7 @@ namespace RTBEditor {
             strncpy_s(buf, sizeof(buf), animator->modelRef.c_str(), _TRUNCATE);
             if (ImGui::InputText("Model", buf, sizeof(buf))) {
                 animator->modelRef = buf;
+                animatorScanStatus.clear();
                 changed = true;
             }
         }
@@ -920,6 +1156,7 @@ namespace RTBEditor {
             ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - 30.0f);
             if (ImGui::InputText("##addModel", buf, sizeof(buf))) {
                 animator->additionalModels[i] = buf;
+                animatorScanStatus.clear();
                 changed = true;
             }
             ImGui::SameLine();
@@ -934,37 +1171,30 @@ namespace RTBEditor {
         }
         if (ImGui::Button("+ Add Model")) {
             animator->additionalModels.push_back("");
+            animatorScanStatus.clear();
             changed = true;
         }
         ImGui::SameLine();
         if (ImGui::Button("Reload Clips")) {
-            // Reload animation clips from all model paths (meshes from additional files are discarded)
-            auto StripPrefix = [](const std::string& s) -> std::string {
-                size_t pipe = s.find('|');
-                return (pipe != std::string::npos) ? s.substr(pipe + 1) : s;
-            };
-            // Primary model: take clips only, free the re-loaded mesh duplicates
-            if (!animator->modelRef.empty()) {
-                RTBEngine::Rendering::ModelData data = RTBEngine::Rendering::ModelLoader::LoadModelWithAnimations(animator->modelRef);
-                for (const auto& clip : data.animations) {
-                    animator->AddClip(StripPrefix(clip->GetName()), clip);
-                }
-                for (RTBEngine::Rendering::Mesh* mesh : data.meshes) {
-                    delete mesh;
-                }
-            }
-            // Additional models: take clips only, free meshes
-            for (const auto& path : animator->additionalModels) {
-                if (path.empty()) continue;
-                RTBEngine::Rendering::ModelData data = RTBEngine::Rendering::ModelLoader::LoadModelWithAnimations(path);
-                for (const auto& clip : data.animations) {
-                    animator->AddClip(StripPrefix(clip->GetName()), clip);
-                }
-                for (RTBEngine::Rendering::Mesh* mesh : data.meshes) {
-                    delete mesh;
-                }
-            }
+            ReloadAnimatorClips(animator);
+            animatorScanStatus = "Reloaded clips from the model and additional animation FBX files.";
             changed = true;
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Auto Find Compatible FBX")) {
+            CompatibleFbxScanResult scanResult = FindCompatibleAnimationFbxPaths(animator->modelRef);
+            animatorScanStatus = scanResult.status;
+
+            if (scanResult.succeeded) {
+                animator->additionalModels = std::move(scanResult.compatiblePaths);
+                ReloadAnimatorClips(animator);
+                changed = true;
+            }
+        }
+
+        if (!animatorScanStatus.empty()) {
+            ImGui::Spacing();
+            ImGui::TextWrapped("%s", animatorScanStatus.c_str());
         }
 
         //Default clip combo

@@ -67,6 +67,10 @@ namespace RTBEditor {
         std::string textureAssetImage;
         bool textureAssetFlip = true;
 
+        // Cached state for animator compatibility scans
+        RTBEngine::Animation::Animator* animatorScanTarget = nullptr;
+        std::string animatorScanStatus;
+
     };
 
 }
