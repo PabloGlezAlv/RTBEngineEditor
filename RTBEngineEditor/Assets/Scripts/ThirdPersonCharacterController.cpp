@@ -2,6 +2,7 @@
 
 #include <RTBEngine/Core/Logger.h>
 #include <RTBEngine/Animation/Animator.h>
+#include <RTBEngine/Rendering/ModelLoader.h>
 #include <RTBEngine/ECS/GameObject.h>
 #include <RTBEngine/ECS/Scene.h>
 #include <RTBEngine/ECS/SceneManager.h>
@@ -20,6 +21,9 @@ namespace {
     constexpr float kPi = 3.14159265358979323846f;
     constexpr float kRadToDeg = 180.0f / kPi;
     constexpr float kDegToRad = kPi / 180.0f;
+    constexpr const char* kIdleAlias = "ThirdPerson.Idle";
+    constexpr const char* kWalkAlias = "ThirdPerson.Walk";
+    constexpr const char* kRunAlias = "ThirdPerson.Run";
 
     float ClampAngleDegrees(float angle) {
         while (angle > 180.0f) angle -= 360.0f;
@@ -68,6 +72,14 @@ namespace {
             outRight.Normalize();
         }
     }
+
+    void ReleaseLoadedModelMeshes(RTBEngine::Rendering::ModelData& data)
+    {
+        for (RTBEngine::Rendering::Mesh* mesh : data.meshes) {
+            delete mesh;
+        }
+        data.meshes.clear();
+    }
 }
 
 RTB_REGISTER_COMPONENT(ThirdPersonCharacterController)
@@ -87,17 +99,20 @@ RTB_REGISTER_COMPONENT(ThirdPersonCharacterController)
     RTB_PROPERTY_RANGE(maxPitch, -89.0f, 89.0f)
     RTB_PROPERTY(cameraFocusOffset)
     RTB_PROPERTY(syncAnimatorLocomotion)
-    RTB_PROPERTY(idleClipName)
-    RTB_PROPERTY(walkClipName)
-    RTB_PROPERTY(runClipName)
+    RTB_PROPERTY_COMPONENT(animator, Animator)
+    RTB_PROPERTY_FBX(idleAnimationFbx)
+    RTB_PROPERTY_FBX(walkAnimationFbx)
+    RTB_PROPERTY_FBX(runAnimationFbx)
 RTB_END_REGISTER(ThirdPersonCharacterController)
 
 void ThirdPersonCharacterController::OnStart()
 {
     ClampSettings();
+    RegisterAnimationSlots();
     ResolveCameraObject();
     SyncCameraFromCurrentTransform();
     DisableCompetingCameraController();
+    UpdateAnimatorLocomotion(false, false);
     UpdateCameraOrbit();
 }
 
@@ -108,6 +123,7 @@ void ThirdPersonCharacterController::OnUpdate(float deltaTime)
     }
 
     ClampSettings();
+    RegisterAnimationSlots();
     ResolveCameraObject();
     DisableCompetingCameraController();
     UpdateMovement(deltaTime);
@@ -117,9 +133,11 @@ void ThirdPersonCharacterController::OnUpdate(float deltaTime)
 void ThirdPersonCharacterController::OnValidate()
 {
     ClampSettings();
+    RegisterAnimationSlots();
     ResolveCameraObject();
     SyncCameraFromCurrentTransform();
     DisableCompetingCameraController();
+    UpdateAnimatorLocomotion(false, false);
     UpdateCameraOrbit();
 }
 
@@ -139,6 +157,67 @@ void ThirdPersonCharacterController::ClampSettings()
         std::swap(minPitch, maxPitch);
     }
     cameraPitch = std::clamp(cameraPitch, minPitch, maxPitch);
+}
+
+void ThirdPersonCharacterController::RegisterAnimationSlots()
+{
+    const bool animatorChanged = (registeredAnimator != animator);
+    if (animatorChanged) {
+        registeredAnimator = animator;
+        idleSlotState = {};
+        walkSlotState = {};
+        runSlotState = {};
+    }
+
+    if (!syncAnimatorLocomotion) {
+        return;
+    }
+
+    if (!animator) {
+        if (!missingAnimatorWarningShown &&
+            (!idleAnimationFbx.empty() || !walkAnimationFbx.empty() || !runAnimationFbx.empty())) {
+            RTB_WARN("[ThirdPersonCharacterController] Assign an Animator component to use FBX animation slots.");
+            missingAnimatorWarningShown = true;
+        }
+        return;
+    }
+
+    missingAnimatorWarningShown = false;
+
+    RegisterAnimationSlot("Idle", idleAnimationFbx, kIdleAlias, idleSlotState);
+    RegisterAnimationSlot("Walk", walkAnimationFbx, kWalkAlias, walkSlotState);
+    RegisterAnimationSlot("Run", runAnimationFbx, kRunAlias, runSlotState);
+}
+
+void ThirdPersonCharacterController::RegisterAnimationSlot(const char* slotLabel,
+                                                           const std::string& sourceFbx,
+                                                           const char* alias,
+                                                           AnimationSlotState& slotState)
+{
+    if (slotState.sourceFbx == sourceFbx) {
+        return;
+    }
+
+    slotState.sourceFbx = sourceFbx;
+    slotState.ready = false;
+
+    if (!animator || sourceFbx.empty()) {
+        return;
+    }
+
+    RTBEngine::Rendering::ModelData modelData =
+        RTBEngine::Rendering::ModelLoader::LoadModelWithAnimations(sourceFbx);
+
+    if (modelData.animations.empty() || !modelData.animations.front()) {
+        RTB_WARN(std::string("[ThirdPersonCharacterController] ") + slotLabel +
+            " slot FBX has no usable animation clip: " + sourceFbx);
+        ReleaseLoadedModelMeshes(modelData);
+        return;
+    }
+
+    animator->AddClip(alias, modelData.animations.front());
+    slotState.ready = true;
+    ReleaseLoadedModelMeshes(modelData);
 }
 
 void ThirdPersonCharacterController::ResolveCameraObject()
@@ -287,31 +366,32 @@ void ThirdPersonCharacterController::UpdateCameraOrbit()
 
 void ThirdPersonCharacterController::UpdateAnimatorLocomotion(bool hasMovementInput, bool isRunning)
 {
-    if (!syncAnimatorLocomotion || !owner) {
+    if (!syncAnimatorLocomotion || !owner || !animator) {
         return;
     }
 
-    auto* animator = owner->GetComponent<RTBEngine::Animation::Animator>();
-    if (!animator) {
-        return;
-    }
-
-    const std::string* targetClipName = &idleClipName;
+    const char* targetClipAlias = nullptr;
     if (hasMovementInput) {
-        targetClipName = isRunning ? &runClipName : &walkClipName;
+        if (isRunning && runSlotState.ready) {
+            targetClipAlias = kRunAlias;
+        } else if (walkSlotState.ready) {
+            targetClipAlias = kWalkAlias;
+        }
+    } else if (idleSlotState.ready) {
+        targetClipAlias = kIdleAlias;
     }
 
-    if (targetClipName->empty()) {
+    if (!targetClipAlias) {
         return;
     }
 
-    if (animator->GetCurrentClipName() == *targetClipName && animator->IsPlaying()) {
+    if (animator->GetCurrentClipName() == targetClipAlias && animator->IsPlaying()) {
         return;
     }
 
-    if (!animator->GetClip(*targetClipName)) {
+    if (!animator->GetClip(targetClipAlias)) {
         return;
     }
 
-    animator->Play(*targetClipName, true);
+    animator->Play(targetClipAlias, true);
 }

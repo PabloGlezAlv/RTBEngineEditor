@@ -6,6 +6,9 @@
 #include <string>
 
 namespace RTBEngine {
+    namespace Animation {
+        class Animator;
+    }
     namespace ECS {
         class GameObject;
     }
@@ -37,20 +40,36 @@ public:
     float maxPitch = 65.0f;
     RTBEngine::Math::Vector3 cameraFocusOffset = RTBEngine::Math::Vector3(0.0f, 1.6f, 0.0f);
     bool syncAnimatorLocomotion = true;
-    std::string idleClipName;
-    std::string walkClipName;
-    std::string runClipName;
+    RTBEngine::Animation::Animator* animator = nullptr;
+    std::string idleAnimationFbx;
+    std::string walkAnimationFbx;
+    std::string runAnimationFbx;
 
     RTB_COMPONENT(ThirdPersonCharacterController)
 
 private:
+    struct AnimationSlotState {
+        std::string sourceFbx;
+        bool ready = false;
+    };
+
     float cameraYaw = 0.0f;
     float cameraPitch = 18.0f;
+    RTBEngine::Animation::Animator* registeredAnimator = nullptr;
+    bool missingAnimatorWarningShown = false;
+    AnimationSlotState idleSlotState;
+    AnimationSlotState walkSlotState;
+    AnimationSlotState runSlotState;
 
     void ClampSettings();
     void ResolveCameraObject();
     void DisableCompetingCameraController() const;
     void SyncCameraFromCurrentTransform();
+    void RegisterAnimationSlots();
+    void RegisterAnimationSlot(const char* slotLabel,
+                               const std::string& sourceFbx,
+                               const char* alias,
+                               AnimationSlotState& slotState);
     void UpdateMovement(float deltaTime);
     void UpdateCameraOrbit();
     void UpdateAnimatorLocomotion(bool hasMovementInput, bool isRunning);

@@ -36,6 +36,9 @@ namespace RTBEditor {
         bool DrawSceneStringProperty(RTBEngine::ECS::Component* component,
                                      const RTBEngine::Reflection::PropertyInfo& prop,
                                      std::string* value);
+        bool DrawAssetRefProperty(RTBEngine::ECS::Component* component,
+                                  const RTBEngine::Reflection::PropertyInfo& prop,
+                                  std::string* value);
         std::string FormatTypeName(const char* typeName);
 
         void DrawAnimatorComponent(RTBEngine::Animation::Animator* animator);

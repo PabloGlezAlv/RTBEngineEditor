@@ -273,6 +273,13 @@ namespace RTBEditor {
                 std::string(component->GetTypeName()) == "SceneChangeButton";
         }
 
+        std::string GetAssetRefTooltip(const std::string& assetType) {
+            if (assetType == "fbx") {
+                return "Drop an .fbx asset here.";
+            }
+            return "Drop a compatible asset here.";
+        }
+
         void OpenGameScriptsProjectOrFile(const std::filesystem::path& fileToOpen) {
             Project* project = Project::GetActiveProject();
             const std::filesystem::path scriptsProjectPath =
@@ -625,6 +632,73 @@ namespace RTBEditor {
         return changed;
     }
 
+    bool InspectorPanel::DrawAssetRefProperty(RTBEngine::ECS::Component* component,
+                                              const RTBEngine::Reflection::PropertyInfo& prop,
+                                              std::string* value) {
+        if (!component || !value) {
+            return false;
+        }
+
+        const std::string assetType = ToLowerCopy(prop.assetType);
+        const bool isFbxAsset = (assetType == "fbx");
+        if (!isFbxAsset) {
+            return false;
+        }
+
+        bool changed = false;
+
+        ImGui::Text("%s:", prop.displayName.c_str());
+        ImGui::SameLine();
+
+        const bool hasAsset = !value->empty();
+        ImGui::PushStyleColor(
+            ImGuiCol_Text,
+            hasAsset ? ImVec4(0.4f, 0.8f, 0.4f, 1.0f) : ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.2f, 0.5f, 0.8f, 0.3f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.2f, 0.5f, 0.8f, 0.5f));
+
+        const std::string label = (hasAsset ? *value : std::string("[None]")) + "##AssetRefDropArea";
+        ImGui::Button(label.c_str(), ImVec2(220, 0));
+
+        ImGui::PopStyleColor(4);
+
+        if (ImGui::IsItemHovered()) {
+            ImGui::SetTooltip("%s", hasAsset ? value->c_str() : GetAssetRefTooltip(assetType).c_str());
+        }
+
+        if (ImGui::BeginDragDropTarget()) {
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(PAYLOAD_MESH)) {
+                const MeshPayload* payloadData = static_cast<const MeshPayload*>(payload->Data);
+                const std::filesystem::path relativePath(payloadData->path);
+                if (HasFbxExtension(relativePath)) {
+                    *value = MakeAssetReference(relativePath);
+                    changed = true;
+                }
+            }
+            ImGui::EndDragDropTarget();
+        }
+
+        ImGui::SameLine();
+        if (ImGui::SmallButton("...##SelectAssetRef")) {
+            assetBrowserModal->Open(
+                AssetType::Fbx,
+                [component, value](const std::string& path) {
+                    *value = MakeAssetReference(path);
+                    component->OnValidate();
+                    RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                });
+        }
+
+        ImGui::SameLine();
+        if (ImGui::SmallButton("X##ClearAssetRef")) {
+            value->clear();
+            changed = true;
+        }
+
+        return changed;
+    }
+
     void InspectorPanel::DrawProperty(RTBEngine::ECS::Component* component, const RTBEngine::Reflection::PropertyInfo& prop) {
         void* data = prop.GetMutableData(component);
         bool changed = false;
@@ -681,6 +755,21 @@ namespace RTBEditor {
                 std::string* val = (std::string*)data;
                 if (IsScenePathProperty(component, prop)) {
                     changed |= DrawSceneStringProperty(component, prop, val);
+                } else {
+                    char buffer[1024];
+                    memset(buffer, 0, sizeof(buffer));
+                    strncpy_s(buffer, sizeof(buffer), val->c_str(), _TRUNCATE);
+                    if (ImGui::InputText(prop.displayName.c_str(), buffer, sizeof(buffer))) {
+                        *val = buffer;
+                        changed = true;
+                    }
+                }
+                break;
+            }
+            case RTBEngine::Reflection::PropertyType::AssetRef: {
+                std::string* val = (std::string*)data;
+                if (DrawAssetRefProperty(component, prop, val)) {
+                    changed = true;
                 } else {
                     char buffer[1024];
                     memset(buffer, 0, sizeof(buffer));

@@ -8,6 +8,7 @@ namespace RTBEditor {
 
     enum class AssetType {
         Texture,
+        Fbx,
         Mesh,
         AudioClip,
         Font,

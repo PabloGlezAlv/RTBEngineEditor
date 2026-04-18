@@ -51,6 +51,8 @@ namespace RTBEditor {
         switch (filterType) {
         case AssetType::Texture:
             return { ".png", ".jpg", ".jpeg", ".tga", ".dds", ".bmp", ".texture" };
+        case AssetType::Fbx:
+            return { ".fbx" };
         case AssetType::Mesh:
             return { ".fbx", ".obj", ".gltf", ".glb" };
         case AssetType::AudioClip:
@@ -108,6 +110,7 @@ namespace RTBEditor {
             // Filter info
             ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "Filter: %s",
                 filterType == AssetType::Texture ? "Textures" :
+                filterType == AssetType::Fbx ? "FBX Files" :
                 filterType == AssetType::Mesh ? "Meshes" :
                 filterType == AssetType::AudioClip ? "Audio Clips" :
                 filterType == AssetType::Scene ? "Scenes" :
