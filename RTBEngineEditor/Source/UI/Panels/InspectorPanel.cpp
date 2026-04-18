@@ -1146,29 +1146,46 @@ namespace RTBEditor {
         }
 
         //Additional models list
-        ImGui::Text("Additional Models");
-        std::vector<int> toRemove;
-        for (int i = 0; i < static_cast<int>(animator->additionalModels.size()); i++) {
-            ImGui::PushID(i);
-            char buf[1024];
-            memset(buf, 0, sizeof(buf));
-            strncpy_s(buf, sizeof(buf), animator->additionalModels[i].c_str(), _TRUNCATE);
-            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - 30.0f);
-            if (ImGui::InputText("##addModel", buf, sizeof(buf))) {
-                animator->additionalModels[i] = buf;
-                animatorScanStatus.clear();
-                changed = true;
+        std::string totalAnimations = std::to_string(animator->additionalModels.size());
+        std::string header = "Additional Models (" + totalAnimations + ")";
+
+        ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.18f, 0.32f, 0.22f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.24f, 0.42f, 0.28f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(0.16f, 0.28f, 0.20f, 1.0f));
+        if (ImGui::CollapsingHeader(header.c_str()))
+        {
+            std::vector<int> toRemove;
+            //Populate the list with animation list
+            for (int i = 0; i < static_cast<int>(animator->additionalModels.size()); i++) {
+                ImGui::PushID(i);
+
+                char buf[1024];
+                memset(buf, 0, sizeof(buf));
+                strncpy_s(buf, sizeof(buf), animator->additionalModels[i].c_str(), _TRUNCATE);
+
+                ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - 30.0f);
+                if (ImGui::InputText("##addModel", buf, sizeof(buf))) {
+                    animator->additionalModels[i] = buf;
+                    animatorScanStatus.clear();
+                    changed = true;
+                }
+
+                ImGui::SameLine();
+                if (ImGui::SmallButton("x")) {
+                    toRemove.push_back(i);
+                    changed = true;
+                }
+                ImGui::PopID();
             }
-            ImGui::SameLine();
-            if (ImGui::SmallButton("x")) {
-                toRemove.push_back(i);
-                changed = true;
+
+            //Remove animation from list
+            for (int i = static_cast<int>(toRemove.size()) - 1; i >= 0; i--) {
+                animator->additionalModels.erase(animator->additionalModels.begin() + toRemove[i]);
             }
-            ImGui::PopID();
         }
-        for (int i = static_cast<int>(toRemove.size()) - 1; i >= 0; i--) {
-            animator->additionalModels.erase(animator->additionalModels.begin() + toRemove[i]);
-        }
+
+        ImGui::PopStyleColor(3);
+
         if (ImGui::Button("+ Add Model")) {
             animator->additionalModels.push_back("");
             animatorScanStatus.clear();
@@ -1258,11 +1275,12 @@ namespace RTBEditor {
         if (clipNames.empty()) {
             ImGui::TextDisabled("(none)");
         } else {
+            ImGui::BeginChild("LoadedClipsList", ImVec2(0, 180), true);
             for (const auto& name : clipNames) {
                 ImGui::Text("%s", name.c_str());
             }
         }
-
+        ImGui::EndChild();
         if (changed) {
             RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
         }
