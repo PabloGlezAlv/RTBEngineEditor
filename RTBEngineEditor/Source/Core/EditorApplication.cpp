@@ -8,6 +8,8 @@
 #include <RTBEngine/Scripting/SceneSaver.h>
 #include <RTBEngine/Scripting/ScriptManager.h>
 #include <RTBEngine/Core/Window.h>
+#include <RTBEngine/Input/InputManager.h>
+#include <RTBEngine/Input/KeyCode.h>
 #include <RTBEngine/ECS/MeshRenderer.h>
 #include <RTBEngine/Audio/AudioSystem.h>
 #include <RTBEngine/Physics/PhysicsWorld.h>
@@ -274,15 +276,28 @@ namespace RTBEditor {
             engineApp->InitializePhysicsForScene(scene);
         }
 
+        if (engineApp && engineApp->GetWindow()) {
+            engineApp->GetWindow()->SetMouseCaptured(false);
+            engineApp->GetWindow()->SetCursorVisible(true);
+        }
+
         state = EditorState::Play;
         ImGui::SetWindowFocus("Game");
     }
 
     void EditorApplication::OnPause() {
+        if (engineApp && engineApp->GetWindow()) {
+            engineApp->GetWindow()->SetMouseCaptured(false);
+            engineApp->GetWindow()->SetCursorVisible(true);
+        }
         state = EditorState::Pause;
     }
 
     void EditorApplication::OnStop() {
+        if (engineApp && engineApp->GetWindow()) {
+            engineApp->GetWindow()->SetMouseCaptured(false);
+            engineApp->GetWindow()->SetCursorVisible(true);
+        }
         state = EditorState::Edit;
 
         RTBEngine::Core::Application::ClearQuitRequest();
@@ -432,6 +447,7 @@ namespace RTBEditor {
         // Render editor UI
         if (uiLayer) {
             uiLayer->SetEditorState(state);
+            uiLayer->GetContext().window = engineApp->GetWindow();
             uiLayer->Begin();
             uiLayer->OnUIRender();
             uiLayer->End();

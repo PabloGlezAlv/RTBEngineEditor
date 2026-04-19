@@ -18,9 +18,15 @@ namespace RTBEditor {
         bool IsVisible() const { return isVisible; }
 
     private:
+        void ReleaseMouseCapture(EditorContext& context);
+        void UpdateMouseCapture(EditorContext& context);
+        bool IsGameOwningMouse(const EditorContext& context) const;
+
         std::unique_ptr<RTBEngine::Rendering::Framebuffer> framebuffer;
         uint32_t viewportWidth = 1280;
         uint32_t viewportHeight = 720;
         bool isVisible = true;
+        bool isFocused = false;
+        bool isHovered = false;
     };
 }

@@ -10,7 +10,6 @@
 #include <RTBEngine/ECS/FreeLookCamera.h>
 #include <RTBEngine/Input/InputManager.h>
 #include <RTBEngine/Input/KeyCode.h>
-#include <RTBEngine/Input/MouseButton.h>
 #include <RTBEngine/Math/Quaternions/Quaternion.h>
 #include <algorithm>
 #include <cmath>
@@ -84,9 +83,6 @@ namespace {
 
 RTB_REGISTER_COMPONENT(ThirdPersonCharacterController)
     RTB_PROPERTY_GAMEOBJECT(cameraObject)
-    RTB_PROPERTY(autoResolveMainCamera)
-    RTB_PROPERTY(requireRightMouseForLook)
-    RTB_PROPERTY(enableZoom)
     RTB_PROPERTY_RANGE(moveSpeed, 0.0f, 20.0f)
     RTB_PROPERTY_RANGE(sprintMultiplier, 1.0f, 4.0f)
     RTB_PROPERTY_RANGE(turnSpeed, 0.0f, 1440.0f)
@@ -98,7 +94,6 @@ RTB_REGISTER_COMPONENT(ThirdPersonCharacterController)
     RTB_PROPERTY_RANGE(minPitch, -89.0f, 89.0f)
     RTB_PROPERTY_RANGE(maxPitch, -89.0f, 89.0f)
     RTB_PROPERTY(cameraFocusOffset)
-    RTB_PROPERTY(syncAnimatorLocomotion)
     RTB_PROPERTY_COMPONENT(animator, Animator)
     RTB_PROPERTY_FBX(idleAnimationFbx)
     RTB_PROPERTY_FBX(walkAnimationFbx)
@@ -114,6 +109,7 @@ void ThirdPersonCharacterController::OnStart()
     DisableCompetingCameraController();
     UpdateAnimatorLocomotion(false, false);
     UpdateCameraOrbit();
+    RTBEngine::Input::InputManager::GetInstance().SetMouseRelativeMode(true);
 }
 
 void ThirdPersonCharacterController::OnUpdate(float deltaTime)
@@ -169,10 +165,6 @@ void ThirdPersonCharacterController::RegisterAnimationSlots()
         runSlotState = {};
     }
 
-    if (!syncAnimatorLocomotion) {
-        return;
-    }
-
     if (!animator) {
         if (!missingAnimatorWarningShown &&
             (!idleAnimationFbx.empty() || !walkAnimationFbx.empty() || !runAnimationFbx.empty())) {
@@ -222,7 +214,7 @@ void ThirdPersonCharacterController::RegisterAnimationSlot(const char* slotLabel
 
 void ThirdPersonCharacterController::ResolveCameraObject()
 {
-    if (cameraObject || !autoResolveMainCamera) {
+    if (cameraObject) {
         return;
     }
 
@@ -318,8 +310,7 @@ void ThirdPersonCharacterController::UpdateCameraOrbit()
     }
 
     RTBEngine::Input::InputManager& input = RTBEngine::Input::InputManager::GetInstance();
-    const bool canLook = !requireRightMouseForLook ||
-        input.IsMouseButtonPressed(RTBEngine::Input::MouseButton::Right);
+    const bool canLook = true;
 
     if (canLook) {
         cameraYaw += static_cast<float>(input.GetMouseDeltaX()) * mouseSensitivity;
@@ -327,14 +318,12 @@ void ThirdPersonCharacterController::UpdateCameraOrbit()
         cameraPitch = std::clamp(cameraPitch, minPitch, maxPitch);
     }
 
-    if (enableZoom) {
-        const int scrollDelta = input.GetScrollDelta();
-        if (scrollDelta != 0) {
-            cameraDistance = std::clamp(
-                cameraDistance - static_cast<float>(scrollDelta) * zoomStep,
-                minCameraDistance,
-                maxCameraDistance);
-        }
+    const int scrollDelta = input.GetScrollDelta();
+    if (scrollDelta != 0) {
+        cameraDistance = std::clamp(
+            cameraDistance - static_cast<float>(scrollDelta) * zoomStep,
+            minCameraDistance,
+            maxCameraDistance);
     }
 
     const RTBEngine::Math::Quaternion orbitRotation =
@@ -366,7 +355,7 @@ void ThirdPersonCharacterController::UpdateCameraOrbit()
 
 void ThirdPersonCharacterController::UpdateAnimatorLocomotion(bool hasMovementInput, bool isRunning)
 {
-    if (!syncAnimatorLocomotion || !owner || !animator) {
+    if (!owner || !animator) {
         return;
     }
 

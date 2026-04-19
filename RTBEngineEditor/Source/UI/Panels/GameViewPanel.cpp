@@ -1,5 +1,6 @@
 #include "GameViewPanel.h"
 #include <imgui.h>
+#include <RTBEngine/Core/Window.h>
 #include <RTBEngine/ECS/SceneManager.h>
 #include <RTBEngine/UI/CanvasSystem.h>
 
@@ -15,6 +16,8 @@ namespace RTBEditor {
     void GameViewPanel::OnUIRender(EditorContext& context) {
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
         ImGui::Begin("Game", &isVisible);
+        isFocused = ImGui::IsWindowFocused();
+        isHovered = ImGui::IsWindowHovered();
 
         // Check resize
         ImVec2 availableSize = ImGui::GetContentRegionAvail();
@@ -43,6 +46,8 @@ namespace RTBEditor {
             );
         }
 
+        UpdateMouseCapture(context);
+
         // Render scene UI on top of the game view
         RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
         if (scene && viewportWidth > 0 && viewportHeight > 0) {
@@ -59,7 +64,7 @@ namespace RTBEditor {
             ImVec2 mousePos = ImGui::GetMousePos();
             bool mouseInViewport = mousePos.x >= contentPos.x && mousePos.x <= contentPos.x + (float)viewportWidth
                                 && mousePos.y >= contentPos.y && mousePos.y <= contentPos.y + (float)viewportHeight;
-            if (mouseInViewport && context.state == EditorState::Play) {
+            if (mouseInViewport && context.state == EditorState::Play && !IsGameOwningMouse(context)) {
                 RTBEngine::Math::Vector2 localMouse(mousePos.x - contentPos.x, mousePos.y - contentPos.y);
                 canvasSystem.ProcessInput(localMouse);
             }
@@ -81,6 +86,36 @@ namespace RTBEditor {
 
         ImGui::End();
         ImGui::PopStyleVar();
+    }
+
+    void GameViewPanel::ReleaseMouseCapture(EditorContext& context) {
+        if (context.window) {
+            context.window->SetMouseCaptured(false);
+            context.window->SetCursorVisible(true);
+        }
+    }
+
+    void GameViewPanel::UpdateMouseCapture(EditorContext& context) {
+        if (!context.window) {
+            return;
+        }
+
+        if (context.state != EditorState::Play || !isVisible) {
+            ReleaseMouseCapture(context);
+            return;
+        }
+
+        if (ImGui::IsKeyPressed(ImGuiKey_Escape, false) && IsGameOwningMouse(context)) {
+            ReleaseMouseCapture(context);
+        }
+    }
+
+    bool GameViewPanel::IsGameOwningMouse(const EditorContext& context) const {
+        if (!context.window) {
+            return false;
+        }
+
+        return context.window->IsMouseCaptured() || !context.window->IsCursorVisible();
     }
 
 }

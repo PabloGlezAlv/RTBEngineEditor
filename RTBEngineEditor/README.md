@@ -1065,7 +1065,7 @@ CanvasSystem::GetInstance().RenderAll(
 
 ### Mouse Input Forwarding
 
-When in Play mode and the mouse is inside the Game View viewport:
+When in Play mode, the Game View forwards pointer input to the scene UI only while the cursor is visible and free. If the game explicitly captures or hides the cursor, the editor stops forwarding pointer events until the cursor is released again.
 
 ```cpp
 ImVec2 mousePos = ImGui::GetMousePos() - panelPos;
@@ -1076,6 +1076,8 @@ if (ImGui::IsMouseClicked(0))
 if (ImGui::IsMouseReleased(0))
     CanvasSystem::GetInstance().OnMouseUp(0, mousePos.x, mousePos.y);
 ```
+
+Entering Play leaves the cursor visible and uncaptured. Pressing `Escape` in the Game View only releases and shows the cursor when the game had previously captured or hidden it; otherwise `Escape` does nothing at the host/editor level.
 
 ### UI Raycast Debug Overlay
 
@@ -2120,6 +2122,6 @@ startScene=Assets/Scenes/Main.lua
 
 1. Create a Canvas (ScreenSpaceOverlay) and add UIButton and UIText children in the Hierarchy.
 2. Switch to **Game View** tab to see the UI overlay.
-3. In Play mode, click inside the Game View to interact with the buttons.
+3. In Play mode, with the cursor visible, click inside the Game View to interact with the buttons.
 4. The Game View draws red rectangles around `raycastTarget` elements for the selected UI object — useful for verifying hit-test regions.
 5. Check Console for any `[WARN]` related to missing fonts or null Canvas references.

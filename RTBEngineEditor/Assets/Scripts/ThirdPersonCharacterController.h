@@ -25,9 +25,6 @@ public:
     void OnValidate() override;
 
     RTBEngine::ECS::GameObject* cameraObject = nullptr;
-    bool autoResolveMainCamera = true;
-    bool requireRightMouseForLook = true;
-    bool enableZoom = true;
     float moveSpeed = 4.0f;
     float sprintMultiplier = 1.75f;
     float turnSpeed = 720.0f;
@@ -39,7 +36,6 @@ public:
     float minPitch = -20.0f;
     float maxPitch = 65.0f;
     RTBEngine::Math::Vector3 cameraFocusOffset = RTBEngine::Math::Vector3(0.0f, 1.6f, 0.0f);
-    bool syncAnimatorLocomotion = true;
     RTBEngine::Animation::Animator* animator = nullptr;
     std::string idleAnimationFbx;
     std::string walkAnimationFbx;

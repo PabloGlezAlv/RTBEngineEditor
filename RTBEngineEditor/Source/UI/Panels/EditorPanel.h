@@ -8,7 +8,15 @@
 #include <vector>
 #include <algorithm>
 
+namespace RTBEngine {
+    namespace Core {
+        class Window;
+    }
+}
+
 namespace RTBEditor {
+
+    namespace RTBEngineCore = RTBEngine::Core;
 
     struct StatsData {
         float fps = 0.0f;
@@ -30,6 +38,7 @@ namespace RTBEditor {
         std::filesystem::path pendingSceneLoad;
         StatsData stats;
         bool showStatsOverlay = false;
+        RTBEngineCore::Window* window = nullptr;
     };
 
     inline void ClearSelection(EditorContext& context) {
