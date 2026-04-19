@@ -2,8 +2,10 @@
 #include <RTBEngine/Core/ResourceManager.h>
 #include <RTBEngine/ECS/BoxColliderComponent.h>
 #include <RTBEngine/ECS/SphereColliderComponent.h>
+#include <RTBEngine/ECS/CapsuleColliderComponent.h>
 #include <RTBEngine/ECS/Transform.h>
 #include <RTBEngine/Math/Math.h>
+#include <algorithm>
 #include <cmath>
 #include <vector>
 
@@ -54,6 +56,20 @@ namespace RTBEditor {
         glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(LineVertex), (void*)offsetof(LineVertex, color));
 
         glBindVertexArray(0);
+
+        glGenVertexArrays(1, &capsuleVao);
+        glGenBuffers(1, &capsuleVbo);
+
+        glBindVertexArray(capsuleVao);
+        glBindBuffer(GL_ARRAY_BUFFER, capsuleVbo);
+        glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
+
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(LineVertex), (void*)0);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(LineVertex), (void*)offsetof(LineVertex, color));
+
+        glBindVertexArray(0);
     }
 
     ColliderRenderer::~ColliderRenderer() {
@@ -61,6 +77,8 @@ namespace RTBEditor {
         if (vbo) glDeleteBuffers(1, &vbo);
         if (sphereVao) glDeleteVertexArrays(1, &sphereVao);
         if (sphereVbo) glDeleteBuffers(1, &sphereVbo);
+        if (capsuleVao) glDeleteVertexArrays(1, &capsuleVao);
+        if (capsuleVbo) glDeleteBuffers(1, &capsuleVbo);
     }
 
     void ColliderRenderer::RenderSelection(RTBEngine::Rendering::Camera* camera,
@@ -130,6 +148,12 @@ namespace RTBEditor {
         if (sphereCollider) {
             RenderSphereWireframe(camera, selectedObject, sphereCollider);
         }
+
+        RTBEngine::ECS::CapsuleColliderComponent* capsuleCollider =
+            selectedObject->GetComponent<RTBEngine::ECS::CapsuleColliderComponent>();
+        if (capsuleCollider) {
+            RenderCapsuleWireframe(camera, selectedObject, capsuleCollider);
+        }
     }
 
     void ColliderRenderer::RenderSphereWireframe(RTBEngine::Rendering::Camera* camera,
@@ -175,6 +199,100 @@ namespace RTBEditor {
 
         glBindVertexArray(sphereVao);
         glDrawArrays(GL_LINES, 0, SPHERE_VERTEX_COUNT);
+        glBindVertexArray(0);
+
+        glDisable(GL_BLEND);
+        lineShader->Unbind();
+    }
+
+    void ColliderRenderer::RenderCapsuleWireframe(RTBEngine::Rendering::Camera* camera,
+                                                  RTBEngine::ECS::GameObject* object,
+                                                  RTBEngine::ECS::CapsuleColliderComponent* collider) {
+        const float r = collider->radius;
+        const float cylinderHalf = std::max(0.0f, collider->height * 0.5f - r);
+        const RTBEngine::Math::Vector3 localCenter = collider->centerOffset;
+        const RTBEngine::Math::Vector4 color(0.1f, 1.0f, 0.1f, 1.0f);
+        const RTBEngine::Math::Vector3 objectPosition = object->GetTransform().GetPosition();
+        const RTBEngine::Math::Quaternion objectRotation = object->GetTransform().GetRotation();
+
+        auto transformPoint = [&](const RTBEngine::Math::Vector3& localPoint) {
+            return objectPosition + (objectRotation * localPoint);
+        };
+
+        std::vector<LineVertex> vertices;
+        vertices.reserve(640);
+
+        auto pushSegment = [&](const RTBEngine::Math::Vector3& a, const RTBEngine::Math::Vector3& b) {
+            vertices.push_back({ transformPoint(a), color });
+            vertices.push_back({ transformPoint(b), color });
+        };
+
+        for (int seg = 0; seg < SPHERE_SEGMENTS; ++seg) {
+            const float a0 = static_cast<float>(seg) / SPHERE_SEGMENTS * 2.0f * 3.14159265f;
+            const float a1 = static_cast<float>(seg + 1) / SPHERE_SEGMENTS * 2.0f * 3.14159265f;
+            const float c0 = std::cos(a0);
+            const float s0 = std::sin(a0);
+            const float c1 = std::cos(a1);
+            const float s1 = std::sin(a1);
+
+            const RTBEngine::Math::Vector3 topCenter = localCenter + RTBEngine::Math::Vector3(0.0f, cylinderHalf, 0.0f);
+            const RTBEngine::Math::Vector3 bottomCenter = localCenter - RTBEngine::Math::Vector3(0.0f, cylinderHalf, 0.0f);
+
+            pushSegment(
+                topCenter + RTBEngine::Math::Vector3(r * c0, 0.0f, r * s0),
+                topCenter + RTBEngine::Math::Vector3(r * c1, 0.0f, r * s1));
+            pushSegment(
+                bottomCenter + RTBEngine::Math::Vector3(r * c0, 0.0f, r * s0),
+                bottomCenter + RTBEngine::Math::Vector3(r * c1, 0.0f, r * s1));
+        }
+
+        pushSegment(
+            localCenter + RTBEngine::Math::Vector3( r, -cylinderHalf, 0.0f),
+            localCenter + RTBEngine::Math::Vector3( r,  cylinderHalf, 0.0f));
+        pushSegment(
+            localCenter + RTBEngine::Math::Vector3(-r, -cylinderHalf, 0.0f),
+            localCenter + RTBEngine::Math::Vector3(-r,  cylinderHalf, 0.0f));
+        pushSegment(
+            localCenter + RTBEngine::Math::Vector3(0.0f, -cylinderHalf,  r),
+            localCenter + RTBEngine::Math::Vector3(0.0f,  cylinderHalf,  r));
+        pushSegment(
+            localCenter + RTBEngine::Math::Vector3(0.0f, -cylinderHalf, -r),
+            localCenter + RTBEngine::Math::Vector3(0.0f,  cylinderHalf, -r));
+
+        for (int seg = 0; seg < SPHERE_SEGMENTS; ++seg) {
+            const float a0 = static_cast<float>(seg) / SPHERE_SEGMENTS * 3.14159265f;
+            const float a1 = static_cast<float>(seg + 1) / SPHERE_SEGMENTS * 3.14159265f;
+
+            const RTBEngine::Math::Vector3 topCenter = localCenter + RTBEngine::Math::Vector3(0.0f, cylinderHalf, 0.0f);
+            const RTBEngine::Math::Vector3 bottomCenter = localCenter - RTBEngine::Math::Vector3(0.0f, cylinderHalf, 0.0f);
+
+            pushSegment(
+                topCenter + RTBEngine::Math::Vector3(r * std::cos(a0), r * std::sin(a0), 0.0f),
+                topCenter + RTBEngine::Math::Vector3(r * std::cos(a1), r * std::sin(a1), 0.0f));
+            pushSegment(
+                bottomCenter + RTBEngine::Math::Vector3(r * std::cos(a0 + 3.14159265f), r * std::sin(a0 + 3.14159265f), 0.0f),
+                bottomCenter + RTBEngine::Math::Vector3(r * std::cos(a1 + 3.14159265f), r * std::sin(a1 + 3.14159265f), 0.0f));
+
+            pushSegment(
+                topCenter + RTBEngine::Math::Vector3(0.0f, r * std::sin(a0), r * std::cos(a0)),
+                topCenter + RTBEngine::Math::Vector3(0.0f, r * std::sin(a1), r * std::cos(a1)));
+            pushSegment(
+                bottomCenter + RTBEngine::Math::Vector3(0.0f, r * std::sin(a0 + 3.14159265f), r * std::cos(a0 + 3.14159265f)),
+                bottomCenter + RTBEngine::Math::Vector3(0.0f, r * std::sin(a1 + 3.14159265f), r * std::cos(a1 + 3.14159265f)));
+        }
+
+        glBindBuffer(GL_ARRAY_BUFFER, capsuleVbo);
+        glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(vertices.size() * sizeof(LineVertex)), vertices.data(), GL_DYNAMIC_DRAW);
+
+        lineShader->Bind();
+        lineShader->SetMatrix4("uViewProjection", camera->GetViewProjectionMatrix());
+
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glEnable(GL_DEPTH_TEST);
+
+        glBindVertexArray(capsuleVao);
+        glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(vertices.size()));
         glBindVertexArray(0);
 
         glDisable(GL_BLEND);

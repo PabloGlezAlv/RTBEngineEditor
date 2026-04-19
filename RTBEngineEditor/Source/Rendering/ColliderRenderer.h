@@ -7,6 +7,7 @@
 namespace RTBEngine {
     namespace ECS {
         class SphereColliderComponent;
+        class CapsuleColliderComponent;
     }
 }
 
@@ -33,11 +34,18 @@ namespace RTBEditor {
         GLuint sphereVao = 0;
         GLuint sphereVbo = 0;
 
+        //Capsule collider rendering
+        GLuint capsuleVao = 0;
+        GLuint capsuleVbo = 0;
+
         RTBEngine::Rendering::Shader* lineShader = nullptr;
 
         void RenderSphereWireframe(RTBEngine::Rendering::Camera* camera,
                                    RTBEngine::ECS::GameObject* object,
                                    RTBEngine::ECS::SphereColliderComponent* collider);
+        void RenderCapsuleWireframe(RTBEngine::Rendering::Camera* camera,
+                                    RTBEngine::ECS::GameObject* object,
+                                    RTBEngine::ECS::CapsuleColliderComponent* collider);
     };
 
 }

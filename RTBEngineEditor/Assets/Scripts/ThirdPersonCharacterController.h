@@ -22,6 +22,7 @@ public:
 
     void OnStart() override;
     void OnUpdate(float deltaTime) override;
+    void OnFixedUpdate(float fixedDeltaTime) override;
     void OnValidate() override;
 
     RTBEngine::ECS::GameObject* cameraObject = nullptr;
@@ -58,9 +59,12 @@ private:
     AnimationSlotState runSlotState;
 
     void ClampSettings();
+    void ConfigurePhysicsBody() const;
+    RTBEngine::Math::Vector3 GetColliderCenterOffset() const;
     void ResolveCameraObject();
     void DisableCompetingCameraController() const;
     void SyncCameraFromCurrentTransform();
+    void ApplyCameraOrbitTransform();
     void RegisterAnimationSlots();
     void RegisterAnimationSlot(const char* slotLabel,
                                const std::string& sourceFbx,

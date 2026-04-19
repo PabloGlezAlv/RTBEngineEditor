@@ -7,6 +7,9 @@
 #include <RTBEngine/ECS/Scene.h>
 #include <RTBEngine/ECS/SceneManager.h>
 #include <RTBEngine/ECS/CameraComponent.h>
+#include <RTBEngine/ECS/RigidBodyComponent.h>
+#include <RTBEngine/ECS/SphereColliderComponent.h>
+#include <RTBEngine/ECS/CapsuleColliderComponent.h>
 #include <RTBEngine/ECS/FreeLookCamera.h>
 #include <RTBEngine/Input/InputManager.h>
 #include <RTBEngine/Input/KeyCode.h>
@@ -106,9 +109,10 @@ void ThirdPersonCharacterController::OnStart()
     RegisterAnimationSlots();
     ResolveCameraObject();
     SyncCameraFromCurrentTransform();
+    ConfigurePhysicsBody();
     DisableCompetingCameraController();
     UpdateAnimatorLocomotion(false, false);
-    UpdateCameraOrbit();
+    ApplyCameraOrbitTransform();
     RTBEngine::Input::InputManager::GetInstance().SetMouseRelativeMode(true);
 }
 
@@ -122,8 +126,20 @@ void ThirdPersonCharacterController::OnUpdate(float deltaTime)
     RegisterAnimationSlots();
     ResolveCameraObject();
     DisableCompetingCameraController();
-    UpdateMovement(deltaTime);
     UpdateCameraOrbit();
+}
+
+void ThirdPersonCharacterController::OnFixedUpdate(float fixedDeltaTime)
+{
+    if (!owner) {
+        return;
+    }
+
+    ClampSettings();
+    ResolveCameraObject();
+    ConfigurePhysicsBody();
+    UpdateMovement(fixedDeltaTime);
+    ApplyCameraOrbitTransform();
 }
 
 void ThirdPersonCharacterController::OnValidate()
@@ -132,9 +148,10 @@ void ThirdPersonCharacterController::OnValidate()
     RegisterAnimationSlots();
     ResolveCameraObject();
     SyncCameraFromCurrentTransform();
+    ConfigurePhysicsBody();
     DisableCompetingCameraController();
     UpdateAnimatorLocomotion(false, false);
-    UpdateCameraOrbit();
+    ApplyCameraOrbitTransform();
 }
 
 void ThirdPersonCharacterController::ClampSettings()
@@ -153,6 +170,43 @@ void ThirdPersonCharacterController::ClampSettings()
         std::swap(minPitch, maxPitch);
     }
     cameraPitch = std::clamp(cameraPitch, minPitch, maxPitch);
+}
+
+void ThirdPersonCharacterController::ConfigurePhysicsBody() const
+{
+    if (!owner) {
+        return;
+    }
+
+    auto* rbComp = owner->GetComponent<RTBEngine::ECS::RigidBodyComponent>();
+    if (!rbComp || !rbComp->HasRigidBody()) {
+        return;
+    }
+
+    RTBEngine::Physics::RigidBody* rigidBody = rbComp->GetRigidBody();
+    if (!rigidBody || rigidBody->GetType() != RTBEngine::Physics::RigidBodyType::Dynamic) {
+        return;
+    }
+
+    rigidBody->SetAngularFactor(btVector3(0.0f, 0.0f, 0.0f));
+    rigidBody->SetAngularVelocity(btVector3(0.0f, 0.0f, 0.0f));
+}
+
+RTBEngine::Math::Vector3 ThirdPersonCharacterController::GetColliderCenterOffset() const
+{
+    if (!owner) {
+        return RTBEngine::Math::Vector3::Zero();
+    }
+
+    if (auto* capsule = owner->GetComponent<RTBEngine::ECS::CapsuleColliderComponent>()) {
+        return capsule->GetCenterOffset();
+    }
+
+    if (auto* sphere = owner->GetComponent<RTBEngine::ECS::SphereColliderComponent>()) {
+        return sphere->GetCenterOffset();
+    }
+
+    return RTBEngine::Math::Vector3::Zero();
 }
 
 void ThirdPersonCharacterController::RegisterAnimationSlots()
@@ -278,8 +332,20 @@ void ThirdPersonCharacterController::UpdateMovement(float deltaTime)
     const bool hasMovementInput = HasMovementInput(desiredMove);
     const bool isRunning = hasMovementInput &&
         input.IsKeyPressed(RTBEngine::Input::KeyCode::LeftShift);
+    auto* rbComp = owner ? owner->GetComponent<RTBEngine::ECS::RigidBodyComponent>() : nullptr;
+    RTBEngine::Physics::RigidBody* rigidBody =
+        (rbComp && rbComp->HasRigidBody()) ? rbComp->GetRigidBody() : nullptr;
+    const bool useDynamicRigidBody =
+        rigidBody && rigidBody->GetType() == RTBEngine::Physics::RigidBodyType::Dynamic;
 
     if (!hasMovementInput) {
+        if (useDynamicRigidBody) {
+            btVector3 velocity = rigidBody->GetLinearVelocity();
+            velocity.setX(0.0f);
+            velocity.setZ(0.0f);
+            rigidBody->SetLinearVelocity(velocity);
+        }
+
         UpdateAnimatorLocomotion(false, false);
         return;
     }
@@ -289,16 +355,29 @@ void ThirdPersonCharacterController::UpdateMovement(float deltaTime)
     const float speed = moveSpeed *
         (isRunning ? sprintMultiplier : 1.0f);
 
-    owner->GetTransform().SetPosition(
-        owner->GetTransform().GetPosition() + desiredMove * speed * deltaTime);
-
     const float targetYaw = -std::atan2(desiredMove.x, desiredMove.z) * kRadToDeg;
     RTBEngine::Math::Vector3 currentEuler = owner->GetTransform().GetRotation().ToEulerAngles();
     const float currentYaw = currentEuler.y * kRadToDeg;
     const float nextYaw = MoveTowardsAngleDegrees(currentYaw, targetYaw, turnSpeed * deltaTime);
+    const RTBEngine::Math::Quaternion nextRotation =
+        RTBEngine::Math::Quaternion::FromEulerAngles(0.0f, nextYaw * kDegToRad, 0.0f);
 
-    owner->GetTransform().SetRotation(
-        RTBEngine::Math::Quaternion::FromEulerAngles(0.0f, nextYaw * kDegToRad, 0.0f));
+    if (useDynamicRigidBody) {
+        btVector3 velocity = rigidBody->GetLinearVelocity();
+        velocity.setX(desiredMove.x * speed);
+        velocity.setZ(desiredMove.z * speed);
+        rigidBody->SetLinearVelocity(velocity);
+
+        const RTBEngine::Math::Vector3 bodyPosition =
+            owner->GetTransform().GetPosition() + (nextRotation * GetColliderCenterOffset());
+        rigidBody->SetWorldTransform(bodyPosition, nextRotation);
+        rigidBody->SetAngularVelocity(btVector3(0.0f, 0.0f, 0.0f));
+        owner->GetTransform().SetRotation(nextRotation);
+    } else {
+        owner->GetTransform().SetPosition(
+            owner->GetTransform().GetPosition() + desiredMove * speed * deltaTime);
+        owner->GetTransform().SetRotation(nextRotation);
+    }
 
     UpdateAnimatorLocomotion(true, isRunning);
 }
@@ -324,6 +403,15 @@ void ThirdPersonCharacterController::UpdateCameraOrbit()
             cameraDistance - static_cast<float>(scrollDelta) * zoomStep,
             minCameraDistance,
             maxCameraDistance);
+    }
+
+    ApplyCameraOrbitTransform();
+}
+
+void ThirdPersonCharacterController::ApplyCameraOrbitTransform()
+{
+    if (!owner || !cameraObject) {
+        return;
     }
 
     const RTBEngine::Math::Quaternion orbitRotation =
