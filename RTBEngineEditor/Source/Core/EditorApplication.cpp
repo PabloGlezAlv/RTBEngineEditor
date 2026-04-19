@@ -11,6 +11,7 @@
 #include <RTBEngine/Input/InputManager.h>
 #include <RTBEngine/Input/KeyCode.h>
 #include <RTBEngine/ECS/MeshRenderer.h>
+#include <RTBEngine/ECS/CameraComponent.h>
 #include <RTBEngine/Audio/AudioSystem.h>
 #include <RTBEngine/Physics/PhysicsWorld.h>
 #include "../UI/Panels/SceneViewPanel.h"
@@ -507,6 +508,7 @@ namespace RTBEditor {
 
             // We only need to render Game view if it exists and has a camera
             if (framebuffer && mainCamComp && vpWidth > 0 && vpHeight > 0) {
+                mainCamComp->SyncNow();
                 RTBEngine::Rendering::Camera* mainCamera = mainCamComp->GetCamera();
                 if (mainCamera) {
                     framebuffer->Bind();

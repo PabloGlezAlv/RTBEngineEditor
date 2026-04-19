@@ -23,6 +23,7 @@ public:
     void OnStart() override;
     void OnUpdate(float deltaTime) override;
     void OnFixedUpdate(float fixedDeltaTime) override;
+    void OnLateUpdate(float deltaTime) override;
     void OnValidate() override;
 
     RTBEngine::ECS::GameObject* cameraObject = nullptr;
@@ -60,7 +61,6 @@ private:
 
     void ClampSettings();
     void ConfigurePhysicsBody() const;
-    RTBEngine::Math::Vector3 GetColliderCenterOffset() const;
     void ResolveCameraObject();
     void DisableCompetingCameraController() const;
     void SyncCameraFromCurrentTransform();
