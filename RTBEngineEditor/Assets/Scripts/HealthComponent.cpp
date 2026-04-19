@@ -10,64 +10,6 @@ RTB_REGISTER_COMPONENT(HealthComponent)
     RTB_PROPERTY(currentHealth)
 RTB_END_REGISTER(HealthComponent)
 
-HealthComponent::HealthChangedSubscription::HealthChangedSubscription(
-    const std::shared_ptr<ListenerState>& listenerState,
-    std::uint64_t id)
-    : state(listenerState)
-    , listenerId(id)
-{
-}
-
-HealthComponent::HealthChangedSubscription::HealthChangedSubscription(HealthChangedSubscription&& other) noexcept
-    : state(std::move(other.state))
-    , listenerId(other.listenerId)
-{
-    other.listenerId = 0;
-}
-
-HealthComponent::HealthChangedSubscription& HealthComponent::HealthChangedSubscription::operator=(HealthChangedSubscription&& other) noexcept
-{
-    if (this == &other) {
-        return *this;
-    }
-
-    Reset();
-
-    state = std::move(other.state);
-    listenerId = other.listenerId;
-    other.listenerId = 0;
-
-    return *this;
-}
-
-void HealthComponent::HealthChangedSubscription::Reset()
-{
-    if (listenerId == 0) {
-        state.reset();
-        return;
-    }
-
-    if (std::shared_ptr<ListenerState> lockedState = state.lock()) {
-        auto& listeners = lockedState->listeners;
-        listeners.erase(
-            std::remove_if(
-                listeners.begin(),
-                listeners.end(),
-                [this](const auto& listenerEntry) {
-                    return listenerEntry.first == listenerId;
-                }),
-            listeners.end());
-    }
-
-    state.reset();
-    listenerId = 0;
-}
-
-bool HealthComponent::HealthChangedSubscription::IsValid() const
-{
-    return listenerId != 0 && !state.expired();
-}
-
 void HealthComponent::OnStart()
 {
     currentHealth = maxHealth;
@@ -83,11 +25,7 @@ void HealthComponent::OnValidate()
 
 void HealthComponent::OnDestroy()
 {
-    if (listenerState) {
-        listenerState->listeners.clear();
-        listenerState.reset();
-    }
-
+    healthChangedEvent.Clear();
     hasLastNotifiedEvent = false;
 }
 
@@ -127,20 +65,9 @@ void HealthComponent::TakeDamage(float amount)
     NotifyHealthChanged(false);
 }
 
-HealthComponent::HealthChangedSubscription HealthComponent::SubscribeToHealthChanged(HealthChangedCallback callback)
+RTBEngine::Core::EventSubscription HealthComponent::SubscribeToHealthChanged(HealthChangedCallback callback)
 {
-    if (!callback) {
-        return {};
-    }
-
-    if (!listenerState) {
-        listenerState = std::make_shared<ListenerState>();
-    }
-
-    const std::uint64_t listenerId = listenerState->nextListenerId++;
-    listenerState->listeners.emplace_back(listenerId, std::move(callback));
-
-    return HealthChangedSubscription(listenerState, listenerId);
+    return healthChangedEvent.Subscribe(std::move(callback));
 }
 
 HealthComponent::HealthChangedEvent HealthComponent::GetHealthChangedEvent() const
@@ -174,11 +101,7 @@ void HealthComponent::ClampHealth()
 
 void HealthComponent::NotifyHealthChanged(bool forceNotify)
 {
-    if (!listenerState) {
-        return;
-    }
-
-    if (!forceNotify && listenerState->listeners.empty()) {
+    if (!forceNotify && !healthChangedEvent.HasListeners()) {
         return;
     }
 
@@ -196,9 +119,5 @@ void HealthComponent::NotifyHealthChanged(bool forceNotify)
 
     lastNotifiedEvent = eventData;
     hasLastNotifiedEvent = true;
-
-    auto listeners = listenerState->listeners;
-    for (const auto& listenerEntry : listeners) {
-        listenerEntry.second(eventData);
-    }
+    healthChangedEvent.Invoke(eventData);
 }

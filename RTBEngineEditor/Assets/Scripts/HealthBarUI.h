@@ -33,7 +33,7 @@ public:
 private:
     RTBEngine::UI::UISlider* slider = nullptr;
     HealthComponent* subscribedHealth = nullptr;
-    HealthComponent::HealthChangedSubscription healthSubscription;
+    RTBEngine::Core::EventSubscription healthSubscription;
 
     void ResolveSlider();
     RTBEngine::UI::UIPanel* GetEffectiveFillPanel() const;
