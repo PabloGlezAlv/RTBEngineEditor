@@ -13,6 +13,7 @@
 #include <RTBEngine/UI/Elements/UIButton.h>
 #include <RTBEngine/UI/Elements/UIContainer.h>
 #include <RTBEngine/UI/Elements/UIPanel.h>
+#include <RTBEngine/UI/Elements/UISlider.h>
 #include <RTBEngine/UI/Elements/UIText.h>
 #include <RTBEngine/Math/Vectors/Vector2.h>
 #include "../DragDropPayloads.h"
@@ -214,6 +215,9 @@ namespace RTBEditor {
                     }
                     if (ImGui::MenuItem("Button")) {
                         CreateUIButton(activeScene, context, creationParent);
+                    }
+                    if (ImGui::MenuItem("Slider")) {
+                        CreateUISlider(activeScene, context, creationParent);
                     }
                     if (ImGui::MenuItem("Text")) {
                         CreateUIText(activeScene, context, creationParent);
@@ -497,6 +501,62 @@ namespace RTBEditor {
         scene->AddGameObject(textGO);
 
         context.selectedGameObject = buttonGO;
+        RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+    }
+
+    void SceneHierarchyPanel::CreateUISlider(RTBEngine::ECS::Scene* scene, EditorContext& context, RTBEngine::ECS::GameObject* parent) {
+        auto* sliderGO = new RTBEngine::ECS::GameObject("Slider");
+        if (parent) sliderGO->SetParent(parent);
+
+        auto* trackPanel = new RTBEngine::UI::UIPanel();
+        trackPanel->SetAnchorMin(RTBEngine::Math::Vector2(0.5f, 0.5f));
+        trackPanel->SetAnchorMax(RTBEngine::Math::Vector2(0.5f, 0.5f));
+        trackPanel->SetAnchoredPosition(RTBEngine::Math::Vector2(0.0f, 0.0f));
+        trackPanel->SetSizeDelta(RTBEngine::Math::Vector2(200.0f, 20.0f));
+        trackPanel->SetBackgroundColor(RTBEngine::Math::Vector4(0.18f, 0.18f, 0.18f, 1.0f));
+        sliderGO->AddComponent(trackPanel);
+
+        auto* slider = new RTBEngine::UI::UISlider();
+        slider->minValue = 0.0f;
+        slider->maxValue = 1.0f;
+        slider->value = 0.5f;
+        sliderGO->AddComponent(slider);
+
+        scene->AddGameObject(sliderGO);
+
+        auto* fillGO = new RTBEngine::ECS::GameObject("Fill");
+        fillGO->SetParent(sliderGO);
+
+        auto* fillPanel = new RTBEngine::UI::UIPanel();
+        fillPanel->SetAnchorMin(RTBEngine::Math::Vector2(0.0f, 0.0f));
+        fillPanel->SetAnchorMax(RTBEngine::Math::Vector2(0.0f, 1.0f));
+        fillPanel->SetPivot(RTBEngine::Math::Vector2(0.0f, 0.5f));
+        fillPanel->SetAnchoredPosition(RTBEngine::Math::Vector2(0.0f, 0.0f));
+        fillPanel->SetSizeDelta(RTBEngine::Math::Vector2(100.0f, 0.0f));
+        fillPanel->SetBackgroundColor(RTBEngine::Math::Vector4(0.22f, 0.72f, 0.28f, 1.0f));
+        fillPanel->SetRaycastTarget(false);
+        fillGO->AddComponent(fillPanel);
+        scene->AddGameObject(fillGO);
+
+        auto* handleGO = new RTBEngine::ECS::GameObject("Handle");
+        handleGO->SetParent(sliderGO);
+
+        auto* handlePanel = new RTBEngine::UI::UIPanel();
+        handlePanel->SetAnchorMin(RTBEngine::Math::Vector2(0.0f, 0.5f));
+        handlePanel->SetAnchorMax(RTBEngine::Math::Vector2(0.0f, 0.5f));
+        handlePanel->SetPivot(RTBEngine::Math::Vector2(0.5f, 0.5f));
+        handlePanel->SetAnchoredPosition(RTBEngine::Math::Vector2(100.0f, 0.0f));
+        handlePanel->SetSizeDelta(RTBEngine::Math::Vector2(20.0f, 20.0f));
+        handlePanel->SetBackgroundColor(RTBEngine::Math::Vector4(0.92f, 0.92f, 0.92f, 1.0f));
+        handlePanel->SetRaycastTarget(false);
+        handleGO->AddComponent(handlePanel);
+        scene->AddGameObject(handleGO);
+
+        slider->fillPanel = fillPanel;
+        slider->handlePanel = handlePanel;
+        slider->SetValue(0.5f);
+
+        context.selectedGameObject = sliderGO;
         RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
     }
 

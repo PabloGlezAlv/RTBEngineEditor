@@ -712,7 +712,7 @@ void DrawProperty(ECS::Component* component,
                   EditorContext& context);
 ```
 
-Computes `void* propPtr = (char*)component + prop.offset` and dispatches on `prop.type`:
+Computes the property address through `prop.GetMutableData(component)` and dispatches on `prop.type`:
 
 | PropertyType | Widget | Notes |
 |-------------|--------|-------|
@@ -727,6 +727,7 @@ Computes `void* propPtr = (char*)component + prop.offset` and dispatches on `pro
 | `Quaternion` | Three `DragFloat` for Euler X/Y/Z | Converts to/from quat |
 | `Color` | `ImGui::ColorEdit4` | |
 | `Enum` | `ImGui::Combo` | Uses `prop.enumNames` |
+| `AssetRef` | Typed path field + filtered asset browser + drag target | Uses `prop.assetType` to decide the allowed asset family |
 | `TextureRef` | Text field + "…" button → AssetBrowserModal + Drag target | |
 | `MeshRef` | Same pattern | |
 | `AudioClipRef` | Same pattern | |
@@ -735,6 +736,8 @@ Computes `void* propPtr = (char*)component + prop.offset` and dispatches on `pro
 | `ComponentRef` | Drag-drop target (PAYLOAD_GAMEOBJECT) | Resolves on UUID |
 
 After any change: calls `component->OnValidate()` and marks scene dirty.
+
+For typed script asset slots, the Inspector now uses the reflected `assetType` metadata instead of guessing from the property name. For example, a property registered with `RTB_PROPERTY_FBX(idleAnimationFbx)` renders as a dedicated FBX slot that accepts `.fbx` drag-and-drop from the Content Browser, opens the asset browser already filtered to FBX files, and stores the selected logical `Assets/...` path.
 
 **GameObjectRef drag-drop target example:**
 
@@ -1460,7 +1463,7 @@ Build Successful!    or    Build Failed: [reason]
 ### Asset Type Filter
 
 ```cpp
-enum class AssetType { Texture, Mesh, AudioClip, Font, Cubemap, Any };
+enum class AssetType { Texture, Mesh, AudioClip, Font, Cubemap, Fbx, Any };
 ```
 
 Extension filters per type:
@@ -1472,6 +1475,7 @@ Extension filters per type:
 | AudioClip | `.wav`, `.mp3`, `.ogg`, `.flac` |
 | Font | `.ttf`, `.otf` |
 | Cubemap | `.cubemap` |
+| Fbx | `.fbx` |
 | Any | All files |
 
 ### Opening the Modal
@@ -1684,6 +1688,38 @@ void Rotator::OnUpdate(float deltaTime) {
 void Rotator::OnFixedUpdate(float fixedDeltaTime) {}
 void Rotator::OnDestroy() {}
 ```
+
+### Typed Asset and Component Slots
+
+Script components can now expose professional Inspector fields that are more structured than plain strings. Two common cases are:
+
+- `RTB_PROPERTY_COMPONENT(animator, Animator)` for an explicit component reference assigned from the Hierarchy.
+- `RTB_PROPERTY_FBX(idleAnimationFbx)` for a typed FBX asset slot assigned from the Content Browser.
+
+Minimal example:
+
+```cpp
+class ThirdPersonCharacterController : public RTBEngine::ECS::Component {
+public:
+    RTBEngine::Animation::Animator* animator = nullptr;
+    std::string idleAnimationFbx;
+    std::string walkAnimationFbx;
+    std::string runAnimationFbx;
+
+    RTB_COMPONENT(ThirdPersonCharacterController)
+};
+
+using ThisClass = ThirdPersonCharacterController;
+
+RTB_REGISTER_COMPONENT(ThirdPersonCharacterController)
+    RTB_PROPERTY_COMPONENT(animator, Animator)
+    RTB_PROPERTY_FBX(idleAnimationFbx)
+    RTB_PROPERTY_FBX(walkAnimationFbx)
+    RTB_PROPERTY_FBX(runAnimationFbx)
+RTB_END_REGISTER(ThirdPersonCharacterController)
+```
+
+In the Inspector, `animator` shows up as a component reference, while the three animation fields become FBX-only slots with drag-and-drop and the `...` picker. Scene and prefab serialization still store the logical `Assets/...` paths, not absolute filesystem paths.
 
 ### UI Scene Buttons
 
@@ -2039,6 +2075,14 @@ startScene=Assets/Scenes/Main.lua
 2. Select "Sender". In Inspector, find `Connector`'s `targetRef` field.
 3. Drag "Receiver" from the Hierarchy onto the `targetRef` field.
 4. Save scene. Click Play. Console shows: `Object connected: Receiver`.
+
+### Setting Up Third-Person Locomotion Animations
+
+1. Add `Animator` and `ThirdPersonCharacterController` to the player object.
+2. In the controller, drag the sibling `Animator` component into the `animator` field.
+3. Drag the desired idle, walk, and run `.fbx` files from the Content Browser into `idleAnimationFbx`, `walkAnimationFbx`, and `runAnimationFbx`.
+4. Save the scene. The component stores those selections as logical `Assets/...` references.
+5. Enter Play mode. The controller registers the first clip from each FBX under its internal aliases and switches between them automatically based on locomotion state.
 
 ### Exporting a Build
 

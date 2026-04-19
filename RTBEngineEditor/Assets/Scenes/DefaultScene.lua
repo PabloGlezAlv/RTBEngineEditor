@@ -113,6 +113,91 @@ function CreateScene()
                             },
                         }
                     },
+                    {
+                        name = "Slider",
+                        uuid = "5DF934F7-228E-4AFE-82E3-D6B742F023D6",
+                        components = {
+                            {
+                                type = "UIPanel",
+                                backgroundColor = Color(0.69, 0.69, 0.69, 1.00),
+                                borderColor = Color(1.00, 1.00, 1.00, 1.00),
+                                borderThickness = 1.00,
+                                hasBorder = false,
+                                isVisible = true,
+                                raycastTarget = true,
+                                anchorMin = Vector2(0.00, 0.00),
+                                anchorMax = Vector2(0.00, 0.00),
+                                pivot = Vector2(0.00, 0.50),
+                                anchoredPosition = Vector2(10.00, 30.00),
+                                sizeDelta = Vector2(200.00, 20.00),
+                                rotation = 0.00,
+                                scale = Vector2(1.00, 1.00)
+                            },
+                            {
+                                type = "UISlider",
+                                minValue = 0.00,
+                                maxValue = 1.00,
+                                value = 0.50,
+                                interactable = false,
+                                fillPanel = "BCE29D83-01B6-4B80-989F-85CB5E49C359/UIPanel",
+                                handlePanel = "96F2BB4D-DF67-4728-87D6-56904800DDC0/UIPanel"
+                            },
+                            {
+                                type = "HealthBarUI",
+                                health = "E8682E33-50ED-45D8-BC76-B31113639F9E/HealthComponent",
+                                fillPanel = "BCE29D83-01B6-4B80-989F-85CB5E49C359/UIPanel",
+                                highHealthColor = Color(0.12, 0.78, 0.24, 1.00),
+                                midHealthColor = Color(0.95, 0.74, 0.16, 1.00),
+                                lowHealthColor = Color(0.82, 0.18, 0.18, 1.00)
+                            },
+                        },
+                        children = {
+                            {
+                                name = "Fill",
+                                uuid = "BCE29D83-01B6-4B80-989F-85CB5E49C359",
+                                components = {
+                                    {
+                                        type = "UIPanel",
+                                        backgroundColor = Color(0.11, 0.20, 1.00, 1.00),
+                                        borderColor = Color(1.00, 1.00, 1.00, 1.00),
+                                        borderThickness = 1.00,
+                                        hasBorder = false,
+                                        isVisible = true,
+                                        raycastTarget = false,
+                                        anchorMin = Vector2(0.00, 0.00),
+                                        anchorMax = Vector2(0.00, 1.00),
+                                        pivot = Vector2(0.00, 0.50),
+                                        anchoredPosition = Vector2(0.00, 0.00),
+                                        sizeDelta = Vector2(100.00, 0.00),
+                                        rotation = 0.00,
+                                        scale = Vector2(1.00, 1.00)
+                                    },
+                                }
+                            },
+                            {
+                                name = "Handle",
+                                uuid = "96F2BB4D-DF67-4728-87D6-56904800DDC0",
+                                components = {
+                                    {
+                                        type = "UIPanel",
+                                        backgroundColor = Color(0.92, 0.92, 0.92, 1.00),
+                                        borderColor = Color(1.00, 1.00, 1.00, 1.00),
+                                        borderThickness = 1.00,
+                                        hasBorder = false,
+                                        isVisible = false,
+                                        raycastTarget = false,
+                                        anchorMin = Vector2(0.00, 0.50),
+                                        anchorMax = Vector2(0.00, 0.50),
+                                        pivot = Vector2(0.50, 0.50),
+                                        anchoredPosition = Vector2(100.00, 0.00),
+                                        sizeDelta = Vector2(20.00, 20.00),
+                                        rotation = 0.00,
+                                        scale = Vector2(1.00, 1.00)
+                                    },
+                                }
+                            },
+                        }
+                    },
                 }
             },
             {
@@ -327,6 +412,11 @@ function CreateScene()
                         walkAnimationFbx = "Assets/Models/AnimationsPlayer/Great Sword Walk.fbx",
                         runAnimationFbx = "Assets/Models/AnimationsPlayer/Great Sword Run.fbx"
                     },
+                    {
+                        type = "HealthComponent",
+                        maxHealth = 100.00,
+                        currentHealth = 100.00
+                    },
                 },
                 children = {
                     {
@@ -399,13 +489,13 @@ function CreateScene()
                                                                 name = "mixamorig:LeftShoulder",
                                                                 uuid = "8F079083-2A6E-4B60-9663-F23B483F1EBE",
                                                                 position = Vector3(6.34, 14.95, -4.64),
-                                                                rotation = Quaternion.FromEulerAngles(-3.50, -89.95, -100.68),
+                                                                rotation = Quaternion.FromEulerAngles(-5.62, -89.95, -100.68),
                                                                 children = {
                                                                     {
                                                                         name = "mixamorig:LeftArm",
                                                                         uuid = "A0AA69EE-ECD3-475E-9131-68CD84714AD9",
                                                                         position = Vector3(0.00, 9.14, -0.00),
-                                                                        rotation = Quaternion.FromEulerAngles(-10.56, -1.68, 1.72),
+                                                                        rotation = Quaternion.FromEulerAngles(-8.28, -6.77, 6.79),
                                                                         children = {
                                                                             {
                                                                                 name = "mixamorig:LeftForeArm",
@@ -422,7 +512,7 @@ function CreateScene()
                                                                                                 name = "mixamorig:LeftHandThumb1",
                                                                                                 uuid = "9F00811D-BEB8-4B88-84D2-FE33F71E229A",
                                                                                                 position = Vector3(-2.01, 3.66, 1.52),
-                                                                                                rotation = Quaternion.FromEulerAngles(18.13, 19.80, 35.42),
+                                                                                                rotation = Quaternion.FromEulerAngles(23.21, -13.40, 32.57),
                                                                                                 children = {
                                                                                                     {
                                                                                                         name = "mixamorig:LeftHandThumb2",
@@ -572,13 +662,13 @@ function CreateScene()
                                                                 name = "mixamorig:RightShoulder",
                                                                 uuid = "A3EC7C3A-EB28-4791-B5FA-CC662AFCA5AF",
                                                                 position = Vector3(-6.34, 14.95, -4.64),
-                                                                rotation = Quaternion.FromEulerAngles(-3.50, 89.95, 100.68),
+                                                                rotation = Quaternion.FromEulerAngles(-5.62, 89.95, 100.68),
                                                                 children = {
                                                                     {
                                                                         name = "mixamorig:RightArm",
                                                                         uuid = "F7892167-C8F8-4CFE-9F5B-3641B6B9814E",
                                                                         position = Vector3(-0.00, 9.14, -0.00),
-                                                                        rotation = Quaternion.FromEulerAngles(-10.56, 1.68, -1.72),
+                                                                        rotation = Quaternion.FromEulerAngles(-8.28, 6.77, -6.79),
                                                                         children = {
                                                                             {
                                                                                 name = "mixamorig:RightForeArm",
@@ -595,7 +685,7 @@ function CreateScene()
                                                                                                 name = "mixamorig:RightHandThumb1",
                                                                                                 uuid = "B4613E40-45A0-4491-9522-28FEE313CA5F",
                                                                                                 position = Vector3(2.01, 3.66, 1.52),
-                                                                                                rotation = Quaternion.FromEulerAngles(17.83, -20.04, -35.53),
+                                                                                                rotation = Quaternion.FromEulerAngles(23.34, 13.10, -32.47),
                                                                                                 children = {
                                                                                                     {
                                                                                                         name = "mixamorig:RightHandThumb2",
@@ -765,13 +855,13 @@ function CreateScene()
                                                         name = "mixamorig:LeftFoot",
                                                         uuid = "C4679F0E-6B5A-4CDA-A6B5-7B51C0B8B483",
                                                         position = Vector3(0.00, 40.82, -0.00),
-                                                        rotation = Quaternion.FromEulerAngles(-34.50, 1.58, -0.09),
+                                                        rotation = Quaternion.FromEulerAngles(17.55, 30.23, -30.19),
                                                         children = {
                                                             {
                                                                 name = "mixamorig:LeftToeBase",
                                                                 uuid = "49416134-C362-480D-A843-27C2EF3AA04D",
                                                                 position = Vector3(0.00, 18.00, 0.00),
-                                                                rotation = Quaternion.FromEulerAngles(-51.14, 40.48, -40.50),
+                                                                rotation = Quaternion.FromEulerAngles(55.67, -32.20, -32.23),
                                                                 children = {
                                                                     {
                                                                         name = "mixamorig:LeftToe_End",
@@ -802,13 +892,13 @@ function CreateScene()
                                                         name = "mixamorig:RightFoot",
                                                         uuid = "7A80B74F-EA09-4537-917E-3D8868EA0136",
                                                         position = Vector3(0.00, 40.82, -0.00),
-                                                        rotation = Quaternion.FromEulerAngles(-34.50, -1.58, 0.09),
+                                                        rotation = Quaternion.FromEulerAngles(17.55, -30.23, 30.19),
                                                         children = {
                                                             {
                                                                 name = "mixamorig:RightToeBase",
                                                                 uuid = "3434220A-3088-46D8-9B0F-C2BCA301CA63",
                                                                 position = Vector3(-0.00, 18.00, 0.00),
-                                                                rotation = Quaternion.FromEulerAngles(-28.71, -57.05, 57.07),
+                                                                rotation = Quaternion.FromEulerAngles(24.07, 58.49, 58.51),
                                                                 children = {
                                                                     {
                                                                         name = "mixamorig:RightToe_End",
