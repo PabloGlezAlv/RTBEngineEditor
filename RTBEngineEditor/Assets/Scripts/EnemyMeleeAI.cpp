@@ -3,17 +3,18 @@
 #include "HealthComponent.h"
 
 #include <RTBEngine/Animation/Animator.h>
+#include <RTBEngine/Animation/AnimationClip.h>
 #include <RTBEngine/Core/Logger.h>
+#include <RTBEngine/ECS/BoxColliderComponent.h>
 #include <RTBEngine/ECS/CapsuleColliderComponent.h>
 #include <RTBEngine/ECS/GameObject.h>
 #include <RTBEngine/ECS/RigidBodyComponent.h>
 #include <RTBEngine/ECS/Scene.h>
 #include <RTBEngine/ECS/SceneManager.h>
 #include <RTBEngine/ECS/SphereColliderComponent.h>
-#include <RTBEngine/Math/Math.h>
 #include <RTBEngine/Math/Quaternions/Quaternion.h>
+#include <RTBEngine/Physics/PhysicsWorld.h>
 #include <RTBEngine/Physics/PhysicsUtils.h>
-#include <RTBEngine/Rendering/ModelLoader.h>
 
 #include <algorithm>
 #include <cmath>
@@ -27,6 +28,7 @@ namespace {
     constexpr float kDirectionEpsilon = 0.0001f;
     constexpr const char* kWalkAlias = "EnemyMelee.Walk";
     constexpr const char* kAttackAlias = "EnemyMelee.Attack";
+    constexpr float kAttackCompletionEpsilon = 0.0001f;
 
     float ClampAngleDegrees(float angle)
     {
@@ -44,54 +46,20 @@ namespace {
 
         return current + (delta > 0.0f ? maxDelta : -maxDelta);
     }
-
-    RTBEngine::Math::Vector3 GetPlanarForwardFromRotation(const RTBEngine::Math::Quaternion& rotation)
-    {
-        RTBEngine::Math::Vector3 forward = rotation * RTBEngine::Math::Vector3::Forward();
-        forward.y = 0.0f;
-
-        if (forward.LengthSquared() <= kDirectionEpsilon) {
-            return RTBEngine::Math::Vector3::Forward();
-        }
-
-        forward.Normalize();
-        return forward;
-    }
-
-    RTBEngine::Math::Vector3 GetRigidBodyPlanarForward(
-        const RTBEngine::Physics::RigidBody* rigidBody,
-        const RTBEngine::Math::Quaternion& fallbackRotation)
-    {
-        if (!rigidBody || !rigidBody->GetBulletRigidBody()) {
-            return GetPlanarForwardFromRotation(fallbackRotation);
-        }
-
-        return GetPlanarForwardFromRotation(
-            RTBEngine::Physics::PhysicsUtils::FromBullet(
-                rigidBody->GetBulletRigidBody()->getWorldTransform().getRotation()));
-    }
-
-    void ReleaseLoadedModelMeshes(RTBEngine::Rendering::ModelData& data)
-    {
-        for (RTBEngine::Rendering::Mesh* mesh : data.meshes) {
-            delete mesh;
-        }
-        data.meshes.clear();
-    }
 }
 
 RTB_REGISTER_COMPONENT(EnemyMeleeAI)
     RTB_PROPERTY_GAMEOBJECT(targetObject)
-    RTB_PROPERTY(targetName)
+    RTB_PROPERTY_GAMEOBJECT(attackOriginObject)
     RTB_PROPERTY_COMPONENT(animator, Animator)
     RTB_PROPERTY_RANGE(moveSpeed, 0.0f, 20.0f)
     RTB_PROPERTY_RANGE(turnSpeed, 0.0f, 1440.0f)
     RTB_PROPERTY_RANGE(attackRange, 0.1f, 5.0f)
     RTB_PROPERTY_RANGE(attackCooldown, 0.0f, 5.0f)
     RTB_PROPERTY_RANGE(attackDamage, 0.0f, 100.0f)
+    RTB_PROPERTY_RANGE(attackHitDelay, 0.0f, 10.0f)
     RTB_PROPERTY_RANGE(attackSphereRadius, 0.05f, 3.0f)
     RTB_PROPERTY_RANGE(attackSphereDistance, 0.05f, 5.0f)
-    RTB_PROPERTY(attackHandBoneName)
     RTB_PROPERTY_FBX(walkAnimationFbx)
     RTB_PROPERTY_FBX(attackAnimationFbx)
 RTB_END_REGISTER(EnemyMeleeAI)
@@ -99,6 +67,7 @@ RTB_END_REGISTER(EnemyMeleeAI)
 void EnemyMeleeAI::OnStart()
 {
     ClampSettings();
+    CaptureTargetIdentity();
     ResolveTarget();
     ResolveAnimator();
     RegisterAnimationSlots();
@@ -119,11 +88,13 @@ void EnemyMeleeAI::OnUpdate(float deltaTime)
     }
 
     ClampSettings();
+    CaptureTargetIdentity();
     ResolveTarget();
     ResolveAnimator();
     RegisterAnimationSlots();
     ConfigurePhysicsBody();
     UpdateState(deltaTime);
+    UpdateAttack(deltaTime);
 }
 
 void EnemyMeleeAI::OnFixedUpdate(float fixedDeltaTime)
@@ -133,6 +104,7 @@ void EnemyMeleeAI::OnFixedUpdate(float fixedDeltaTime)
     }
 
     ClampSettings();
+    CaptureTargetIdentity();
     ResolveTarget();
     ConfigurePhysicsBody();
     UpdateMovement(fixedDeltaTime);
@@ -144,8 +116,13 @@ void EnemyMeleeAI::OnLateUpdate(float /*deltaTime*/)
         return;
     }
 
-    if (!animator) {
-        FinishAttack();
+    const bool hasAttackAnimation =
+        animator && attackSlotState.ready && animator->GetClip(kAttackAlias);
+
+    if (!hasAttackAnimation) {
+        if (attackHitExecuted || attackElapsed + kAttackCompletionEpsilon >= attackHitDelay) {
+            FinishAttack();
+        }
         return;
     }
 
@@ -159,6 +136,7 @@ void EnemyMeleeAI::OnLateUpdate(float /*deltaTime*/)
 void EnemyMeleeAI::OnValidate()
 {
     ClampSettings();
+    CaptureTargetIdentity();
     ResolveTarget();
     ResolveAnimator();
     RegisterAnimationSlots();
@@ -172,32 +150,47 @@ void EnemyMeleeAI::ClampSettings()
     attackRange = std::max(0.1f, attackRange);
     attackCooldown = std::max(0.0f, attackCooldown);
     attackDamage = std::max(0.0f, attackDamage);
+    attackHitDelay = std::max(0.0f, attackHitDelay);
     attackSphereRadius = std::max(0.05f, attackSphereRadius);
     attackSphereDistance = std::max(0.05f, attackSphereDistance);
 }
 
+void EnemyMeleeAI::CaptureTargetIdentity()
+{
+    if (!targetObject || targetObject == owner) {
+        lastCapturedTarget = nullptr;
+        targetObjectUuid.clear();
+        return;
+    }
+
+    if (targetObject == lastCapturedTarget) {
+        return;
+    }
+
+    targetObjectUuid = targetObject->GetUUID();
+    lastCapturedTarget = targetObject;
+}
+
 void EnemyMeleeAI::ResolveTarget()
 {
-    if (targetObject && targetObject != owner) {
-        return;
-    }
-
     targetObject = nullptr;
 
-    if (targetName.empty()) {
-        return;
-    }
-
-    auto& sceneManager = RTBEngine::ECS::SceneManager::GetInstance();
-    auto* scene = sceneManager.GetActiveScene();
+    auto* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
     if (!scene) {
+        lastCapturedTarget = nullptr;
         return;
     }
 
-    RTBEngine::ECS::GameObject* candidate = scene->FindGameObject(targetName);
-    if (candidate != owner) {
-        targetObject = candidate;
+    if (!targetObjectUuid.empty()) {
+        RTBEngine::ECS::GameObject* candidate = scene->FindGameObjectByUUID(targetObjectUuid);
+        if (candidate && candidate != owner) {
+            targetObject = candidate;
+            lastCapturedTarget = candidate;
+            return;
+        }
     }
+
+    lastCapturedTarget = nullptr;
 }
 
 void EnemyMeleeAI::ResolveAnimator()
@@ -225,16 +218,7 @@ void EnemyMeleeAI::ConfigurePhysicsBody() const
     }
 
     RTBEngine::Physics::RigidBody* rigidBody = rbComp->GetRigidBody();
-    if (!rigidBody || rigidBody->GetType() != RTBEngine::Physics::RigidBodyType::Dynamic) {
-        return;
-    }
-
-    rigidBody->SetAngularFactor(btVector3(0.0f, 1.0f, 0.0f));
-
-    btVector3 angularVelocity = rigidBody->GetAngularVelocity();
-    angularVelocity.setX(0.0f);
-    angularVelocity.setZ(0.0f);
-    rigidBody->SetAngularVelocity(angularVelocity);
+    RTBEngine::Physics::PhysicsUtils::ConfigurePlanarDynamicBody(rigidBody);
 }
 
 void EnemyMeleeAI::RegisterAnimationSlots()
@@ -276,19 +260,13 @@ void EnemyMeleeAI::RegisterAnimationSlot(const char* slotLabel,
         return;
     }
 
-    RTBEngine::Rendering::ModelData modelData =
-        RTBEngine::Rendering::ModelLoader::LoadModelWithAnimations(sourceFbx);
-
-    if (modelData.animations.empty() || !modelData.animations.front()) {
+    if (!animator->LoadClipFromFbx(alias, sourceFbx)) {
         RTB_WARN(std::string("[EnemyMeleeAI] ") + slotLabel +
                  " slot FBX has no usable animation clip: " + sourceFbx);
-        ReleaseLoadedModelMeshes(modelData);
         return;
     }
 
-    animator->AddClip(alias, modelData.animations.front());
     slotState.ready = true;
-    ReleaseLoadedModelMeshes(modelData);
 }
 
 void EnemyMeleeAI::UpdateState(float deltaTime)
@@ -296,6 +274,8 @@ void EnemyMeleeAI::UpdateState(float deltaTime)
     if (!HasValidTarget() || !IsTargetAlive()) {
         state = State::Idle;
         cooldownRemaining = 0.0f;
+        attackElapsed = 0.0f;
+        attackHitExecuted = false;
         return;
     }
 
@@ -319,6 +299,27 @@ void EnemyMeleeAI::UpdateState(float deltaTime)
     PlayWalkLoop();
 }
 
+void EnemyMeleeAI::UpdateAttack(float deltaTime)
+{
+    if (state != State::Attacking) {
+        return;
+    }
+
+    attackElapsed = std::max(0.0f, attackElapsed + deltaTime);
+    if (attackHitExecuted || attackElapsed + kAttackCompletionEpsilon < attackHitDelay) {
+        return;
+    }
+
+    attackHitExecuted = true;
+
+    RTBEngine::Math::Vector3 hitPoint;
+    if (PerformAttackSphereCast(&hitPoint)) {
+        if (HealthComponent* health = ResolveTargetHealth()) {
+            health->TakeDamage(attackDamage);
+        }
+    }
+}
+
 void EnemyMeleeAI::UpdateMovement(float deltaTime)
 {
     auto* rbComp = owner ? owner->GetComponent<RTBEngine::ECS::RigidBodyComponent>() : nullptr;
@@ -333,37 +334,14 @@ void EnemyMeleeAI::UpdateMovement(float deltaTime)
     const RTBEngine::Math::Vector3 desiredMove = shouldMove ? targetDirection : RTBEngine::Math::Vector3::Zero();
 
     if (useDynamicRigidBody) {
-        btVector3 velocity = rigidBody->GetLinearVelocity();
-        velocity.setX(desiredMove.x * moveSpeed);
-        velocity.setZ(desiredMove.z * moveSpeed);
-        rigidBody->SetLinearVelocity(velocity);
-
-        btVector3 angularVelocity = rigidBody->GetAngularVelocity();
-        angularVelocity.setX(0.0f);
-        angularVelocity.setZ(0.0f);
-
-        if (!canFaceTarget || deltaTime <= 0.0001f || turnSpeed <= 0.0f) {
-            angularVelocity.setY(0.0f);
-            rigidBody->SetAngularVelocity(angularVelocity);
-            return;
-        }
-
-        const RTBEngine::Math::Vector3 currentForward =
-            GetRigidBodyPlanarForward(rigidBody, owner->GetTransform().GetRotation());
-        const float signedAngleRadians = std::atan2(
-            currentForward.Cross(targetDirection).y,
-            std::clamp(currentForward.Dot(targetDirection), -1.0f, 1.0f));
-        const float signedAngleDegrees = signedAngleRadians * kRadToDeg;
-
-        if (std::abs(signedAngleDegrees) <= 0.1f) {
-            angularVelocity.setY(0.0f);
-        } else {
-            const float yawSpeedDegrees =
-                std::clamp(signedAngleDegrees / deltaTime, -turnSpeed, turnSpeed);
-            angularVelocity.setY(yawSpeedDegrees * kDegToRad);
-        }
-
-        rigidBody->SetAngularVelocity(angularVelocity);
+        RTBEngine::Physics::PhysicsUtils::ApplyPlanarDynamicBodyMotion(
+            rigidBody,
+            desiredMove,
+            canFaceTarget ? targetDirection : RTBEngine::Math::Vector3::Zero(),
+            moveSpeed,
+            turnSpeed,
+            deltaTime,
+            owner->GetTransform().GetRotation());
         return;
     }
 
@@ -394,25 +372,26 @@ void EnemyMeleeAI::StartAttack()
     }
 
     state = State::Attacking;
+    attackElapsed = 0.0f;
+    attackHitExecuted = false;
 
     if (animator && attackSlotState.ready && animator->GetClip(kAttackAlias)) {
         animator->Play(kAttackAlias, false);
         return;
     }
 
-    RTB_WARN("[EnemyMeleeAI] Attack clip is missing; applying the melee hit without animation.");
+    if (attackAnimationFbx.empty()) {
+        return;
+    }
+
+    RTB_WARN("[EnemyMeleeAI] Attack clip is missing; canceling the melee hit.");
     FinishAttack();
 }
 
 void EnemyMeleeAI::FinishAttack()
 {
-    RTBEngine::Math::Vector3 hitPoint;
-    if (PerformAttackSphereCast(&hitPoint)) {
-        if (HealthComponent* health = ResolveTargetHealth()) {
-            health->TakeDamage(attackDamage);
-        }
-    }
-
+    attackElapsed = 0.0f;
+    attackHitExecuted = false;
     state = State::Cooldown;
     cooldownRemaining = attackCooldown;
 }
@@ -448,6 +427,97 @@ HealthComponent* EnemyMeleeAI::ResolveTargetHealth() const
     return targetObject->GetComponentInChildren<HealthComponent>();
 }
 
+RTBEngine::Physics::PhysicsWorld* EnemyMeleeAI::ResolvePhysicsWorld() const
+{
+    auto resolveFromRigidBody = [](RTBEngine::ECS::GameObject* candidate) -> RTBEngine::Physics::PhysicsWorld* {
+        if (!candidate) {
+            return nullptr;
+        }
+
+        if (auto* rbComp = candidate->GetComponent<RTBEngine::ECS::RigidBodyComponent>()) {
+            if (rbComp->HasRigidBody() && rbComp->GetRigidBody()) {
+                return rbComp->GetRigidBody()->GetPhysicsWorld();
+            }
+        }
+
+        if (auto* rbComp = candidate->GetComponentInChildren<RTBEngine::ECS::RigidBodyComponent>()) {
+            if (rbComp->HasRigidBody() && rbComp->GetRigidBody()) {
+                return rbComp->GetRigidBody()->GetPhysicsWorld();
+            }
+        }
+
+        return nullptr;
+    };
+
+    auto resolveFromColliders = [](RTBEngine::ECS::GameObject* candidate) -> RTBEngine::Physics::PhysicsWorld* {
+        if (!candidate) {
+            return nullptr;
+        }
+
+        if (auto* box = candidate->GetComponent<RTBEngine::ECS::BoxColliderComponent>()) {
+            if (box->GetPhysicsWorld()) {
+                return box->GetPhysicsWorld();
+            }
+        }
+        if (auto* sphere = candidate->GetComponent<RTBEngine::ECS::SphereColliderComponent>()) {
+            if (sphere->GetPhysicsWorld()) {
+                return sphere->GetPhysicsWorld();
+            }
+        }
+        if (auto* capsule = candidate->GetComponent<RTBEngine::ECS::CapsuleColliderComponent>()) {
+            if (capsule->GetPhysicsWorld()) {
+                return capsule->GetPhysicsWorld();
+            }
+        }
+
+        if (auto* box = candidate->GetComponentInChildren<RTBEngine::ECS::BoxColliderComponent>()) {
+            if (box->GetPhysicsWorld()) {
+                return box->GetPhysicsWorld();
+            }
+        }
+        if (auto* sphere = candidate->GetComponentInChildren<RTBEngine::ECS::SphereColliderComponent>()) {
+            if (sphere->GetPhysicsWorld()) {
+                return sphere->GetPhysicsWorld();
+            }
+        }
+        if (auto* capsule = candidate->GetComponentInChildren<RTBEngine::ECS::CapsuleColliderComponent>()) {
+            if (capsule->GetPhysicsWorld()) {
+                return capsule->GetPhysicsWorld();
+            }
+        }
+
+        return nullptr;
+    };
+
+    RTBEngine::ECS::GameObject* candidates[] = { owner, targetObject };
+    for (RTBEngine::ECS::GameObject* candidate : candidates) {
+        if (RTBEngine::Physics::PhysicsWorld* physicsWorld = resolveFromRigidBody(candidate)) {
+            return physicsWorld;
+        }
+
+        if (RTBEngine::Physics::PhysicsWorld* physicsWorld = resolveFromColliders(candidate)) {
+            return physicsWorld;
+        }
+    }
+
+    return nullptr;
+}
+
+bool EnemyMeleeAI::IsWithinTargetHierarchy(RTBEngine::ECS::GameObject* candidate) const
+{
+    if (!candidate || !HasValidTarget()) {
+        return false;
+    }
+
+    for (RTBEngine::ECS::GameObject* current = candidate; current; current = current->GetParent()) {
+        if (current == targetObject) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 float EnemyMeleeAI::GetPlanarDistanceToTarget() const
 {
     if (!owner || !HasValidTarget()) {
@@ -476,31 +546,13 @@ RTBEngine::Math::Vector3 EnemyMeleeAI::GetPlanarDirectionToTarget() const
     return direction;
 }
 
-RTBEngine::Math::Vector3 EnemyMeleeAI::GetAttackHandWorldPosition() const
+RTBEngine::Math::Vector3 EnemyMeleeAI::GetAttackOriginWorldPosition() const
 {
-    if (animator) {
-        if (RTBEngine::ECS::GameObject* bone = animator->GetBoneGameObject(attackHandBoneName)) {
-            return bone->GetWorldPosition();
-        }
-    }
-
-    return GetFallbackHandWorldPosition();
-}
-
-RTBEngine::Math::Vector3 EnemyMeleeAI::GetFallbackHandWorldPosition() const
-{
-    if (!owner) {
+    if (!attackOriginObject) {
         return RTBEngine::Math::Vector3::Zero();
     }
 
-    RTBEngine::Math::Vector3 forward = owner->GetWorldRotation() * RTBEngine::Math::Vector3::Forward();
-    if (forward.LengthSquared() <= kDirectionEpsilon) {
-        forward = RTBEngine::Math::Vector3::Forward();
-    } else {
-        forward.Normalize();
-    }
-
-    return owner->GetWorldPosition() + RTBEngine::Math::Vector3(0.0f, 1.1f, 0.0f) + forward * 0.35f;
+    return attackOriginObject->GetWorldPosition();
 }
 
 void EnemyMeleeAI::PlayWalkLoop()
@@ -520,13 +572,18 @@ void EnemyMeleeAI::PlayWalkLoop()
     animator->Play(kWalkAlias, true);
 }
 
-bool EnemyMeleeAI::PerformAttackSphereCast(RTBEngine::Math::Vector3* outHitPoint) const
+bool EnemyMeleeAI::PerformAttackSphereCast(RTBEngine::Math::Vector3* outHitPoint)
 {
-    if (!owner || !HasValidTarget()) {
+    if (!owner || !HasValidTarget() || !attackOriginObject) {
         return false;
     }
 
-    RTBEngine::Math::Vector3 castStart = GetAttackHandWorldPosition();
+    RTBEngine::Physics::PhysicsWorld* physicsWorld = ResolvePhysicsWorld();
+    if (!physicsWorld) {
+        return false;
+    }
+
+    RTBEngine::Math::Vector3 castStart = GetAttackOriginWorldPosition();
     RTBEngine::Math::Vector3 castDirection = owner->GetWorldRotation() * RTBEngine::Math::Vector3::Forward();
     if (castDirection.LengthSquared() <= kDirectionEpsilon) {
         castDirection = GetPlanarDirectionToTarget();
@@ -539,132 +596,23 @@ bool EnemyMeleeAI::PerformAttackSphereCast(RTBEngine::Math::Vector3* outHitPoint
     }
 
     const RTBEngine::Math::Vector3 castEnd = castStart + castDirection * attackSphereDistance;
-    return SphereCastIntersectsGameObject(targetObject, castStart, castEnd, attackSphereRadius, outHitPoint);
-}
+    RTBEngine::Physics::PhysicsQueryHit hit;
+    RTBEngine::Physics::PhysicsQueryOptions queryOptions;
+    queryOptions.ignoredObject = owner;
+    queryOptions.ignoreIgnoredObjectHierarchy = true;
+    queryOptions.ignoreTriggers = true;
 
-bool EnemyMeleeAI::SphereCastIntersectsGameObject(RTBEngine::ECS::GameObject* candidate,
-                                                  const RTBEngine::Math::Vector3& castStart,
-                                                  const RTBEngine::Math::Vector3& castEnd,
-                                                  float castRadius,
-                                                  RTBEngine::Math::Vector3* outHitPoint) const
-{
-    if (!candidate) {
+    if (!physicsWorld->SphereCastClosest(castStart, castEnd, attackSphereRadius, hit, queryOptions)) {
         return false;
     }
 
-    if (auto* capsule = candidate->GetComponent<RTBEngine::ECS::CapsuleColliderComponent>()) {
-        const RTBEngine::Math::Quaternion candidateRotation = candidate->GetWorldRotation();
-        RTBEngine::Math::Vector3 capsuleUp = candidateRotation * RTBEngine::Math::Vector3::Up();
-        if (capsuleUp.LengthSquared() <= kDirectionEpsilon) {
-            capsuleUp = RTBEngine::Math::Vector3::Up();
-        } else {
-            capsuleUp.Normalize();
-        }
-
-        const RTBEngine::Math::Vector3 capsuleCenter =
-            candidate->GetWorldPosition() + (candidateRotation * capsule->GetCenterOffset());
-        const float halfCylinderHeight = std::max(0.0f, (capsule->GetHeight() - (capsule->GetRadius() * 2.0f)) * 0.5f);
-        const RTBEngine::Math::Vector3 capsuleAxisStart = capsuleCenter + capsuleUp * halfCylinderHeight;
-        const RTBEngine::Math::Vector3 capsuleAxisEnd = capsuleCenter - capsuleUp * halfCylinderHeight;
-        const float combinedRadius = castRadius + capsule->GetRadius();
-
-        if (DistanceSquaredSegmentToSegment(castStart, castEnd, capsuleAxisStart, capsuleAxisEnd) <=
-            (combinedRadius * combinedRadius)) {
-            if (outHitPoint) {
-                *outHitPoint = capsuleCenter;
-            }
-            return true;
-        }
+    if (!IsWithinTargetHierarchy(hit.gameObject)) {
+        return false;
     }
 
-    if (auto* sphere = candidate->GetComponent<RTBEngine::ECS::SphereColliderComponent>()) {
-        const RTBEngine::Math::Vector3 sphereCenter =
-            candidate->GetWorldPosition() + (candidate->GetWorldRotation() * sphere->GetCenterOffset());
-        const float combinedRadius = castRadius + sphere->GetRadius();
-        if (DistanceSquaredPointToSegment(sphereCenter, castStart, castEnd) <=
-            (combinedRadius * combinedRadius)) {
-            if (outHitPoint) {
-                *outHitPoint = sphereCenter;
-            }
-            return true;
-        }
+    if (outHitPoint) {
+        *outHitPoint = hit.point;
     }
 
-    const RTBEngine::Math::Vector3 fallbackTargetPoint =
-        candidate->GetWorldPosition() + RTBEngine::Math::Vector3(0.0f, 0.9f, 0.0f);
-    if (DistanceSquaredPointToSegment(fallbackTargetPoint, castStart, castEnd) <= (castRadius * castRadius)) {
-        if (outHitPoint) {
-            *outHitPoint = fallbackTargetPoint;
-        }
-        return true;
-    }
-
-    return false;
-}
-
-float EnemyMeleeAI::DistanceSquaredPointToSegment(const RTBEngine::Math::Vector3& point,
-                                                  const RTBEngine::Math::Vector3& segmentStart,
-                                                  const RTBEngine::Math::Vector3& segmentEnd)
-{
-    const RTBEngine::Math::Vector3 segment = segmentEnd - segmentStart;
-    const float segmentLengthSq = segment.LengthSquared();
-    if (segmentLengthSq <= kDirectionEpsilon) {
-        return (point - segmentStart).LengthSquared();
-    }
-
-    const float t = std::clamp((point - segmentStart).Dot(segment) / segmentLengthSq, 0.0f, 1.0f);
-    const RTBEngine::Math::Vector3 closestPoint = segmentStart + segment * t;
-    return (point - closestPoint).LengthSquared();
-}
-
-float EnemyMeleeAI::DistanceSquaredSegmentToSegment(const RTBEngine::Math::Vector3& segmentAStart,
-                                                    const RTBEngine::Math::Vector3& segmentAEnd,
-                                                    const RTBEngine::Math::Vector3& segmentBStart,
-                                                    const RTBEngine::Math::Vector3& segmentBEnd)
-{
-    const RTBEngine::Math::Vector3 segmentA = segmentAEnd - segmentAStart;
-    const RTBEngine::Math::Vector3 segmentB = segmentBEnd - segmentBStart;
-    const RTBEngine::Math::Vector3 betweenStarts = segmentAStart - segmentBStart;
-
-    const float a = segmentA.Dot(segmentA);
-    const float e = segmentB.Dot(segmentB);
-    const float f = segmentB.Dot(betweenStarts);
-
-    float s = 0.0f;
-    float t = 0.0f;
-
-    if (a <= kDirectionEpsilon && e <= kDirectionEpsilon) {
-        return betweenStarts.LengthSquared();
-    }
-
-    if (a <= kDirectionEpsilon) {
-        t = std::clamp(f / e, 0.0f, 1.0f);
-    } else {
-        const float c = segmentA.Dot(betweenStarts);
-
-        if (e <= kDirectionEpsilon) {
-            s = std::clamp(-c / a, 0.0f, 1.0f);
-        } else {
-            const float b = segmentA.Dot(segmentB);
-            const float denom = a * e - b * b;
-
-            if (std::abs(denom) > kDirectionEpsilon) {
-                s = std::clamp((b * f - c * e) / denom, 0.0f, 1.0f);
-            }
-
-            t = (b * s + f) / e;
-
-            if (t < 0.0f) {
-                t = 0.0f;
-                s = std::clamp(-c / a, 0.0f, 1.0f);
-            } else if (t > 1.0f) {
-                t = 1.0f;
-                s = std::clamp((b - c) / a, 0.0f, 1.0f);
-            }
-        }
-    }
-
-    const RTBEngine::Math::Vector3 closestPointA = segmentAStart + segmentA * s;
-    const RTBEngine::Math::Vector3 closestPointB = segmentBStart + segmentB * t;
-    return (closestPointA - closestPointB).LengthSquared();
+    return true;
 }

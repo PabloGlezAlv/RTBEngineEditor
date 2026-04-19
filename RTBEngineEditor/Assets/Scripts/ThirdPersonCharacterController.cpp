@@ -2,7 +2,6 @@
 
 #include <RTBEngine/Core/Logger.h>
 #include <RTBEngine/Animation/Animator.h>
-#include <RTBEngine/Rendering/ModelLoader.h>
 #include <RTBEngine/ECS/GameObject.h>
 #include <RTBEngine/ECS/Scene.h>
 #include <RTBEngine/ECS/SceneManager.h>
@@ -44,31 +43,6 @@ namespace {
         return std::abs(value.x) > 0.0001f || std::abs(value.z) > 0.0001f;
     }
 
-    RTBEngine::Math::Vector3 GetPlanarForwardFromRotation(const RTBEngine::Math::Quaternion& rotation)
-    {
-        RTBEngine::Math::Vector3 forward = rotation * RTBEngine::Math::Vector3::Forward();
-        forward.y = 0.0f;
-
-        if (forward.LengthSquared() <= 0.0001f) {
-            return RTBEngine::Math::Vector3::Forward();
-        }
-
-        forward.Normalize();
-        return forward;
-    }
-
-    RTBEngine::Math::Vector3 GetRigidBodyPlanarForward(const RTBEngine::Physics::RigidBody* rigidBody,
-                                                       const RTBEngine::Math::Quaternion& fallbackRotation)
-    {
-        if (!rigidBody || !rigidBody->GetBulletRigidBody()) {
-            return GetPlanarForwardFromRotation(fallbackRotation);
-        }
-
-        return GetPlanarForwardFromRotation(
-            RTBEngine::Physics::PhysicsUtils::FromBullet(
-                rigidBody->GetBulletRigidBody()->getWorldTransform().getRotation()));
-    }
-
     void GetPlanarMovementBasis(
         const RTBEngine::ECS::GameObject* referenceObject,
         RTBEngine::Math::Vector3& outForward,
@@ -99,13 +73,6 @@ namespace {
         }
     }
 
-    void ReleaseLoadedModelMeshes(RTBEngine::Rendering::ModelData& data)
-    {
-        for (RTBEngine::Rendering::Mesh* mesh : data.meshes) {
-            delete mesh;
-        }
-        data.meshes.clear();
-    }
 }
 
 RTB_REGISTER_COMPONENT(ThirdPersonCharacterController)
@@ -218,16 +185,7 @@ void ThirdPersonCharacterController::ConfigurePhysicsBody() const
     }
 
     RTBEngine::Physics::RigidBody* rigidBody = rbComp->GetRigidBody();
-    if (!rigidBody || rigidBody->GetType() != RTBEngine::Physics::RigidBodyType::Dynamic) {
-        return;
-    }
-
-    rigidBody->SetAngularFactor(btVector3(0.0f, 1.0f, 0.0f));
-
-    btVector3 angularVelocity = rigidBody->GetAngularVelocity();
-    angularVelocity.setX(0.0f);
-    angularVelocity.setZ(0.0f);
-    rigidBody->SetAngularVelocity(angularVelocity);
+    RTBEngine::Physics::PhysicsUtils::ConfigurePlanarDynamicBody(rigidBody);
 }
 
 void ThirdPersonCharacterController::RegisterAnimationSlots()
@@ -272,19 +230,13 @@ void ThirdPersonCharacterController::RegisterAnimationSlot(const char* slotLabel
         return;
     }
 
-    RTBEngine::Rendering::ModelData modelData =
-        RTBEngine::Rendering::ModelLoader::LoadModelWithAnimations(sourceFbx);
-
-    if (modelData.animations.empty() || !modelData.animations.front()) {
+    if (!animator->LoadClipFromFbx(alias, sourceFbx)) {
         RTB_WARN(std::string("[ThirdPersonCharacterController] ") + slotLabel +
             " slot FBX has no usable animation clip: " + sourceFbx);
-        ReleaseLoadedModelMeshes(modelData);
         return;
     }
 
-    animator->AddClip(alias, modelData.animations.front());
     slotState.ready = true;
-    ReleaseLoadedModelMeshes(modelData);
 }
 
 void ThirdPersonCharacterController::ResolveCameraObject()
@@ -361,16 +313,14 @@ void ThirdPersonCharacterController::UpdateMovement(float deltaTime)
 
     if (!hasMovementInput) {
         if (useDynamicRigidBody) {
-            btVector3 velocity = rigidBody->GetLinearVelocity();
-            velocity.setX(0.0f);
-            velocity.setZ(0.0f);
-            rigidBody->SetLinearVelocity(velocity);
-
-            btVector3 angularVelocity = rigidBody->GetAngularVelocity();
-            angularVelocity.setX(0.0f);
-            angularVelocity.setY(0.0f);
-            angularVelocity.setZ(0.0f);
-            rigidBody->SetAngularVelocity(angularVelocity);
+            RTBEngine::Physics::PhysicsUtils::ApplyPlanarDynamicBodyMotion(
+                rigidBody,
+                RTBEngine::Math::Vector3::Zero(),
+                RTBEngine::Math::Vector3::Zero(),
+                0.0f,
+                turnSpeed,
+                deltaTime,
+                owner->GetTransform().GetRotation());
         }
 
         UpdateAnimatorLocomotion(false, false);
@@ -383,31 +333,14 @@ void ThirdPersonCharacterController::UpdateMovement(float deltaTime)
         (isRunning ? sprintMultiplier : 1.0f);
 
     if (useDynamicRigidBody) {
-        btVector3 velocity = rigidBody->GetLinearVelocity();
-        velocity.setX(desiredMove.x * speed);
-        velocity.setZ(desiredMove.z * speed);
-        rigidBody->SetLinearVelocity(velocity);
-
-        const RTBEngine::Math::Vector3 currentForward =
-            GetRigidBodyPlanarForward(rigidBody, owner->GetTransform().GetRotation());
-        const float signedAngleRadians = std::atan2(
-            currentForward.Cross(desiredMove).y,
-            std::clamp(currentForward.Dot(desiredMove), -1.0f, 1.0f));
-        const float signedAngleDegrees = signedAngleRadians * kRadToDeg;
-
-        btVector3 angularVelocity = rigidBody->GetAngularVelocity();
-        angularVelocity.setX(0.0f);
-        angularVelocity.setZ(0.0f);
-
-        if (std::abs(signedAngleDegrees) <= 0.1f || deltaTime <= 0.0001f || turnSpeed <= 0.0f) {
-            angularVelocity.setY(0.0f);
-        } else {
-            const float yawSpeedDegrees =
-                std::clamp(signedAngleDegrees / deltaTime, -turnSpeed, turnSpeed);
-            angularVelocity.setY(yawSpeedDegrees * kDegToRad);
-        }
-
-        rigidBody->SetAngularVelocity(angularVelocity);
+        RTBEngine::Physics::PhysicsUtils::ApplyPlanarDynamicBodyMotion(
+            rigidBody,
+            desiredMove,
+            desiredMove,
+            speed,
+            turnSpeed,
+            deltaTime,
+            owner->GetTransform().GetRotation());
     } else {
         const float targetYaw = -std::atan2(desiredMove.x, desiredMove.z) * kRadToDeg;
         RTBEngine::Math::Vector3 currentEuler = owner->GetTransform().GetRotation().ToEulerAngles();
