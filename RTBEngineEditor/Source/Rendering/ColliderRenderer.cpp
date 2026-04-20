@@ -5,6 +5,8 @@
 #include <RTBEngine/ECS/CapsuleColliderComponent.h>
 #include <RTBEngine/ECS/Transform.h>
 #include <RTBEngine/Math/Math.h>
+#include <RTBEngine/Physics/PhysicsWorld.h>
+#include <array>
 #include <algorithm>
 #include <cmath>
 #include <vector>
@@ -14,6 +16,8 @@ namespace RTBEditor {
     static constexpr int SPHERE_SEGMENTS = 32;
     // 3 circles (XY, XZ, YZ) × 32 segments × 2 endpoints = 192 vertices
     static constexpr int SPHERE_VERTEX_COUNT = 3 * SPHERE_SEGMENTS * 2;
+    static constexpr float DEBUG_QUERY_LIFETIME_SECONDS = 5.0f;
+    static constexpr std::size_t MAX_DEBUG_QUERY_RENDER_COUNT = 128;
 
     struct LineVertex {
         RTBEngine::Math::Vector3 position;
@@ -70,6 +74,22 @@ namespace RTBEditor {
         glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(LineVertex), (void*)offsetof(LineVertex, color));
 
         glBindVertexArray(0);
+
+        glGenVertexArrays(1, &debugQueryVao);
+        glGenBuffers(1, &debugQueryVbo);
+
+        glBindVertexArray(debugQueryVao);
+        glBindBuffer(GL_ARRAY_BUFFER, debugQueryVbo);
+        glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
+
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(LineVertex), (void*)0);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(LineVertex), (void*)offsetof(LineVertex, color));
+
+        glBindVertexArray(0);
+
+        RTBEngine::Physics::SetPhysicsDebugQueriesEnabled(true);
     }
 
     ColliderRenderer::~ColliderRenderer() {
@@ -79,6 +99,105 @@ namespace RTBEditor {
         if (sphereVbo) glDeleteBuffers(1, &sphereVbo);
         if (capsuleVao) glDeleteVertexArrays(1, &capsuleVao);
         if (capsuleVbo) glDeleteBuffers(1, &capsuleVbo);
+        if (debugQueryVao) glDeleteVertexArrays(1, &debugQueryVao);
+        if (debugQueryVbo) glDeleteBuffers(1, &debugQueryVbo);
+    }
+
+    void ColliderRenderer::RenderDebugQueries(RTBEngine::Rendering::Camera* camera) {
+        if (!camera || !lineShader) {
+            return;
+        }
+
+        std::array<RTBEngine::Physics::PhysicsDebugQueryEntry, MAX_DEBUG_QUERY_RENDER_COUNT> entries{};
+        const int queryCount = RTBEngine::Physics::GetPhysicsDebugQuerySnapshot(
+            entries.data(),
+            static_cast<int>(entries.size()));
+
+        if (queryCount <= 0) {
+            return;
+        }
+
+        std::vector<LineVertex> lineVertices;
+        lineVertices.reserve(static_cast<std::size_t>(queryCount) * 2);
+
+        auto appendSegment = [&lineVertices](
+            const RTBEngine::Math::Vector3& start,
+            const RTBEngine::Math::Vector3& end,
+            const RTBEngine::Math::Vector4& color) {
+            lineVertices.push_back({ start, color });
+            lineVertices.push_back({ end, color });
+        };
+
+        for (int i = 0; i < queryCount; ++i) {
+            const RTBEngine::Physics::PhysicsDebugQueryEntry& entry = entries[static_cast<std::size_t>(i)];
+            const float lifeAlpha = std::clamp(entry.remainingSeconds / DEBUG_QUERY_LIFETIME_SECONDS, 0.15f, 1.0f);
+
+            if (entry.type == RTBEngine::Physics::PhysicsDebugQueryType::Raycast) {
+                const RTBEngine::Math::Vector4 rayColor =
+                    entry.hit
+                        ? RTBEngine::Math::Vector4(1.0f, 0.35f, 0.2f, lifeAlpha)
+                        : RTBEngine::Math::Vector4(1.0f, 0.8f, 0.15f, lifeAlpha);
+
+                appendSegment(entry.start, entry.end, rayColor);
+
+                if (entry.hit) {
+                    const RTBEngine::Math::Vector3 hitPosition =
+                        entry.start + (entry.end - entry.start) * entry.hitFraction;
+                    RenderSphereWireframe(
+                        camera,
+                        hitPosition,
+                        0.08f,
+                        RTBEngine::Math::Vector4(1.0f, 0.15f, 0.1f, lifeAlpha));
+                }
+
+                continue;
+            }
+
+            const RTBEngine::Math::Vector4 pathColor =
+                entry.hit
+                    ? RTBEngine::Math::Vector4(0.2f, 0.95f, 1.0f, lifeAlpha)
+                    : RTBEngine::Math::Vector4(0.35f, 0.75f, 1.0f, lifeAlpha * 0.9f);
+            const RTBEngine::Math::Vector4 shellColor(pathColor.x, pathColor.y, pathColor.z, lifeAlpha * 0.65f);
+
+            appendSegment(entry.start, entry.end, pathColor);
+            RenderSphereWireframe(camera, entry.start, entry.radius, shellColor);
+            RenderSphereWireframe(camera, entry.end, entry.radius, shellColor);
+
+            if (entry.hit) {
+                const RTBEngine::Math::Vector3 sweepHitCenter =
+                    entry.start + (entry.end - entry.start) * entry.hitFraction;
+                RenderSphereWireframe(
+                    camera,
+                    sweepHitCenter,
+                    std::max(entry.radius, 0.05f),
+                    RTBEngine::Math::Vector4(0.1f, 1.0f, 0.45f, lifeAlpha));
+            }
+        }
+
+        if (lineVertices.empty()) {
+            return;
+        }
+
+        glBindBuffer(GL_ARRAY_BUFFER, debugQueryVbo);
+        glBufferData(
+            GL_ARRAY_BUFFER,
+            static_cast<GLsizeiptr>(lineVertices.size() * sizeof(LineVertex)),
+            lineVertices.data(),
+            GL_DYNAMIC_DRAW);
+
+        lineShader->Bind();
+        lineShader->SetMatrix4("uViewProjection", camera->GetViewProjectionMatrix());
+
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glEnable(GL_DEPTH_TEST);
+
+        glBindVertexArray(debugQueryVao);
+        glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(lineVertices.size()));
+        glBindVertexArray(0);
+
+        glDisable(GL_BLEND);
+        lineShader->Unbind();
     }
 
     void ColliderRenderer::RenderSelection(RTBEngine::Rendering::Camera* camera,
@@ -159,9 +278,18 @@ namespace RTBEditor {
     void ColliderRenderer::RenderSphereWireframe(RTBEngine::Rendering::Camera* camera,
                                                   RTBEngine::ECS::GameObject* object,
                                                   RTBEngine::ECS::SphereColliderComponent* collider) {
-        float r = collider->radius;
-        RTBEngine::Math::Vector3 center = object->GetTransform().GetPosition() + collider->centerOffset;
-        RTBEngine::Math::Vector4 color(0.1f, 1.0f, 0.1f, 1.0f);
+        const float radius = collider->radius;
+        const RTBEngine::Math::Vector3 center = object->GetTransform().GetPosition() + collider->centerOffset;
+        RenderSphereWireframe(camera, center, radius, RTBEngine::Math::Vector4(0.1f, 1.0f, 0.1f, 1.0f));
+    }
+
+    void ColliderRenderer::RenderSphereWireframe(RTBEngine::Rendering::Camera* camera,
+                                                  const RTBEngine::Math::Vector3& center,
+                                                  float radius,
+                                                  const RTBEngine::Math::Vector4& color) {
+        if (!camera || !lineShader || radius <= 0.0f) {
+            return;
+        }
 
         LineVertex vertices[SPHERE_VERTEX_COUNT];
         int idx = 0;
@@ -175,16 +303,16 @@ namespace RTBEditor {
             float c1 = std::cos(a1), s1 = std::sin(a1);
 
             //XY circle
-            vertices[idx++] = { RTBEngine::Math::Vector3(center.x + r * c0, center.y + r * s0, center.z), color };
-            vertices[idx++] = { RTBEngine::Math::Vector3(center.x + r * c1, center.y + r * s1, center.z), color };
+            vertices[idx++] = { RTBEngine::Math::Vector3(center.x + radius * c0, center.y + radius * s0, center.z), color };
+            vertices[idx++] = { RTBEngine::Math::Vector3(center.x + radius * c1, center.y + radius * s1, center.z), color };
 
             //XZ circle
-            vertices[idx++] = { RTBEngine::Math::Vector3(center.x + r * c0, center.y, center.z + r * s0), color };
-            vertices[idx++] = { RTBEngine::Math::Vector3(center.x + r * c1, center.y, center.z + r * s1), color };
+            vertices[idx++] = { RTBEngine::Math::Vector3(center.x + radius * c0, center.y, center.z + radius * s0), color };
+            vertices[idx++] = { RTBEngine::Math::Vector3(center.x + radius * c1, center.y, center.z + radius * s1), color };
 
             //YZ circle
-            vertices[idx++] = { RTBEngine::Math::Vector3(center.x, center.y + r * c0, center.z + r * s0), color };
-            vertices[idx++] = { RTBEngine::Math::Vector3(center.x, center.y + r * c1, center.z + r * s1), color };
+            vertices[idx++] = { RTBEngine::Math::Vector3(center.x, center.y + radius * c0, center.z + radius * s0), color };
+            vertices[idx++] = { RTBEngine::Math::Vector3(center.x, center.y + radius * c1, center.z + radius * s1), color };
         }
 
         glBindBuffer(GL_ARRAY_BUFFER, sphereVbo);

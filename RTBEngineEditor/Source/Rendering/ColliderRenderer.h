@@ -2,6 +2,8 @@
 #include <RTBEngine/Rendering/Camera.h>
 #include <RTBEngine/Rendering/Shader.h>
 #include <RTBEngine/ECS/GameObject.h>
+#include <RTBEngine/Math/Vectors/Vector3.h>
+#include <RTBEngine/Math/Vectors/Vector4.h>
 #include <GL/glew.h>
 
 namespace RTBEngine {
@@ -24,6 +26,7 @@ namespace RTBEditor {
         // Renders a wireframe collider for the selected object's collider component, if it has one.
         void RenderSelection(RTBEngine::Rendering::Camera* camera,
                              RTBEngine::ECS::GameObject* selectedObject);
+        void RenderDebugQueries(RTBEngine::Rendering::Camera* camera);
 
     private:
         //Box collider rendering
@@ -38,11 +41,19 @@ namespace RTBEditor {
         GLuint capsuleVao = 0;
         GLuint capsuleVbo = 0;
 
+        //Dynamic lines for debug queries
+        GLuint debugQueryVao = 0;
+        GLuint debugQueryVbo = 0;
+
         RTBEngine::Rendering::Shader* lineShader = nullptr;
 
         void RenderSphereWireframe(RTBEngine::Rendering::Camera* camera,
                                    RTBEngine::ECS::GameObject* object,
                                    RTBEngine::ECS::SphereColliderComponent* collider);
+        void RenderSphereWireframe(RTBEngine::Rendering::Camera* camera,
+                                   const RTBEngine::Math::Vector3& center,
+                                   float radius,
+                                   const RTBEngine::Math::Vector4& color);
         void RenderCapsuleWireframe(RTBEngine::Rendering::Camera* camera,
                                     RTBEngine::ECS::GameObject* object,
                                     RTBEngine::ECS::CapsuleColliderComponent* collider);
