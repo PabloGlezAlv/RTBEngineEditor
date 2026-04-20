@@ -1,17 +1,22 @@
 #include "ThirdPersonCharacterController.h"
 
-#include <RTBEngine/Core/Logger.h>
+#include "HealthComponent.h"
+
 #include <RTBEngine/Animation/Animator.h>
+#include <RTBEngine/Core/Logger.h>
+#include <RTBEngine/ECS/CameraComponent.h>
+#include <RTBEngine/ECS/FreeLookCamera.h>
 #include <RTBEngine/ECS/GameObject.h>
+#include <RTBEngine/ECS/RigidBodyComponent.h>
 #include <RTBEngine/ECS/Scene.h>
 #include <RTBEngine/ECS/SceneManager.h>
-#include <RTBEngine/ECS/CameraComponent.h>
-#include <RTBEngine/ECS/RigidBodyComponent.h>
-#include <RTBEngine/ECS/FreeLookCamera.h>
 #include <RTBEngine/Input/InputManager.h>
 #include <RTBEngine/Input/KeyCode.h>
-#include <RTBEngine/Physics/PhysicsUtils.h>
+#include <RTBEngine/Input/MouseButton.h>
 #include <RTBEngine/Math/Quaternions/Quaternion.h>
+#include <RTBEngine/Physics/PhysicsUtils.h>
+#include <RTBEngine/Physics/PhysicsWorld.h>
+
 #include <algorithm>
 #include <cmath>
 
@@ -21,32 +26,40 @@ namespace {
     constexpr float kPi = 3.14159265358979323846f;
     constexpr float kRadToDeg = 180.0f / kPi;
     constexpr float kDegToRad = kPi / 180.0f;
+    constexpr float kDirectionEpsilon = 0.0001f;
+    constexpr float kAttackCompletionEpsilon = 0.0001f;
+    constexpr float kFallbackAttackDuration = 0.5f;
     constexpr const char* kIdleAlias = "ThirdPerson.Idle";
     constexpr const char* kWalkAlias = "ThirdPerson.Walk";
     constexpr const char* kRunAlias = "ThirdPerson.Run";
+    constexpr const char* kAttackAlias = "ThirdPerson.Attack";
+    constexpr const char* kDeathAlias = "ThirdPerson.Death";
 
-    float ClampAngleDegrees(float angle) {
+    float ClampAngleDegrees(float angle)
+    {
         while (angle > 180.0f) angle -= 360.0f;
         while (angle < -180.0f) angle += 360.0f;
         return angle;
     }
 
-    float MoveTowardsAngleDegrees(float current, float target, float maxDelta) {
+    float MoveTowardsAngleDegrees(float current, float target, float maxDelta)
+    {
         const float delta = ClampAngleDegrees(target - current);
         if (std::abs(delta) <= maxDelta) {
             return target;
         }
+
         return current + (delta > 0.0f ? maxDelta : -maxDelta);
     }
 
-    bool HasMovementInput(const RTBEngine::Math::Vector3& value) {
-        return std::abs(value.x) > 0.0001f || std::abs(value.z) > 0.0001f;
+    bool HasMovementInput(const RTBEngine::Math::Vector3& value)
+    {
+        return std::abs(value.x) > kDirectionEpsilon || std::abs(value.z) > kDirectionEpsilon;
     }
 
-    void GetPlanarMovementBasis(
-        const RTBEngine::ECS::GameObject* referenceObject,
-        RTBEngine::Math::Vector3& outForward,
-        RTBEngine::Math::Vector3& outRight)
+    void GetPlanarMovementBasis(const RTBEngine::ECS::GameObject* referenceObject,
+                                RTBEngine::Math::Vector3& outForward,
+                                RTBEngine::Math::Vector3& outRight)
     {
         outForward = RTBEngine::Math::Vector3::Forward();
         outRight = RTBEngine::Math::Vector3::Forward().Cross(RTBEngine::Math::Vector3::Up());
@@ -58,25 +71,25 @@ namespace {
         const RTBEngine::Math::Matrix4 worldMatrix = referenceObject->GetWorldMatrix();
         outForward = RTBEngine::Math::Vector3(worldMatrix[8], 0.0f, worldMatrix[10]);
 
-        if (outForward.LengthSquared() <= 0.0001f) {
+        if (outForward.LengthSquared() <= kDirectionEpsilon) {
             outForward = RTBEngine::Math::Vector3::Forward();
         } else {
             outForward.Normalize();
         }
 
-        // Match the engine's negated-yaw convention: "right" is forward x up.
         outRight = outForward.Cross(RTBEngine::Math::Vector3::Up());
-        if (outRight.LengthSquared() <= 0.0001f) {
+        if (outRight.LengthSquared() <= kDirectionEpsilon) {
             outRight = RTBEngine::Math::Vector3::Forward().Cross(RTBEngine::Math::Vector3::Up());
         } else {
             outRight.Normalize();
         }
     }
-
 }
 
 RTB_REGISTER_COMPONENT(ThirdPersonCharacterController)
     RTB_PROPERTY_GAMEOBJECT(cameraObject)
+    RTB_PROPERTY_COMPONENT(health, HealthComponent)
+    RTB_PROPERTY_GAMEOBJECT(attackOriginObject)
     RTB_PROPERTY_RANGE(moveSpeed, 0.0f, 20.0f)
     RTB_PROPERTY_RANGE(sprintMultiplier, 1.0f, 4.0f)
     RTB_PROPERTY_RANGE(turnSpeed, 0.0f, 1440.0f)
@@ -89,22 +102,37 @@ RTB_REGISTER_COMPONENT(ThirdPersonCharacterController)
     RTB_PROPERTY_RANGE(maxPitch, -89.0f, 89.0f)
     RTB_PROPERTY(cameraFocusOffset)
     RTB_PROPERTY_COMPONENT(animator, Animator)
+    RTB_PROPERTY_RANGE(attackRange, 0.1f, 4.0f)
+    RTB_PROPERTY_RANGE(attackCooldown, 0.0f, 5.0f)
+    RTB_PROPERTY_RANGE(attackDamage, 0.0f, 100.0f)
+    RTB_PROPERTY_RANGE(attackHitDelay, 0.0f, 5.0f)
+    RTB_PROPERTY_RANGE(attackSphereRadius, 0.05f, 3.0f)
+    RTB_PROPERTY_RANGE(attackSphereDistance, 0.05f, 5.0f)
     RTB_PROPERTY_FBX(idleAnimationFbx)
     RTB_PROPERTY_FBX(walkAnimationFbx)
     RTB_PROPERTY_FBX(runAnimationFbx)
+    RTB_PROPERTY_FBX(attackAnimationFbx)
+    RTB_PROPERTY_FBX(deathAnimationFbx)
 RTB_END_REGISTER(ThirdPersonCharacterController)
 
 void ThirdPersonCharacterController::OnStart()
 {
     ClampSettings();
+    ResolveHealth();
+    ResolveAnimator();
     RegisterAnimationSlots();
     ResolveCameraObject();
     SyncCameraFromCurrentTransform();
     ConfigurePhysicsBody();
     DisableCompetingCameraController();
+    RebindHealthSubscription();
     UpdateAnimatorLocomotion(false, false);
     ApplyCameraOrbitTransform();
     RTBEngine::Input::InputManager::GetInstance().SetMouseRelativeMode(true);
+
+    if (health && health->IsDead()) {
+        HandleDeath(health->GetLastDeathEvent());
+    }
 }
 
 void ThirdPersonCharacterController::OnUpdate(float deltaTime)
@@ -114,10 +142,26 @@ void ThirdPersonCharacterController::OnUpdate(float deltaTime)
     }
 
     ClampSettings();
+    ResolveHealth();
+    ResolveAnimator();
     RegisterAnimationSlots();
     ResolveCameraObject();
     DisableCompetingCameraController();
+    RebindHealthSubscription();
     UpdateCameraOrbit();
+
+    cooldownRemaining = std::max(0.0f, cooldownRemaining - deltaTime);
+
+    if (state == State::Dead) {
+        return;
+    }
+
+    if (state == State::Attacking) {
+        UpdateAttack(deltaTime);
+        return;
+    }
+
+    UpdateAttackInput();
 }
 
 void ThirdPersonCharacterController::OnFixedUpdate(float fixedDeltaTime)
@@ -127,12 +171,19 @@ void ThirdPersonCharacterController::OnFixedUpdate(float fixedDeltaTime)
     }
 
     ClampSettings();
+    ResolveHealth();
     ResolveCameraObject();
     ConfigurePhysicsBody();
+
+    if (state == State::Dead) {
+        StopPlanarMotion();
+        return;
+    }
+
     UpdateMovement(fixedDeltaTime);
 }
 
-void ThirdPersonCharacterController::OnLateUpdate(float deltaTime)
+void ThirdPersonCharacterController::OnLateUpdate(float /*deltaTime*/)
 {
     if (!owner) {
         return;
@@ -141,11 +192,34 @@ void ThirdPersonCharacterController::OnLateUpdate(float deltaTime)
     ResolveCameraObject();
     DisableCompetingCameraController();
     ApplyCameraOrbitTransform();
+
+    if (state != State::Attacking) {
+        return;
+    }
+
+    const bool hasAttackAnimation =
+        animator && attackSlotState.ready && animator->GetClip(kAttackAlias);
+
+    if (!hasAttackAnimation) {
+        if (attackHitExecuted &&
+            attackElapsed + kAttackCompletionEpsilon >= attackHitDelay + kFallbackAttackDuration) {
+            FinishAttack();
+        }
+        return;
+    }
+
+    if (animator->GetCurrentClipName() == kAttackAlias && animator->IsPlaying()) {
+        return;
+    }
+
+    FinishAttack();
 }
 
 void ThirdPersonCharacterController::OnValidate()
 {
     ClampSettings();
+    ResolveHealth();
+    ResolveAnimator();
     RegisterAnimationSlots();
     ResolveCameraObject();
     SyncCameraFromCurrentTransform();
@@ -153,6 +227,11 @@ void ThirdPersonCharacterController::OnValidate()
     DisableCompetingCameraController();
     UpdateAnimatorLocomotion(false, false);
     ApplyCameraOrbitTransform();
+}
+
+void ThirdPersonCharacterController::OnDestroy()
+{
+    UnsubscribeFromHealth();
 }
 
 void ThirdPersonCharacterController::ClampSettings()
@@ -171,6 +250,13 @@ void ThirdPersonCharacterController::ClampSettings()
         std::swap(minPitch, maxPitch);
     }
     cameraPitch = std::clamp(cameraPitch, minPitch, maxPitch);
+
+    attackRange = std::max(0.1f, attackRange);
+    attackCooldown = std::max(0.0f, attackCooldown);
+    attackDamage = std::max(0.0f, attackDamage);
+    attackHitDelay = std::max(0.0f, attackHitDelay);
+    attackSphereRadius = std::max(0.05f, attackSphereRadius);
+    attackSphereDistance = std::max(0.05f, attackSphereDistance);
 }
 
 void ThirdPersonCharacterController::ConfigurePhysicsBody() const
@@ -186,57 +272,6 @@ void ThirdPersonCharacterController::ConfigurePhysicsBody() const
 
     RTBEngine::Physics::RigidBody* rigidBody = rbComp->GetRigidBody();
     RTBEngine::Physics::PhysicsUtils::ConfigurePlanarDynamicBody(rigidBody);
-}
-
-void ThirdPersonCharacterController::RegisterAnimationSlots()
-{
-    const bool animatorChanged = (registeredAnimator != animator);
-    if (animatorChanged) {
-        registeredAnimator = animator;
-        idleSlotState = {};
-        walkSlotState = {};
-        runSlotState = {};
-    }
-
-    if (!animator) {
-        if (!missingAnimatorWarningShown &&
-            (!idleAnimationFbx.empty() || !walkAnimationFbx.empty() || !runAnimationFbx.empty())) {
-            RTB_WARN("[ThirdPersonCharacterController] Assign an Animator component to use FBX animation slots.");
-            missingAnimatorWarningShown = true;
-        }
-        return;
-    }
-
-    missingAnimatorWarningShown = false;
-
-    RegisterAnimationSlot("Idle", idleAnimationFbx, kIdleAlias, idleSlotState);
-    RegisterAnimationSlot("Walk", walkAnimationFbx, kWalkAlias, walkSlotState);
-    RegisterAnimationSlot("Run", runAnimationFbx, kRunAlias, runSlotState);
-}
-
-void ThirdPersonCharacterController::RegisterAnimationSlot(const char* slotLabel,
-                                                           const std::string& sourceFbx,
-                                                           const char* alias,
-                                                           AnimationSlotState& slotState)
-{
-    if (slotState.sourceFbx == sourceFbx) {
-        return;
-    }
-
-    slotState.sourceFbx = sourceFbx;
-    slotState.ready = false;
-
-    if (!animator || sourceFbx.empty()) {
-        return;
-    }
-
-    if (!animator->LoadClipFromFbx(alias, sourceFbx)) {
-        RTB_WARN(std::string("[ThirdPersonCharacterController] ") + slotLabel +
-            " slot FBX has no usable animation clip: " + sourceFbx);
-        return;
-    }
-
-    slotState.ready = true;
 }
 
 void ThirdPersonCharacterController::ResolveCameraObject()
@@ -266,6 +301,24 @@ void ThirdPersonCharacterController::ResolveCameraObject()
     cameraObject = mainCamera->GetOwner();
 }
 
+void ThirdPersonCharacterController::ResolveHealth()
+{
+    if (health || !owner) {
+        return;
+    }
+
+    health = owner->GetComponent<HealthComponent>();
+}
+
+void ThirdPersonCharacterController::ResolveAnimator()
+{
+    if (animator || !owner) {
+        return;
+    }
+
+    animator = owner->GetComponentInChildren<RTBEngine::Animation::Animator>();
+}
+
 void ThirdPersonCharacterController::DisableCompetingCameraController() const
 {
     if (!cameraObject) {
@@ -287,6 +340,162 @@ void ThirdPersonCharacterController::SyncCameraFromCurrentTransform()
     RTBEngine::Math::Vector3 euler = cameraObject->GetWorldRotation().ToEulerAngles();
     cameraPitch = std::clamp(euler.x * kRadToDeg, minPitch, maxPitch);
     cameraYaw = euler.y * kRadToDeg;
+}
+
+void ThirdPersonCharacterController::ApplyCameraOrbitTransform()
+{
+    if (!owner || !cameraObject) {
+        return;
+    }
+
+    const RTBEngine::Math::Quaternion orbitRotation =
+        RTBEngine::Math::Quaternion::FromEulerAngles(
+            cameraPitch * kDegToRad,
+            cameraYaw * kDegToRad,
+            0.0f);
+    const RTBEngine::Math::Quaternion ownerWorldRotation = owner->GetWorldRotation();
+    const RTBEngine::Math::Vector3 worldFocusOffset = ownerWorldRotation * cameraFocusOffset;
+    const bool cameraIsChildOfOwner = (cameraObject->GetParent() == owner);
+
+    if (cameraIsChildOfOwner) {
+        const RTBEngine::Math::Quaternion localOrbitRotation = ownerWorldRotation.Inverse() * orbitRotation;
+        const RTBEngine::Math::Vector3 localForward = localOrbitRotation * RTBEngine::Math::Vector3::Forward();
+        const RTBEngine::Math::Vector3 localCameraPosition = cameraFocusOffset - localForward * cameraDistance;
+
+        cameraObject->GetTransform().SetPosition(localCameraPosition);
+        cameraObject->GetTransform().SetRotation(localOrbitRotation);
+        return;
+    }
+
+    const RTBEngine::Math::Vector3 focusPoint = owner->GetWorldPosition() + worldFocusOffset;
+    const RTBEngine::Math::Vector3 forward = orbitRotation * RTBEngine::Math::Vector3::Forward();
+    const RTBEngine::Math::Vector3 cameraPosition = focusPoint - forward * cameraDistance;
+
+    cameraObject->GetTransform().SetPosition(cameraPosition);
+    cameraObject->GetTransform().SetRotation(orbitRotation);
+}
+
+void ThirdPersonCharacterController::RegisterAnimationSlots()
+{
+    const bool animatorChanged = (registeredAnimator != animator);
+    if (animatorChanged) {
+        registeredAnimator = animator;
+        idleSlotState = {};
+        walkSlotState = {};
+        runSlotState = {};
+        attackSlotState = {};
+        deathSlotState = {};
+    }
+
+    if (!animator) {
+        if (!missingAnimatorWarningShown &&
+            (!idleAnimationFbx.empty() || !walkAnimationFbx.empty() || !runAnimationFbx.empty() ||
+             !attackAnimationFbx.empty() || !deathAnimationFbx.empty())) {
+            RTB_WARN("[ThirdPersonCharacterController] Assign an Animator component to use FBX animation slots.");
+            missingAnimatorWarningShown = true;
+        }
+        return;
+    }
+
+    missingAnimatorWarningShown = false;
+
+    RegisterAnimationSlot("Idle", idleAnimationFbx, kIdleAlias, idleSlotState);
+    RegisterAnimationSlot("Walk", walkAnimationFbx, kWalkAlias, walkSlotState);
+    RegisterAnimationSlot("Run", runAnimationFbx, kRunAlias, runSlotState);
+    RegisterAnimationSlot("Attack", attackAnimationFbx, kAttackAlias, attackSlotState);
+    RegisterAnimationSlot("Death", deathAnimationFbx, kDeathAlias, deathSlotState);
+}
+
+void ThirdPersonCharacterController::RegisterAnimationSlot(const char* slotLabel,
+                                                           const std::string& sourceFbx,
+                                                           const char* alias,
+                                                           AnimationSlotState& slotState)
+{
+    if (slotState.sourceFbx == sourceFbx) {
+        return;
+    }
+
+    slotState.sourceFbx = sourceFbx;
+    slotState.ready = false;
+
+    if (!animator || sourceFbx.empty()) {
+        return;
+    }
+
+    if (!animator->LoadClipFromFbx(alias, sourceFbx)) {
+        RTB_WARN(std::string("[ThirdPersonCharacterController] ") + slotLabel +
+                 " slot FBX has no usable animation clip: " + sourceFbx);
+        return;
+    }
+
+    slotState.ready = true;
+}
+
+void ThirdPersonCharacterController::RebindHealthSubscription()
+{
+    if (subscribedHealth == health && deathSubscription.IsValid()) {
+        return;
+    }
+
+    UnsubscribeFromHealth();
+
+    if (!health) {
+        return;
+    }
+
+    subscribedHealth = health;
+    deathSubscription = health->SubscribeToDeath(
+        [this](const HealthComponent::DeathEvent& eventData) {
+            HandleDeath(eventData);
+        });
+}
+
+void ThirdPersonCharacterController::UnsubscribeFromHealth()
+{
+    deathSubscription.Reset();
+    subscribedHealth = nullptr;
+}
+
+void ThirdPersonCharacterController::UpdateAttackInput()
+{
+    if (attackDamage <= 0.0f) {
+        return;
+    }
+
+    RTBEngine::Input::InputManager& input = RTBEngine::Input::InputManager::GetInstance();
+    if (!input.IsMouseButtonJustPressed(RTBEngine::Input::MouseButton::Left)) {
+        return;
+    }
+
+    if (cooldownRemaining > 0.0f) {
+        return;
+    }
+
+    StartAttack();
+}
+
+void ThirdPersonCharacterController::UpdateAttack(float deltaTime)
+{
+    attackElapsed = std::max(0.0f, attackElapsed + deltaTime);
+    if (attackHitExecuted || attackElapsed + kAttackCompletionEpsilon < attackHitDelay) {
+        return;
+    }
+
+    attackHitExecuted = true;
+
+    HealthComponent* targetHealth = nullptr;
+    RTBEngine::Math::Vector3 hitPoint;
+    RTBEngine::Math::Vector3 hitDirection;
+    if (!PerformAttackSphereCast(&targetHealth, &hitPoint, &hitDirection) || !targetHealth) {
+        return;
+    }
+
+    HealthComponent::DamageContext damageContext;
+    damageContext.amount = attackDamage;
+    damageContext.instigator = owner;
+    damageContext.hitPoint = hitPoint;
+    damageContext.hitDirection = hitDirection;
+    targetHealth->TakeDamage(attackDamage, damageContext);
 }
 
 void ThirdPersonCharacterController::UpdateMovement(float deltaTime)
@@ -329,8 +538,7 @@ void ThirdPersonCharacterController::UpdateMovement(float deltaTime)
 
     desiredMove.Normalize();
 
-    const float speed = moveSpeed *
-        (isRunning ? sprintMultiplier : 1.0f);
+    const float speed = moveSpeed * (isRunning ? sprintMultiplier : 1.0f);
 
     if (useDynamicRigidBody) {
         RTBEngine::Physics::PhysicsUtils::ApplyPlanarDynamicBodyMotion(
@@ -364,13 +572,9 @@ void ThirdPersonCharacterController::UpdateCameraOrbit()
     }
 
     RTBEngine::Input::InputManager& input = RTBEngine::Input::InputManager::GetInstance();
-    const bool canLook = true;
-
-    if (canLook) {
-        cameraYaw += static_cast<float>(input.GetMouseDeltaX()) * mouseSensitivity;
-        cameraPitch -= static_cast<float>(input.GetMouseDeltaY()) * mouseSensitivity;
-        cameraPitch = std::clamp(cameraPitch, minPitch, maxPitch);
-    }
+    cameraYaw += static_cast<float>(input.GetMouseDeltaX()) * mouseSensitivity;
+    cameraPitch -= static_cast<float>(input.GetMouseDeltaY()) * mouseSensitivity;
+    cameraPitch = std::clamp(cameraPitch, minPitch, maxPitch);
 
     const int scrollDelta = input.GetScrollDelta();
     if (scrollDelta != 0) {
@@ -381,42 +585,9 @@ void ThirdPersonCharacterController::UpdateCameraOrbit()
     }
 }
 
-void ThirdPersonCharacterController::ApplyCameraOrbitTransform()
-{
-    if (!owner || !cameraObject) {
-        return;
-    }
-
-    const RTBEngine::Math::Quaternion orbitRotation =
-        RTBEngine::Math::Quaternion::FromEulerAngles(
-            cameraPitch * kDegToRad,
-            cameraYaw * kDegToRad,
-            0.0f);
-    const RTBEngine::Math::Quaternion ownerWorldRotation = owner->GetWorldRotation();
-    const RTBEngine::Math::Vector3 worldFocusOffset = ownerWorldRotation * cameraFocusOffset;
-    const bool cameraIsChildOfOwner = (cameraObject->GetParent() == owner);
-
-    if (cameraIsChildOfOwner) {
-        const RTBEngine::Math::Quaternion localOrbitRotation = ownerWorldRotation.Inverse() * orbitRotation;
-        const RTBEngine::Math::Vector3 localForward = localOrbitRotation * RTBEngine::Math::Vector3::Forward();
-        const RTBEngine::Math::Vector3 localCameraPosition = cameraFocusOffset - localForward * cameraDistance;
-
-        cameraObject->GetTransform().SetPosition(localCameraPosition);
-        cameraObject->GetTransform().SetRotation(localOrbitRotation);
-        return;
-    }
-
-    const RTBEngine::Math::Vector3 focusPoint = owner->GetWorldPosition() + worldFocusOffset;
-    const RTBEngine::Math::Vector3 forward = orbitRotation * RTBEngine::Math::Vector3::Forward();
-    const RTBEngine::Math::Vector3 cameraPosition = focusPoint - forward * cameraDistance;
-
-    cameraObject->GetTransform().SetPosition(cameraPosition);
-    cameraObject->GetTransform().SetRotation(orbitRotation);
-}
-
 void ThirdPersonCharacterController::UpdateAnimatorLocomotion(bool hasMovementInput, bool isRunning)
 {
-    if (!owner || !animator) {
+    if (!owner || !animator || state != State::Locomotion) {
         return;
     }
 
@@ -431,7 +602,7 @@ void ThirdPersonCharacterController::UpdateAnimatorLocomotion(bool hasMovementIn
         targetClipAlias = kIdleAlias;
     }
 
-    if (!targetClipAlias) {
+    if (!targetClipAlias || !animator->GetClip(targetClipAlias)) {
         return;
     }
 
@@ -439,9 +610,161 @@ void ThirdPersonCharacterController::UpdateAnimatorLocomotion(bool hasMovementIn
         return;
     }
 
-    if (!animator->GetClip(targetClipAlias)) {
+    animator->Play(targetClipAlias, true);
+}
+
+void ThirdPersonCharacterController::StartAttack()
+{
+    if (state == State::Dead) {
         return;
     }
 
-    animator->Play(targetClipAlias, true);
+    state = State::Attacking;
+    cooldownRemaining = attackCooldown;
+    attackElapsed = 0.0f;
+    attackHitExecuted = false;
+
+    if (animator && attackSlotState.ready && animator->GetClip(kAttackAlias)) {
+        animator->Play(kAttackAlias, false);
+    }
+}
+
+void ThirdPersonCharacterController::FinishAttack()
+{
+    if (state != State::Attacking) {
+        return;
+    }
+
+    attackElapsed = 0.0f;
+    attackHitExecuted = false;
+    state = State::Locomotion;
+}
+
+void ThirdPersonCharacterController::HandleDeath(const HealthComponent::DeathEvent& /*eventData*/)
+{
+    if (state == State::Dead) {
+        return;
+    }
+
+    state = State::Dead;
+    cooldownRemaining = 0.0f;
+    attackElapsed = 0.0f;
+    attackHitExecuted = false;
+    StopPlanarMotion();
+
+    if (animator && deathSlotState.ready && animator->GetClip(kDeathAlias)) {
+        animator->Play(kDeathAlias, false);
+    }
+}
+
+void ThirdPersonCharacterController::StopPlanarMotion() const
+{
+    if (!owner) {
+        return;
+    }
+
+    auto* rbComp = owner->GetComponent<RTBEngine::ECS::RigidBodyComponent>();
+    if (!rbComp || !rbComp->HasRigidBody()) {
+        return;
+    }
+
+    RTBEngine::Physics::RigidBody* rigidBody = rbComp->GetRigidBody();
+    if (!rigidBody) {
+        return;
+    }
+
+    btVector3 velocity = rigidBody->GetLinearVelocity();
+    velocity.setX(0.0f);
+    velocity.setZ(0.0f);
+    rigidBody->SetLinearVelocity(velocity);
+    rigidBody->SetAngularVelocity(btVector3(0.0f, 0.0f, 0.0f));
+}
+
+RTBEngine::Physics::PhysicsWorld* ThirdPersonCharacterController::ResolvePhysicsWorld() const
+{
+    if (!owner) {
+        return nullptr;
+    }
+
+    if (auto* rbComp = owner->GetComponent<RTBEngine::ECS::RigidBodyComponent>()) {
+        if (rbComp->HasRigidBody() && rbComp->GetRigidBody()) {
+            return rbComp->GetRigidBody()->GetPhysicsWorld();
+        }
+    }
+
+    return nullptr;
+}
+
+HealthComponent* ThirdPersonCharacterController::ResolveHitHealth(RTBEngine::ECS::GameObject* hitObject) const
+{
+    for (RTBEngine::ECS::GameObject* current = hitObject; current; current = current->GetParent()) {
+        if (current == owner) {
+            return nullptr;
+        }
+
+        if (HealthComponent* targetHealth = current->GetComponent<HealthComponent>()) {
+            if (targetHealth != health && !targetHealth->IsDead()) {
+                return targetHealth;
+            }
+            return nullptr;
+        }
+    }
+
+    return nullptr;
+}
+
+bool ThirdPersonCharacterController::PerformAttackSphereCast(HealthComponent** outHealth,
+                                                             RTBEngine::Math::Vector3* outHitPoint,
+                                                             RTBEngine::Math::Vector3* outHitDirection)
+{
+    if (outHealth) {
+        *outHealth = nullptr;
+    }
+
+    if (!owner || !attackOriginObject) {
+        return false;
+    }
+
+    RTBEngine::Physics::PhysicsWorld* physicsWorld = ResolvePhysicsWorld();
+    if (!physicsWorld) {
+        return false;
+    }
+
+    RTBEngine::Math::Vector3 castStart = attackOriginObject->GetWorldPosition();
+    RTBEngine::Math::Vector3 castDirection = owner->GetWorldRotation() * RTBEngine::Math::Vector3::Forward();
+    castDirection.y = 0.0f;
+
+    if (castDirection.LengthSquared() <= kDirectionEpsilon) {
+        castDirection = RTBEngine::Math::Vector3::Forward();
+    } else {
+        castDirection.Normalize();
+    }
+
+    const RTBEngine::Math::Vector3 castEnd = castStart + castDirection * std::min(attackSphereDistance, attackRange);
+    RTBEngine::Physics::PhysicsQueryHit hit;
+    RTBEngine::Physics::PhysicsQueryOptions queryOptions;
+    queryOptions.ignoredObject = owner;
+    queryOptions.ignoreIgnoredObjectHierarchy = true;
+    queryOptions.ignoreTriggers = true;
+
+    if (!physicsWorld->SphereCastClosest(castStart, castEnd, attackSphereRadius, hit, queryOptions)) {
+        return false;
+    }
+
+    HealthComponent* targetHealth = ResolveHitHealth(hit.gameObject);
+    if (!targetHealth) {
+        return false;
+    }
+
+    if (outHealth) {
+        *outHealth = targetHealth;
+    }
+    if (outHitPoint) {
+        *outHitPoint = hit.point;
+    }
+    if (outHitDirection) {
+        *outHitDirection = castDirection;
+    }
+
+    return true;
 }

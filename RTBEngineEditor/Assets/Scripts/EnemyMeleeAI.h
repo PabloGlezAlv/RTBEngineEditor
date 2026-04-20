@@ -1,15 +1,13 @@
 #pragma once
 
+#include "HealthComponent.h"
+
+#include <RTBEngine/Core/Event.h>
 #include <RTBEngine/ECS/Component.h>
 #include <RTBEngine/Math/Vectors/Vector3.h>
 #include <RTBEngine/Reflection/PropertyMacros.h>
-#include <string>
 
 namespace RTBEngine {
-    namespace Animation {
-        class Animator;
-    }
-
     namespace ECS {
         class GameObject;
     }
@@ -19,7 +17,9 @@ namespace RTBEngine {
     }
 }
 
-class HealthComponent;
+class EnemyAnimationDriver;
+class EnemyLocomotionController;
+class EnemyTargetTracker;
 
 class EnemyMeleeAI : public RTBEngine::ECS::Component
 {
@@ -32,70 +32,66 @@ public:
     void OnFixedUpdate(float fixedDeltaTime) override;
     void OnLateUpdate(float deltaTime) override;
     void OnValidate() override;
+    void OnDestroy() override;
 
-    RTBEngine::ECS::GameObject* targetObject = nullptr;
+    HealthComponent* health = nullptr;
+    EnemyTargetTracker* targetTracker = nullptr;
+    EnemyAnimationDriver* animationDriver = nullptr;
+    EnemyLocomotionController* locomotion = nullptr;
     RTBEngine::ECS::GameObject* attackOriginObject = nullptr;
-    RTBEngine::Animation::Animator* animator = nullptr;
-    float moveSpeed = 2.6f;
-    float turnSpeed = 540.0f;
     float attackRange = 1.35f;
     float attackCooldown = 0.85f;
     float attackDamage = 12.0f;
-    float attackHitDelay = 2.0f;
+    float attackHitDelay = 0.45f;
     float attackSphereRadius = 0.45f;
     float attackSphereDistance = 0.95f;
-    std::string walkAnimationFbx = "Assets/Models/walking.fbx";
-    std::string attackAnimationFbx = "Assets/Models/attack.fbx";
+    float hitReactDuration = 0.4f;
+    float deathHoldDuration = 0.75f;
+    float shrinkDuration = 0.85f;
 
     RTB_COMPONENT(EnemyMeleeAI)
 
 private:
-    struct AnimationSlotState {
-        std::string sourceFbx;
-        bool ready = false;
-    };
-
     enum class State {
         Idle,
         Chasing,
         Attacking,
-        Cooldown
+        HitReact,
+        Dying,
+        Shrinking,
+        Dead
     };
 
     State state = State::Idle;
     float cooldownRemaining = 0.0f;
     float attackElapsed = 0.0f;
+    float hitReactRemaining = 0.0f;
+    float deathHoldRemaining = 0.0f;
+    float shrinkElapsed = 0.0f;
     bool attackHitExecuted = false;
-    RTBEngine::Animation::Animator* registeredAnimator = nullptr;
-    bool missingAnimatorWarningShown = false;
-    AnimationSlotState walkSlotState;
-    AnimationSlotState attackSlotState;
-    std::string targetObjectUuid;
-    RTBEngine::ECS::GameObject* lastCapturedTarget = nullptr;
+    bool deathPoseLocked = false;
+    RTBEngine::Math::Vector3 initialScale = RTBEngine::Math::Vector3::One();
+    HealthComponent* subscribedHealth = nullptr;
+    RTBEngine::Core::EventSubscription damageTakenSubscription;
+    RTBEngine::Core::EventSubscription deathSubscription;
 
     void ClampSettings();
-    void CaptureTargetIdentity();
-    void ResolveTarget();
-    void ResolveAnimator();
-    void ConfigurePhysicsBody() const;
-    void RegisterAnimationSlots();
-    void RegisterAnimationSlot(const char* slotLabel,
-                               const std::string& sourceFbx,
-                               const char* alias,
-                               AnimationSlotState& slotState);
-    void UpdateState(float deltaTime);
+    void ResolveDependencies();
+    void RebindHealthSubscriptions();
+    void UnsubscribeFromHealth();
+    void UpdateState();
     void UpdateAttack(float deltaTime);
-    void UpdateMovement(float deltaTime);
+    void UpdateHitReact(float deltaTime);
+    void UpdateDying(float deltaTime);
+    void UpdateShrinking(float deltaTime);
     void StartAttack();
     void FinishAttack();
-    bool HasValidTarget() const;
-    bool IsTargetAlive() const;
-    HealthComponent* ResolveTargetHealth() const;
+    void EnterIdle();
+    void EnterChasing();
+    bool HasValidCombatSetup() const;
+    bool PerformAttackSphereCast(RTBEngine::Math::Vector3* outHitPoint = nullptr,
+                                 RTBEngine::Math::Vector3* outHitDirection = nullptr);
     RTBEngine::Physics::PhysicsWorld* ResolvePhysicsWorld() const;
-    bool IsWithinTargetHierarchy(RTBEngine::ECS::GameObject* candidate) const;
-    float GetPlanarDistanceToTarget() const;
-    RTBEngine::Math::Vector3 GetPlanarDirectionToTarget() const;
-    RTBEngine::Math::Vector3 GetAttackOriginWorldPosition() const;
-    void PlayWalkLoop();
-    bool PerformAttackSphereCast(RTBEngine::Math::Vector3* outHitPoint = nullptr);
+    void HandleDamageTaken(const HealthComponent::DamageTakenEvent& eventData);
+    void HandleDeath(const HealthComponent::DeathEvent& eventData);
 };

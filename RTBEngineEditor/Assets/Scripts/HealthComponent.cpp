@@ -26,7 +26,11 @@ void HealthComponent::OnValidate()
 void HealthComponent::OnDestroy()
 {
     healthChangedEvent.Clear();
+    damageTakenEvent.Clear();
+    deathEvent.Clear();
     hasLastNotifiedEvent = false;
+    hasLastDamageTakenEvent = false;
+    hasLastDeathEvent = false;
 }
 
 void HealthComponent::SetMaxHealth(float value)
@@ -56,18 +60,59 @@ void HealthComponent::Heal(float amount)
 
 void HealthComponent::TakeDamage(float amount)
 {
+    TakeDamage(amount, {});
+}
+
+void HealthComponent::TakeDamage(float amount, const DamageContext& context)
+{
     if (amount <= 0.0f || IsDead()) {
         return;
     }
 
+    const float previousHealth = currentHealth;
     currentHealth -= amount;
     ClampHealth();
+
+    DamageTakenEvent damageEventData;
+    damageEventData.previousHealth = previousHealth;
+    damageEventData.currentHealth = currentHealth;
+    damageEventData.maxHealth = maxHealth;
+    damageEventData.normalizedHealth = GetHealthNormalized();
+    damageEventData.damage = context;
+    damageEventData.damage.amount = amount;
+
+    lastDamageTakenEvent = damageEventData;
+    hasLastDamageTakenEvent = true;
+    damageTakenEvent.Invoke(damageEventData);
+
+    if (currentHealth <= 0.0f) {
+        DeathEvent deathEventData;
+        deathEventData.previousHealth = previousHealth;
+        deathEventData.currentHealth = currentHealth;
+        deathEventData.maxHealth = maxHealth;
+        deathEventData.damage = damageEventData.damage;
+
+        lastDeathEvent = deathEventData;
+        hasLastDeathEvent = true;
+        deathEvent.Invoke(deathEventData);
+    }
+
     NotifyHealthChanged(false);
 }
 
 RTBEngine::Core::EventSubscription HealthComponent::SubscribeToHealthChanged(HealthChangedCallback callback)
 {
     return healthChangedEvent.Subscribe(std::move(callback));
+}
+
+RTBEngine::Core::EventSubscription HealthComponent::SubscribeToDamageTaken(DamageTakenCallback callback)
+{
+    return damageTakenEvent.Subscribe(std::move(callback));
+}
+
+RTBEngine::Core::EventSubscription HealthComponent::SubscribeToDeath(DeathCallback callback)
+{
+    return deathEvent.Subscribe(std::move(callback));
 }
 
 HealthComponent::HealthChangedEvent HealthComponent::GetHealthChangedEvent() const
