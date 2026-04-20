@@ -89,7 +89,7 @@ namespace {
 RTB_REGISTER_COMPONENT(ThirdPersonCharacterController)
     RTB_PROPERTY_GAMEOBJECT(cameraObject)
     RTB_PROPERTY_COMPONENT(health, HealthComponent)
-    RTB_PROPERTY_GAMEOBJECT(attackOriginObject)
+    RTB_PROPERTY(attackOriginOffset)
     RTB_PROPERTY_RANGE(moveSpeed, 0.0f, 20.0f)
     RTB_PROPERTY_RANGE(sprintMultiplier, 1.0f, 4.0f)
     RTB_PROPERTY_RANGE(turnSpeed, 0.0f, 1440.0f)
@@ -695,6 +695,15 @@ RTBEngine::Physics::PhysicsWorld* ThirdPersonCharacterController::ResolvePhysics
     return nullptr;
 }
 
+RTBEngine::Math::Vector3 ThirdPersonCharacterController::GetAttackCastOrigin() const
+{
+    if (!owner) {
+        return RTBEngine::Math::Vector3::Zero();
+    }
+
+    return owner->GetWorldPosition() + (owner->GetWorldRotation() * attackOriginOffset);
+}
+
 HealthComponent* ThirdPersonCharacterController::ResolveHitHealth(RTBEngine::ECS::GameObject* hitObject) const
 {
     for (RTBEngine::ECS::GameObject* current = hitObject; current; current = current->GetParent()) {
@@ -721,7 +730,7 @@ bool ThirdPersonCharacterController::PerformAttackSphereCast(HealthComponent** o
         *outHealth = nullptr;
     }
 
-    if (!owner || !attackOriginObject) {
+    if (!owner) {
         return false;
     }
 
@@ -730,7 +739,7 @@ bool ThirdPersonCharacterController::PerformAttackSphereCast(HealthComponent** o
         return false;
     }
 
-    RTBEngine::Math::Vector3 castStart = attackOriginObject->GetWorldPosition();
+    RTBEngine::Math::Vector3 castStart = GetAttackCastOrigin();
     RTBEngine::Math::Vector3 castDirection = owner->GetWorldRotation() * RTBEngine::Math::Vector3::Forward();
     castDirection.y = 0.0f;
 

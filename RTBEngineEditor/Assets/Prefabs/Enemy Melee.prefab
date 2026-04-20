@@ -1,0 +1,90 @@
+return {
+    name = "Enemy Melee",
+    position = Vector3(-3.00, 0.00, 0.00),
+    components = {
+        {
+            type = "EnemyTargetTracker",
+            targetObject = "E8682E33-50ED-45D8-BC76-B31113639F9E"
+        },
+        {
+            type = "EnemyAnimationDriver",
+            animator = "E1F5A9B7-1030-4F9B-9A18-77AD11B06E20/Animator",
+            walkAnimationFbx = "Assets/Models/walking.fbx",
+            attackAnimationFbx = "Assets/Models/attack.fbx",
+            deathAnimationFbx = "Assets/Models/dying.fbx"
+        },
+        {
+            type = "EnemyLocomotionController",
+            moveSpeed = 2.60,
+            turnSpeed = 540.00,
+            knockbackImpulse = 3.50
+        },
+        {
+            type = "EnemyMeleeAI",
+            health = "753770D2-B00E-4859-B7D3-5ABF1249B014/HealthComponent",
+            targetTracker = "753770D2-B00E-4859-B7D3-5ABF1249B014/EnemyTargetTracker",
+            animationDriver = "753770D2-B00E-4859-B7D3-5ABF1249B014/EnemyAnimationDriver",
+            locomotion = "753770D2-B00E-4859-B7D3-5ABF1249B014/EnemyLocomotionController",
+            attackOriginObject = "F179904E-6B6D-4BD4-9CBA-E6C591A632B6",
+            attackRange = 1.35,
+            attackCooldown = 0.85,
+            attackDamage = 12.00,
+            attackHitDelay = 0.45,
+            attackSphereRadius = 0.45,
+            attackSphereDistance = 0.95,
+            hitReactDuration = 0.40,
+            deathHoldDuration = 0.75,
+            shrinkDuration = 0.85
+        },
+        {
+            type = "HealthComponent",
+            maxHealth = 28.75,
+            currentHealth = 1.00
+        },
+        {
+            type = "RigidBodyComponent",
+            mass = 1.00,
+            friction = 0.80,
+            restitution = 0.00,
+            bodyType = "Dynamic"
+        },
+        {
+            type = "CapsuleColliderComponent",
+            radius = 0.35,
+            height = 1.80,
+            centerOffset = Vector3(0.00, 0.90, 0.00),
+            isTrigger = false
+        },
+    },
+    children = {
+        {
+            name = "EnemyAttackOrigin",
+            position = Vector3(0.00, 1.00, 0.85),
+            components = {
+            },
+        },
+        {
+            name = "Enemy Model",
+            scale = Vector3(0.01, 0.01, 0.01),
+            components = {
+                {
+                    type = "Animator",
+                    modelRef = "Assets/Models/walking.fbx",
+                    currentClipName = "Walking",
+                    defaultClip = "",
+                    speed = 1.00,
+                    playing = false,
+                    looping = true
+                },
+                {
+                    type = "MeshRenderer",
+                    meshRef = "Assets/Models/walking.fbx",
+                    textureRef = "Assets/Models/walking_mutant_M.texture",
+                    colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                    meshIndex = 0,
+                    multiMesh = false
+                },
+            },
+        },
+    },
+}

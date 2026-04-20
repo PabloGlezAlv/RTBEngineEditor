@@ -105,6 +105,13 @@ bool EnemyTargetTracker::IsWithinTargetHierarchy(const RTBEngine::ECS::GameObjec
     return false;
 }
 
+void EnemyTargetTracker::SetTarget(RTBEngine::ECS::GameObject* target)
+{
+    targetObject = (target != owner) ? target : nullptr;
+    CaptureTargetIdentity();
+    ResolveTarget();
+}
+
 void EnemyTargetTracker::CaptureTargetIdentity()
 {
     if (!targetObject || targetObject == owner) {

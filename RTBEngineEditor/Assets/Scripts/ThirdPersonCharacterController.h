@@ -37,7 +37,7 @@ public:
 
     RTBEngine::ECS::GameObject* cameraObject = nullptr;
     HealthComponent* health = nullptr;
-    RTBEngine::ECS::GameObject* attackOriginObject = nullptr;
+    RTBEngine::Math::Vector3 attackOriginOffset = RTBEngine::Math::Vector3(0.0f, 1.0f, 0.0f);
     float moveSpeed = 4.0f;
     float sprintMultiplier = 1.75f;
     float turnSpeed = 720.0f;
@@ -117,6 +117,7 @@ private:
     void HandleDeath(const HealthComponent::DeathEvent& eventData);
     void StopPlanarMotion() const;
     RTBEngine::Physics::PhysicsWorld* ResolvePhysicsWorld() const;
+    RTBEngine::Math::Vector3 GetAttackCastOrigin() const;
     HealthComponent* ResolveHitHealth(RTBEngine::ECS::GameObject* hitObject) const;
     bool PerformAttackSphereCast(HealthComponent** outHealth,
                                  RTBEngine::Math::Vector3* outHitPoint,

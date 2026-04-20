@@ -19,8 +19,9 @@ RTB_REGISTER_COMPONENT(EnemyMeleeAI)
     RTB_PROPERTY_COMPONENT(targetTracker, EnemyTargetTracker)
     RTB_PROPERTY_COMPONENT(animationDriver, EnemyAnimationDriver)
     RTB_PROPERTY_COMPONENT(locomotion, EnemyLocomotionController)
-    RTB_PROPERTY_GAMEOBJECT(attackOriginObject)
+    RTB_PROPERTY(attackOriginOffset)
     RTB_PROPERTY_RANGE(attackRange, 0.1f, 5.0f)
+    RTB_PROPERTY_RANGE(preferredAttackDistance, 0.1f, 5.0f)
     RTB_PROPERTY_RANGE(attackCooldown, 0.0f, 5.0f)
     RTB_PROPERTY_RANGE(attackDamage, 0.0f, 100.0f)
     RTB_PROPERTY_RANGE(attackHitDelay, 0.0f, 10.0f)
@@ -98,6 +99,11 @@ void EnemyMeleeAI::OnFixedUpdate(float fixedDeltaTime)
             locomotion->MoveTowards(targetTracker->GetPlanarDirectionTo(owner), fixedDeltaTime);
         }
         break;
+    case State::Repositioning:
+        if (targetTracker) {
+            locomotion->MoveTowards(targetTracker->GetPlanarDirectionTo(owner) * -1.0f, fixedDeltaTime);
+        }
+        break;
     case State::Attacking:
     case State::Dying:
     case State::Shrinking:
@@ -170,6 +176,7 @@ void EnemyMeleeAI::OnDestroy()
 void EnemyMeleeAI::ClampSettings()
 {
     attackRange = std::max(0.1f, attackRange);
+    preferredAttackDistance = std::clamp(preferredAttackDistance, 0.1f, attackRange);
     attackCooldown = std::max(0.0f, attackCooldown);
     attackDamage = std::max(0.0f, attackDamage);
     attackHitDelay = std::max(0.0f, attackHitDelay);
@@ -233,6 +240,8 @@ void EnemyMeleeAI::UnsubscribeFromHealth()
 
 void EnemyMeleeAI::UpdateState()
 {
+    constexpr float kAttackDistanceTolerance = 0.15f;
+
     if (!HasValidCombatSetup()) {
         EnterIdle();
         return;
@@ -243,8 +252,20 @@ void EnemyMeleeAI::UpdateState()
         return;
     }
 
-    if (targetTracker->GetPlanarDistanceTo(owner) <= attackRange && cooldownRemaining <= 0.0f) {
-        StartAttack();
+    const float targetDistance = targetTracker->GetPlanarDistanceTo(owner);
+    const float minAttackDistance = std::max(0.1f, preferredAttackDistance - kAttackDistanceTolerance);
+
+    if (targetDistance < minAttackDistance) {
+        EnterRepositioning();
+        return;
+    }
+
+    if (targetDistance <= attackRange) {
+        if (cooldownRemaining <= 0.0f) {
+            StartAttack();
+        } else {
+            EnterIdle();
+        }
         return;
     }
 
@@ -364,6 +385,14 @@ void EnemyMeleeAI::EnterChasing()
     }
 }
 
+void EnemyMeleeAI::EnterRepositioning()
+{
+    state = State::Repositioning;
+    if (animationDriver) {
+        animationDriver->PlayWalkLoop();
+    }
+}
+
 bool EnemyMeleeAI::HasValidCombatSetup() const
 {
     return owner && targetTracker && locomotion;
@@ -381,8 +410,7 @@ bool EnemyMeleeAI::PerformAttackSphereCast(RTBEngine::Math::Vector3* outHitPoint
         return false;
     }
 
-    RTBEngine::Math::Vector3 castStart =
-        attackOriginObject ? attackOriginObject->GetWorldPosition() : owner->GetWorldPosition();
+    RTBEngine::Math::Vector3 castStart = GetAttackCastOrigin();
     RTBEngine::Math::Vector3 castDirection = owner->GetWorldRotation() * RTBEngine::Math::Vector3::Forward();
     castDirection.y = 0.0f;
     if (!EnemyMeleeAIDetail::HasPlanarDirection(castDirection)) {
@@ -422,6 +450,15 @@ bool EnemyMeleeAI::PerformAttackSphereCast(RTBEngine::Math::Vector3* outHitPoint
     return true;
 }
 
+RTBEngine::Math::Vector3 EnemyMeleeAI::GetAttackCastOrigin() const
+{
+    if (!owner) {
+        return RTBEngine::Math::Vector3::Zero();
+    }
+
+    return owner->GetWorldPosition() + (owner->GetWorldRotation() * attackOriginOffset);
+}
+
 RTBEngine::Physics::PhysicsWorld* EnemyMeleeAI::ResolvePhysicsWorld() const
 {
     if (!owner) {
@@ -430,7 +467,16 @@ RTBEngine::Physics::PhysicsWorld* EnemyMeleeAI::ResolvePhysicsWorld() const
 
     auto* rbComp = owner->GetComponent<RTBEngine::ECS::RigidBodyComponent>();
     if (rbComp && rbComp->HasRigidBody() && rbComp->GetRigidBody()) {
-        return rbComp->GetRigidBody()->GetPhysicsWorld();
+        if (RTBEngine::Physics::PhysicsWorld* world = rbComp->GetRigidBody()->GetPhysicsWorld()) {
+            return world;
+        }
+    }
+
+    if (targetTracker && targetTracker->targetObject) {
+        auto* targetRigidBody = targetTracker->targetObject->GetComponent<RTBEngine::ECS::RigidBodyComponent>();
+        if (targetRigidBody && targetRigidBody->HasRigidBody() && targetRigidBody->GetRigidBody()) {
+            return targetRigidBody->GetRigidBody()->GetPhysicsWorld();
+        }
     }
 
     return nullptr;

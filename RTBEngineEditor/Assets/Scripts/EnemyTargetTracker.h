@@ -35,6 +35,7 @@ public:
     RTBEngine::Math::Vector3 GetPlanarDirectionTo(const RTBEngine::ECS::GameObject* requester) const;
     bool IsWithinTargetHierarchy(const RTBEngine::ECS::GameObject* requester,
                                  RTBEngine::ECS::GameObject* candidate) const;
+    void SetTarget(RTBEngine::ECS::GameObject* target);
 
 private:
     std::string targetObjectUuid;

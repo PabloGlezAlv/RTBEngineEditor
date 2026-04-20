@@ -38,8 +38,9 @@ public:
     EnemyTargetTracker* targetTracker = nullptr;
     EnemyAnimationDriver* animationDriver = nullptr;
     EnemyLocomotionController* locomotion = nullptr;
-    RTBEngine::ECS::GameObject* attackOriginObject = nullptr;
+    RTBEngine::Math::Vector3 attackOriginOffset = RTBEngine::Math::Vector3(0.0f, 1.05f, 0.18f);
     float attackRange = 1.35f;
+    float preferredAttackDistance = 1.05f;
     float attackCooldown = 0.85f;
     float attackDamage = 12.0f;
     float attackHitDelay = 0.45f;
@@ -55,6 +56,7 @@ private:
     enum class State {
         Idle,
         Chasing,
+        Repositioning,
         Attacking,
         HitReact,
         Dying,
@@ -88,10 +90,12 @@ private:
     void FinishAttack();
     void EnterIdle();
     void EnterChasing();
+    void EnterRepositioning();
     bool HasValidCombatSetup() const;
     bool PerformAttackSphereCast(RTBEngine::Math::Vector3* outHitPoint = nullptr,
                                  RTBEngine::Math::Vector3* outHitDirection = nullptr);
     RTBEngine::Physics::PhysicsWorld* ResolvePhysicsWorld() const;
+    RTBEngine::Math::Vector3 GetAttackCastOrigin() const;
     void HandleDamageTaken(const HealthComponent::DamageTakenEvent& eventData);
     void HandleDeath(const HealthComponent::DeathEvent& eventData);
 };

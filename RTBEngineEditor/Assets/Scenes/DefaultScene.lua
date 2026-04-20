@@ -67,6 +67,13 @@ function CreateScene()
                         canvasSize = Vector2(1920.00, 1080.00),
                         sortOrder = 0
                     },
+                    {
+                        type = "RoundUIHandler",
+                        roundText = "D7D85F5A-5A9A-4E6A-8AA2-9032EC0F0B11/UIText",
+                        countdownText = "A5C9F5F4-2D0B-4D2C-9FE5-443A683E1A22/UIText",
+                        roundPrefix = "Round ",
+                        countdownPrefix = "Start in "
+                    },
                 },
                 children = {
                     {
@@ -108,6 +115,52 @@ function CreateScene()
                                 pivot = Vector2(0.50, 0.50),
                                 anchoredPosition = Vector2(69.80, 20.70),
                                 sizeDelta = Vector2(100.00, 100.00),
+                                rotation = 0.00,
+                                scale = Vector2(1.00, 1.00)
+                            },
+                        }
+                    },
+                    {
+                        name = "RoundText",
+                        uuid = "D7D85F5A-5A9A-4E6A-8AA2-9032EC0F0B11",
+                        components = {
+                            {
+                                type = "UIText",
+                                text = "Round 1",
+                                color = Color(1.00, 1.00, 1.00, 1.00),
+                                fontSize = 36.00,
+                                alignment = "Center",
+                                font = nil,
+                                isVisible = true,
+                                raycastTarget = false,
+                                anchorMin = Vector2(0.50, 1.00),
+                                anchorMax = Vector2(0.50, 1.00),
+                                pivot = Vector2(0.50, 1.00),
+                                anchoredPosition = Vector2(0.00, -50.00),
+                                sizeDelta = Vector2(420.00, 48.00),
+                                rotation = 0.00,
+                                scale = Vector2(1.00, 1.00)
+                            },
+                        }
+                    },
+                    {
+                        name = "CountdownText",
+                        uuid = "A5C9F5F4-2D0B-4D2C-9FE5-443A683E1A22",
+                        components = {
+                            {
+                                type = "UIText",
+                                text = "Start in 5",
+                                color = Color(1.00, 0.95, 0.72, 1.00),
+                                fontSize = 24.00,
+                                alignment = "Center",
+                                font = nil,
+                                isVisible = true,
+                                raycastTarget = false,
+                                anchorMin = Vector2(0.50, 1.00),
+                                anchorMax = Vector2(0.50, 1.00),
+                                pivot = Vector2(0.50, 1.00),
+                                anchoredPosition = Vector2(0.00, -159.00),
+                                sizeDelta = Vector2(420.00, 36.00),
                                 rotation = 0.00,
                                 scale = Vector2(1.00, 1.00)
                             },
@@ -201,6 +254,21 @@ function CreateScene()
                 }
             },
             {
+                name = "RoundManager",
+                uuid = "4A7C26F9-7F62-4A3A-B8F0-91A4B36C1601",
+                components = {
+                    {
+                        type = "RoundManager",
+                        enemyTemplate = "753770D2-B00E-4859-B7D3-5ABF1249B014",
+                        playerObject = "E8682E33-50ED-45D8-BC76-B31113639F9E",
+                        uiHandler = "62E6AE07-7DC2-42B3-8F0E-AA7CA40264F0/RoundUIHandler",
+                        roundCountdownDuration = 5.00,
+                        baseEnemiesPerRound = 2,
+                        additionalEnemiesPerRound = 1
+                    },
+                }
+            },
+            {
                 name = "Floor",
                 uuid = "737688CD-BE46-4776-B38D-CA30B01FB6D1",
                 position = Vector3(-0.46, -0.05, 0.00),
@@ -229,212 +297,74 @@ function CreateScene()
                 }
             },
             {
-                name = "Cube",
-                uuid = "64B0D534-9E35-4D68-A32D-CFFCC1F5E1F3",
-                position = Vector3(2.00, 1.01, 0.00),
+                name = "EnemySpawnPointLeft",
+                uuid = "74B6BC8E-5892-4C38-A4B6-8AAAF7B1F001",
+                position = Vector3(-4.50, 0.00, 3.50),
+                rotation = Quaternion.FromEulerAngles(0.00, 135.00, 0.00),
                 components = {
                     {
-                        type = "MeshRenderer",
-                        meshRef = "Default/Models/cube.obj",
-                        textureRef = nil,
-                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                        meshIndex = 0,
-                        multiMesh = false
-                    },
-                    {
-                        type = "BoxColliderComponent",
-                        size = Vector3(1.00, 1.00, 1.00),
-                        isTrigger = false
-                    },
-                    {
-                        type = "RigidBodyComponent",
-                        mass = 1.00,
-                        friction = 0.50,
-                        restitution = 0.00,
-                        bodyType = "Dynamic"
+                        type = "EnemySpawnPoint"
                     },
                 }
             },
             {
-                name = "SphereTest",
-                uuid = "8FB4850C-0A3A-41D9-866E-BB98439FE7DD",
-                position = Vector3(-1.87, 1.10, 1.15),
-                rotation = Quaternion.FromEulerAngles(0.00, 53.00, 0.00),
-                scale = Vector3(1.22, 1.22, 1.22),
+                name = "EnemySpawnPointRight",
+                uuid = "74B6BC8E-5892-4C38-A4B6-8AAAF7B1F002",
+                position = Vector3(4.50, 0.00, 3.50),
+                rotation = Quaternion.FromEulerAngles(0.00, -135.00, -0.00),
                 components = {
                     {
-                        type = "MeshRenderer",
-                        meshRef = "Default/Models/sphere.obj",
-                        textureRef = "Assets/Textures/testTexture.png",
-                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                        meshIndex = 0,
-                        multiMesh = false
-                    },
-                    {
-                        type = "RigidBodyComponent",
-                        mass = 1.00,
-                        friction = 0.50,
-                        restitution = 0.10,
-                        bodyType = "Dynamic"
-                    },
-                    {
-                        type = "SphereColliderComponent",
-                        radius = 1.20,
-                        centerOffset = Vector3(0.00, 0.00, 0.00),
-                        isTrigger = false
+                        type = "EnemySpawnPoint"
                     },
                 }
             },
             {
-                name = "SphereTest",
-                uuid = "B1A1E446-8B0B-4117-8C4C-4913A00864DA",
-                position = Vector3(-3.67, 1.10, 1.15),
-                rotation = Quaternion.FromEulerAngles(0.00, 53.00, 0.00),
-                scale = Vector3(1.22, 1.22, 1.22),
+                name = "EnemySpawnPointRear",
+                uuid = "74B6BC8E-5892-4C38-A4B6-8AAAF7B1F003",
+                position = Vector3(0.00, 0.00, -5.00),
                 components = {
                     {
-                        type = "MeshRenderer",
-                        meshRef = "Default/Models/sphere.obj",
-                        textureRef = "Assets/Textures/testTexture.png",
-                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                        meshIndex = 0,
-                        multiMesh = false
-                    },
-                    {
-                        type = "RigidBodyComponent",
-                        mass = 1.00,
-                        friction = 0.50,
-                        restitution = 0.10,
-                        bodyType = "Dynamic"
-                    },
-                    {
-                        type = "SphereColliderComponent",
-                        radius = 1.20,
-                        centerOffset = Vector3(0.00, 0.00, 0.00),
-                        isTrigger = false
-                    },
-                }
-            },
-            {
-                name = "SphereTest",
-                uuid = "2E5FD2F6-252B-43F9-8D30-1043F0373064",
-                position = Vector3(3.23, 1.10, 1.15),
-                rotation = Quaternion.FromEulerAngles(0.00, 53.00, 0.00),
-                scale = Vector3(1.22, 1.22, 1.22),
-                components = {
-                    {
-                        type = "MeshRenderer",
-                        meshRef = "Default/Models/sphere.obj",
-                        textureRef = "Assets/Textures/testTexture.png",
-                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                        meshIndex = 0,
-                        multiMesh = false
-                    },
-                    {
-                        type = "RigidBodyComponent",
-                        mass = 1.00,
-                        friction = 0.50,
-                        restitution = 0.10,
-                        bodyType = "Dynamic"
-                    },
-                    {
-                        type = "SphereColliderComponent",
-                        radius = 1.20,
-                        centerOffset = Vector3(0.00, 0.00, 0.00),
-                        isTrigger = false
+                        type = "EnemySpawnPoint"
                     },
                 }
             },
             {
                 name = "Enemy Melee",
                 uuid = "753770D2-B00E-4859-B7D3-5ABF1249B014",
+                prefab = "Enemy Melee",
                 position = Vector3(-3.00, 0.00, 0.00),
-                components = {
-                    {
-                        type = "EnemyTargetTracker",
-                        targetObject = "E8682E33-50ED-45D8-BC76-B31113639F9E",
-                    },
-                    {
-                        type = "EnemyAnimationDriver",
-                        animator = "E1F5A9B7-1030-4F9B-9A18-77AD11B06E20/Animator",
-                        walkAnimationFbx = "Assets/Models/walking.fbx",
-                        attackAnimationFbx = "Assets/Models/attack.fbx",
-                        deathAnimationFbx = "Assets/Models/dying.fbx"
-                    },
-                    {
-                        type = "EnemyLocomotionController",
-                        moveSpeed = 2.60,
-                        turnSpeed = 540.00,
-                        knockbackImpulse = 3.50
-                    },
-                    {
-                        type = "EnemyMeleeAI",
-                        health = "753770D2-B00E-4859-B7D3-5ABF1249B014/HealthComponent",
-                        targetTracker = "753770D2-B00E-4859-B7D3-5ABF1249B014/EnemyTargetTracker",
-                        animationDriver = "753770D2-B00E-4859-B7D3-5ABF1249B014/EnemyAnimationDriver",
-                        locomotion = "753770D2-B00E-4859-B7D3-5ABF1249B014/EnemyLocomotionController",
-                        attackOriginObject = "F179904E-6B6D-4BD4-9CBA-E6C591A632B6",
-                        attackRange = 1.35,
-                        attackCooldown = 0.85,
-                        attackDamage = 12.00,
-                        attackHitDelay = 0.45,
-                        attackSphereRadius = 0.45,
-                        attackSphereDistance = 0.95,
-                        hitReactDuration = 0.40,
-                        deathHoldDuration = 0.75,
-                        shrinkDuration = 0.85
-                    },
-                    {
-                        type = "HealthComponent",
-                        maxHealth = 28.75,
-                        currentHealth = 1.00
-                    },
-                    {
-                        type = "RigidBodyComponent",
-                        mass = 1.00,
-                        friction = 0.80,
-                        restitution = 0.00,
-                        bodyType = "Dynamic"
-                    },
-                    {
-                        type = "CapsuleColliderComponent",
-                        radius = 0.35,
-                        height = 1.80,
-                        centerOffset = Vector3(0.00, 0.90, 0.00),
-                        isTrigger = false
+                overrides = {
+                    components = {
+                        { type = "EnemyTargetTracker",
+                            targetObject = "E8682E33-50ED-45D8-BC76-B31113639F9E",
+                        },
+                        { type = "EnemyAnimationDriver",
+                            animator = "B6FBA593-04F8-487A-AA0F-2BDDCD2E38D1/Animator",
+                        },
+                        { type = "EnemyMeleeAI",
+                            health = "753770D2-B00E-4859-B7D3-5ABF1249B014/HealthComponent",
+                            targetTracker = "753770D2-B00E-4859-B7D3-5ABF1249B014/EnemyTargetTracker",
+                            animationDriver = "753770D2-B00E-4859-B7D3-5ABF1249B014/EnemyAnimationDriver",
+                            locomotion = "753770D2-B00E-4859-B7D3-5ABF1249B014/EnemyLocomotionController",
+                        },
                     },
                 },
                 children = {
                     {
                         name = "EnemyAttackOrigin",
-                        uuid = "F179904E-6B6D-4BD4-9CBA-E6C591A632B6",
+                        uuid = "DED4C0D0-2CE5-4FF8-A63E-B9683531617E",
+                        prefab = "EnemyAttackOrigin",
                         position = Vector3(0.00, 1.00, 0.85),
+                        overrides = {
+                        },
                     },
                     {
                         name = "Enemy Model",
-                        uuid = "E1F5A9B7-1030-4F9B-9A18-77AD11B06E20",
+                        uuid = "B6FBA593-04F8-487A-AA0F-2BDDCD2E38D1",
+                        prefab = "Enemy Model",
                         scale = Vector3(0.01, 0.01, 0.01),
-                        components = {
-                            {
-                                type = "Animator",
-                                modelRef = "Assets/Models/walking.fbx",
-                                currentClipName = "Walking",
-                                defaultClip = "",
-                                speed = 1.00,
-                                playing = false,
-                                looping = true
-                            },
-                            {
-                                type = "MeshRenderer",
-                                meshRef = "Assets/Models/walking.fbx",
-                                textureRef = "Assets/Models/walking_mutant_M.texture",
-                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                meshIndex = 0,
-                                multiMesh = false
-                            },
+                        overrides = {
                         },
-                        children = {
-                        }
                     },
                 }
             },
@@ -446,7 +376,7 @@ function CreateScene()
                         type = "ThirdPersonCharacterController",
                         cameraObject = "0E7CE370-7C0E-45A8-89CA-AD7A3E70C216",
                         health = "E8682E33-50ED-45D8-BC76-B31113639F9E/HealthComponent",
-                        attackOriginObject = "4A2E7D7B-3F70-4E2A-AC87-6B4E0D21F9C1",
+                        attackOriginOffset = Vector3(0.00, 1.00, 0.00),
                         moveSpeed = 4.00,
                         sprintMultiplier = 1.75,
                         turnSpeed = 720.00,
@@ -562,13 +492,13 @@ function CreateScene()
                                                                 name = "mixamorig:LeftShoulder",
                                                                 uuid = "8F079083-2A6E-4B60-9663-F23B483F1EBE",
                                                                 position = Vector3(6.34, 14.95, -4.64),
-                                                                rotation = Quaternion.FromEulerAngles(-7.74, -89.95, -100.76),
+                                                                rotation = Quaternion.FromEulerAngles(79.21, 89.74, 171.47),
                                                                 children = {
                                                                     {
                                                                         name = "mixamorig:LeftArm",
                                                                         uuid = "A0AA69EE-ECD3-475E-9131-68CD84714AD9",
                                                                         position = Vector3(0.00, 9.14, -0.00),
-                                                                        rotation = Quaternion.FromEulerAngles(4.60, -9.64, 9.65),
+                                                                        rotation = Quaternion.FromEulerAngles(8.22, -6.82, 6.83),
                                                                         children = {
                                                                             {
                                                                                 name = "mixamorig:LeftForeArm",
@@ -585,7 +515,7 @@ function CreateScene()
                                                                                                 name = "mixamorig:LeftHandThumb1",
                                                                                                 uuid = "9F00811D-BEB8-4B88-84D2-FE33F71E229A",
                                                                                                 position = Vector3(-2.01, 3.66, 1.52),
-                                                                                                rotation = Quaternion.FromEulerAngles(-13.22, -23.32, 37.28),
+                                                                                                rotation = Quaternion.FromEulerAngles(26.10, -5.44, 30.39),
                                                                                                 children = {
                                                                                                     {
                                                                                                         name = "mixamorig:LeftHandThumb2",
@@ -735,13 +665,13 @@ function CreateScene()
                                                                 name = "mixamorig:RightShoulder",
                                                                 uuid = "A3EC7C3A-EB28-4791-B5FA-CC662AFCA5AF",
                                                                 position = Vector3(-6.34, 14.95, -4.64),
-                                                                rotation = Quaternion.FromEulerAngles(-7.74, 89.95, 100.76),
+                                                                rotation = Quaternion.FromEulerAngles(79.21, -89.74, -171.47),
                                                                 children = {
                                                                     {
                                                                         name = "mixamorig:RightArm",
                                                                         uuid = "F7892167-C8F8-4CFE-9F5B-3641B6B9814E",
                                                                         position = Vector3(-0.00, 9.14, -0.00),
-                                                                        rotation = Quaternion.FromEulerAngles(4.60, 9.64, -9.65),
+                                                                        rotation = Quaternion.FromEulerAngles(8.22, 6.82, -6.83),
                                                                         children = {
                                                                             {
                                                                                 name = "mixamorig:RightForeArm",
@@ -758,7 +688,7 @@ function CreateScene()
                                                                                                 name = "mixamorig:RightHandThumb1",
                                                                                                 uuid = "B4613E40-45A0-4491-9522-28FEE313CA5F",
                                                                                                 position = Vector3(2.01, 3.66, 1.52),
-                                                                                                rotation = Quaternion.FromEulerAngles(-12.87, 23.48, -37.39),
+                                                                                                rotation = Quaternion.FromEulerAngles(26.14, 5.09, -30.37),
                                                                                                 children = {
                                                                                                     {
                                                                                                         name = "mixamorig:RightHandThumb2",
@@ -916,7 +846,7 @@ function CreateScene()
                                         name = "mixamorig:LeftUpLeg",
                                         uuid = "FDB86573-787B-4E8E-9431-7055AF56C3CC",
                                         position = Vector3(9.69, -5.69, -1.69),
-                                        rotation = Quaternion.FromEulerAngles(1.97, -0.00, 180.00),
+                                        rotation = Quaternion.FromEulerAngles(-1.97, -0.00, -180.00),
                                         children = {
                                             {
                                                 name = "mixamorig:LeftLeg",
@@ -928,13 +858,13 @@ function CreateScene()
                                                         name = "mixamorig:LeftFoot",
                                                         uuid = "C4679F0E-6B5A-4CDA-A6B5-7B51C0B8B483",
                                                         position = Vector3(0.00, 40.82, -0.00),
-                                                        rotation = Quaternion.FromEulerAngles(34.42, 3.00, 2.49),
+                                                        rotation = Quaternion.FromEulerAngles(30.33, 17.38, 17.30),
                                                         children = {
                                                             {
                                                                 name = "mixamorig:LeftToeBase",
                                                                 uuid = "49416134-C362-480D-A843-27C2EF3AA04D",
                                                                 position = Vector3(0.00, 18.00, 0.00),
-                                                                rotation = Quaternion.FromEulerAngles(-60.55, 13.97, -14.01),
+                                                                rotation = Quaternion.FromEulerAngles(51.48, 39.99, -40.01),
                                                                 children = {
                                                                     {
                                                                         name = "mixamorig:LeftToe_End",
@@ -953,7 +883,7 @@ function CreateScene()
                                         name = "mixamorig:RightUpLeg",
                                         uuid = "629668F3-AE58-42C6-B3F7-C708AA7EC15C",
                                         position = Vector3(-9.69, -5.69, -1.69),
-                                        rotation = Quaternion.FromEulerAngles(1.97, -0.00, 180.00),
+                                        rotation = Quaternion.FromEulerAngles(-1.97, -0.00, -180.00),
                                         children = {
                                             {
                                                 name = "mixamorig:RightLeg",
@@ -965,13 +895,13 @@ function CreateScene()
                                                         name = "mixamorig:RightFoot",
                                                         uuid = "7A80B74F-EA09-4537-917E-3D8868EA0136",
                                                         position = Vector3(0.00, 40.82, -0.00),
-                                                        rotation = Quaternion.FromEulerAngles(34.42, -3.00, -2.49),
+                                                        rotation = Quaternion.FromEulerAngles(30.33, -17.38, -17.30),
                                                         children = {
                                                             {
                                                                 name = "mixamorig:RightToeBase",
                                                                 uuid = "3434220A-3088-46D8-9B0F-C2BCA301CA63",
                                                                 position = Vector3(-0.00, 18.00, 0.00),
-                                                                rotation = Quaternion.FromEulerAngles(-24.19, -58.45, 58.47),
+                                                                rotation = Quaternion.FromEulerAngles(61.34, -5.51, 5.90),
                                                                 children = {
                                                                     {
                                                                         name = "mixamorig:RightToe_End",
@@ -1020,15 +950,10 @@ function CreateScene()
                         }
                     },
                     {
-                        name = "PlayerAttackOrigin",
-                        uuid = "4A2E7D7B-3F70-4E2A-AC87-6B4E0D21F9C1",
-                        position = Vector3(0.00, 1.10, 1.00),
-                    },
-                    {
                         name = "MainCamera",
                         uuid = "0E7CE370-7C0E-45A8-89CA-AD7A3E70C216",
                         position = Vector3(0.00, 1.60, 4.50),
-                        rotation = Quaternion.FromEulerAngles(0.00, 180.00, -0.00),
+                        rotation = Quaternion.FromEulerAngles(-0.00, -180.00, -0.00),
                         components = {
                             {
                                 type = "CameraComponent",

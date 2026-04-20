@@ -46,7 +46,9 @@ void EnemyLocomotionController::MoveTowards(const RTBEngine::Math::Vector3& targ
     RTBEngine::Physics::RigidBody* rigidBody =
         (rbComp && rbComp->HasRigidBody()) ? rbComp->GetRigidBody() : nullptr;
     const bool useDynamicRigidBody =
-        rigidBody && rigidBody->GetType() == RTBEngine::Physics::RigidBodyType::Dynamic;
+        rigidBody &&
+        rigidBody->GetType() == RTBEngine::Physics::RigidBodyType::Dynamic &&
+        rigidBody->GetBulletRigidBody() != nullptr;
 
     const bool canFaceTarget = EnemyMeleeAIDetail::HasPlanarDirection(targetDirection);
     const RTBEngine::Math::Vector3 desiredMove =
