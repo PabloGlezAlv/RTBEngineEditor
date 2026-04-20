@@ -1368,8 +1368,8 @@ namespace RTBEditor {
             for (const auto& name : clipNames) {
                 ImGui::Text("%s", name.c_str());
             }
+            ImGui::EndChild();
         }
-        ImGui::EndChild();
         if (changed) {
             RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
         }

@@ -30,7 +30,9 @@ void EnemyAnimationDriver::OnUpdate(float /*deltaTime*/)
 void EnemyAnimationDriver::OnValidate()
 {
     ResolveAnimator();
-    RegisterAnimationSlots();
+    if (animator) {
+        RegisterAnimationSlots();
+    }
 }
 
 void EnemyAnimationDriver::ResolveAnimator()

@@ -220,7 +220,9 @@ void ThirdPersonCharacterController::OnValidate()
     ClampSettings();
     ResolveHealth();
     ResolveAnimator();
-    RegisterAnimationSlots();
+    if (animator) {
+        RegisterAnimationSlots();
+    }
     ResolveCameraObject();
     SyncCameraFromCurrentTransform();
     ConfigurePhysicsBody();
