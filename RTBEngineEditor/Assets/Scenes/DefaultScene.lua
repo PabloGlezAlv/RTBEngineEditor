@@ -220,7 +220,9 @@ function CreateScene()
                         uiHandler = "62E6AE07-7DC2-42B3-8F0E-AA7CA40264F0/RoundUIHandler",
                         roundCountdownDuration = 5.00,
                         baseEnemiesPerRound = 2,
-                        additionalEnemiesPerRound = 1
+                        additionalEnemiesPerRound = 1,
+                        winningRound = 5,
+                        finalScenePath = "Assets/Scenes/FinalScene.lua"
                     },
                 }
             },

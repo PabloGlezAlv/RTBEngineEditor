@@ -53,6 +53,33 @@ namespace RTBEditor {
             return ToLowerCopy(path.extension().string()) == ".fbx";
         }
 
+        bool IsComponentInScene(const RTBEngine::ECS::Scene* scene,
+                                const RTBEngine::ECS::Component* component) {
+            if (!scene || !component) {
+                return false;
+            }
+
+            for (const auto& gameObject : scene->GetGameObjects()) {
+                if (!gameObject) {
+                    continue;
+                }
+
+                const auto& components = gameObject->GetComponents();
+                const bool found = std::any_of(
+                    components.begin(),
+                    components.end(),
+                    [component](const RTBEngine::ECS::GameObject::ComponentPtr& candidate) {
+                        return candidate.get() == component;
+                    });
+
+                if (found) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         std::string StripClipVendorPrefix(const std::string& value) {
             const size_t pipe = value.find('|');
             return pipe != std::string::npos ? value.substr(pipe + 1) : value;
@@ -1081,12 +1108,16 @@ namespace RTBEditor {
             }
             case RTBEngine::Reflection::PropertyType::GameObjectRef: {
                 RTBEngine::ECS::GameObject** goPtr = (RTBEngine::ECS::GameObject**)data;
+                RTBEngine::ECS::Scene* activeScene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
+                const bool hasLiveGameObject = *goPtr && IsGameObjectInScene(activeScene, *goPtr);
                 ImGui::Text("%s:", prop.displayName.c_str());
                 ImGui::SameLine();
 
                 // Text color based on state
-                if (*goPtr) {
+                if (hasLiveGameObject) {
                     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 0.8f, 1.0f, 1.0f)); // Light blue
+                } else if (*goPtr) {
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.55f, 0.25f, 1.0f)); // Orange
                 } else {
                     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 1.0f)); // Gray
                 }
@@ -1096,8 +1127,10 @@ namespace RTBEditor {
                 ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3f, 0.5f, 0.8f, 0.3f));
                 ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.3f, 0.5f, 0.8f, 0.5f));
 
-                if (*goPtr) {
+                if (hasLiveGameObject) {
                     ImGui::Button((*goPtr)->GetName().c_str(), ImVec2(150, 0));
+                } else if (*goPtr) {
+                    ImGui::Button("[Missing]##GODropArea", ImVec2(150, 0));
                 } else {
                     ImGui::Button("[None]##GODropArea", ImVec2(150, 0));
                 }
@@ -1126,12 +1159,16 @@ namespace RTBEditor {
             }
             case RTBEngine::Reflection::PropertyType::ComponentRef: {
                 RTBEngine::ECS::Component** compPtr = (RTBEngine::ECS::Component**)data;
+                RTBEngine::ECS::Scene* activeScene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
+                const bool hasLiveComponent = *compPtr && IsComponentInScene(activeScene, *compPtr);
                 ImGui::Text("%s (%s):", prop.displayName.c_str(), prop.componentTypeName.c_str());
                 ImGui::SameLine();
 
                 // Text color based on state
-                if (*compPtr) {
+                if (hasLiveComponent) {
                     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.8f, 0.6f, 1.0f, 1.0f)); // Purple
+                } else if (*compPtr) {
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.55f, 0.25f, 1.0f)); // Orange
                 } else {
                     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 1.0f)); // Gray
                 }
@@ -1141,9 +1178,11 @@ namespace RTBEditor {
                 ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.5f, 0.3f, 0.8f, 0.3f));
                 ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.5f, 0.3f, 0.8f, 0.5f));
 
-                if (*compPtr) {
+                if (hasLiveComponent) {
                     std::string label = std::string("[") + (*compPtr)->GetTypeName() + "]##CompDropArea";
                     ImGui::Button(label.c_str(), ImVec2(150, 0));
+                } else if (*compPtr) {
+                    ImGui::Button("[Missing]##CompDropArea", ImVec2(150, 0));
                 } else {
                     ImGui::Button("[None]##CompDropArea", ImVec2(150, 0));
                 }

@@ -5,6 +5,7 @@
 #include "EnemyMeleeAI.h"
 #include "EnemySpawnPoint.h"
 #include "EnemyTargetTracker.h"
+#include "GameSession.h"
 #include "HealthComponent.h"
 #include "RoundUIHandler.h"
 
@@ -26,12 +27,17 @@ RTB_REGISTER_COMPONENT(RoundManager)
     RTB_PROPERTY_RANGE(roundCountdownDuration, 0.0f, 30.0f)
     RTB_PROPERTY_RANGE(baseEnemiesPerRound, 1.0f, 100.0f)
     RTB_PROPERTY_RANGE(additionalEnemiesPerRound, 0.0f, 50.0f)
+    RTB_PROPERTY_RANGE(winningRound, 1.0f, 100.0f)
+    RTB_PROPERTY(finalScenePath)
 RTB_END_REGISTER(RoundManager)
 
 void RoundManager::OnStart()
 {
+    GameSession::GetInstance().Reset();
+    hasRequestedEndScene = false;
     ClampSettings();
     ResolveDependencies();
+    RebindPlayerDeathSubscription();
     RefreshSpawnPoints();
     CreateEnemyPrefabFromTemplate();
 
@@ -52,18 +58,13 @@ void RoundManager::OnStart()
 
 void RoundManager::OnUpdate(float deltaTime)
 {
-    ClampSettings();
-    ResolveDependencies();
-    RefreshSpawnPoints();
-    CleanupSpawnedEnemies();
-
-    if (!IsPlayerAlive()) {
-        state = State::Stopped;
-        if (uiHandler) {
-            uiHandler->HideCountdown();
-        }
+    if (hasRequestedEndScene) {
         return;
     }
+
+    ClampSettings();
+    RefreshSpawnPoints();
+    CleanupSpawnedEnemies();
 
     switch (state) {
     case State::Countdown:
@@ -87,11 +88,17 @@ void RoundManager::OnValidate()
     RefreshSpawnPoints();
 }
 
+void RoundManager::OnDestroy()
+{
+    UnsubscribeFromPlayerHealth();
+}
+
 void RoundManager::ClampSettings()
 {
     roundCountdownDuration = std::max(0.0f, roundCountdownDuration);
     baseEnemiesPerRound = std::max(1, baseEnemiesPerRound);
     additionalEnemiesPerRound = std::max(0, additionalEnemiesPerRound);
+    winningRound = std::max(1, winningRound);
 }
 
 void RoundManager::ResolveDependencies()
@@ -152,6 +159,7 @@ void RoundManager::CreateEnemyPrefabFromTemplate()
     enemyPrefab = RTBEngine::ECS::Prefab::CreateFromGameObject(enemyTemplate);
     SetHierarchyActive(enemyTemplate, false);
     QueueRemoveHierarchy(scene, enemyTemplate);
+    enemyTemplate = nullptr;
 }
 
 void RoundManager::UpdateCountdown(float deltaTime)
@@ -168,6 +176,11 @@ void RoundManager::UpdateCountdown(float deltaTime)
 
 void RoundManager::StartRound()
 {
+    if (nextRound >= winningRound) {
+        EndGame(GameResult::Win);
+        return;
+    }
+
     if (!enemyPrefab || spawnPoints.empty()) {
         state = State::Stopped;
         if (uiHandler) {
@@ -311,19 +324,6 @@ int RoundManager::GetEnemyCountForRound(int roundNumber) const
     return std::max(1, baseEnemiesPerRound + std::max(0, roundNumber - 1) * additionalEnemiesPerRound);
 }
 
-bool RoundManager::IsPlayerAlive() const
-{
-    if (!playerObject) {
-        return true;
-    }
-
-    if (!playerHealth) {
-        return true;
-    }
-
-    return !playerHealth->IsDead();
-}
-
 void RoundManager::UpdateCountdownText()
 {
     if (!uiHandler) {
@@ -337,6 +337,62 @@ void RoundManager::UpdateCountdownText()
 
     displayedCountdownSeconds = countdownSeconds;
     uiHandler->ShowCountdown(displayedCountdownSeconds);
+}
+
+void RoundManager::RebindPlayerDeathSubscription()
+{
+    if (subscribedPlayerHealth == playerHealth && playerDeathSubscription.IsValid()) {
+        return;
+    }
+
+    UnsubscribeFromPlayerHealth();
+
+    if (!playerHealth) {
+        return;
+    }
+
+    subscribedPlayerHealth = playerHealth;
+    playerDeathSubscription = playerHealth->SubscribeToDeath(
+        [this](const HealthComponent::DeathEvent&) {
+            HandlePlayerDeath();
+        });
+
+    if (playerHealth->IsDead()) {
+        HandlePlayerDeath();
+    }
+}
+
+void RoundManager::UnsubscribeFromPlayerHealth()
+{
+    playerDeathSubscription.Reset();
+    subscribedPlayerHealth = nullptr;
+}
+
+void RoundManager::HandlePlayerDeath()
+{
+    EndGame(GameResult::Lose);
+}
+
+void RoundManager::EndGame(GameResult result)
+{
+    if (hasRequestedEndScene) {
+        return;
+    }
+
+    hasRequestedEndScene = true;
+    state = State::Stopped;
+    GameSession::GetInstance().SetResult(result);
+
+    if (uiHandler) {
+        uiHandler->HideCountdown();
+    }
+
+    if (finalScenePath.empty()) {
+        RTB_WARN("[RoundManager] finalScenePath is empty; cannot load final scene.");
+        return;
+    }
+
+    RTBEngine::ECS::SceneManager::GetInstance().RequestSceneLoad(finalScenePath.c_str());
 }
 
 void RoundManager::QueueRemoveHierarchy(RTBEngine::ECS::Scene* scene, RTBEngine::ECS::GameObject* root) const
