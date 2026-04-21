@@ -24,7 +24,7 @@ function CreateScene()
             {
                 name = "Directional Light",
                 uuid = "33E609A2-DB15-43A6-B8D1-EB017F1606F7",
-                rotation = Quaternion.FromEulerAngles(-35.00, -35.00, 0.00),
+                rotation = Quaternion.FromEulerAngles(-28.02, -40.52, 21.88),
                 components = {
                     {
                         type = "LightComponent",
@@ -52,12 +52,34 @@ function CreateScene()
                     {
                         type = "FinalSceneController",
                         resultText = "D7B61DB1-BE7B-4859-B224-B33818C081C2/UIText",
-                        winMessage = "You won\nThanks for playing the demo",
+                        winMessage = "You won
+Thanks for playing the demo",
                         loseMessage = "You lost",
                         fallbackMessage = "Thanks for playing the demo"
                     },
                 },
                 children = {
+                    {
+                        name = "Background",
+                        uuid = "A6C5C515-CE68-4F34-AFC5-44DA266B0F12",
+                        components = {
+                            {
+                                type = "UIImage",
+                                texture = "Assets/UI/EndGameBG.png",
+                                tintColor = Color(1.00, 1.00, 1.00, 1.00),
+                                preserveAspect = false,
+                                isVisible = true,
+                                raycastTarget = false,
+                                anchorMin = Vector2(0.00, 0.00),
+                                anchorMax = Vector2(1.00, 1.00),
+                                pivot = Vector2(0.50, 0.50),
+                                anchoredPosition = Vector2(0.00, 0.00),
+                                sizeDelta = Vector2(0.00, 0.00),
+                                rotation = 0.00,
+                                scale = Vector2(1.00, 1.00)
+                            },
+                        }
+                    },
                     {
                         name = "ResultText",
                         uuid = "D7B61DB1-BE7B-4859-B224-B33818C081C2",
