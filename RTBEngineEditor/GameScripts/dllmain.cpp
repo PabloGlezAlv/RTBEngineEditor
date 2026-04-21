@@ -1,10 +1,33 @@
 #include <Windows.h>
 #include <RTBEngine/Scripting/ScriptBridgeABI.h>
 #include <cstring>
+#include <string>
+
+#ifndef _ITERATOR_DEBUG_LEVEL
+#define _ITERATOR_DEBUG_LEVEL 0
+#endif
 
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)
 {
     return TRUE;
+}
+
+extern "C" __declspec(dllexport)
+const RTBScriptBuildInfo* RTBScripts_GetBuildInfo()
+{
+    static const RTBScriptBuildInfo buildInfo{
+        RTB_SCRIPT_BRIDGE_ABI_VERSION,
+#ifdef _DEBUG
+        1,
+#else
+        0,
+#endif
+        _ITERATOR_DEBUG_LEVEL,
+        sizeof(std::string),
+        sizeof(RTBPropertyDesc),
+        sizeof(RTBScriptTypeDesc)
+    };
+    return &buildInfo;
 }
 
 // ABI-safe descriptor structs — only POD types, no STL across the module boundary.

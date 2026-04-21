@@ -39,6 +39,7 @@ public:
     int baseEnemiesPerRound = 2;
     int additionalEnemiesPerRound = 1;
     int winningRound = 5;
+    float finalSceneDelay = 5.0f;
     std::string finalScenePath = "Assets/Scenes/FinalScene.lua";
 
     RTB_COMPONENT(RoundManager)
@@ -61,8 +62,10 @@ private:
     int nextRound = 1;
     float countdownRemaining = 0.0f;
     int displayedCountdownSeconds = -1;
+    float finalSceneDelayRemaining = 0.0f;
     uint32_t cachedHierarchyVersion = 0;
     bool hasRequestedEndScene = false;
+    bool finalSceneLoadRequested = false;
 
     void ClampSettings();
     void ResolveDependencies();
@@ -81,6 +84,8 @@ private:
     void UnsubscribeFromPlayerHealth();
     void HandlePlayerDeath();
     void EndGame(GameResult result);
+    void UpdateFinalSceneTransition(float deltaTime);
+    void RequestFinalScene();
     void QueueRemoveHierarchy(RTBEngine::ECS::Scene* scene, RTBEngine::ECS::GameObject* root) const;
     void SetHierarchyActive(RTBEngine::ECS::GameObject* root, bool active) const;
     void CollectHierarchy(RTBEngine::ECS::GameObject* root,

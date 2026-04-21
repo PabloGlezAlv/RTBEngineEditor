@@ -28,6 +28,7 @@ RTB_REGISTER_COMPONENT(RoundManager)
     RTB_PROPERTY_RANGE(baseEnemiesPerRound, 1.0f, 100.0f)
     RTB_PROPERTY_RANGE(additionalEnemiesPerRound, 0.0f, 50.0f)
     RTB_PROPERTY_RANGE(winningRound, 1.0f, 100.0f)
+    RTB_PROPERTY_RANGE(finalSceneDelay, 0.0f, 30.0f)
     RTB_PROPERTY(finalScenePath)
 RTB_END_REGISTER(RoundManager)
 
@@ -35,6 +36,8 @@ void RoundManager::OnStart()
 {
     GameSession::GetInstance().Reset();
     hasRequestedEndScene = false;
+    finalSceneLoadRequested = false;
+    finalSceneDelayRemaining = 0.0f;
     ClampSettings();
     ResolveDependencies();
     RebindPlayerDeathSubscription();
@@ -59,6 +62,7 @@ void RoundManager::OnStart()
 void RoundManager::OnUpdate(float deltaTime)
 {
     if (hasRequestedEndScene) {
+        UpdateFinalSceneTransition(deltaTime);
         return;
     }
 
@@ -99,6 +103,7 @@ void RoundManager::ClampSettings()
     baseEnemiesPerRound = std::max(1, baseEnemiesPerRound);
     additionalEnemiesPerRound = std::max(0, additionalEnemiesPerRound);
     winningRound = std::max(1, winningRound);
+    finalSceneDelay = std::max(0.0f, finalSceneDelay);
 }
 
 void RoundManager::ResolveDependencies()
@@ -380,6 +385,8 @@ void RoundManager::EndGame(GameResult result)
     }
 
     hasRequestedEndScene = true;
+    finalSceneLoadRequested = false;
+    finalSceneDelayRemaining = std::max(0.0f, finalSceneDelay);
     state = State::Stopped;
     GameSession::GetInstance().SetResult(result);
 
@@ -387,6 +394,30 @@ void RoundManager::EndGame(GameResult result)
         uiHandler->HideCountdown();
     }
 
+    if (finalSceneDelayRemaining <= 0.0f) {
+        RequestFinalScene();
+    }
+}
+
+void RoundManager::UpdateFinalSceneTransition(float deltaTime)
+{
+    if (finalSceneLoadRequested) {
+        return;
+    }
+
+    finalSceneDelayRemaining = std::max(0.0f, finalSceneDelayRemaining - std::max(0.0f, deltaTime));
+    if (finalSceneDelayRemaining <= 0.0f) {
+        RequestFinalScene();
+    }
+}
+
+void RoundManager::RequestFinalScene()
+{
+    if (finalSceneLoadRequested) {
+        return;
+    }
+
+    finalSceneLoadRequested = true;
     if (finalScenePath.empty()) {
         RTB_WARN("[RoundManager] finalScenePath is empty; cannot load final scene.");
         return;

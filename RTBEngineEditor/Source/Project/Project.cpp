@@ -1,5 +1,4 @@
 #include "Project.h"
-#include <RTBEngine/ECS/PrefabRegistry.h>
 #include <RTBEngine/Core/Logger.h>
 #include <fstream>
 #include <sstream>
@@ -54,9 +53,6 @@ namespace RTBEditor {
         }
 
         activeProject = this;
-
-        RTBEngine::ECS::PrefabRegistry::GetInstance().Clear();
-        RTBEngine::ECS::PrefabRegistry::GetInstance().LoadAll(GetAssetRootPath().string());
 
         return true;
     }
@@ -116,12 +112,7 @@ namespace RTBEditor {
         if (projectDirectory.empty()) {
             return {};
         }
-        const std::filesystem::path configurationDll =
-            (projectDirectory / "x64" / configuration / "GameScripts.dll").lexically_normal();
-        if (std::filesystem::exists(configurationDll)) {
-            return configurationDll;
-        }
-        return (projectDirectory / "GameScripts.dll").lexically_normal();
+        return (projectDirectory / "x64" / configuration / "GameScripts.dll").lexically_normal();
     }
 
     std::filesystem::path Project::GetSDKPath() const {

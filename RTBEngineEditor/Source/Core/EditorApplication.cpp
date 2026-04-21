@@ -4,6 +4,7 @@
 #include <filesystem>
 #include <vector>
 #include <RTBEngine/ECS/SceneManager.h>
+#include <RTBEngine/ECS/PrefabRegistry.h>
 #include <RTBEngine/Rendering/FrameBuffer.h>
 #include <RTBEngine/Scripting/SceneSaver.h>
 #include <RTBEngine/Scripting/ScriptManager.h>
@@ -19,6 +20,24 @@
 
 namespace {
     namespace fs = std::filesystem;
+
+    const char* GetEditorBuildConfiguration() {
+#ifdef _DEBUG
+        return "Debug";
+#else
+        return "Release";
+#endif
+    }
+
+    void ReloadProjectPrefabs(const RTBEditor::Project& project) {
+        auto& prefabRegistry = RTBEngine::ECS::PrefabRegistry::GetInstance();
+        prefabRegistry.Clear();
+
+        const fs::path assetsPath = project.GetAssetRootPath();
+        if (fs::exists(assetsPath) && fs::is_directory(assetsPath)) {
+            prefabRegistry.LoadAll(assetsPath.string());
+        }
+    }
 
     fs::path ResolveProjectFilePath(const fs::path& projectFileName) {
         const fs::path currentDir = fs::current_path();
@@ -80,7 +99,8 @@ namespace RTBEditor {
 
         if (project->Load(projectFilePath)) {
             resources.SetAssetRootPath(project->GetAssetRootPath());
-            fs::path scriptsDllPath = project->GetGameScriptsDllPath("Debug");
+            const char* buildConfiguration = GetEditorBuildConfiguration();
+            fs::path scriptsDllPath = project->GetGameScriptsDllPath(buildConfiguration);
 
             // Load GameScripts.dll before loading the scene so script component types are
             // registered in time for the SceneLoader to instantiate them.
@@ -90,6 +110,8 @@ namespace RTBEditor {
             else {
                 RTB_WARN("GameScripts.dll not found at: " + scriptsDllPath.string());
             }
+
+            ReloadProjectPrefabs(*project);
 
             const std::string& lastOpen = project->GetLastOpenScene();
             const std::string& sceneToLoad = !lastOpen.empty() ? lastOpen : project->GetStartScene();
@@ -222,10 +244,13 @@ namespace RTBEditor {
 
             if (result == ScriptCompileResult::Success) {
                 namespace fs = std::filesystem;
-                fs::path targetDllPath = BuildSystem::GetCompiledScriptsDllPath("Debug");
+                fs::path targetDllPath = BuildSystem::GetCompiledScriptsDllPath(GetEditorBuildConfiguration());
 
                 if (fs::exists(targetDllPath)) {
                     RTBEngine::Scripting::ScriptManager::GetInstance().LoadScripts(targetDllPath.string());
+                    if (project) {
+                        ReloadProjectPrefabs(*project);
+                    }
 
                     // Reload using pendingScenePath saved in OnCompileScripts before UnloadScripts
                     // cleared activeScenePath.
@@ -578,7 +603,9 @@ namespace RTBEditor {
         // Launch MSBuild in a background thread. It will compile and copy the DLL,
         // and we will load it back on the main thread once finished.
         compileThread = std::thread([this, vcxprojPath]() {
-            ScriptCompileResult result = BuildSystem::CompileScripts(vcxprojPath.string());
+            ScriptCompileResult result = BuildSystem::CompileScripts(
+                vcxprojPath.string(),
+                GetEditorBuildConfiguration());
             compileJobResult.store(static_cast<int>(result), std::memory_order_release);
             compileJobDone.store(true, std::memory_order_release);
         });

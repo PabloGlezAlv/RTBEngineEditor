@@ -69,9 +69,6 @@
       <AdditionalLibraryDirectories>$(ProjectDir)..\RTBEngine_SDK\Lib\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>RTBEngine.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <PostBuildEvent>
-      <Command>copy /Y "$(TargetPath)" "$(ProjectDir)..\GameScripts.dll"</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -91,9 +88,6 @@
       <AdditionalLibraryDirectories>$(ProjectDir)..\RTBEngine_SDK\Lib\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>RTBEngine.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <PostBuildEvent>
-      <Command>copy /Y "$(TargetPath)" "$(ProjectDir)..\GameScripts.dll"</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <!-- Pick up all user scripts automatically so creating new classes in Assets/Scripts does not require manual vcxproj edits. -->
   <ItemGroup>

@@ -52,8 +52,7 @@ function CreateScene()
                     {
                         type = "FinalSceneController",
                         resultText = "D7B61DB1-BE7B-4859-B224-B33818C081C2/UIText",
-                        winMessage = "You won
-Thanks for playing the demo",
+                        winMessage = "You won\nThanks for playing the demo",
                         loseMessage = "You lost",
                         fallbackMessage = "Thanks for playing the demo"
                     },
