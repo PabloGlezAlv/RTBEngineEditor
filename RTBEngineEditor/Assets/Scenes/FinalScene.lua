@@ -50,6 +50,9 @@ function CreateScene()
                         sortOrder = 0
                     },
                     {
+                        type = "CursorUnlocker"
+                    },
+                    {
                         type = "FinalSceneController",
                         resultText = "D7B61DB1-BE7B-4859-B224-B33818C081C2/UIText",
                         winMessage = "You won\nThanks for playing the demo",

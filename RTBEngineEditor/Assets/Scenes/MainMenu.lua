@@ -55,6 +55,9 @@ function CreateScene()
                         canvasSize = Vector2(1920.00, 1080.00),
                         sortOrder = 0
                     },
+                    {
+                        type = "CursorUnlocker"
+                    },
                 },
                 children = {
                     {
