@@ -206,6 +206,9 @@ function CreateScene()
                                 pressInTimeSec = 0.08,
                                 pressOutTimeSec = 0.12
                             },
+                            {
+                                type = "ApplicationQuitButton"
+                            },
                         },
                         children = {
                             {
