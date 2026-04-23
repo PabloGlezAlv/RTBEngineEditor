@@ -13,7 +13,6 @@
 namespace RTBEngine {
     namespace ECS {
         class GameObject;
-        class Scene;
     }
 }
 
@@ -86,8 +85,4 @@ private:
     void EndGame(GameResult result);
     void UpdateFinalSceneTransition(float deltaTime);
     void RequestFinalScene();
-    void QueueRemoveHierarchy(RTBEngine::ECS::Scene* scene, RTBEngine::ECS::GameObject* root) const;
-    void SetHierarchyActive(RTBEngine::ECS::GameObject* root, bool active) const;
-    void CollectHierarchy(RTBEngine::ECS::GameObject* root,
-                          std::vector<RTBEngine::ECS::GameObject*>& outHierarchy) const;
 };

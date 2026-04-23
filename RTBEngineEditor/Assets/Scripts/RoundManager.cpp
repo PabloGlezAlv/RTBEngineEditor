@@ -156,14 +156,13 @@ void RoundManager::CreateEnemyPrefabFromTemplate()
         return;
     }
 
-    RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
-    if (!scene) {
+    auto& sceneManager = RTBEngine::ECS::SceneManager::GetInstance();
+    if (!sceneManager.GetActiveScene()) {
         return;
     }
 
     enemyPrefab = RTBEngine::ECS::Prefab::CreateFromGameObject(enemyTemplate);
-    SetHierarchyActive(enemyTemplate, false);
-    QueueRemoveHierarchy(scene, enemyTemplate);
+    sceneManager.DeactivateHierarchy(enemyTemplate);
     enemyTemplate = nullptr;
 }
 
@@ -243,26 +242,19 @@ void RoundManager::SpawnRoundEnemies(int count)
 
 RTBEngine::ECS::GameObject* RoundManager::SpawnEnemyAt(RTBEngine::ECS::GameObject* spawnPoint)
 {
-    RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
-    if (!scene || !spawnPoint || !enemyPrefab) {
+    if (!spawnPoint || !enemyPrefab) {
         return nullptr;
     }
 
-    std::vector<RTBEngine::ECS::GameObject*> spawnedChildren;
-    RTBEngine::ECS::GameObject* spawnedEnemy = enemyPrefab->Instantiate(nullptr, spawnedChildren);
+    RTBEngine::ECS::GameObject* spawnedEnemy =
+        RTBEngine::ECS::SceneManager::GetInstance().Instantiate(
+            *enemyPrefab,
+            spawnPoint->GetWorldPosition(),
+            spawnPoint->GetWorldRotation());
     if (!spawnedEnemy) {
         return nullptr;
     }
 
-    scene->AddGameObject(spawnedEnemy);
-    for (RTBEngine::ECS::GameObject* child : spawnedChildren) {
-        if (child) {
-            scene->AddGameObject(child);
-        }
-    }
-
-    spawnedEnemy->GetTransform().SetPosition(spawnPoint->GetWorldPosition());
-    spawnedEnemy->GetTransform().SetRotation(spawnPoint->GetWorldRotation());
     RebindSpawnedEnemy(spawnedEnemy);
     return spawnedEnemy;
 }
@@ -298,16 +290,10 @@ void RoundManager::RebindSpawnedEnemy(RTBEngine::ECS::GameObject* spawnedEnemy)
 
 void RoundManager::CleanupSpawnedEnemies()
 {
-    RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
-    if (!scene) {
-        spawnedEnemies.clear();
-        return;
-    }
-
     auto removeIt = std::remove_if(
         spawnedEnemies.begin(),
         spawnedEnemies.end(),
-        [this, scene](RTBEngine::ECS::GameObject* spawnedEnemy) {
+        [](RTBEngine::ECS::GameObject* spawnedEnemy) {
             if (!spawnedEnemy) {
                 return true;
             }
@@ -316,8 +302,7 @@ void RoundManager::CleanupSpawnedEnemies()
                 return false;
             }
 
-            SetHierarchyActive(spawnedEnemy, false);
-            QueueRemoveHierarchy(scene, spawnedEnemy);
+            RTBEngine::ECS::SceneManager::GetInstance().DeactivateHierarchy(spawnedEnemy);
             return true;
         });
 
@@ -424,43 +409,4 @@ void RoundManager::RequestFinalScene()
     }
 
     RTBEngine::ECS::SceneManager::GetInstance().RequestSceneLoad(finalScenePath.c_str());
-}
-
-void RoundManager::QueueRemoveHierarchy(RTBEngine::ECS::Scene* scene, RTBEngine::ECS::GameObject* root) const
-{
-    if (!scene || !root) {
-        return;
-    }
-
-    std::vector<RTBEngine::ECS::GameObject*> hierarchy;
-    CollectHierarchy(root, hierarchy);
-
-    for (auto it = hierarchy.rbegin(); it != hierarchy.rend(); ++it) {
-        scene->RemoveGameObject(*it);
-    }
-}
-
-void RoundManager::SetHierarchyActive(RTBEngine::ECS::GameObject* root, bool active) const
-{
-    if (!root) {
-        return;
-    }
-
-    root->SetActive(active);
-    for (RTBEngine::ECS::GameObject* child : root->GetChildren()) {
-        SetHierarchyActive(child, active);
-    }
-}
-
-void RoundManager::CollectHierarchy(RTBEngine::ECS::GameObject* root,
-                                    std::vector<RTBEngine::ECS::GameObject*>& outHierarchy) const
-{
-    if (!root) {
-        return;
-    }
-
-    outHierarchy.push_back(root);
-    for (RTBEngine::ECS::GameObject* child : root->GetChildren()) {
-        CollectHierarchy(child, outHierarchy);
-    }
 }
