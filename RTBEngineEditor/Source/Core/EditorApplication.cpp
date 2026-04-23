@@ -298,8 +298,7 @@ namespace RTBEditor {
         // Reset and re-initialize physics for the current scene before entering Play
         RTBEngine::ECS::Scene* scene = sm.GetActiveScene();
         if (scene && engineApp) {
-            engineApp->ResetPhysics();
-            engineApp->InitializePhysicsForScene(scene);
+            engineApp->RebuildPhysicsForScene(scene);
         }
 
         if (engineApp && engineApp->GetWindow()) {
