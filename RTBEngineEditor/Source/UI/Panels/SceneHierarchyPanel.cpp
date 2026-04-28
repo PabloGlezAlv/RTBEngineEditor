@@ -560,38 +560,8 @@ namespace RTBEditor {
         RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
     }
 
-    void SceneHierarchyPanel::CollectDescendants(RTBEngine::ECS::GameObject* gameObject, std::vector<RTBEngine::ECS::GameObject*>& out) {
-        for (auto* child : gameObject->GetChildren()) {
-            CollectDescendants(child, out);
-            out.push_back(child);
-        }
-    }
-
     void SceneHierarchyPanel::DeleteGameObject(RTBEngine::ECS::Scene* scene, RTBEngine::ECS::GameObject* gameObject, EditorContext& context) {
-        // Collect all descendants (deepest first) so they can be removed from the scene
-        std::vector<RTBEngine::ECS::GameObject*> descendants;
-        CollectDescendants(gameObject, descendants);
-
-        // Detach descendants from their parents to avoid dangling child pointers
-        for (auto* desc : descendants) {
-            if (desc->GetParent()) {
-                desc->SetParent(nullptr);
-            }
-        }
-
-        // Detach the root GO from its parent
-        if (gameObject->GetParent()) {
-            gameObject->SetParent(nullptr);
-        }
-
-        // Remove descendants from scene (unique_ptr destroyed here)
-        for (auto* desc : descendants) {
-            scene->RemoveGameObject(desc);
-        }
-
-        // Remove the GO itself
         scene->RemoveGameObject(gameObject);
-
         context.selectedGameObject = nullptr;
         RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
     }

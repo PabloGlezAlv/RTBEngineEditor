@@ -28,7 +28,6 @@ namespace RTBEditor {
         void CreateUISlider(RTBEngine::ECS::Scene* scene, EditorContext& context, RTBEngine::ECS::GameObject* parent = nullptr);
         void CreateUIText(RTBEngine::ECS::Scene* scene, EditorContext& context, RTBEngine::ECS::GameObject* parent = nullptr);
 
-        void CollectDescendants(RTBEngine::ECS::GameObject* gameObject, std::vector<RTBEngine::ECS::GameObject*>& out);
         void DeleteGameObject(RTBEngine::ECS::Scene* scene, RTBEngine::ECS::GameObject* gameObject, EditorContext& context);
     };
 
