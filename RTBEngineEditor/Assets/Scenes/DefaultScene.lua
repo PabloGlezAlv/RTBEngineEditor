@@ -74,6 +74,10 @@ function CreateScene()
                         roundPrefix = "Round ",
                         countdownPrefix = "Start in "
                     },
+                    {
+                        type = "PauseMenuController",
+                        menuRoot = "F0B5D1DA-3CF0-4563-88C2-4731F9E91A10"
+                    },
                 },
                 children = {
                     {
@@ -202,6 +206,233 @@ function CreateScene()
                                         sizeDelta = Vector2(20.00, 20.00),
                                         rotation = 0.00,
                                         scale = Vector2(1.00, 1.00)
+                                    },
+                                }
+                            },
+                        }
+                    },
+                    {
+                        name = "PauseMenu",
+                        uuid = "F0B5D1DA-3CF0-4563-88C2-4731F9E91A10",
+                        components = {
+                            {
+                                type = "UIPanel",
+                                backgroundColor = Color(0.00, 0.00, 0.00, 0.62),
+                                borderColor = Color(1.00, 1.00, 1.00, 1.00),
+                                borderThickness = 1.00,
+                                hasBorder = false,
+                                isVisible = true,
+                                raycastTarget = true,
+                                anchorMin = Vector2(0.00, 0.00),
+                                anchorMax = Vector2(1.00, 1.00),
+                                pivot = Vector2(0.50, 0.50),
+                                anchoredPosition = Vector2(0.00, 0.00),
+                                sizeDelta = Vector2(0.00, 0.00),
+                                rotation = 0.00,
+                                scale = Vector2(1.00, 1.00)
+                            },
+                        },
+                        children = {
+                            {
+                                name = "PausePanel",
+                                uuid = "0D9B1028-C0DA-4736-A523-C1D53594E4E2",
+                                components = {
+                                    {
+                                        type = "UIPanel",
+                                        backgroundColor = Color(0.09, 0.10, 0.13, 0.94),
+                                        borderColor = Color(0.95, 0.82, 0.42, 1.00),
+                                        borderThickness = 2.00,
+                                        hasBorder = true,
+                                        isVisible = true,
+                                        raycastTarget = true,
+                                        anchorMin = Vector2(0.50, 0.50),
+                                        anchorMax = Vector2(0.50, 0.50),
+                                        pivot = Vector2(0.50, 0.50),
+                                        anchoredPosition = Vector2(0.00, 0.00),
+                                        sizeDelta = Vector2(420.00, 300.00),
+                                        rotation = 0.00,
+                                        scale = Vector2(1.00, 1.00)
+                                    },
+                                },
+                                children = {
+                                    {
+                                        name = "PauseTitle",
+                                        uuid = "B7E6A2A0-D3E6-450C-A7E2-9F43E52D8B74",
+                                        components = {
+                                            {
+                                                type = "UIText",
+                                                text = "Paused",
+                                                color = Color(1.00, 0.92, 0.62, 1.00),
+                                                fontSize = 42.00,
+                                                alignment = "Center",
+                                                font = nil,
+                                                isVisible = true,
+                                                raycastTarget = false,
+                                                anchorMin = Vector2(0.50, 1.00),
+                                                anchorMax = Vector2(0.50, 1.00),
+                                                pivot = Vector2(0.50, 1.00),
+                                                anchoredPosition = Vector2(0.00, -42.00),
+                                                sizeDelta = Vector2(360.00, 60.00),
+                                                rotation = 0.00,
+                                                scale = Vector2(1.00, 1.00)
+                                            },
+                                        }
+                                    },
+                                    {
+                                        name = "ContinueButton",
+                                        uuid = "D51F4600-5E83-4B08-8402-D0F6189B936A",
+                                        components = {
+                                            {
+                                                type = "UIPanel",
+                                                backgroundColor = Color(0.20, 0.20, 0.20, 1.00),
+                                                borderColor = Color(1.00, 1.00, 1.00, 1.00),
+                                                borderThickness = 1.00,
+                                                hasBorder = false,
+                                                isVisible = true,
+                                                raycastTarget = true,
+                                                anchorMin = Vector2(0.50, 0.50),
+                                                anchorMax = Vector2(0.50, 0.50),
+                                                pivot = Vector2(0.50, 0.50),
+                                                anchoredPosition = Vector2(0.00, 18.00),
+                                                sizeDelta = Vector2(260.00, 54.00),
+                                                rotation = 0.00,
+                                                scale = Vector2(1.00, 1.00)
+                                            },
+                                            {
+                                                type = "UIButton",
+                                                normalColor = Color(1.00, 1.00, 1.00, 0.23),
+                                                hoveredColor = Color(0.90, 0.90, 0.90, 0.44),
+                                                pressedColor = Color(0.70, 0.70, 0.70, 1.00),
+                                                disabledColor = Color(0.50, 0.50, 0.50, 0.50),
+                                                interactable = true,
+                                                enableDefaultHoverVisuals = false
+                                            },
+                                            {
+                                                type = "ButtonStyle",
+                                                backgroundPanel = "D51F4600-5E83-4B08-8402-D0F6189B936A/UIPanel",
+                                                label = "5DE3585B-3426-421D-8F36-DBAF43123F50/UIText",
+                                                normalPanelColor = Color(0.18, 0.25, 0.22, 1.00),
+                                                normalTextColor = Color(1.00, 1.00, 1.00, 1.00),
+                                                hoverPanelColor = Color(0.25, 0.44, 0.35, 1.00),
+                                                hoverTextColor = Color(1.00, 0.96, 0.68, 1.00),
+                                                hoverScaleBoost = 1.06,
+                                                hoverRotationDeg = 0.00,
+                                                clickPanelColor = Color(0.12, 0.30, 0.23, 1.00),
+                                                clickTextColor = Color(0.86, 0.86, 0.92, 1.00),
+                                                clickScaleBoost = 0.96,
+                                                hoverInTimeSec = 0.12,
+                                                hoverOutTimeSec = 0.18,
+                                                pressInTimeSec = 0.08,
+                                                pressOutTimeSec = 0.12
+                                            },
+                                            {
+                                                type = "ResumeGameButton",
+                                                controller = "62E6AE07-7DC2-42B3-8F0E-AA7CA40264F0/PauseMenuController"
+                                            },
+                                        },
+                                        children = {
+                                            {
+                                                name = "Text",
+                                                uuid = "5DE3585B-3426-421D-8F36-DBAF43123F50",
+                                                components = {
+                                                    {
+                                                        type = "UIText",
+                                                        text = "Continue",
+                                                        color = Color(1.00, 1.00, 1.00, 1.00),
+                                                        fontSize = 20.00,
+                                                        alignment = "Center",
+                                                        font = nil,
+                                                        isVisible = true,
+                                                        raycastTarget = false,
+                                                        anchorMin = Vector2(0.00, 0.00),
+                                                        anchorMax = Vector2(1.00, 1.00),
+                                                        pivot = Vector2(0.50, 0.50),
+                                                        anchoredPosition = Vector2(0.00, 0.00),
+                                                        sizeDelta = Vector2(0.00, 0.00),
+                                                        rotation = 0.00,
+                                                        scale = Vector2(1.00, 1.00)
+                                                    },
+                                                }
+                                            },
+                                        }
+                                    },
+                                    {
+                                        name = "BackToMenuButton",
+                                        uuid = "9E2C0BE0-4742-4279-A2DD-0C7009566B7B",
+                                        components = {
+                                            {
+                                                type = "UIPanel",
+                                                backgroundColor = Color(0.20, 0.20, 0.20, 1.00),
+                                                borderColor = Color(1.00, 1.00, 1.00, 1.00),
+                                                borderThickness = 1.00,
+                                                hasBorder = false,
+                                                isVisible = true,
+                                                raycastTarget = true,
+                                                anchorMin = Vector2(0.50, 0.50),
+                                                anchorMax = Vector2(0.50, 0.50),
+                                                pivot = Vector2(0.50, 0.50),
+                                                anchoredPosition = Vector2(0.00, -58.00),
+                                                sizeDelta = Vector2(260.00, 54.00),
+                                                rotation = 0.00,
+                                                scale = Vector2(1.00, 1.00)
+                                            },
+                                            {
+                                                type = "UIButton",
+                                                normalColor = Color(1.00, 1.00, 1.00, 0.23),
+                                                hoveredColor = Color(0.90, 0.90, 0.90, 0.44),
+                                                pressedColor = Color(0.70, 0.70, 0.70, 1.00),
+                                                disabledColor = Color(0.50, 0.50, 0.50, 0.50),
+                                                interactable = true,
+                                                enableDefaultHoverVisuals = false
+                                            },
+                                            {
+                                                type = "ButtonStyle",
+                                                backgroundPanel = "9E2C0BE0-4742-4279-A2DD-0C7009566B7B/UIPanel",
+                                                label = "2F7C83F3-A334-41DA-BF4C-A4FDDE59BA6C/UIText",
+                                                normalPanelColor = Color(0.22, 0.18, 0.18, 1.00),
+                                                normalTextColor = Color(1.00, 1.00, 1.00, 1.00),
+                                                hoverPanelColor = Color(0.45, 0.30, 0.25, 1.00),
+                                                hoverTextColor = Color(1.00, 0.96, 0.68, 1.00),
+                                                hoverScaleBoost = 1.06,
+                                                hoverRotationDeg = 0.00,
+                                                clickPanelColor = Color(0.32, 0.18, 0.16, 1.00),
+                                                clickTextColor = Color(0.86, 0.86, 0.92, 1.00),
+                                                clickScaleBoost = 0.96,
+                                                hoverInTimeSec = 0.12,
+                                                hoverOutTimeSec = 0.18,
+                                                pressInTimeSec = 0.08,
+                                                pressOutTimeSec = 0.12
+                                            },
+                                            {
+                                                type = "SceneChangeButton",
+                                                scenePath = "Assets/Scenes/MainMenu.lua"
+                                            },
+                                        },
+                                        children = {
+                                            {
+                                                name = "Text",
+                                                uuid = "2F7C83F3-A334-41DA-BF4C-A4FDDE59BA6C",
+                                                components = {
+                                                    {
+                                                        type = "UIText",
+                                                        text = "Back to Menu",
+                                                        color = Color(1.00, 1.00, 1.00, 1.00),
+                                                        fontSize = 20.00,
+                                                        alignment = "Center",
+                                                        font = nil,
+                                                        isVisible = true,
+                                                        raycastTarget = false,
+                                                        anchorMin = Vector2(0.00, 0.00),
+                                                        anchorMax = Vector2(1.00, 1.00),
+                                                        pivot = Vector2(0.50, 0.50),
+                                                        anchoredPosition = Vector2(0.00, 0.00),
+                                                        sizeDelta = Vector2(0.00, 0.00),
+                                                        rotation = 0.00,
+                                                        scale = Vector2(1.00, 1.00)
+                                                    },
+                                                }
+                                            },
+                                        }
                                     },
                                 }
                             },

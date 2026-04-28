@@ -1,6 +1,7 @@
 #include "SceneChangeButton.h"
 
 #include <RTBEngine/Core/Logger.h>
+#include <RTBEngine/Core/Time.h>
 #include <RTBEngine/ECS/GameObject.h>
 #include <RTBEngine/ECS/SceneManager.h>
 #include <RTBEngine/UI/Elements/UIButton.h>
@@ -26,5 +27,6 @@ void SceneChangeButton::OnPointerClick(const RTBEngine::UI::PointerEventData&)
         return;
     }
 
+    RTBEngine::Core::Time::SetPaused(false);
     RTBEngine::ECS::SceneManager::GetInstance().RequestSceneLoad(scenePath.c_str());
 }

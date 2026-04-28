@@ -9,6 +9,7 @@
 #include <RTBEngine/Scripting/SceneSaver.h>
 #include <RTBEngine/Scripting/ScriptManager.h>
 #include <RTBEngine/Core/Window.h>
+#include <RTBEngine/Core/Time.h>
 #include <RTBEngine/Input/InputManager.h>
 #include <RTBEngine/Input/KeyCode.h>
 #include <RTBEngine/ECS/MeshRenderer.h>
@@ -268,11 +269,19 @@ namespace RTBEditor {
             }
         }
 
-        if (state == EditorState::Play) {
+        if (state == EditorState::Play || state == EditorState::Pause) {
             RTBEngine::ECS::Scene* sceneBeforeUpdate =
                 RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
 
+            if (state == EditorState::Pause) {
+                RTBEngine::Core::Time::SetPaused(true);
+            }
+
             engineApp->Update(deltaTime);
+
+            if (state == EditorState::Pause) {
+                RTBEngine::Core::Time::SetPaused(true);
+            }
 
             if (RTBEngine::Core::Application::ConsumeQuitRequest()) {
                 OnStop();
@@ -289,6 +298,11 @@ namespace RTBEditor {
 
     void EditorApplication::OnPlay() {
         RTBEngine::Core::Application::ClearQuitRequest();
+        RTBEngine::Core::Time::Reset();
+        if (engineApp) {
+            RTBEngine::Core::Time::SetFixedDeltaTime(engineApp->GetConfig().physics.timeStep);
+        }
+        RTBEngine::Core::Time::SetPaused(false);
 
         auto& sm = RTBEngine::ECS::SceneManager::GetInstance();
 
@@ -311,10 +325,22 @@ namespace RTBEditor {
     }
 
     void EditorApplication::OnPause() {
+        if (state == EditorState::Pause) {
+            RTBEngine::Core::Time::SetPaused(false);
+            state = EditorState::Play;
+            ImGui::SetWindowFocus("Game");
+            return;
+        }
+
+        if (state != EditorState::Play) {
+            return;
+        }
+
         if (engineApp && engineApp->GetWindow()) {
             engineApp->GetWindow()->SetMouseCaptured(false);
             engineApp->GetWindow()->SetCursorVisible(true);
         }
+        RTBEngine::Core::Time::SetPaused(true);
         state = EditorState::Pause;
     }
 
@@ -326,6 +352,11 @@ namespace RTBEditor {
         state = EditorState::Edit;
 
         RTBEngine::Core::Application::ClearQuitRequest();
+        RTBEngine::Core::Time::SetPaused(false);
+        RTBEngine::Core::Time::Reset();
+        if (engineApp) {
+            RTBEngine::Core::Time::SetFixedDeltaTime(engineApp->GetConfig().physics.timeStep);
+        }
         RTBEngine::ECS::SceneManager::GetInstance().ClearPendingSceneLoad();
 
         // Clear selection before scene reload to avoid dangling pointer crashes.

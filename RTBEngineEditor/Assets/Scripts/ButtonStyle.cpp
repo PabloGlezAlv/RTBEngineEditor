@@ -33,6 +33,7 @@ RTB_END_REGISTER(ButtonStyle)
 
 void ButtonStyle::OnAwake()
 {
+    SetTimeMode(RTBEngine::ECS::ComponentTimeMode::Unscaled);
     currentState = State::Normal;
     baseScale = RTBEngine::Math::Vector2(1.0f, 1.0f);
     baseRotation = 0.0f;
