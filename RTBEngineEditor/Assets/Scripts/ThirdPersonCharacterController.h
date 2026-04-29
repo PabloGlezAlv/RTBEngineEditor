@@ -41,14 +41,8 @@ public:
     float moveSpeed = 4.0f;
     float sprintMultiplier = 1.75f;
     float turnSpeed = 720.0f;
-    float mouseSensitivity = 0.18f;
-    float cameraDistance = 4.5f;
-    float minCameraDistance = 2.0f;
-    float maxCameraDistance = 7.0f;
-    float zoomStep = 0.6f;
-    float minPitch = -20.0f;
-    float maxPitch = 65.0f;
-    RTBEngine::Math::Vector3 cameraFocusOffset = RTBEngine::Math::Vector3(0.0f, 1.6f, 0.0f);
+    float cameraDistance = 11.0f;
+    RTBEngine::Math::Vector3 cameraFocusOffset = RTBEngine::Math::Vector3(0.0f, 1.2f, 0.0f);
     RTBEngine::Animation::Animator* animator = nullptr;
     float attackRange = 1.75f;
     float attackCooldown = 0.8f;
@@ -77,8 +71,6 @@ private:
     };
 
     State state = State::Locomotion;
-    float cameraYaw = 0.0f;
-    float cameraPitch = 18.0f;
     float cooldownRemaining = 0.0f;
     float attackElapsed = 0.0f;
     bool attackHitExecuted = false;
@@ -98,8 +90,7 @@ private:
     void ResolveHealth();
     void ResolveAnimator();
     void DisableCompetingCameraController() const;
-    void SyncCameraFromCurrentTransform();
-    void ApplyCameraOrbitTransform();
+    void ApplyCameraFollowTransform();
     void RegisterAnimationSlots();
     void RegisterAnimationSlot(const char* slotLabel,
                                const std::string& sourceFbx,
@@ -110,7 +101,6 @@ private:
     void UpdateAttackInput();
     void UpdateAttack(float deltaTime);
     void UpdateMovement(float deltaTime);
-    void UpdateCameraOrbit();
     void UpdateAnimatorLocomotion(bool hasMovementInput, bool isRunning);
     void StartAttack();
     void FinishAttack();

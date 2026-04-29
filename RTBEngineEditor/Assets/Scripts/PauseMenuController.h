@@ -15,8 +15,11 @@ public:
     void OnAwake() override;
     void OnStart() override;
     void OnUpdate(float deltaTime) override;
+    void OnDestroy() override;
 
     RTBEngine::ECS::GameObject* menuRoot = nullptr;
+    bool pauseSimulation = false;
+    bool useRelativeMouseWhenClosed = false;
 
     RTB_COMPONENT(PauseMenuController)
 
@@ -25,6 +28,7 @@ public:
     void PauseGame();
     void ResumeGame();
     bool IsMenuOpen() const { return menuVisible; }
+    static bool IsAnyMenuOpen();
 
 private:
     struct UIElementState {

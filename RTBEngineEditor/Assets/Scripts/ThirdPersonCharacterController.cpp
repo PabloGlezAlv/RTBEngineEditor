@@ -1,6 +1,7 @@
 #include "ThirdPersonCharacterController.h"
 
 #include "HealthComponent.h"
+#include "PauseMenuController.h"
 
 #include <RTBEngine/Animation/Animator.h>
 #include <RTBEngine/Core/Logger.h>
@@ -29,6 +30,8 @@ namespace {
     constexpr float kDirectionEpsilon = 0.0001f;
     constexpr float kAttackCompletionEpsilon = 0.0001f;
     constexpr float kFallbackAttackDuration = 0.5f;
+    constexpr float kFixedCameraYawDegrees = 0.0f;
+    constexpr float kFixedCameraPitchDegrees = 50.0f;
     constexpr const char* kIdleAlias = "ThirdPerson.Idle";
     constexpr const char* kWalkAlias = "ThirdPerson.Walk";
     constexpr const char* kRunAlias = "ThirdPerson.Run";
@@ -93,13 +96,7 @@ RTB_REGISTER_COMPONENT(ThirdPersonCharacterController)
     RTB_PROPERTY_RANGE(moveSpeed, 0.0f, 20.0f)
     RTB_PROPERTY_RANGE(sprintMultiplier, 1.0f, 4.0f)
     RTB_PROPERTY_RANGE(turnSpeed, 0.0f, 1440.0f)
-    RTB_PROPERTY_RANGE(mouseSensitivity, 0.01f, 1.0f)
     RTB_PROPERTY_RANGE(cameraDistance, 0.5f, 20.0f)
-    RTB_PROPERTY_RANGE(minCameraDistance, 0.5f, 20.0f)
-    RTB_PROPERTY_RANGE(maxCameraDistance, 0.5f, 20.0f)
-    RTB_PROPERTY_RANGE(zoomStep, 0.05f, 2.0f)
-    RTB_PROPERTY_RANGE(minPitch, -89.0f, 89.0f)
-    RTB_PROPERTY_RANGE(maxPitch, -89.0f, 89.0f)
     RTB_PROPERTY(cameraFocusOffset)
     RTB_PROPERTY_COMPONENT(animator, Animator)
     RTB_PROPERTY_RANGE(attackRange, 0.1f, 4.0f)
@@ -122,13 +119,12 @@ void ThirdPersonCharacterController::OnStart()
     ResolveAnimator();
     RegisterAnimationSlots();
     ResolveCameraObject();
-    SyncCameraFromCurrentTransform();
     ConfigurePhysicsBody();
     DisableCompetingCameraController();
     RebindHealthSubscription();
     UpdateAnimatorLocomotion(false, false);
-    ApplyCameraOrbitTransform();
-    RTBEngine::Input::InputManager::GetInstance().SetMouseRelativeMode(true);
+    ApplyCameraFollowTransform();
+    RTBEngine::Input::InputManager::GetInstance().SetMouseRelativeMode(false);
 
     if (health && health->IsDead()) {
         HandleDeath(health->GetLastDeathEvent());
@@ -148,7 +144,6 @@ void ThirdPersonCharacterController::OnUpdate(float deltaTime)
     ResolveCameraObject();
     DisableCompetingCameraController();
     RebindHealthSubscription();
-    UpdateCameraOrbit();
 
     cooldownRemaining = std::max(0.0f, cooldownRemaining - deltaTime);
 
@@ -158,6 +153,10 @@ void ThirdPersonCharacterController::OnUpdate(float deltaTime)
 
     if (state == State::Attacking) {
         UpdateAttack(deltaTime);
+        return;
+    }
+
+    if (PauseMenuController::IsAnyMenuOpen()) {
         return;
     }
 
@@ -180,6 +179,12 @@ void ThirdPersonCharacterController::OnFixedUpdate(float fixedDeltaTime)
         return;
     }
 
+    if (PauseMenuController::IsAnyMenuOpen()) {
+        StopPlanarMotion();
+        UpdateAnimatorLocomotion(false, false);
+        return;
+    }
+
     UpdateMovement(fixedDeltaTime);
 }
 
@@ -191,7 +196,7 @@ void ThirdPersonCharacterController::OnLateUpdate(float /*deltaTime*/)
 
     ResolveCameraObject();
     DisableCompetingCameraController();
-    ApplyCameraOrbitTransform();
+    ApplyCameraFollowTransform();
 
     if (state != State::Attacking) {
         return;
@@ -224,16 +229,16 @@ void ThirdPersonCharacterController::OnValidate()
         RegisterAnimationSlots();
     }
     ResolveCameraObject();
-    SyncCameraFromCurrentTransform();
     ConfigurePhysicsBody();
     DisableCompetingCameraController();
     UpdateAnimatorLocomotion(false, false);
-    ApplyCameraOrbitTransform();
+    ApplyCameraFollowTransform();
 }
 
 void ThirdPersonCharacterController::OnDestroy()
 {
     UnsubscribeFromHealth();
+    RTBEngine::Input::InputManager::GetInstance().SetMouseRelativeMode(false);
 }
 
 void ThirdPersonCharacterController::ClampSettings()
@@ -241,17 +246,7 @@ void ThirdPersonCharacterController::ClampSettings()
     moveSpeed = std::max(0.0f, moveSpeed);
     sprintMultiplier = std::max(1.0f, sprintMultiplier);
     turnSpeed = std::max(0.0f, turnSpeed);
-    mouseSensitivity = std::max(0.01f, mouseSensitivity);
-    minCameraDistance = std::max(0.1f, minCameraDistance);
-    maxCameraDistance = std::max(minCameraDistance, maxCameraDistance);
-    cameraDistance = std::clamp(cameraDistance, minCameraDistance, maxCameraDistance);
-    zoomStep = std::max(0.01f, zoomStep);
-    minPitch = std::clamp(minPitch, -89.0f, 89.0f);
-    maxPitch = std::clamp(maxPitch, -89.0f, 89.0f);
-    if (minPitch > maxPitch) {
-        std::swap(minPitch, maxPitch);
-    }
-    cameraPitch = std::clamp(cameraPitch, minPitch, maxPitch);
+    cameraDistance = std::max(0.1f, cameraDistance);
 
     attackRange = std::max(0.1f, attackRange);
     attackCooldown = std::max(0.0f, attackCooldown);
@@ -333,18 +328,7 @@ void ThirdPersonCharacterController::DisableCompetingCameraController() const
     }
 }
 
-void ThirdPersonCharacterController::SyncCameraFromCurrentTransform()
-{
-    if (!cameraObject) {
-        return;
-    }
-
-    RTBEngine::Math::Vector3 euler = cameraObject->GetWorldRotation().ToEulerAngles();
-    cameraPitch = std::clamp(euler.x * kRadToDeg, minPitch, maxPitch);
-    cameraYaw = euler.y * kRadToDeg;
-}
-
-void ThirdPersonCharacterController::ApplyCameraOrbitTransform()
+void ThirdPersonCharacterController::ApplyCameraFollowTransform()
 {
     if (!owner || !cameraObject) {
         return;
@@ -352,8 +336,8 @@ void ThirdPersonCharacterController::ApplyCameraOrbitTransform()
 
     const RTBEngine::Math::Quaternion orbitRotation =
         RTBEngine::Math::Quaternion::FromEulerAngles(
-            cameraPitch * kDegToRad,
-            cameraYaw * kDegToRad,
+            kFixedCameraPitchDegrees * kDegToRad,
+            kFixedCameraYawDegrees * kDegToRad,
             0.0f);
     const RTBEngine::Math::Quaternion ownerWorldRotation = owner->GetWorldRotation();
     const RTBEngine::Math::Vector3 worldFocusOffset = ownerWorldRotation * cameraFocusOffset;
@@ -565,26 +549,6 @@ void ThirdPersonCharacterController::UpdateMovement(float deltaTime)
     }
 
     UpdateAnimatorLocomotion(true, isRunning);
-}
-
-void ThirdPersonCharacterController::UpdateCameraOrbit()
-{
-    if (!owner || !cameraObject) {
-        return;
-    }
-
-    RTBEngine::Input::InputManager& input = RTBEngine::Input::InputManager::GetInstance();
-    cameraYaw += static_cast<float>(input.GetMouseDeltaX()) * mouseSensitivity;
-    cameraPitch -= static_cast<float>(input.GetMouseDeltaY()) * mouseSensitivity;
-    cameraPitch = std::clamp(cameraPitch, minPitch, maxPitch);
-
-    const int scrollDelta = input.GetScrollDelta();
-    if (scrollDelta != 0) {
-        cameraDistance = std::clamp(
-            cameraDistance - static_cast<float>(scrollDelta) * zoomStep,
-            minCameraDistance,
-            maxCameraDistance);
-    }
 }
 
 void ThirdPersonCharacterController::UpdateAnimatorLocomotion(bool hasMovementInput, bool isRunning)

@@ -7,8 +7,14 @@
 
 using ThisClass = PauseMenuController;
 
+namespace {
+    int g_openPauseMenus = 0;
+}
+
 RTB_REGISTER_COMPONENT(PauseMenuController)
     RTB_PROPERTY_GAMEOBJECT(menuRoot)
+    RTB_PROPERTY(pauseSimulation)
+    RTB_PROPERTY(useRelativeMouseWhenClosed)
 RTB_END_REGISTER(PauseMenuController)
 
 void PauseMenuController::OnAwake()
@@ -21,6 +27,7 @@ void PauseMenuController::OnStart()
 {
     CaptureMenuElementStates();
     SetMenuVisible(false);
+    RTBEngine::Input::InputManager::GetInstance().SetMouseRelativeMode(useRelativeMouseWhenClosed);
 }
 
 void PauseMenuController::OnUpdate(float /*deltaTime*/)
@@ -28,6 +35,17 @@ void PauseMenuController::OnUpdate(float /*deltaTime*/)
     RTBEngine::Input::InputManager& input = RTBEngine::Input::InputManager::GetInstance();
     if (input.IsKeyJustPressed(RTBEngine::Input::KeyCode::Tab)) {
         TogglePause();
+    }
+}
+
+void PauseMenuController::OnDestroy()
+{
+    if (menuVisible && g_openPauseMenus > 0) {
+        --g_openPauseMenus;
+    }
+
+    if (pauseSimulation && RTBEngine::Core::Time::IsPaused()) {
+        RTBEngine::Core::Time::SetPaused(false);
     }
 }
 
@@ -45,15 +63,19 @@ void PauseMenuController::PauseGame()
 {
     CaptureMenuElementStates();
     SetMenuVisible(true);
-    RTBEngine::Core::Time::SetPaused(true);
+    if (pauseSimulation) {
+        RTBEngine::Core::Time::SetPaused(true);
+    }
     RTBEngine::Input::InputManager::GetInstance().SetMouseRelativeMode(false);
 }
 
 void PauseMenuController::ResumeGame()
 {
     SetMenuVisible(false);
-    RTBEngine::Core::Time::SetPaused(false);
-    RTBEngine::Input::InputManager::GetInstance().SetMouseRelativeMode(true);
+    if (pauseSimulation) {
+        RTBEngine::Core::Time::SetPaused(false);
+    }
+    RTBEngine::Input::InputManager::GetInstance().SetMouseRelativeMode(useRelativeMouseWhenClosed);
 }
 
 void PauseMenuController::CaptureMenuElementStates()
@@ -106,5 +128,16 @@ void PauseMenuController::SetMenuVisible(bool visible)
         state.element->SetRaycastTarget(visible ? state.raycastTarget : false);
     }
 
+    if (!menuVisible && visible) {
+        ++g_openPauseMenus;
+    } else if (menuVisible && !visible && g_openPauseMenus > 0) {
+        --g_openPauseMenus;
+    }
+
     menuVisible = visible;
+}
+
+bool PauseMenuController::IsAnyMenuOpen()
+{
+    return g_openPauseMenus > 0;
 }
