@@ -474,19 +474,13 @@ void ThirdPersonCharacterController::UnsubscribeFromAttackJoystick()
 
 void ThirdPersonCharacterController::HandleJoystickAttackReleased(const RTBEngine::Math::Vector2& joystickValue)
 {
-    if (state != State::Locomotion ||
-        attackDamage <= 0.0f ||
+    if (attackDamage <= 0.0f ||
         cooldownRemaining > 0.0f ||
         PauseMenuController::IsAnyMenuOpen()) {
         return;
     }
 
-    RTBEngine::Math::Vector3 attackDirection = GetAttackDirectionFromJoystick(joystickValue);
-    if (!HasMovementInput(attackDirection)) {
-        return;
-    }
-
-    StartAttack(attackDirection);
+    StartAttack(GetAttackDirectionFromJoystick(joystickValue));
 }
 
 void ThirdPersonCharacterController::UpdateAttack(float deltaTime)
@@ -515,7 +509,7 @@ void ThirdPersonCharacterController::UpdateAttack(float deltaTime)
 
 void ThirdPersonCharacterController::UpdateAttackFacingLock(float deltaTime)
 {
-    RTBEngine::Math::Vector3 attackDirection = GetCurrentAttackDirection();
+    RTBEngine::Math::Vector3 attackDirection = GetActiveAttackDirection();
     if (!HasMovementInput(attackDirection)) {
         StopPlanarMotion();
         return;
@@ -638,18 +632,19 @@ void ThirdPersonCharacterController::UpdateAnimatorLocomotion(bool hasMovementIn
 
 void ThirdPersonCharacterController::StartAttack(const RTBEngine::Math::Vector3& attackDirection)
 {
-    if (state == State::Dead) {
+    if (state != State::Locomotion) {
         return;
     }
 
-    queuedAttackDirection = attackDirection;
-    queuedAttackDirection.y = 0.0f;
-    if (queuedAttackDirection.LengthSquared() <= kDirectionEpsilon) {
-        queuedAttackDirection = GetCurrentAttackDirection();
-    } else {
-        queuedAttackDirection.Normalize();
+    RTBEngine::Math::Vector3 normalizedAttackDirection = attackDirection;
+    normalizedAttackDirection.y = 0.0f;
+    if (normalizedAttackDirection.LengthSquared() <= kDirectionEpsilon) {
+        return;
     }
-    FaceAttackDirection(queuedAttackDirection);
+
+    normalizedAttackDirection.Normalize();
+    activeAttackDirection = normalizedAttackDirection;
+    FaceAttackDirection(activeAttackDirection);
 
     state = State::Attacking;
     cooldownRemaining = attackCooldown;
@@ -669,7 +664,7 @@ void ThirdPersonCharacterController::FinishAttack()
 
     attackElapsed = 0.0f;
     attackHitExecuted = false;
-    queuedAttackDirection = RTBEngine::Math::Vector3::Zero();
+    activeAttackDirection = RTBEngine::Math::Vector3::Zero();
     state = State::Locomotion;
 }
 
@@ -683,7 +678,7 @@ void ThirdPersonCharacterController::HandleDeath(const HealthComponent::DeathEve
     cooldownRemaining = 0.0f;
     attackElapsed = 0.0f;
     attackHitExecuted = false;
-    queuedAttackDirection = RTBEngine::Math::Vector3::Zero();
+    activeAttackDirection = RTBEngine::Math::Vector3::Zero();
     StopPlanarMotion();
 
     if (animator && deathSlotState.ready && animator->GetClip(kDeathAlias)) {
@@ -814,9 +809,9 @@ RTBEngine::Math::Vector3 ThirdPersonCharacterController::GetAttackDirectionFromJ
     return attackDirection;
 }
 
-RTBEngine::Math::Vector3 ThirdPersonCharacterController::GetCurrentAttackDirection() const
+RTBEngine::Math::Vector3 ThirdPersonCharacterController::GetActiveAttackDirection() const
 {
-    RTBEngine::Math::Vector3 attackDirection = queuedAttackDirection;
+    RTBEngine::Math::Vector3 attackDirection = activeAttackDirection;
     attackDirection.y = 0.0f;
     if (attackDirection.LengthSquared() <= kDirectionEpsilon && owner) {
         attackDirection = owner->GetWorldRotation() * RTBEngine::Math::Vector3::Forward();
@@ -867,7 +862,7 @@ bool ThirdPersonCharacterController::PerformAttackSphereCast(HealthComponent** o
     }
 
     RTBEngine::Math::Vector3 castStart = GetAttackCastOrigin();
-    RTBEngine::Math::Vector3 castDirection = GetCurrentAttackDirection();
+    RTBEngine::Math::Vector3 castDirection = GetActiveAttackDirection();
 
     const RTBEngine::Math::Vector3 castEnd = castStart + castDirection * std::min(attackSphereDistance, attackRange);
     RTBEngine::Physics::PhysicsQueryHit hit;

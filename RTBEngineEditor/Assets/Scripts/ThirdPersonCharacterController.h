@@ -91,7 +91,7 @@ private:
     RTBEngine::Core::EventSubscription deathSubscription;
     RTBEngine::UI::UIJoystick* subscribedAttackJoystick = nullptr;
     RTBEngine::Core::EventSubscription attackJoystickReleaseSubscription;
-    RTBEngine::Math::Vector3 queuedAttackDirection = RTBEngine::Math::Vector3::Zero();
+    RTBEngine::Math::Vector3 activeAttackDirection = RTBEngine::Math::Vector3::Zero();
 
     void ClampSettings();
     void ConfigurePhysicsBody() const;
@@ -123,7 +123,7 @@ private:
     RTBEngine::Physics::PhysicsWorld* ResolvePhysicsWorld() const;
     RTBEngine::Math::Vector3 GetAttackCastOrigin() const;
     RTBEngine::Math::Vector3 GetAttackDirectionFromJoystick(const RTBEngine::Math::Vector2& joystickValue) const;
-    RTBEngine::Math::Vector3 GetCurrentAttackDirection() const;
+    RTBEngine::Math::Vector3 GetActiveAttackDirection() const;
     HealthComponent* ResolveHitHealth(RTBEngine::ECS::GameObject* hitObject) const;
     bool PerformAttackSphereCast(HealthComponent** outHealth,
                                  RTBEngine::Math::Vector3* outHitPoint,
