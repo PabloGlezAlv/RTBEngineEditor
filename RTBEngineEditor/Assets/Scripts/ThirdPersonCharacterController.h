@@ -4,6 +4,7 @@
 
 #include <RTBEngine/Core/Event.h>
 #include <RTBEngine/ECS/Component.h>
+#include <RTBEngine/Math/Vectors/Vector2.h>
 #include <RTBEngine/Math/Vectors/Vector3.h>
 #include <RTBEngine/Reflection/PropertyMacros.h>
 #include <string>
@@ -19,6 +20,10 @@ namespace RTBEngine {
 
     namespace Physics {
         class PhysicsWorld;
+    }
+
+    namespace UI {
+        class UIJoystick;
     }
 }
 
@@ -50,6 +55,7 @@ public:
     float attackHitDelay = 0.35f;
     float attackSphereRadius = 0.55f;
     float attackSphereDistance = 1.15f;
+    RTBEngine::UI::UIJoystick* attackJoystick = nullptr;
     std::string idleAnimationFbx;
     std::string walkAnimationFbx;
     std::string runAnimationFbx;
@@ -83,6 +89,9 @@ private:
     AnimationSlotState deathSlotState;
     HealthComponent* subscribedHealth = nullptr;
     RTBEngine::Core::EventSubscription deathSubscription;
+    RTBEngine::UI::UIJoystick* subscribedAttackJoystick = nullptr;
+    RTBEngine::Core::EventSubscription attackJoystickReleaseSubscription;
+    RTBEngine::Math::Vector3 queuedAttackDirection = RTBEngine::Math::Vector3::Zero();
 
     void ClampSettings();
     void ConfigurePhysicsBody() const;
@@ -98,16 +107,23 @@ private:
                                AnimationSlotState& slotState);
     void RebindHealthSubscription();
     void UnsubscribeFromHealth();
-    void UpdateAttackInput();
+    void RebindAttackJoystickSubscription();
+    void UnsubscribeFromAttackJoystick();
+    void HandleJoystickAttackReleased(const RTBEngine::Math::Vector2& joystickValue);
     void UpdateAttack(float deltaTime);
+    void UpdateAttackFacingLock(float deltaTime);
     void UpdateMovement(float deltaTime);
     void UpdateAnimatorLocomotion(bool hasMovementInput, bool isRunning);
-    void StartAttack();
+    void StartAttack(const RTBEngine::Math::Vector3& attackDirection);
     void FinishAttack();
     void HandleDeath(const HealthComponent::DeathEvent& eventData);
+    void FaceAttackDirection(const RTBEngine::Math::Vector3& attackDirection);
     void StopPlanarMotion() const;
+    RTBEngine::Math::Vector3 GetDesiredMoveDirection(bool& outIsRunning) const;
     RTBEngine::Physics::PhysicsWorld* ResolvePhysicsWorld() const;
     RTBEngine::Math::Vector3 GetAttackCastOrigin() const;
+    RTBEngine::Math::Vector3 GetAttackDirectionFromJoystick(const RTBEngine::Math::Vector2& joystickValue) const;
+    RTBEngine::Math::Vector3 GetCurrentAttackDirection() const;
     HealthComponent* ResolveHitHealth(RTBEngine::ECS::GameObject* hitObject) const;
     bool PerformAttackSphereCast(HealthComponent** outHealth,
                                  RTBEngine::Math::Vector3* outHitPoint,

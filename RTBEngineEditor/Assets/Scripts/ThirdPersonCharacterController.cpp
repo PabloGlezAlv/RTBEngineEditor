@@ -6,17 +6,19 @@
 #include <RTBEngine/Animation/Animator.h>
 #include <RTBEngine/Core/Logger.h>
 #include <RTBEngine/ECS/CameraComponent.h>
+#include <RTBEngine/ECS/CapsuleColliderComponent.h>
 #include <RTBEngine/ECS/FreeLookCamera.h>
 #include <RTBEngine/ECS/GameObject.h>
 #include <RTBEngine/ECS/RigidBodyComponent.h>
 #include <RTBEngine/ECS/Scene.h>
 #include <RTBEngine/ECS/SceneManager.h>
+#include <RTBEngine/ECS/SphereColliderComponent.h>
 #include <RTBEngine/Input/InputManager.h>
 #include <RTBEngine/Input/KeyCode.h>
-#include <RTBEngine/Input/MouseButton.h>
 #include <RTBEngine/Math/Quaternions/Quaternion.h>
 #include <RTBEngine/Physics/PhysicsUtils.h>
 #include <RTBEngine/Physics/PhysicsWorld.h>
+#include <RTBEngine/UI/Elements/UIJoystick.h>
 
 #include <algorithm>
 #include <cmath>
@@ -105,6 +107,7 @@ RTB_REGISTER_COMPONENT(ThirdPersonCharacterController)
     RTB_PROPERTY_RANGE(attackHitDelay, 0.0f, 5.0f)
     RTB_PROPERTY_RANGE(attackSphereRadius, 0.05f, 3.0f)
     RTB_PROPERTY_RANGE(attackSphereDistance, 0.05f, 5.0f)
+    RTB_PROPERTY_COMPONENT(attackJoystick, UIJoystick)
     RTB_PROPERTY_FBX(idleAnimationFbx)
     RTB_PROPERTY_FBX(walkAnimationFbx)
     RTB_PROPERTY_FBX(runAnimationFbx)
@@ -122,6 +125,7 @@ void ThirdPersonCharacterController::OnStart()
     ConfigurePhysicsBody();
     DisableCompetingCameraController();
     RebindHealthSubscription();
+    RebindAttackJoystickSubscription();
     UpdateAnimatorLocomotion(false, false);
     ApplyCameraFollowTransform();
     RTBEngine::Input::InputManager::GetInstance().SetMouseRelativeMode(false);
@@ -155,12 +159,6 @@ void ThirdPersonCharacterController::OnUpdate(float deltaTime)
         UpdateAttack(deltaTime);
         return;
     }
-
-    if (PauseMenuController::IsAnyMenuOpen()) {
-        return;
-    }
-
-    UpdateAttackInput();
 }
 
 void ThirdPersonCharacterController::OnFixedUpdate(float fixedDeltaTime)
@@ -182,6 +180,11 @@ void ThirdPersonCharacterController::OnFixedUpdate(float fixedDeltaTime)
     if (PauseMenuController::IsAnyMenuOpen()) {
         StopPlanarMotion();
         UpdateAnimatorLocomotion(false, false);
+        return;
+    }
+
+    if (state == State::Attacking) {
+        UpdateAttackFacingLock(fixedDeltaTime);
         return;
     }
 
@@ -231,12 +234,14 @@ void ThirdPersonCharacterController::OnValidate()
     ResolveCameraObject();
     ConfigurePhysicsBody();
     DisableCompetingCameraController();
+    RebindAttackJoystickSubscription();
     UpdateAnimatorLocomotion(false, false);
     ApplyCameraFollowTransform();
 }
 
 void ThirdPersonCharacterController::OnDestroy()
 {
+    UnsubscribeFromAttackJoystick();
     UnsubscribeFromHealth();
     RTBEngine::Input::InputManager::GetInstance().SetMouseRelativeMode(false);
 }
@@ -442,22 +447,46 @@ void ThirdPersonCharacterController::UnsubscribeFromHealth()
     subscribedHealth = nullptr;
 }
 
-void ThirdPersonCharacterController::UpdateAttackInput()
+void ThirdPersonCharacterController::RebindAttackJoystickSubscription()
 {
-    if (attackDamage <= 0.0f) {
+    if (subscribedAttackJoystick == attackJoystick && attackJoystickReleaseSubscription.IsValid()) {
         return;
     }
 
-    RTBEngine::Input::InputManager& input = RTBEngine::Input::InputManager::GetInstance();
-    if (!input.IsMouseButtonJustPressed(RTBEngine::Input::MouseButton::Left)) {
+    UnsubscribeFromAttackJoystick();
+
+    if (!attackJoystick) {
         return;
     }
 
-    if (cooldownRemaining > 0.0f) {
+    subscribedAttackJoystick = attackJoystick;
+    attackJoystickReleaseSubscription = attackJoystick->SubscribeToReleased(
+        [this](const RTBEngine::Math::Vector2& joystickValue) {
+            HandleJoystickAttackReleased(joystickValue);
+        });
+}
+
+void ThirdPersonCharacterController::UnsubscribeFromAttackJoystick()
+{
+    attackJoystickReleaseSubscription.Reset();
+    subscribedAttackJoystick = nullptr;
+}
+
+void ThirdPersonCharacterController::HandleJoystickAttackReleased(const RTBEngine::Math::Vector2& joystickValue)
+{
+    if (state != State::Locomotion ||
+        attackDamage <= 0.0f ||
+        cooldownRemaining > 0.0f ||
+        PauseMenuController::IsAnyMenuOpen()) {
         return;
     }
 
-    StartAttack();
+    RTBEngine::Math::Vector3 attackDirection = GetAttackDirectionFromJoystick(joystickValue);
+    if (!HasMovementInput(attackDirection)) {
+        return;
+    }
+
+    StartAttack(attackDirection);
 }
 
 void ThirdPersonCharacterController::UpdateAttack(float deltaTime)
@@ -484,22 +513,52 @@ void ThirdPersonCharacterController::UpdateAttack(float deltaTime)
     targetHealth->TakeDamage(attackDamage, damageContext);
 }
 
+void ThirdPersonCharacterController::UpdateAttackFacingLock(float deltaTime)
+{
+    RTBEngine::Math::Vector3 attackDirection = GetCurrentAttackDirection();
+    if (!HasMovementInput(attackDirection)) {
+        StopPlanarMotion();
+        return;
+    }
+
+    FaceAttackDirection(attackDirection);
+
+    bool isRunning = false;
+    RTBEngine::Math::Vector3 desiredMove = GetDesiredMoveDirection(isRunning);
+    const bool hasMovementInput = HasMovementInput(desiredMove);
+    const float speed = hasMovementInput
+        ? moveSpeed * (isRunning ? sprintMultiplier : 1.0f)
+        : 0.0f;
+
+    auto* rbComp = owner ? owner->GetComponent<RTBEngine::ECS::RigidBodyComponent>() : nullptr;
+    RTBEngine::Physics::RigidBody* rigidBody =
+        (rbComp && rbComp->HasRigidBody()) ? rbComp->GetRigidBody() : nullptr;
+    const bool useDynamicRigidBody =
+        rigidBody && rigidBody->GetType() == RTBEngine::Physics::RigidBodyType::Dynamic;
+
+    if (useDynamicRigidBody) {
+        RTBEngine::Physics::PhysicsUtils::ApplyPlanarDynamicBodyMotion(
+            rigidBody,
+            desiredMove,
+            attackDirection,
+            speed,
+            turnSpeed,
+            deltaTime,
+            owner->GetTransform().GetRotation());
+        return;
+    }
+
+    if (hasMovementInput) {
+        owner->GetTransform().SetPosition(
+            owner->GetTransform().GetPosition() + desiredMove * speed * deltaTime);
+    }
+}
+
 void ThirdPersonCharacterController::UpdateMovement(float deltaTime)
 {
-    RTBEngine::Input::InputManager& input = RTBEngine::Input::InputManager::GetInstance();
-    RTBEngine::Math::Vector3 forward = RTBEngine::Math::Vector3::Forward();
-    RTBEngine::Math::Vector3 right = RTBEngine::Math::Vector3::Forward().Cross(RTBEngine::Math::Vector3::Up());
-    GetPlanarMovementBasis(cameraObject ? cameraObject : owner, forward, right);
-
-    RTBEngine::Math::Vector3 desiredMove = RTBEngine::Math::Vector3::Zero();
-    if (input.IsKeyPressed(RTBEngine::Input::KeyCode::W)) desiredMove += forward;
-    if (input.IsKeyPressed(RTBEngine::Input::KeyCode::S)) desiredMove -= forward;
-    if (input.IsKeyPressed(RTBEngine::Input::KeyCode::D)) desiredMove += right;
-    if (input.IsKeyPressed(RTBEngine::Input::KeyCode::A)) desiredMove -= right;
-
+    bool isRunning = false;
+    RTBEngine::Math::Vector3 desiredMove = GetDesiredMoveDirection(isRunning);
     const bool hasMovementInput = HasMovementInput(desiredMove);
-    const bool isRunning = hasMovementInput &&
-        input.IsKeyPressed(RTBEngine::Input::KeyCode::LeftShift);
     auto* rbComp = owner ? owner->GetComponent<RTBEngine::ECS::RigidBodyComponent>() : nullptr;
     RTBEngine::Physics::RigidBody* rigidBody =
         (rbComp && rbComp->HasRigidBody()) ? rbComp->GetRigidBody() : nullptr;
@@ -521,8 +580,6 @@ void ThirdPersonCharacterController::UpdateMovement(float deltaTime)
         UpdateAnimatorLocomotion(false, false);
         return;
     }
-
-    desiredMove.Normalize();
 
     const float speed = moveSpeed * (isRunning ? sprintMultiplier : 1.0f);
 
@@ -579,11 +636,20 @@ void ThirdPersonCharacterController::UpdateAnimatorLocomotion(bool hasMovementIn
     animator->Play(targetClipAlias, true);
 }
 
-void ThirdPersonCharacterController::StartAttack()
+void ThirdPersonCharacterController::StartAttack(const RTBEngine::Math::Vector3& attackDirection)
 {
     if (state == State::Dead) {
         return;
     }
+
+    queuedAttackDirection = attackDirection;
+    queuedAttackDirection.y = 0.0f;
+    if (queuedAttackDirection.LengthSquared() <= kDirectionEpsilon) {
+        queuedAttackDirection = GetCurrentAttackDirection();
+    } else {
+        queuedAttackDirection.Normalize();
+    }
+    FaceAttackDirection(queuedAttackDirection);
 
     state = State::Attacking;
     cooldownRemaining = attackCooldown;
@@ -603,6 +669,7 @@ void ThirdPersonCharacterController::FinishAttack()
 
     attackElapsed = 0.0f;
     attackHitExecuted = false;
+    queuedAttackDirection = RTBEngine::Math::Vector3::Zero();
     state = State::Locomotion;
 }
 
@@ -616,10 +683,42 @@ void ThirdPersonCharacterController::HandleDeath(const HealthComponent::DeathEve
     cooldownRemaining = 0.0f;
     attackElapsed = 0.0f;
     attackHitExecuted = false;
+    queuedAttackDirection = RTBEngine::Math::Vector3::Zero();
     StopPlanarMotion();
 
     if (animator && deathSlotState.ready && animator->GetClip(kDeathAlias)) {
         animator->Play(kDeathAlias, false);
+    }
+}
+
+void ThirdPersonCharacterController::FaceAttackDirection(const RTBEngine::Math::Vector3& attackDirection)
+{
+    if (!owner || !HasMovementInput(attackDirection)) {
+        return;
+    }
+
+    RTBEngine::Math::Vector3 planarDirection = attackDirection;
+    planarDirection.y = 0.0f;
+    planarDirection.Normalize();
+
+    const float targetYaw = -std::atan2(planarDirection.x, planarDirection.z) * kRadToDeg;
+    const RTBEngine::Math::Quaternion targetRotation =
+        RTBEngine::Math::Quaternion::FromEulerAngles(0.0f, targetYaw * kDegToRad, 0.0f);
+
+    owner->GetTransform().SetRotation(targetRotation);
+
+    auto* rbComp = owner->GetComponent<RTBEngine::ECS::RigidBodyComponent>();
+    RTBEngine::Physics::RigidBody* rigidBody =
+        (rbComp && rbComp->HasRigidBody()) ? rbComp->GetRigidBody() : nullptr;
+    if (rigidBody && rigidBody->GetType() == RTBEngine::Physics::RigidBodyType::Dynamic) {
+        RTBEngine::Math::Vector3 centerOffset = RTBEngine::Math::Vector3::Zero();
+        if (auto* capsule = owner->GetComponent<RTBEngine::ECS::CapsuleColliderComponent>()) {
+            centerOffset = capsule->GetCenterOffset();
+        } else if (auto* sphere = owner->GetComponent<RTBEngine::ECS::SphereColliderComponent>()) {
+            centerOffset = sphere->GetCenterOffset();
+        }
+        rigidBody->SetWorldTransform(owner->GetWorldPosition() + (targetRotation * centerOffset), targetRotation);
+        rigidBody->SetAngularVelocity(btVector3(0.0f, 0.0f, 0.0f));
     }
 }
 
@@ -646,6 +745,34 @@ void ThirdPersonCharacterController::StopPlanarMotion() const
     rigidBody->SetAngularVelocity(btVector3(0.0f, 0.0f, 0.0f));
 }
 
+RTBEngine::Math::Vector3 ThirdPersonCharacterController::GetDesiredMoveDirection(bool& outIsRunning) const
+{
+    outIsRunning = false;
+
+    if (!owner) {
+        return RTBEngine::Math::Vector3::Zero();
+    }
+
+    RTBEngine::Input::InputManager& input = RTBEngine::Input::InputManager::GetInstance();
+    RTBEngine::Math::Vector3 forward = RTBEngine::Math::Vector3::Forward();
+    RTBEngine::Math::Vector3 right = RTBEngine::Math::Vector3::Forward().Cross(RTBEngine::Math::Vector3::Up());
+    GetPlanarMovementBasis(cameraObject ? cameraObject : owner, forward, right);
+
+    RTBEngine::Math::Vector3 desiredMove = RTBEngine::Math::Vector3::Zero();
+    if (input.IsKeyPressed(RTBEngine::Input::KeyCode::W)) desiredMove += forward;
+    if (input.IsKeyPressed(RTBEngine::Input::KeyCode::S)) desiredMove -= forward;
+    if (input.IsKeyPressed(RTBEngine::Input::KeyCode::D)) desiredMove += right;
+    if (input.IsKeyPressed(RTBEngine::Input::KeyCode::A)) desiredMove -= right;
+
+    if (!HasMovementInput(desiredMove)) {
+        return RTBEngine::Math::Vector3::Zero();
+    }
+
+    desiredMove.Normalize();
+    outIsRunning = input.IsKeyPressed(RTBEngine::Input::KeyCode::LeftShift);
+    return desiredMove;
+}
+
 RTBEngine::Physics::PhysicsWorld* ThirdPersonCharacterController::ResolvePhysicsWorld() const
 {
     if (!owner) {
@@ -668,6 +795,40 @@ RTBEngine::Math::Vector3 ThirdPersonCharacterController::GetAttackCastOrigin() c
     }
 
     return owner->GetWorldPosition() + (owner->GetWorldRotation() * attackOriginOffset);
+}
+
+RTBEngine::Math::Vector3 ThirdPersonCharacterController::GetAttackDirectionFromJoystick(
+    const RTBEngine::Math::Vector2& joystickValue) const
+{
+    RTBEngine::Math::Vector3 forward = RTBEngine::Math::Vector3::Forward();
+    RTBEngine::Math::Vector3 right = RTBEngine::Math::Vector3::Forward().Cross(RTBEngine::Math::Vector3::Up());
+    GetPlanarMovementBasis(cameraObject ? cameraObject : owner, forward, right);
+
+    RTBEngine::Math::Vector3 attackDirection = right * joystickValue.x + forward * joystickValue.y;
+    attackDirection.y = 0.0f;
+    if (attackDirection.LengthSquared() <= kDirectionEpsilon) {
+        return RTBEngine::Math::Vector3::Zero();
+    }
+
+    attackDirection.Normalize();
+    return attackDirection;
+}
+
+RTBEngine::Math::Vector3 ThirdPersonCharacterController::GetCurrentAttackDirection() const
+{
+    RTBEngine::Math::Vector3 attackDirection = queuedAttackDirection;
+    attackDirection.y = 0.0f;
+    if (attackDirection.LengthSquared() <= kDirectionEpsilon && owner) {
+        attackDirection = owner->GetWorldRotation() * RTBEngine::Math::Vector3::Forward();
+        attackDirection.y = 0.0f;
+    }
+
+    if (attackDirection.LengthSquared() <= kDirectionEpsilon) {
+        return RTBEngine::Math::Vector3::Forward();
+    }
+
+    attackDirection.Normalize();
+    return attackDirection;
 }
 
 HealthComponent* ThirdPersonCharacterController::ResolveHitHealth(RTBEngine::ECS::GameObject* hitObject) const
@@ -706,14 +867,7 @@ bool ThirdPersonCharacterController::PerformAttackSphereCast(HealthComponent** o
     }
 
     RTBEngine::Math::Vector3 castStart = GetAttackCastOrigin();
-    RTBEngine::Math::Vector3 castDirection = owner->GetWorldRotation() * RTBEngine::Math::Vector3::Forward();
-    castDirection.y = 0.0f;
-
-    if (castDirection.LengthSquared() <= kDirectionEpsilon) {
-        castDirection = RTBEngine::Math::Vector3::Forward();
-    } else {
-        castDirection.Normalize();
-    }
+    RTBEngine::Math::Vector3 castDirection = GetCurrentAttackDirection();
 
     const RTBEngine::Math::Vector3 castEnd = castStart + castDirection * std::min(attackSphereDistance, attackRange);
     RTBEngine::Physics::PhysicsQueryHit hit;
