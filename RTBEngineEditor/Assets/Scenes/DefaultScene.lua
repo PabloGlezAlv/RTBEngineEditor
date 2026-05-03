@@ -494,6 +494,43 @@ function CreateScene()
                 }
             },
             {
+                name = "WorldSpaceCanvasTest",
+                uuid = "1A5CC89B-B19E-4B64-B0B0-8013A8CE7D2B",
+                position = Vector3(0.00, 1.35, 1.50),
+                components = {
+                    {
+                        type = "Canvas",
+                        renderMode = "WorldSpace",
+                        canvasSize = Vector2(256.00, 256.00),
+                        pixelsPerUnit = 128.00,
+                        sortOrder = 10
+                    },
+                },
+                children = {
+                    {
+                        name = "WorldSpaceLogo",
+                        uuid = "3E6E79B6-0F02-46BF-98F0-AB2070C70448",
+                        components = {
+                            {
+                                type = "UIImage",
+                                texture = "Default/Textures/logo.png",
+                                tintColor = Color(1.00, 1.00, 1.00, 0.85),
+                                preserveAspect = true,
+                                isVisible = true,
+                                raycastTarget = false,
+                                anchorMin = Vector2(0.50, 0.50),
+                                anchorMax = Vector2(0.50, 0.50),
+                                pivot = Vector2(0.50, 0.50),
+                                anchoredPosition = Vector2(0.00, 0.00),
+                                sizeDelta = Vector2(256.00, 256.00),
+                                rotation = 0.00,
+                                scale = Vector2(1.00, 1.00)
+                            },
+                        }
+                    },
+                }
+            },
+            {
                 name = "RoundManager",
                 uuid = "4A7C26F9-7F62-4A3A-B8F0-91A4B36C1601",
                 components = {
