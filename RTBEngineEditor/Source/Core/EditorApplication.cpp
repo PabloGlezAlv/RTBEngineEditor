@@ -12,6 +12,7 @@
 #include <RTBEngine/Core/Time.h>
 #include <RTBEngine/Input/InputManager.h>
 #include <RTBEngine/Input/KeyCode.h>
+#include <RTBEngine/Online/OnlineSystem.h>
 #include <RTBEngine/ECS/MeshRenderer.h>
 #include <RTBEngine/ECS/CameraComponent.h>
 #include <RTBEngine/Audio/AudioSystem.h>
@@ -220,6 +221,11 @@ namespace RTBEditor {
         uiLayer->GetMenuBar()->SetSceneDirty(
             RTBEngine::ECS::SceneManager::GetInstance().IsSceneDirty()
         );
+
+        // Keep editor-side online tools alive while the game simulation is not running.
+        if (state == EditorState::Edit) {
+            RTBEngine::Online::OnlineSystem::GetInstance().Tick(deltaTime);
+        }
 
         // Consume scene open request from Content Browser double-click
         if (!uiLayer->GetContext().pendingSceneLoad.empty() && state == EditorState::Edit) {

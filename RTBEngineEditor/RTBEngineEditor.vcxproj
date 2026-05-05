@@ -123,6 +123,7 @@ if exist "$(ProjectDir)MyProject.rtbproj" xcopy /y /d "$(ProjectDir)MyProject.rt
     <ClCompile Include="Source\UI\Panels\InspectorPanel.cpp" />
     <ClCompile Include="Source\UI\Panels\SceneHierarchyPanel.cpp" />
     <ClCompile Include="Source\UI\Panels\ConsolePanel.cpp" />
+    <ClCompile Include="Source\UI\Panels\OnlinePanel.cpp" />
     <ClCompile Include="Source\UI\Panels\SceneViewPanel.cpp" />
     <ClCompile Include="Source\UI\Panels\ToolbarPanel.cpp" />
     <ClCompile Include="Source\UI\Panels\StatsOverlayPanel.cpp" />
@@ -152,6 +153,7 @@ if exist "$(ProjectDir)MyProject.rtbproj" xcopy /y /d "$(ProjectDir)MyProject.rt
     <ClInclude Include="Source\UI\Panels\InspectorPanel.h" />
     <ClInclude Include="Source\UI\Panels\SceneHierarchyPanel.h" />
     <ClInclude Include="Source\UI\Panels\ConsolePanel.h" />
+    <ClInclude Include="Source\UI\Panels\OnlinePanel.h" />
     <ClInclude Include="Source\UI\Panels\SceneViewPanel.h" />
     <ClInclude Include="Source\UI\Panels\ToolbarPanel.h" />
     <ClInclude Include="Source\UI\Panels\StatsOverlayPanel.h" />

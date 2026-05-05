@@ -42,6 +42,9 @@
     <ClCompile Include="Source\UI\Panels\ConsolePanel.cpp">
       <Filter>Archivos de origen</Filter>
     </ClCompile>
+    <ClCompile Include="Source\UI\Panels\OnlinePanel.cpp">
+      <Filter>Archivos de origen</Filter>
+    </ClCompile>
     <ClCompile Include="Source\UI\Panels\SceneViewPanel.cpp">
       <Filter>Archivos de origen</Filter>
     </ClCompile>
@@ -90,6 +93,9 @@
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
     <ClInclude Include="Source\UI\Panels\ConsolePanel.h">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\UI\Panels\OnlinePanel.h">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
     <ClInclude Include="Source\UI\Panels\SceneViewPanel.h">

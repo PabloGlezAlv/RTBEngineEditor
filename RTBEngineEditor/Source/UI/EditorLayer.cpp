@@ -7,6 +7,7 @@
 #include "Panels/ContentBrowserPanel.h"
 #include "Panels/ConsolePanel.h"
 #include "Panels/SceneViewPanel.h"
+#include "Panels/OnlinePanel.h"
 #include "MainMenuBar.h"
 #include <imgui_internal.h>
 #include <utility>
@@ -35,6 +36,7 @@ namespace RTBEditor {
         AddPanel(std::make_unique<InspectorPanel>());
         AddPanel(std::make_unique<ContentBrowserPanel>());
         AddPanel(std::make_unique<ConsolePanel>());
+        AddPanel(std::make_unique<OnlinePanel>());
         AddPanel(std::make_unique<StatsOverlayPanel>());
     }
 
@@ -160,6 +162,7 @@ namespace RTBEditor {
         ImGui::DockBuilderDockWindow("Inspector", dock_id_right);
         ImGui::DockBuilderDockWindow("Content Browser", dock_id_bottom);
         ImGui::DockBuilderDockWindow("Console", dock_id_bottom);
+        ImGui::DockBuilderDockWindow("Online", dock_id_bottom);
         
         ImGui::DockBuilderFinish(dockspaceId);
     }
