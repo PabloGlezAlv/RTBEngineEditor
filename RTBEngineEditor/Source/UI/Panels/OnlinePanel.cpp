@@ -4,11 +4,13 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <cstdio>
 #include <utility>
 
 namespace {
 
     constexpr std::size_t MaxLoginEvents = 64;
+    constexpr std::size_t MaxLobbyEvents = 64;
 
     void DrawTextRow(const char* label, const char* value)
     {
@@ -38,15 +40,30 @@ namespace {
         }
     }
 
+    template<size_t Size>
+    void CopyToBuffer(char (&buffer)[Size], const std::string& value)
+    {
+        std::snprintf(buffer, Size, "%s", value.c_str());
+    }
+
+    std::string ReadBuffer(const char* buffer)
+    {
+        return buffer ? std::string(buffer) : std::string();
+    }
+
 }
 
 namespace RTBEditor {
 
-    OnlinePanel::OnlinePanel() = default;
+    OnlinePanel::OnlinePanel()
+    {
+        LoadSettingsIntoFields();
+    }
 
     OnlinePanel::~OnlinePanel()
     {
         loginStatusSubscription.Reset();
+        lobbyStatusSubscription.Reset();
     }
 
     void OnlinePanel::OnUIRender(EditorContext& /*context*/)
@@ -56,15 +73,23 @@ namespace RTBEditor {
         RTBEngine::Online::OnlineSystem& onlineSystem =
             RTBEngine::Online::OnlineSystem::GetInstance();
         RTBEngine::Online::IOnlineIdentity* identity = onlineSystem.GetIdentity();
+        RTBEngine::Online::IOnlineLobby* lobby = onlineSystem.GetLobby();
 
         // Keep the debug panel connected to the currently active backend identity.
         RefreshIdentitySubscription(identity);
+        RefreshLobbySubscription(lobby);
 
+        DrawSettingsSection();
+        ImGui::Separator();
         DrawSystemSection(onlineSystem);
         ImGui::Separator();
         DrawIdentitySection(identity);
         ImGui::Separator();
+        DrawLobbySection(lobby, identity);
+        ImGui::Separator();
         DrawLoginEventsSection();
+        ImGui::Separator();
+        DrawLobbyEventsSection();
 
         ImGui::End();
     }
@@ -89,6 +114,26 @@ namespace RTBEditor {
             });
     }
 
+    void OnlinePanel::RefreshLobbySubscription(RTBEngine::Online::IOnlineLobby* lobby)
+    {
+        if (lobby == subscribedLobby && lobbyStatusSubscription.IsValid()) {
+            return;
+        }
+
+        // Drop the old listener before subscribing to a new lobby instance.
+        lobbyStatusSubscription.Reset();
+        subscribedLobby = lobby;
+
+        if (!lobby) {
+            return;
+        }
+
+        lobbyStatusSubscription = lobby->SubscribeLobbyStatusChanged(
+            [this](const RTBEngine::Online::OnlineLobbyStatusChangedEvent& eventData) {
+                AddLobbyEvent(eventData);
+            });
+    }
+
     void OnlinePanel::AddLoginEvent(const RTBEngine::Online::OnlineLoginStatusChangedEvent& eventData)
     {
         LoginEventEntry entry;
@@ -102,19 +147,158 @@ namespace RTBEditor {
         }
     }
 
-    void OnlinePanel::StoreActionResult(const RTBEngine::Online::OnlineResult& result)
+    void OnlinePanel::AddLobbyEvent(const RTBEngine::Online::OnlineLobbyStatusChangedEvent& eventData)
     {
-        lastActionSucceeded = result.success;
+        LobbyEventEntry entry;
+        entry.previousState = RTBEngine::Online::ToString(eventData.previousState);
+        entry.currentState = RTBEngine::Online::ToString(eventData.currentState);
+        entry.lobbyId = eventData.lobby.lobbyId.empty() ? "None" : eventData.lobby.lobbyId;
+
+        lobbyEvents.push_back(std::move(entry));
+        if (lobbyEvents.size() > MaxLobbyEvents) {
+            lobbyEvents.erase(lobbyEvents.begin());
+        }
+    }
+
+    void OnlinePanel::StoreIdentityActionResult(const RTBEngine::Online::OnlineResult& result)
+    {
+        lastIdentityActionSucceeded = result.success;
 
         if (result.success) {
-            lastActionMessage = result.message.empty() ? "Success." : result.message;
+            lastIdentityActionMessage = result.message.empty() ? "Success." : result.message;
             return;
         }
 
-        lastActionMessage = std::string(RTBEngine::Online::ToString(result.errorCode));
+        lastIdentityActionMessage = std::string(RTBEngine::Online::ToString(result.errorCode));
         if (!result.message.empty()) {
-            lastActionMessage += ": ";
-            lastActionMessage += result.message;
+            lastIdentityActionMessage += ": ";
+            lastIdentityActionMessage += result.message;
+        }
+    }
+
+    void OnlinePanel::StoreLobbyActionResult(const RTBEngine::Online::OnlineResult& result)
+    {
+        lastLobbyActionSucceeded = result.success;
+
+        if (result.success) {
+            lastLobbyActionMessage = result.message.empty() ? "Success." : result.message;
+            return;
+        }
+
+        lastLobbyActionMessage = std::string(RTBEngine::Online::ToString(result.errorCode));
+        if (!result.message.empty()) {
+            lastLobbyActionMessage += ": ";
+            lastLobbyActionMessage += result.message;
+        }
+    }
+
+    void OnlinePanel::LoadSettingsIntoFields()
+    {
+        const EditorOnlineSettings settings = EditorOnlineSettingsStore::Load();
+
+        onlineSettingsEnabled = settings.enabled;
+        onlineBackendIndex = settings.backend == RTBEngine::Online::OnlineBackendType::EOS ? 1 : 0;
+        CopyToBuffer(eosProductId, settings.productId);
+        CopyToBuffer(eosSandboxId, settings.sandboxId);
+        CopyToBuffer(eosDeploymentId, settings.deploymentId);
+        CopyToBuffer(eosClientId, settings.clientId);
+        CopyToBuffer(eosClientSecret, settings.clientSecret);
+    }
+
+    EditorOnlineSettings OnlinePanel::BuildSettingsFromFields() const
+    {
+        EditorOnlineSettings settings;
+        settings.enabled = onlineSettingsEnabled;
+        settings.backend = onlineBackendIndex == 1
+            ? RTBEngine::Online::OnlineBackendType::EOS
+            : RTBEngine::Online::OnlineBackendType::Null;
+        settings.productId = ReadBuffer(eosProductId);
+        settings.sandboxId = ReadBuffer(eosSandboxId);
+        settings.deploymentId = ReadBuffer(eosDeploymentId);
+        settings.clientId = ReadBuffer(eosClientId);
+        settings.clientSecret = ReadBuffer(eosClientSecret);
+        return settings;
+    }
+
+    void OnlinePanel::DrawSettingsSection()
+    {
+        ImGui::TextUnformatted("Settings");
+
+        const std::string settingsPath = EditorOnlineSettingsStore::GetSettingsPath().string();
+        ImGui::TextWrapped("Stored in: %s", settingsPath.c_str());
+
+        ImGui::Checkbox("Online Enabled", &onlineSettingsEnabled);
+
+        const char* backendItems[] = { "Null", "EOS" };
+        ImGui::SetNextItemWidth(160.0f);
+        ImGui::Combo("Backend", &onlineBackendIndex, backendItems, IM_ARRAYSIZE(backendItems));
+
+        const bool usingEos = onlineBackendIndex == 1;
+        BeginDisabledIf(!usingEos);
+        ImGui::SetNextItemWidth(-1.0f);
+        ImGui::InputText("Product Id", eosProductId, sizeof(eosProductId));
+        ImGui::SetNextItemWidth(-1.0f);
+        ImGui::InputText("Sandbox Id", eosSandboxId, sizeof(eosSandboxId));
+        ImGui::SetNextItemWidth(-1.0f);
+        ImGui::InputText("Deployment Id", eosDeploymentId, sizeof(eosDeploymentId));
+        ImGui::SetNextItemWidth(-1.0f);
+        ImGui::InputText("Client Id", eosClientId, sizeof(eosClientId));
+        ImGui::Checkbox("Show Client Secret", &showClientSecret);
+        ImGui::SetNextItemWidth(-1.0f);
+        const ImGuiInputTextFlags secretFlags = showClientSecret ? 0 : ImGuiInputTextFlags_Password;
+        ImGui::InputText("Client Secret", eosClientSecret, sizeof(eosClientSecret), secretFlags);
+        EndDisabledIf(!usingEos);
+
+        const EditorOnlineSettings currentSettings = BuildSettingsFromFields();
+        if (usingEos && !currentSettings.HasCompleteEosConfig()) {
+            ImGui::TextDisabled("EOS needs all credential fields before it can be applied.");
+        }
+
+        if (ImGui::Button("Reload Settings")) {
+            LoadSettingsIntoFields();
+            lastSettingsSucceeded = true;
+            lastSettingsMessage = "Settings reloaded.";
+        }
+
+        ImGui::SameLine();
+
+        if (ImGui::Button("Save Settings")) {
+            lastSettingsSucceeded = EditorOnlineSettingsStore::Save(currentSettings);
+            lastSettingsMessage = lastSettingsSucceeded
+                ? "Settings saved."
+                : "Failed to save settings.";
+        }
+
+        ImGui::SameLine();
+
+        const bool applyBlocked = usingEos && !currentSettings.HasCompleteEosConfig();
+        BeginDisabledIf(applyBlocked);
+        if (ImGui::Button("Save And Apply")) {
+            lastSettingsSucceeded = EditorOnlineSettingsStore::Save(currentSettings);
+            if (!lastSettingsSucceeded) {
+                lastSettingsMessage = "Failed to save settings.";
+            } else {
+                RTBEngine::Online::OnlineConfig config;
+                EditorOnlineSettingsStore::ApplyToOnlineConfig(currentSettings, config);
+                lastSettingsSucceeded = RTBEngine::Online::OnlineSystem::GetInstance().Initialize(config);
+                lastSettingsMessage = lastSettingsSucceeded
+                    ? "Settings saved and applied."
+                    : "Settings saved, but online initialization failed.";
+                loginEvents.clear();
+                lobbyEvents.clear();
+                loginStatusSubscription.Reset();
+                lobbyStatusSubscription.Reset();
+                subscribedIdentity = nullptr;
+                subscribedLobby = nullptr;
+            }
+        }
+        EndDisabledIf(applyBlocked);
+
+        if (!lastSettingsMessage.empty()) {
+            const ImVec4 color = lastSettingsSucceeded
+                ? ImVec4(0.35f, 0.85f, 0.45f, 1.0f)
+                : ImVec4(0.95f, 0.35f, 0.35f, 1.0f);
+            ImGui::TextColored(color, "%s", lastSettingsMessage.c_str());
         }
     }
 
@@ -168,7 +352,7 @@ namespace RTBEditor {
             RTBEngine::Online::OnlineLoginOptions options;
             options.type = RTBEngine::Online::OnlineLoginType::DeviceId;
             options.displayName = displayName;
-            StoreActionResult(identity->Login(options));
+            StoreIdentityActionResult(identity->Login(options));
         }
         EndDisabledIf(loginBlocked);
 
@@ -177,16 +361,98 @@ namespace RTBEditor {
         BeginDisabledIf(logoutBlocked);
         if (ImGui::Button("Logout")) {
             identity->Logout();
-            lastActionSucceeded = true;
-            lastActionMessage = "Logout requested.";
+            lastIdentityActionSucceeded = true;
+            lastIdentityActionMessage = "Logout requested.";
         }
         EndDisabledIf(logoutBlocked);
 
-        if (!lastActionMessage.empty()) {
-            const ImVec4 color = lastActionSucceeded
+        if (!lastIdentityActionMessage.empty()) {
+            const ImVec4 color = lastIdentityActionSucceeded
                 ? ImVec4(0.35f, 0.85f, 0.45f, 1.0f)
                 : ImVec4(0.95f, 0.35f, 0.35f, 1.0f);
-            ImGui::TextColored(color, "Last action: %s", lastActionMessage.c_str());
+            ImGui::TextColored(color, "Last action: %s", lastIdentityActionMessage.c_str());
+        }
+    }
+
+    void OnlinePanel::DrawLobbySection(RTBEngine::Online::IOnlineLobby* lobby,
+                                       const RTBEngine::Online::IOnlineIdentity* identity)
+    {
+        ImGui::TextUnformatted("Lobby");
+
+        if (!lobby) {
+            ImGui::TextDisabled("Lobby is not available for the current online state.");
+            return;
+        }
+
+        const RTBEngine::Online::OnlineLobbyState state = lobby->GetState();
+        const RTBEngine::Online::OnlineLobbyInfo& currentLobby = lobby->GetCurrentLobby();
+
+        if (ImGui::BeginTable("##OnlineLobbyTable", 2, ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersInnerV)) {
+            DrawTextRow("State", RTBEngine::Online::ToString(state));
+            DrawStringRow("Lobby Id", currentLobby.lobbyId);
+            DrawStringRow("Owner User Id", currentLobby.ownerUserId.ToString());
+            DrawTextRow("Is Owner", currentLobby.isOwner ? "true" : "false");
+            DrawStringRow("Max Members", std::to_string(currentLobby.maxMembers));
+            DrawStringRow("Available Slots", std::to_string(currentLobby.availableSlots));
+            DrawTextRow("Last Error", lobby->GetLastError());
+            ImGui::EndTable();
+        }
+
+        ImGui::Spacing();
+        ImGui::SetNextItemWidth(220.0f);
+        ImGui::InputText("Bucket Id", lobbyBucketId, sizeof(lobbyBucketId));
+        ImGui::SetNextItemWidth(120.0f);
+        ImGui::InputInt("Max Members", &lobbyMaxMembers);
+        lobbyMaxMembers = std::clamp(lobbyMaxMembers, 2, 6);
+
+        ImGui::Checkbox("Public Advertised", &lobbyPublicAdvertised);
+        ImGui::SameLine();
+        ImGui::Checkbox("Allow Invites", &lobbyAllowInvites);
+        ImGui::Checkbox("Allow Join By Id", &lobbyAllowJoinById);
+        ImGui::SameLine();
+        ImGui::Checkbox("Allow Host Migration", &lobbyAllowHostMigration);
+
+        const bool loggedIn = identity && identity->IsLoggedIn();
+        const bool createBlocked =
+            !loggedIn ||
+            state == RTBEngine::Online::OnlineLobbyState::Creating ||
+            state == RTBEngine::Online::OnlineLobbyState::Destroying ||
+            (state == RTBEngine::Online::OnlineLobbyState::InLobby && !currentLobby.lobbyId.empty());
+        const bool destroyBlocked =
+            currentLobby.lobbyId.empty() ||
+            state == RTBEngine::Online::OnlineLobbyState::Creating ||
+            state == RTBEngine::Online::OnlineLobbyState::Destroying;
+
+        BeginDisabledIf(createBlocked);
+        if (ImGui::Button("Create Lobby")) {
+            RTBEngine::Online::OnlineCreateLobbyOptions options;
+            options.maxMembers = static_cast<std::uint32_t>(lobbyMaxMembers);
+            options.bucketId = lobbyBucketId;
+            options.publicAdvertised = lobbyPublicAdvertised;
+            options.allowInvites = lobbyAllowInvites;
+            options.allowJoinById = lobbyAllowJoinById;
+            options.allowHostMigration = lobbyAllowHostMigration;
+            StoreLobbyActionResult(lobby->CreateLobby(options));
+        }
+        EndDisabledIf(createBlocked);
+
+        ImGui::SameLine();
+
+        BeginDisabledIf(destroyBlocked);
+        if (ImGui::Button("Destroy Lobby")) {
+            StoreLobbyActionResult(lobby->DestroyLobby());
+        }
+        EndDisabledIf(destroyBlocked);
+
+        if (!loggedIn) {
+            ImGui::TextDisabled("Login is required before creating a lobby.");
+        }
+
+        if (!lastLobbyActionMessage.empty()) {
+            const ImVec4 color = lastLobbyActionSucceeded
+                ? ImVec4(0.35f, 0.85f, 0.45f, 1.0f)
+                : ImVec4(0.95f, 0.35f, 0.35f, 1.0f);
+            ImGui::TextColored(color, "Last lobby action: %s", lastLobbyActionMessage.c_str());
         }
     }
 
@@ -218,6 +484,40 @@ namespace RTBEditor {
                 ImGui::TextUnformatted(eventEntry.currentStatus.c_str());
                 ImGui::TableSetColumnIndex(2);
                 ImGui::TextUnformatted(eventEntry.localUserId.c_str());
+            }
+
+            ImGui::EndTable();
+        }
+    }
+
+    void OnlinePanel::DrawLobbyEventsSection()
+    {
+        ImGui::TextUnformatted("Lobby Events");
+
+        if (ImGui::Button("Clear Lobby Events")) {
+            lobbyEvents.clear();
+        }
+
+        if (lobbyEvents.empty()) {
+            ImGui::TextDisabled("No lobby status events captured yet.");
+            return;
+        }
+
+        if (ImGui::BeginTable("##OnlineLobbyEventsTable", 3,
+            ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable)) {
+            ImGui::TableSetupColumn("Previous");
+            ImGui::TableSetupColumn("Current");
+            ImGui::TableSetupColumn("Lobby Id");
+            ImGui::TableHeadersRow();
+
+            for (const LobbyEventEntry& eventEntry : lobbyEvents) {
+                ImGui::TableNextRow();
+                ImGui::TableSetColumnIndex(0);
+                ImGui::TextUnformatted(eventEntry.previousState.c_str());
+                ImGui::TableSetColumnIndex(1);
+                ImGui::TextUnformatted(eventEntry.currentState.c_str());
+                ImGui::TableSetColumnIndex(2);
+                ImGui::TextUnformatted(eventEntry.lobbyId.c_str());
             }
 
             ImGui::EndTable();

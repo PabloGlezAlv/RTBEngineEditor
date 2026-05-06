@@ -18,6 +18,9 @@
     <ClCompile Include="Source\Core\EditorApplication.cpp">
       <Filter>Archivos de origen</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Core\EditorOnlineSettings.cpp">
+      <Filter>Archivos de origen</Filter>
+    </ClCompile>
     <ClCompile Include="Source\main.cpp">
       <Filter>Archivos de origen</Filter>
     </ClCompile>
@@ -69,6 +72,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Core\EditorApplication.h">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Core\EditorOnlineSettings.h">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
     <ClInclude Include="Source\Project\Project.h">
