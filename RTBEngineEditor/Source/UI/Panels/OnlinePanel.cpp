@@ -5,7 +5,9 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdio>
+#include <filesystem>
 #include <utility>
+#include <vector>
 
 namespace {
 
@@ -86,6 +88,8 @@ namespace RTBEditor {
         DrawIdentitySection(identity);
         ImGui::Separator();
         DrawLobbySection(lobby, identity);
+        ImGui::Separator();
+        DrawMultiplayerTestSection();
         ImGui::Separator();
         DrawLoginEventsSection();
         ImGui::Separator();
@@ -413,15 +417,37 @@ namespace RTBEditor {
         ImGui::Checkbox("Allow Host Migration", &lobbyAllowHostMigration);
 
         const bool loggedIn = identity && identity->IsLoggedIn();
+        const bool hasLobby = !currentLobby.lobbyId.empty();
+        const bool hasTargetLobby = lobbyTargetId[0] != '\0';
+        const bool operationInProgress =
+            state == RTBEngine::Online::OnlineLobbyState::Creating ||
+            state == RTBEngine::Online::OnlineLobbyState::Searching ||
+            state == RTBEngine::Online::OnlineLobbyState::Joining ||
+            state == RTBEngine::Online::OnlineLobbyState::Leaving ||
+            state == RTBEngine::Online::OnlineLobbyState::Destroying;
         const bool createBlocked =
             !loggedIn ||
-            state == RTBEngine::Online::OnlineLobbyState::Creating ||
-            state == RTBEngine::Online::OnlineLobbyState::Destroying ||
-            (state == RTBEngine::Online::OnlineLobbyState::InLobby && !currentLobby.lobbyId.empty());
+            operationInProgress ||
+            hasLobby;
+        const bool findBlocked =
+            !loggedIn ||
+            operationInProgress ||
+            hasLobby ||
+            !hasTargetLobby;
+        const bool joinBlocked =
+            !loggedIn ||
+            operationInProgress ||
+            hasLobby ||
+            !hasTargetLobby;
+        const bool leaveBlocked =
+            !loggedIn ||
+            operationInProgress ||
+            !hasLobby;
         const bool destroyBlocked =
-            currentLobby.lobbyId.empty() ||
-            state == RTBEngine::Online::OnlineLobbyState::Creating ||
-            state == RTBEngine::Online::OnlineLobbyState::Destroying;
+            !loggedIn ||
+            operationInProgress ||
+            !hasLobby ||
+            !currentLobby.isOwner;
 
         BeginDisabledIf(createBlocked);
         if (ImGui::Button("Create Lobby")) {
@@ -444,8 +470,68 @@ namespace RTBEditor {
         }
         EndDisabledIf(destroyBlocked);
 
+        ImGui::Spacing();
+        ImGui::SetNextItemWidth(-1.0f);
+        ImGui::InputText("Lobby Id", lobbyTargetId, sizeof(lobbyTargetId));
+
+        BeginDisabledIf(findBlocked);
+        if (ImGui::Button("Find Lobby")) {
+            RTBEngine::Online::OnlineFindLobbiesOptions options;
+            options.lobbyId = lobbyTargetId;
+            options.maxResults = 10;
+            StoreLobbyActionResult(lobby->FindLobbies(options));
+        }
+        EndDisabledIf(findBlocked);
+
+        ImGui::SameLine();
+
+        BeginDisabledIf(joinBlocked);
+        if (ImGui::Button("Join Lobby")) {
+            RTBEngine::Online::OnlineJoinLobbyOptions options;
+            options.lobbyId = lobbyTargetId;
+            StoreLobbyActionResult(lobby->JoinLobby(options));
+        }
+        EndDisabledIf(joinBlocked);
+
+        ImGui::SameLine();
+
+        BeginDisabledIf(leaveBlocked);
+        if (ImGui::Button("Leave Lobby")) {
+            StoreLobbyActionResult(lobby->LeaveLobby());
+        }
+        EndDisabledIf(leaveBlocked);
+
+        const std::vector<RTBEngine::Online::OnlineLobbyInfo>& searchResults = lobby->GetSearchResults();
+        if (searchResults.empty()) {
+            ImGui::TextDisabled("No lobby search results yet.");
+        } else if (ImGui::BeginTable("##OnlineLobbySearchResultsTable", 5,
+            ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable)) {
+            ImGui::TableSetupColumn("Lobby Id");
+            ImGui::TableSetupColumn("Owner");
+            ImGui::TableSetupColumn("Max");
+            ImGui::TableSetupColumn("Slots");
+            ImGui::TableSetupColumn("Owner Local");
+            ImGui::TableHeadersRow();
+
+            for (const RTBEngine::Online::OnlineLobbyInfo& result : searchResults) {
+                ImGui::TableNextRow();
+                ImGui::TableSetColumnIndex(0);
+                ImGui::TextUnformatted(result.lobbyId.c_str());
+                ImGui::TableSetColumnIndex(1);
+                ImGui::TextUnformatted(result.ownerUserId.ToString().c_str());
+                ImGui::TableSetColumnIndex(2);
+                ImGui::TextUnformatted(std::to_string(result.maxMembers).c_str());
+                ImGui::TableSetColumnIndex(3);
+                ImGui::TextUnformatted(std::to_string(result.availableSlots).c_str());
+                ImGui::TableSetColumnIndex(4);
+                ImGui::TextUnformatted(result.isOwner ? "true" : "false");
+            }
+
+            ImGui::EndTable();
+        }
+
         if (!loggedIn) {
-            ImGui::TextDisabled("Login is required before creating a lobby.");
+            ImGui::TextDisabled("Login is required before lobby operations.");
         }
 
         if (!lastLobbyActionMessage.empty()) {
@@ -453,6 +539,84 @@ namespace RTBEditor {
                 ? ImVec4(0.35f, 0.85f, 0.45f, 1.0f)
                 : ImVec4(0.95f, 0.35f, 0.35f, 1.0f);
             ImGui::TextColored(color, "Last lobby action: %s", lastLobbyActionMessage.c_str());
+        }
+    }
+
+    void OnlinePanel::DrawMultiplayerTestSection()
+    {
+        multiplayerLauncher.RefreshProcessStates();
+
+        ImGui::TextUnformatted("Multiplayer Test");
+        ImGui::SetNextItemWidth(120.0f);
+        ImGui::InputInt("Player Count", &multiplayerPlayerCount);
+        multiplayerPlayerCount = std::clamp(multiplayerPlayerCount, 2, 6);
+
+        ImGui::SetNextItemWidth(-1.0f);
+        ImGui::InputText("Start Scene", multiplayerStartScene, sizeof(multiplayerStartScene));
+
+        if (ImGui::Button("Prepare & Launch")) {
+            MultiplayerTestLauncher::LaunchSettings settings;
+            settings.playerCount = multiplayerPlayerCount;
+            settings.startScene = multiplayerStartScene;
+            multiplayerLauncher.PrepareAndLaunch(settings);
+        }
+
+        ImGui::SameLine();
+
+        if (ImGui::Button("Stop All")) {
+            multiplayerLauncher.StopAll();
+        }
+
+        ImGui::SameLine();
+
+        if (ImGui::Button("Clean Last Run")) {
+            multiplayerLauncher.CleanLastRun();
+        }
+
+        if (!multiplayerLauncher.GetLastMessage().empty()) {
+            const ImVec4 color = multiplayerLauncher.WasLastActionSuccessful()
+                ? ImVec4(0.35f, 0.85f, 0.45f, 1.0f)
+                : ImVec4(0.95f, 0.35f, 0.35f, 1.0f);
+            ImGui::TextColored(color, "%s", multiplayerLauncher.GetLastMessage().c_str());
+        }
+
+        const std::filesystem::path& runDirectory = multiplayerLauncher.GetLastRunDirectory();
+        if (!runDirectory.empty()) {
+            ImGui::TextWrapped("Run directory: %s", runDirectory.string().c_str());
+        }
+
+        const std::vector<MultiplayerTestLauncher::PlayerInstance>& instances =
+            multiplayerLauncher.GetInstances();
+        if (instances.empty()) {
+            ImGui::TextDisabled("No multiplayer test players launched.");
+            return;
+        }
+
+        if (ImGui::BeginTable("##MultiplayerTestPlayersTable", 4,
+            ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable)) {
+            ImGui::TableSetupColumn("Player");
+            ImGui::TableSetupColumn("PID");
+            ImGui::TableSetupColumn("State");
+            ImGui::TableSetupColumn("Working Directory");
+            ImGui::TableHeadersRow();
+
+            for (const MultiplayerTestLauncher::PlayerInstance& instance : instances) {
+                ImGui::TableNextRow();
+                ImGui::TableSetColumnIndex(0);
+                ImGui::Text("Player %d", instance.playerIndex);
+                ImGui::TableSetColumnIndex(1);
+                ImGui::Text("%lu", instance.processId);
+                ImGui::TableSetColumnIndex(2);
+                if (instance.running) {
+                    ImGui::TextUnformatted("Running");
+                } else {
+                    ImGui::Text("Exited (%lu)", instance.exitCode);
+                }
+                ImGui::TableSetColumnIndex(3);
+                ImGui::TextWrapped("%s", instance.workingDirectory.string().c_str());
+            }
+
+            ImGui::EndTable();
         }
     }
 

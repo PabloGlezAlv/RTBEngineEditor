@@ -130,7 +130,7 @@ function CreateScene()
                             },
                             {
                                 type = "SceneChangeButton",
-                                scenePath = "Assets/Scenes/DefaultScene.lua"
+                                scenePath = "Assets/Scenes/LobbyScene.lua"
                             },
                         },
                         children = {

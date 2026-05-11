@@ -43,6 +43,12 @@ namespace RTBEditor {
         // Invokes MSBuild to compile GameScripts.vcxproj into GameScripts.dll
         static ScriptCompileResult CompileScripts(const std::string& vcxprojPath, const std::string& configuration = "Debug");
 
+        // Invokes MSBuild with an isolated output directory so the editor-loaded GameScripts.dll is not overwritten.
+        static ScriptCompileResult CompileScriptsToDirectory(
+            const std::string& vcxprojPath,
+            const std::filesystem::path& outputDirectory,
+            const std::string& configuration = "Debug");
+
     private:
         static bool CreateDirectoryStructure(const std::filesystem::path& outputDir);
         static bool CopyPlayerExecutable(const std::filesystem::path& outputDir, const std::string& gameName);

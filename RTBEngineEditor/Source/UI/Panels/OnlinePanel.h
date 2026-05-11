@@ -8,6 +8,7 @@
 #include <RTBEngine/Online/OnlineResult.h>
 #include <RTBEngine/Online/OnlineSystem.h>
 #include "../../Core/EditorOnlineSettings.h"
+#include "../../Core/MultiplayerTestLauncher.h"
 
 #include <string>
 #include <vector>
@@ -51,6 +52,7 @@ namespace RTBEditor {
         void DrawIdentitySection(RTBEngine::Online::IOnlineIdentity* identity);
         void DrawLobbySection(RTBEngine::Online::IOnlineLobby* lobby,
                               const RTBEngine::Online::IOnlineIdentity* identity);
+        void DrawMultiplayerTestSection();
         void DrawLoginEventsSection();
         void DrawLobbyEventsSection();
 
@@ -79,11 +81,16 @@ namespace RTBEditor {
         bool lobbyAllowInvites = true;
         bool lobbyAllowJoinById = true;
         bool lobbyAllowHostMigration = false;
+        char lobbyTargetId[128] = "";
 
         std::string lastIdentityActionMessage;
         bool lastIdentityActionSucceeded = true;
         std::string lastLobbyActionMessage;
         bool lastLobbyActionSucceeded = true;
+
+        MultiplayerTestLauncher multiplayerLauncher;
+        int multiplayerPlayerCount = 2;
+        char multiplayerStartScene[260] = "Assets/Scenes/LobbyScene.lua";
     };
 
 }

@@ -1,6 +1,7 @@
 #include "BuildSystem.h"
 #include <fstream>
 #include <RTBEngine/Core/Logger.h>
+#include "../Core/EditorOnlineSettings.h"
 #include "../Project/Project.h"
 #include <algorithm>
 #include <cctype>
@@ -55,6 +56,20 @@ namespace {
 
         const fs::path scenePath = (project.GetProjectDirectory() / normalized).lexically_normal();
         return fs::exists(scenePath) && fs::is_regular_file(scenePath);
+    }
+
+    std::string EnsureGenericTrailingSlash(const fs::path& path)
+    {
+        std::string value = path.lexically_normal().generic_string();
+        if (!value.empty() && value.back() != '/') {
+            value.push_back('/');
+        }
+        return value;
+    }
+
+    std::string GetMSBuildPath()
+    {
+        return "C:\\Program Files\\Microsoft Visual Studio\\18\\Community\\MSBuild\\Current\\Bin\\amd64\\MSBuild.exe";
     }
 }
 
@@ -287,6 +302,26 @@ namespace RTBEditor {
             cfgFile << "[Scene]\n";
             cfgFile << "StartScene=" << NormalizeReferencePath(settings.startScene) << "\n";
 
+            const EditorOnlineSettings editorOnlineSettings = EditorOnlineSettingsStore::Load();
+            RTBEngine::Online::OnlineConfig onlineConfig;
+            EditorOnlineSettingsStore::ApplyToOnlineConfig(editorOnlineSettings, onlineConfig);
+
+            cfgFile << "\n[Online]\n";
+            cfgFile << "Enabled=" << (onlineConfig.enabled ? "true" : "false") << "\n";
+            cfgFile << "FailApplicationOnError=" << (onlineConfig.failApplicationOnError ? "true" : "false") << "\n";
+            cfgFile << "Backend=" << (onlineConfig.backend == RTBEngine::Online::OnlineBackendType::EOS ? "EOS" : "Null") << "\n";
+            cfgFile << "ProductName=" << onlineConfig.productName << "\n";
+            cfgFile << "ProductVersion=" << onlineConfig.productVersion << "\n";
+            cfgFile << "ProductId=" << onlineConfig.productId << "\n";
+            cfgFile << "SandboxId=" << onlineConfig.sandboxId << "\n";
+            cfgFile << "DeploymentId=" << onlineConfig.deploymentId << "\n";
+            cfgFile << "ClientId=" << onlineConfig.clientId << "\n";
+            cfgFile << "ClientSecret=" << onlineConfig.clientSecret << "\n";
+            cfgFile << "IsServer=" << (onlineConfig.isServer ? "true" : "false") << "\n";
+            cfgFile << "DisableOverlay=" << (onlineConfig.disableOverlay ? "true" : "false") << "\n";
+            cfgFile << "CacheDirectory=" << onlineConfig.cacheDirectory << "\n";
+            cfgFile << "TickBudgetMilliseconds=" << onlineConfig.tickBudgetMilliseconds << "\n";
+
             cfgFile.close();
             return true;
         }
@@ -310,8 +345,7 @@ namespace RTBEditor {
 
         // Use an explicit path to MSBuild so the editor does not depend on PATH.
         // This path is based on your current Visual Studio installation.
-        const std::string msbuildPath =
-            "C:\\Program Files\\Microsoft Visual Studio\\18\\Community\\MSBuild\\Current\\Bin\\amd64\\MSBuild.exe";
+        const std::string msbuildPath = GetMSBuildPath();
 
         if (!std::filesystem::exists(msbuildPath)) {
             RTB_ERROR("CompileScripts: MSBuild.exe not found at the expected path. "
@@ -351,6 +385,67 @@ namespace RTBEditor {
             return ScriptCompileResult::Failure;
         }
         RTB_INFO("CompileScripts: Output DLL at '" + outputDll.string() + "'");
+        return ScriptCompileResult::Success;
+    }
+
+    ScriptCompileResult BuildSystem::CompileScriptsToDirectory(
+        const std::string& vcxprojPath,
+        const std::filesystem::path& outputDirectory,
+        const std::string& configuration)
+    {
+        if (!std::filesystem::exists(vcxprojPath)) {
+            RTB_ERROR("CompileScriptsToDirectory: vcxproj not found at '" + vcxprojPath + "'");
+            return ScriptCompileResult::MSBuildNotFound;
+        }
+
+        const std::string msbuildPath = GetMSBuildPath();
+        if (!std::filesystem::exists(msbuildPath)) {
+            RTB_ERROR("CompileScriptsToDirectory: MSBuild.exe not found at the expected path.");
+            return ScriptCompileResult::MSBuildNotFound;
+        }
+
+        std::error_code error;
+        const fs::path absoluteOutputDirectory = fs::absolute(outputDirectory).lexically_normal();
+        const fs::path absoluteIntermediateDirectory = (absoluteOutputDirectory / "Intermediate").lexically_normal();
+        fs::create_directories(absoluteOutputDirectory, error);
+        if (error) {
+            RTB_ERROR("CompileScriptsToDirectory: Could not create output directory: " + error.message());
+            return ScriptCompileResult::Failure;
+        }
+
+        fs::create_directories(absoluteIntermediateDirectory, error);
+        if (error) {
+            RTB_ERROR("CompileScriptsToDirectory: Could not create intermediate directory: " + error.message());
+            return ScriptCompileResult::Failure;
+        }
+
+        const std::string outDir = EnsureGenericTrailingSlash(absoluteOutputDirectory);
+        const std::string intDir = EnsureGenericTrailingSlash(absoluteIntermediateDirectory);
+
+        std::string cmd =
+            "cmd /C \"\"" + msbuildPath + "\" \"" + vcxprojPath + "\""
+            " /p:Configuration=" + configuration +
+            " /p:Platform=x64"
+            " /p:OutDir=\"" + outDir + "\""
+            " /p:IntDir=\"" + intDir + "\""
+            " /t:Build"
+            " /nologo /v:m\"";
+
+        RTB_INFO("CompileScriptsToDirectory: Running: " + cmd);
+
+        int exitCode = system(cmd.c_str());
+        if (exitCode != 0) {
+            RTB_ERROR("CompileScriptsToDirectory: MSBuild failed with exit code " + std::to_string(exitCode));
+            return ScriptCompileResult::CompileError;
+        }
+
+        const fs::path outputDll = absoluteOutputDirectory / "GameScripts.dll";
+        if (!fs::exists(outputDll)) {
+            RTB_ERROR("CompileScriptsToDirectory: Build succeeded but expected DLL not found at '" + outputDll.string() + "'");
+            return ScriptCompileResult::Failure;
+        }
+
+        RTB_INFO("CompileScriptsToDirectory: Output DLL at '" + outputDll.string() + "'");
         return ScriptCompileResult::Success;
     }
 

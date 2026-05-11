@@ -1,5 +1,7 @@
 #pragma once
 
+#include <RTBEngine/Online/OnlineConfig.h>
+
 #include <string>
 
 namespace RTBPlayer {
@@ -16,6 +18,7 @@ namespace RTBPlayer {
         int GetWindowHeight() const { return windowHeight; }
         bool IsFullscreen() const { return fullscreen; }
         const std::string& GetStartScene() const { return startScene; }
+        const RTBEngine::Online::OnlineConfig& GetOnlineConfig() const { return onlineConfig; }
 
     private:
         std::string windowTitle = "RTBEngine Game";
@@ -23,6 +26,7 @@ namespace RTBPlayer {
         int windowHeight = 720;
         bool fullscreen = false;
         std::string startScene = "Assets/Scenes/DefaultScene.lua";
+        RTBEngine::Online::OnlineConfig onlineConfig;
     };
 
 }

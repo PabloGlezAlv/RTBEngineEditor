@@ -11,6 +11,7 @@ int main(int argc, char* argv[]) {
     config.window.height = gameConfig.GetWindowHeight();
     config.window.fullscreen = gameConfig.IsFullscreen();
     config.initialScenePath = gameConfig.GetStartScene();
+    config.online = gameConfig.GetOnlineConfig();
 
     return RTBEngine::Run(config);
 }

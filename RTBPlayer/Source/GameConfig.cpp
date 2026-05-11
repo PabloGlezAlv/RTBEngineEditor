@@ -1,7 +1,35 @@
 #include "GameConfig.h"
 #include <RTBEngine/Core/Logger.h>
+#include <cstdint>
 #include <fstream>
 #include <sstream>
+
+namespace {
+
+    bool ParseBool(const std::string& value)
+    {
+        return value == "true" || value == "1" || value == "True" || value == "TRUE";
+    }
+
+    RTBEngine::Online::OnlineBackendType ParseOnlineBackend(const std::string& value)
+    {
+        if (value == "EOS" || value == "eos") {
+            return RTBEngine::Online::OnlineBackendType::EOS;
+        }
+
+        return RTBEngine::Online::OnlineBackendType::Null;
+    }
+
+    std::uint32_t ParseUInt32(const std::string& value)
+    {
+        if (value.empty()) {
+            return 0;
+        }
+
+        return static_cast<std::uint32_t>(std::stoul(value));
+    }
+
+}
 
 namespace RTBPlayer {
 
@@ -46,6 +74,22 @@ namespace RTBPlayer {
                 }
                 else if (currentSection == "Scene") {
                     if (key == "StartScene") startScene = value;
+                }
+                else if (currentSection == "Online") {
+                    if (key == "Enabled") onlineConfig.enabled = ParseBool(value);
+                    else if (key == "FailApplicationOnError") onlineConfig.failApplicationOnError = ParseBool(value);
+                    else if (key == "Backend") onlineConfig.backend = ParseOnlineBackend(value);
+                    else if (key == "ProductName") onlineConfig.productName = value;
+                    else if (key == "ProductVersion") onlineConfig.productVersion = value;
+                    else if (key == "ProductId") onlineConfig.productId = value;
+                    else if (key == "SandboxId") onlineConfig.sandboxId = value;
+                    else if (key == "DeploymentId") onlineConfig.deploymentId = value;
+                    else if (key == "ClientId") onlineConfig.clientId = value;
+                    else if (key == "ClientSecret") onlineConfig.clientSecret = value;
+                    else if (key == "IsServer") onlineConfig.isServer = ParseBool(value);
+                    else if (key == "DisableOverlay") onlineConfig.disableOverlay = ParseBool(value);
+                    else if (key == "CacheDirectory") onlineConfig.cacheDirectory = value;
+                    else if (key == "TickBudgetMilliseconds") onlineConfig.tickBudgetMilliseconds = ParseUInt32(value);
                 }
                 else if (currentSection == "Game") {
                     if (key == "Name") windowTitle = value;
