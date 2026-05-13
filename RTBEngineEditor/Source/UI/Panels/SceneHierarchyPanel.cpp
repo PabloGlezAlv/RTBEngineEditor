@@ -12,6 +12,7 @@
 #include <RTBEngine/UI/Canvas.h>
 #include <RTBEngine/UI/Elements/UIButton.h>
 #include <RTBEngine/UI/Elements/UIContainer.h>
+#include <RTBEngine/UI/Elements/UIInputField.h>
 #include <RTBEngine/UI/Elements/UIPanel.h>
 #include <RTBEngine/UI/Elements/UISlider.h>
 #include <RTBEngine/UI/Elements/UIText.h>
@@ -215,6 +216,9 @@ namespace RTBEditor {
                     }
                     if (ImGui::MenuItem("Button")) {
                         CreateUIButton(activeScene, context, creationParent);
+                    }
+                    if (ImGui::MenuItem("InputField")) {
+                        CreateUIInputField(activeScene, context, creationParent);
                     }
                     if (ImGui::MenuItem("Slider")) {
                         CreateUISlider(activeScene, context, creationParent);
@@ -501,6 +505,52 @@ namespace RTBEditor {
         scene->AddGameObject(textGO);
 
         context.selectedGameObject = buttonGO;
+        RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+    }
+
+    void SceneHierarchyPanel::CreateUIInputField(RTBEngine::ECS::Scene* scene, EditorContext& context, RTBEngine::ECS::GameObject* parent) {
+        auto* inputGO = new RTBEngine::ECS::GameObject("InputField");
+        if (parent) inputGO->SetParent(parent);
+
+        auto* panel = new RTBEngine::UI::UIPanel();
+        panel->SetAnchorMin(RTBEngine::Math::Vector2(0.5f, 0.5f));
+        panel->SetAnchorMax(RTBEngine::Math::Vector2(0.5f, 0.5f));
+        panel->SetAnchoredPosition(RTBEngine::Math::Vector2(0.0f, 0.0f));
+        panel->SetSizeDelta(RTBEngine::Math::Vector2(260.0f, 42.0f));
+        panel->SetBackgroundColor(RTBEngine::Math::Vector4(0.10f, 0.11f, 0.14f, 0.88f));
+        panel->SetBorderColor(RTBEngine::Math::Vector4(0.62f, 0.69f, 0.94f, 1.0f));
+        panel->SetBorderThickness(1.0f);
+        panel->SetHasBorder(true);
+        inputGO->AddComponent(panel);
+
+        auto* inputField = new RTBEngine::UI::UIInputField();
+        inputField->placeholder = "Enter name";
+        inputField->maxLength = 24;
+        inputField->backgroundPanel = panel;
+        inputGO->AddComponent(inputField);
+
+        scene->AddGameObject(inputGO);
+
+        auto* textGO = new RTBEngine::ECS::GameObject("Text");
+        textGO->SetParent(inputGO);
+
+        auto* uiText = new RTBEngine::UI::UIText();
+        uiText->SetAnchorMin(RTBEngine::Math::Vector2(0.0f, 0.0f));
+        uiText->SetAnchorMax(RTBEngine::Math::Vector2(1.0f, 1.0f));
+        uiText->SetAnchoredPosition(RTBEngine::Math::Vector2(12.0f, 0.0f));
+        uiText->SetSizeDelta(RTBEngine::Math::Vector2(-24.0f, 0.0f));
+        uiText->SetText("Enter name");
+        uiText->SetColor(RTBEngine::Math::Vector4(0.68f, 0.70f, 0.76f, 1.0f));
+        uiText->SetAlignment(RTBEngine::UI::TextAlignment::Left);
+        uiText->SetRaycastTarget(false);
+        textGO->AddComponent(uiText);
+
+        inputField->textComponent = uiText;
+        inputField->OnValidate();
+
+        scene->AddGameObject(textGO);
+
+        context.selectedGameObject = inputGO;
         RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
     }
 
