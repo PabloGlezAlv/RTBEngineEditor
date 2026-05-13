@@ -20,6 +20,21 @@ namespace {
         return RTBEngine::Online::OnlineBackendType::Null;
     }
 
+    RTBEngine::Online::OnlineLoginType ParseLoginType(const std::string& value)
+    {
+        if (value == "DeveloperAuth" || value == "developerAuth" ||
+            value == "DevAuth" || value == "devauth") {
+            return RTBEngine::Online::OnlineLoginType::DeveloperAuth;
+        }
+
+        if (value == "AccountPortal" || value == "accountPortal" ||
+            value == "Account_Portal" || value == "account_portal") {
+            return RTBEngine::Online::OnlineLoginType::AccountPortal;
+        }
+
+        return RTBEngine::Online::OnlineLoginType::DeviceId;
+    }
+
     std::uint32_t ParseUInt32(const std::string& value)
     {
         if (value.empty()) {
@@ -90,6 +105,10 @@ namespace RTBPlayer {
                     else if (key == "DisableOverlay") onlineConfig.disableOverlay = ParseBool(value);
                     else if (key == "CacheDirectory") onlineConfig.cacheDirectory = value;
                     else if (key == "TickBudgetMilliseconds") onlineConfig.tickBudgetMilliseconds = ParseUInt32(value);
+                    else if (key == "LoginType") onlineConfig.loginType = ParseLoginType(value);
+                    else if (key == "LoginDisplayName") onlineConfig.loginDisplayName = value;
+                    else if (key == "DeveloperAuthHost") onlineConfig.developerAuthHost = value;
+                    else if (key == "DeveloperAuthCredentialName") onlineConfig.developerAuthCredentialName = value;
                 }
                 else if (currentSection == "Game") {
                     if (key == "Name") windowTitle = value;
@@ -98,6 +117,36 @@ namespace RTBPlayer {
         }
 
         return true;
+    }
+
+    void GameConfig::ApplyCommandLine(int argc, char* argv[])
+    {
+        for (int index = 1; index < argc; ++index) {
+            std::string argument = argv[index] ? argv[index] : "";
+            if (argument.rfind("--", 0) == 0) {
+                argument.erase(0, 2);
+            } else if (argument.rfind("-", 0) == 0) {
+                argument.erase(0, 1);
+            }
+
+            const std::size_t separator = argument.find('=');
+            if (separator == std::string::npos) {
+                continue;
+            }
+
+            const std::string key = argument.substr(0, separator);
+            const std::string value = argument.substr(separator + 1);
+
+            if (key == "start-scene") startScene = value;
+            else if (key == "window-title") windowTitle = value;
+            else if (key == "online-enabled") onlineConfig.enabled = ParseBool(value);
+            else if (key == "online-backend") onlineConfig.backend = ParseOnlineBackend(value);
+            else if (key == "login") onlineConfig.loginType = ParseLoginType(value);
+            else if (key == "display-name") onlineConfig.loginDisplayName = value;
+            else if (key == "devauth-host") onlineConfig.developerAuthHost = value;
+            else if (key == "devauth-credential") onlineConfig.developerAuthCredentialName = value;
+            else if (key == "cache-directory") onlineConfig.cacheDirectory = value;
+        }
     }
 
 }

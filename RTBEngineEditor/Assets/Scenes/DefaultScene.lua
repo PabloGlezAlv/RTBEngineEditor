@@ -708,6 +708,14 @@ function CreateScene()
                         currentHealth = 100.00
                     },
                     {
+                        type = "NetworkTransform",
+                        objectKey = "PlayerGO",
+                        sendRate = 15.00,
+                        interpolationSpeed = 14.00,
+                        replicatePosition = true,
+                        replicateRotation = true
+                    },
+                    {
                         type = "RigidBodyComponent",
                         mass = 1.00,
                         friction = 0.50,

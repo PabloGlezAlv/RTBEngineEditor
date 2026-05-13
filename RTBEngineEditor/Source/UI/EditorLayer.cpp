@@ -160,9 +160,9 @@ namespace RTBEditor {
         ImGui::DockBuilderDockWindow("Game", dock_id_center);
         ImGui::DockBuilderDockWindow("Hierarchy", dock_id_left);
         ImGui::DockBuilderDockWindow("Inspector", dock_id_right);
+        ImGui::DockBuilderDockWindow("Online", dock_id_right);
         ImGui::DockBuilderDockWindow("Content Browser", dock_id_bottom);
         ImGui::DockBuilderDockWindow("Console", dock_id_bottom);
-        ImGui::DockBuilderDockWindow("Online", dock_id_bottom);
         
         ImGui::DockBuilderFinish(dockspaceId);
     }

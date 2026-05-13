@@ -85,9 +85,36 @@ namespace {
         return RTBEngine::Online::OnlineBackendType::Null;
     }
 
+    RTBEngine::Online::OnlineLoginType ParseLoginType(const std::string& value)
+    {
+        const std::string normalized = ToUpper(Trim(value));
+        if (normalized == "DEVELOPERAUTH" || normalized == "DEV_AUTH" || normalized == "DEVAUTH") {
+            return RTBEngine::Online::OnlineLoginType::DeveloperAuth;
+        }
+
+        if (normalized == "ACCOUNTPORTAL" || normalized == "ACCOUNT_PORTAL") {
+            return RTBEngine::Online::OnlineLoginType::AccountPortal;
+        }
+
+        return RTBEngine::Online::OnlineLoginType::DeviceId;
+    }
+
     const char* SerializeBackend(RTBEngine::Online::OnlineBackendType backend)
     {
         return backend == RTBEngine::Online::OnlineBackendType::EOS ? "EOS" : "Null";
+    }
+
+    const char* SerializeLoginType(RTBEngine::Online::OnlineLoginType loginType)
+    {
+        switch (loginType) {
+        case RTBEngine::Online::OnlineLoginType::DeveloperAuth:
+            return "DeveloperAuth";
+        case RTBEngine::Online::OnlineLoginType::AccountPortal:
+            return "AccountPortal";
+        case RTBEngine::Online::OnlineLoginType::DeviceId:
+        default:
+            return "DeviceId";
+        }
     }
 
 }
@@ -101,6 +128,12 @@ namespace RTBEditor {
             !deploymentId.empty() &&
             !clientId.empty() &&
             !clientSecret.empty();
+    }
+
+    bool EditorOnlineSettings::HasCompleteDeveloperAuthConfig() const
+    {
+        return loginType != RTBEngine::Online::OnlineLoginType::DeveloperAuth ||
+            (!developerAuthHost.empty() && !developerAuthCredentialName.empty());
     }
 
     std::filesystem::path EditorOnlineSettingsStore::GetSettingsPath()
@@ -150,6 +183,14 @@ namespace RTBEditor {
         settings.deploymentId = readValue("DeploymentId");
         settings.clientId = readValue("ClientId");
         settings.clientSecret = readValue("ClientSecret");
+        settings.disableOverlay = ParseBool(readValue("DisableOverlay"), settings.disableOverlay);
+        settings.loginType = ParseLoginType(readValue("LoginType"));
+        settings.loginDisplayName = readValue("LoginDisplayName");
+        settings.developerAuthHost = readValue("DeveloperAuthHost");
+        if (settings.developerAuthHost.empty()) {
+            settings.developerAuthHost = "localhost:6300";
+        }
+        settings.developerAuthCredentialName = readValue("DeveloperAuthCredentialName");
 
         return settings;
     }
@@ -177,6 +218,11 @@ namespace RTBEditor {
         file << "DeploymentId=" << settings.deploymentId << "\n";
         file << "ClientId=" << settings.clientId << "\n";
         file << "ClientSecret=" << settings.clientSecret << "\n";
+        file << "DisableOverlay=" << (settings.disableOverlay ? "true" : "false") << "\n";
+        file << "LoginType=" << SerializeLoginType(settings.loginType) << "\n";
+        file << "LoginDisplayName=" << settings.loginDisplayName << "\n";
+        file << "DeveloperAuthHost=" << settings.developerAuthHost << "\n";
+        file << "DeveloperAuthCredentialName=" << settings.developerAuthCredentialName << "\n";
 
         return file.good();
     }
@@ -194,6 +240,11 @@ namespace RTBEditor {
         config.deploymentId = settings.deploymentId;
         config.clientId = settings.clientId;
         config.clientSecret = settings.clientSecret;
+        config.disableOverlay = settings.disableOverlay;
+        config.loginType = settings.loginType;
+        config.loginDisplayName = settings.loginDisplayName;
+        config.developerAuthHost = settings.developerAuthHost;
+        config.developerAuthCredentialName = settings.developerAuthCredentialName;
     }
 
 }

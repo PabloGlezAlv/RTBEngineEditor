@@ -4,6 +4,7 @@
 int main(int argc, char* argv[]) {
     RTBPlayer::GameConfig gameConfig;
     gameConfig.Load("game.cfg");
+    gameConfig.ApplyCommandLine(argc, argv);
 
     RTBEngine::Core::ApplicationConfig config;
     config.window.title = gameConfig.GetWindowTitle();

@@ -71,6 +71,11 @@ namespace RTBEditor {
         char eosDeploymentId[128] = "";
         char eosClientId[128] = "";
         char eosClientSecret[256] = "";
+        bool disableOverlay = false;
+        int loginTypeIndex = 0;
+        char loginDisplayName[64] = "";
+        char developerAuthHost[128] = "localhost:6300";
+        char developerAuthCredentialName[128] = "";
         std::string lastSettingsMessage;
         bool lastSettingsSucceeded = true;
 

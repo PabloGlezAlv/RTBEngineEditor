@@ -16,6 +16,8 @@
 #include <RTBEngine/Input/InputManager.h>
 #include <RTBEngine/Input/KeyCode.h>
 #include <RTBEngine/Math/Quaternions/Quaternion.h>
+#include <RTBEngine/Online/IOnlineLobby.h>
+#include <RTBEngine/Online/OnlineSystem.h>
 #include <RTBEngine/Physics/PhysicsUtils.h>
 #include <RTBEngine/Physics/PhysicsWorld.h>
 #include <RTBEngine/UI/Elements/UIJoystick.h>
@@ -89,6 +91,17 @@ namespace {
             outRight.Normalize();
         }
     }
+
+    bool HasLocalGameplayAuthority()
+    {
+        RTBEngine::Online::OnlineSystem& online = RTBEngine::Online::OnlineSystem::GetInstance();
+        RTBEngine::Online::IOnlineLobby* lobby = online.GetLobby();
+        if (!online.IsInitialized() || !lobby || lobby->GetCurrentLobby().lobbyId.empty()) {
+            return true;
+        }
+
+        return lobby->GetCurrentLobby().isOwner;
+    }
 }
 
 RTB_REGISTER_COMPONENT(ThirdPersonCharacterController)
@@ -141,6 +154,10 @@ void ThirdPersonCharacterController::OnUpdate(float deltaTime)
         return;
     }
 
+    if (!HasLocalGameplayAuthority()) {
+        return;
+    }
+
     ClampSettings();
     ResolveHealth();
     ResolveAnimator();
@@ -164,6 +181,12 @@ void ThirdPersonCharacterController::OnUpdate(float deltaTime)
 void ThirdPersonCharacterController::OnFixedUpdate(float fixedDeltaTime)
 {
     if (!owner) {
+        return;
+    }
+
+    if (!HasLocalGameplayAuthority()) {
+        StopPlanarMotion();
+        UpdateAnimatorLocomotion(false, false);
         return;
     }
 
@@ -474,6 +497,10 @@ void ThirdPersonCharacterController::UnsubscribeFromAttackJoystick()
 
 void ThirdPersonCharacterController::HandleJoystickAttackReleased(const RTBEngine::Math::Vector2& joystickValue)
 {
+    if (!HasLocalGameplayAuthority()) {
+        return;
+    }
+
     if (attackDamage <= 0.0f ||
         cooldownRemaining > 0.0f ||
         PauseMenuController::IsAnyMenuOpen()) {

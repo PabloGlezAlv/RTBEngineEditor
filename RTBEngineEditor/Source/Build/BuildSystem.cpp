@@ -71,6 +71,19 @@ namespace {
     {
         return "C:\\Program Files\\Microsoft Visual Studio\\18\\Community\\MSBuild\\Current\\Bin\\amd64\\MSBuild.exe";
     }
+
+    const char* SerializeLoginType(RTBEngine::Online::OnlineLoginType loginType)
+    {
+        switch (loginType) {
+        case RTBEngine::Online::OnlineLoginType::DeveloperAuth:
+            return "DeveloperAuth";
+        case RTBEngine::Online::OnlineLoginType::AccountPortal:
+            return "AccountPortal";
+        case RTBEngine::Online::OnlineLoginType::DeviceId:
+        default:
+            return "DeviceId";
+        }
+    }
 }
 
 namespace RTBEditor {
@@ -321,6 +334,10 @@ namespace RTBEditor {
             cfgFile << "DisableOverlay=" << (onlineConfig.disableOverlay ? "true" : "false") << "\n";
             cfgFile << "CacheDirectory=" << onlineConfig.cacheDirectory << "\n";
             cfgFile << "TickBudgetMilliseconds=" << onlineConfig.tickBudgetMilliseconds << "\n";
+            cfgFile << "LoginType=" << SerializeLoginType(onlineConfig.loginType) << "\n";
+            cfgFile << "LoginDisplayName=" << onlineConfig.loginDisplayName << "\n";
+            cfgFile << "DeveloperAuthHost=" << onlineConfig.developerAuthHost << "\n";
+            cfgFile << "DeveloperAuthCredentialName=" << onlineConfig.developerAuthCredentialName << "\n";
 
             cfgFile.close();
             return true;

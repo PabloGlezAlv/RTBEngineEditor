@@ -53,6 +53,27 @@ namespace {
         return buffer ? std::string(buffer) : std::string();
     }
 
+    void ReplaceAll(std::string& value, const std::string& token, const std::string& replacement)
+    {
+        std::size_t position = 0;
+        while ((position = value.find(token, position)) != std::string::npos) {
+            value.replace(position, token.size(), replacement);
+            position += replacement.size();
+        }
+    }
+
+    std::string ResolveEditorDevAuthCredential(const std::string& credentialName)
+    {
+        if (credentialName.empty()) {
+            return "Player1";
+        }
+
+        std::string resolved = credentialName;
+        ReplaceAll(resolved, "{index}", "1");
+        ReplaceAll(resolved, "{0}", "1");
+        return resolved;
+    }
+
 }
 
 namespace RTBEditor {
@@ -74,14 +95,16 @@ namespace RTBEditor {
 
         RTBEngine::Online::OnlineSystem& onlineSystem =
             RTBEngine::Online::OnlineSystem::GetInstance();
+
+        DrawSettingsSection();
+
+        // Save And Apply can rebuild the backend, so acquire service pointers only
+        // after settings UI has had a chance to reinitialize OnlineSystem.
         RTBEngine::Online::IOnlineIdentity* identity = onlineSystem.GetIdentity();
         RTBEngine::Online::IOnlineLobby* lobby = onlineSystem.GetLobby();
-
-        // Keep the debug panel connected to the currently active backend identity.
         RefreshIdentitySubscription(identity);
         RefreshLobbySubscription(lobby);
 
-        DrawSettingsSection();
         ImGui::Separator();
         DrawSystemSection(onlineSystem);
         ImGui::Separator();
@@ -207,6 +230,22 @@ namespace RTBEditor {
         CopyToBuffer(eosDeploymentId, settings.deploymentId);
         CopyToBuffer(eosClientId, settings.clientId);
         CopyToBuffer(eosClientSecret, settings.clientSecret);
+        disableOverlay = settings.disableOverlay;
+        switch (settings.loginType) {
+        case RTBEngine::Online::OnlineLoginType::DeveloperAuth:
+            loginTypeIndex = 1;
+            break;
+        case RTBEngine::Online::OnlineLoginType::AccountPortal:
+            loginTypeIndex = 2;
+            break;
+        case RTBEngine::Online::OnlineLoginType::DeviceId:
+        default:
+            loginTypeIndex = 0;
+            break;
+        }
+        CopyToBuffer(loginDisplayName, settings.loginDisplayName);
+        CopyToBuffer(developerAuthHost, settings.developerAuthHost);
+        CopyToBuffer(developerAuthCredentialName, settings.developerAuthCredentialName);
     }
 
     EditorOnlineSettings OnlinePanel::BuildSettingsFromFields() const
@@ -221,6 +260,17 @@ namespace RTBEditor {
         settings.deploymentId = ReadBuffer(eosDeploymentId);
         settings.clientId = ReadBuffer(eosClientId);
         settings.clientSecret = ReadBuffer(eosClientSecret);
+        settings.disableOverlay = disableOverlay;
+        if (loginTypeIndex == 1) {
+            settings.loginType = RTBEngine::Online::OnlineLoginType::DeveloperAuth;
+        } else if (loginTypeIndex == 2) {
+            settings.loginType = RTBEngine::Online::OnlineLoginType::AccountPortal;
+        } else {
+            settings.loginType = RTBEngine::Online::OnlineLoginType::DeviceId;
+        }
+        settings.loginDisplayName = ReadBuffer(loginDisplayName);
+        settings.developerAuthHost = ReadBuffer(developerAuthHost);
+        settings.developerAuthCredentialName = ReadBuffer(developerAuthCredentialName);
         return settings;
     }
 
@@ -251,11 +301,33 @@ namespace RTBEditor {
         ImGui::SetNextItemWidth(-1.0f);
         const ImGuiInputTextFlags secretFlags = showClientSecret ? 0 : ImGuiInputTextFlags_Password;
         ImGui::InputText("Client Secret", eosClientSecret, sizeof(eosClientSecret), secretFlags);
+        bool useEosOverlay = !disableOverlay;
+        if (ImGui::Checkbox("Use EOS Overlay", &useEosOverlay)) {
+            disableOverlay = !useEosOverlay;
+        }
         EndDisabledIf(!usingEos);
+
+        const char* loginItems[] = { "Device ID", "Developer Auth", "Account Portal" };
+        ImGui::SetNextItemWidth(180.0f);
+        ImGui::Combo("Default Login", &loginTypeIndex, loginItems, IM_ARRAYSIZE(loginItems));
+        ImGui::SetNextItemWidth(220.0f);
+        ImGui::InputText("Login Display Name", loginDisplayName, sizeof(loginDisplayName));
+
+        const bool usingDeveloperAuth = loginTypeIndex == 1;
+        BeginDisabledIf(!usingDeveloperAuth);
+        ImGui::SetNextItemWidth(220.0f);
+        ImGui::InputText("DevAuth Host", developerAuthHost, sizeof(developerAuthHost));
+        ImGui::SetNextItemWidth(220.0f);
+        ImGui::InputText("DevAuth Credential", developerAuthCredentialName, sizeof(developerAuthCredentialName));
+        EndDisabledIf(!usingDeveloperAuth);
 
         const EditorOnlineSettings currentSettings = BuildSettingsFromFields();
         if (usingEos && !currentSettings.HasCompleteEosConfig()) {
             ImGui::TextDisabled("EOS needs all credential fields before it can be applied.");
+        }
+
+        if (usingEos && !currentSettings.HasCompleteDeveloperAuthConfig()) {
+            ImGui::TextDisabled("Developer Auth needs host and credential name.");
         }
 
         if (ImGui::Button("Reload Settings")) {
@@ -275,7 +347,8 @@ namespace RTBEditor {
 
         ImGui::SameLine();
 
-        const bool applyBlocked = usingEos && !currentSettings.HasCompleteEosConfig();
+        const bool applyBlocked = usingEos &&
+            (!currentSettings.HasCompleteEosConfig() || !currentSettings.HasCompleteDeveloperAuthConfig());
         BeginDisabledIf(applyBlocked);
         if (ImGui::Button("Save And Apply")) {
             lastSettingsSucceeded = EditorOnlineSettingsStore::Save(currentSettings);
@@ -352,10 +425,28 @@ namespace RTBEditor {
             status == RTBEngine::Online::OnlineLoginStatus::LoggingIn;
 
         BeginDisabledIf(loginBlocked);
-        if (ImGui::Button("Login Device ID")) {
+        if (ImGui::Button("Login Configured")) {
+            const EditorOnlineSettings settings = BuildSettingsFromFields();
             RTBEngine::Online::OnlineLoginOptions options;
-            options.type = RTBEngine::Online::OnlineLoginType::DeviceId;
-            options.displayName = displayName;
+            options.type = settings.loginType;
+            options.displayName = displayName[0] != '\0' ? displayName : settings.loginDisplayName;
+            options.developerAuthHost = settings.developerAuthHost;
+            options.developerAuthCredentialName =
+                options.type == RTBEngine::Online::OnlineLoginType::DeveloperAuth
+                    ? ResolveEditorDevAuthCredential(settings.developerAuthCredentialName)
+                    : settings.developerAuthCredentialName;
+            StoreIdentityActionResult(identity->Login(options));
+        }
+        EndDisabledIf(loginBlocked);
+
+        ImGui::SameLine();
+
+        BeginDisabledIf(loginBlocked);
+        if (ImGui::Button("Login Account Portal")) {
+            const EditorOnlineSettings settings = BuildSettingsFromFields();
+            RTBEngine::Online::OnlineLoginOptions options;
+            options.type = RTBEngine::Online::OnlineLoginType::AccountPortal;
+            options.displayName = displayName[0] != '\0' ? displayName : settings.loginDisplayName;
             StoreIdentityActionResult(identity->Login(options));
         }
         EndDisabledIf(loginBlocked);
@@ -396,9 +487,29 @@ namespace RTBEditor {
             DrawStringRow("Lobby Id", currentLobby.lobbyId);
             DrawStringRow("Owner User Id", currentLobby.ownerUserId.ToString());
             DrawTextRow("Is Owner", currentLobby.isOwner ? "true" : "false");
+            DrawStringRow("Current Members", std::to_string(currentLobby.currentMembers));
             DrawStringRow("Max Members", std::to_string(currentLobby.maxMembers));
             DrawStringRow("Available Slots", std::to_string(currentLobby.availableSlots));
+            DrawStringRow("Known Member Ids", std::to_string(currentLobby.memberUserIds.size()));
             DrawTextRow("Last Error", lobby->GetLastError());
+            ImGui::EndTable();
+        }
+
+        if (!currentLobby.memberUserIds.empty() &&
+            ImGui::BeginTable("##OnlineLobbyMembersTable", 2,
+                ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable)) {
+            ImGui::TableSetupColumn("Member");
+            ImGui::TableSetupColumn("User Id");
+            ImGui::TableHeadersRow();
+
+            for (std::size_t index = 0; index < currentLobby.memberUserIds.size(); ++index) {
+                ImGui::TableNextRow();
+                ImGui::TableSetColumnIndex(0);
+                ImGui::Text("%zu", index + 1);
+                ImGui::TableSetColumnIndex(1);
+                ImGui::TextUnformatted(currentLobby.memberUserIds[index].ToString().c_str());
+            }
+
             ImGui::EndTable();
         }
 
@@ -554,11 +665,40 @@ namespace RTBEditor {
         ImGui::SetNextItemWidth(-1.0f);
         ImGui::InputText("Start Scene", multiplayerStartScene, sizeof(multiplayerStartScene));
 
-        if (ImGui::Button("Prepare & Launch")) {
+        const EditorOnlineSettings launchOnlineSettings = BuildSettingsFromFields();
+        const bool launchUsesDeveloperAuth =
+            launchOnlineSettings.loginType == RTBEngine::Online::OnlineLoginType::DeveloperAuth;
+        const bool launchUsesAccountPortal =
+            launchOnlineSettings.loginType == RTBEngine::Online::OnlineLoginType::AccountPortal;
+        const char* launchLoginText = launchUsesDeveloperAuth
+            ? "Developer Auth"
+            : (launchUsesAccountPortal ? "Account Portal" : "Device ID");
+        ImGui::Text("Launch login: %s", launchLoginText);
+        ImGui::Text("EOS overlay: %s", launchOnlineSettings.disableOverlay ? "disabled" : "enabled");
+        if (launchUsesDeveloperAuth) {
+            const char* credentialText = launchOnlineSettings.developerAuthCredentialName.empty()
+                ? "Player{index}"
+                : launchOnlineSettings.developerAuthCredentialName.c_str();
+            ImGui::Text("DevAuth credential pattern: %s", credentialText);
+        } else if (launchUsesAccountPortal) {
+            ImGui::TextDisabled("Account Portal opens Epic sign-in/consent for each prepared client.");
+        } else {
+            ImGui::TextDisabled("DevAuthTool credentials are not used while Default Login is Device ID.");
+        }
+
+        if (ImGui::Button("Prepare Players")) {
             MultiplayerTestLauncher::LaunchSettings settings;
             settings.playerCount = multiplayerPlayerCount;
             settings.startScene = multiplayerStartScene;
-            multiplayerLauncher.PrepareAndLaunch(settings);
+            settings.overrideOnlineSettings = true;
+            settings.onlineSettings = launchOnlineSettings;
+            multiplayerLauncher.Prepare(settings);
+        }
+
+        ImGui::SameLine();
+
+        if (ImGui::Button("Launch All Prepared")) {
+            multiplayerLauncher.LaunchAllPrepared();
         }
 
         ImGui::SameLine();
@@ -588,15 +728,16 @@ namespace RTBEditor {
         const std::vector<MultiplayerTestLauncher::PlayerInstance>& instances =
             multiplayerLauncher.GetInstances();
         if (instances.empty()) {
-            ImGui::TextDisabled("No multiplayer test players launched.");
+            ImGui::TextDisabled("No multiplayer test players prepared.");
             return;
         }
 
-        if (ImGui::BeginTable("##MultiplayerTestPlayersTable", 4,
+        if (ImGui::BeginTable("##MultiplayerTestPlayersTable", 5,
             ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable)) {
             ImGui::TableSetupColumn("Player");
             ImGui::TableSetupColumn("PID");
             ImGui::TableSetupColumn("State");
+            ImGui::TableSetupColumn("Actions");
             ImGui::TableSetupColumn("Working Directory");
             ImGui::TableHeadersRow();
 
@@ -605,14 +746,30 @@ namespace RTBEditor {
                 ImGui::TableSetColumnIndex(0);
                 ImGui::Text("Player %d", instance.playerIndex);
                 ImGui::TableSetColumnIndex(1);
-                ImGui::Text("%lu", instance.processId);
+                if (instance.processId == 0) {
+                    ImGui::TextUnformatted("-");
+                } else {
+                    ImGui::Text("%lu", instance.processId);
+                }
                 ImGui::TableSetColumnIndex(2);
                 if (instance.running) {
                     ImGui::TextUnformatted("Running");
+                } else if (instance.processId == 0) {
+                    ImGui::TextUnformatted("Prepared");
                 } else {
                     ImGui::Text("Exited (%lu)", instance.exitCode);
                 }
                 ImGui::TableSetColumnIndex(3);
+                ImGui::PushID(instance.playerIndex);
+                if (instance.running) {
+                    if (ImGui::Button("Stop")) {
+                        multiplayerLauncher.StopPlayer(instance.playerIndex);
+                    }
+                } else if (ImGui::Button("Launch")) {
+                    multiplayerLauncher.LaunchPreparedPlayer(instance.playerIndex);
+                }
+                ImGui::PopID();
+                ImGui::TableSetColumnIndex(4);
                 ImGui::TextWrapped("%s", instance.workingDirectory.string().c_str());
             }
 

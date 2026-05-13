@@ -17,8 +17,14 @@ namespace RTBEditor {
         std::string deploymentId;
         std::string clientId;
         std::string clientSecret;
+        bool disableOverlay = false;
+        RTBEngine::Online::OnlineLoginType loginType = RTBEngine::Online::OnlineLoginType::DeviceId;
+        std::string loginDisplayName;
+        std::string developerAuthHost = "localhost:6300";
+        std::string developerAuthCredentialName;
 
         bool HasCompleteEosConfig() const;
+        bool HasCompleteDeveloperAuthConfig() const;
     };
 #pragma warning(pop)
 

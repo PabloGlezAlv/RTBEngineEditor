@@ -12,6 +12,7 @@ namespace RTBPlayer {
         ~GameConfig();
 
         bool Load(const std::string& path);
+        void ApplyCommandLine(int argc, char* argv[]);
 
         const std::string& GetWindowTitle() const { return windowTitle; }
         int GetWindowWidth() const { return windowWidth; }

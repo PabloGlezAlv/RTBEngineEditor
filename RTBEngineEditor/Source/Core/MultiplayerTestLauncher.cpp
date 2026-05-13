@@ -10,6 +10,7 @@
 #include <Windows.h>
 
 #include <algorithm>
+#include <cctype>
 #include <chrono>
 #include <cstdlib>
 #include <fstream>
@@ -44,6 +45,77 @@ namespace {
     std::string SerializeBackend(RTBEngine::Online::OnlineBackendType backend)
     {
         return backend == RTBEngine::Online::OnlineBackendType::EOS ? "EOS" : "Null";
+    }
+
+    std::string SerializeLoginType(RTBEngine::Online::OnlineLoginType loginType)
+    {
+        switch (loginType) {
+        case RTBEngine::Online::OnlineLoginType::DeveloperAuth:
+            return "DeveloperAuth";
+        case RTBEngine::Online::OnlineLoginType::AccountPortal:
+            return "AccountPortal";
+        case RTBEngine::Online::OnlineLoginType::DeviceId:
+        default:
+            return "DeviceId";
+        }
+    }
+
+    bool ContainsPlayerIndexToken(const std::string& value)
+    {
+        return value.find("{index}") != std::string::npos ||
+            value.find("{0}") != std::string::npos;
+    }
+
+    std::string ReplaceAll(std::string value, const std::string& token, const std::string& replacement)
+    {
+        std::size_t position = 0;
+        while ((position = value.find(token, position)) != std::string::npos) {
+            value.replace(position, token.size(), replacement);
+            position += replacement.size();
+        }
+
+        return value;
+    }
+
+    std::string ReplacePlayerIndexTokens(std::string value, int playerIndex)
+    {
+        const std::string replacement = std::to_string(playerIndex);
+        value = ReplaceAll(std::move(value), "{index}", replacement);
+        value = ReplaceAll(std::move(value), "{0}", replacement);
+        return value;
+    }
+
+    std::string ReplaceTrailingNumber(std::string value, int playerIndex)
+    {
+        std::size_t suffixStart = value.size();
+        while (suffixStart > 0 &&
+            std::isdigit(static_cast<unsigned char>(value[suffixStart - 1])) != 0) {
+            --suffixStart;
+        }
+
+        if (suffixStart == value.size()) {
+            return value;
+        }
+
+        value.erase(suffixStart);
+        value += std::to_string(playerIndex);
+        return value;
+    }
+
+    std::string ResolveIndexedPlayerValue(
+        const std::string& value,
+        int playerIndex,
+        const std::string& defaultPrefix)
+    {
+        if (value.empty()) {
+            return defaultPrefix + std::to_string(playerIndex);
+        }
+
+        if (ContainsPlayerIndexToken(value)) {
+            return ReplacePlayerIndexTokens(value, playerIndex);
+        }
+
+        return ReplaceTrailingNumber(value, playerIndex);
     }
 
     bool CopyDirectoryTree(const fs::path& source, const fs::path& destination, std::string& outError)
@@ -91,7 +163,7 @@ namespace RTBEditor {
         StopAll();
     }
 
-    bool MultiplayerTestLauncher::PrepareAndLaunch(const LaunchSettings& requestedSettings)
+    bool MultiplayerTestLauncher::Prepare(const LaunchSettings& requestedSettings)
     {
         LaunchSettings settings = requestedSettings;
         settings.playerCount = std::clamp(settings.playerCount, 2, 6);
@@ -139,14 +211,124 @@ namespace RTBEditor {
                 return false;
             }
 
-            if (!LaunchPlayerProcess(executablePath, playerDirectory, playerIndex)) {
-                StopAll();
-                return false;
-            }
+            PlayerInstance instance;
+            instance.playerIndex = playerIndex;
+            instance.workingDirectory = playerDirectory;
+            instances.push_back(instance);
         }
 
-        SetResult(true, "Launched " + std::to_string(settings.playerCount) + " multiplayer test players.");
+        SetResult(true, "Prepared " + std::to_string(settings.playerCount) +
+            " multiplayer test players.");
         return true;
+    }
+
+    bool MultiplayerTestLauncher::PrepareAndLaunch(const LaunchSettings& requestedSettings)
+    {
+        if (!Prepare(requestedSettings)) {
+            return false;
+        }
+
+        return LaunchAllPrepared();
+    }
+
+    bool MultiplayerTestLauncher::LaunchPreparedPlayer(int playerIndex)
+    {
+        RefreshProcessStates();
+
+        auto instanceIt = std::find_if(instances.begin(), instances.end(),
+            [playerIndex](const PlayerInstance& instance) {
+                return instance.playerIndex == playerIndex;
+            });
+
+        if (instanceIt == instances.end()) {
+            SetResult(false, "Player" + std::to_string(playerIndex) + " is not prepared.");
+            return false;
+        }
+
+        if (instanceIt->running) {
+            SetResult(false, "Player" + std::to_string(playerIndex) + " is already running.");
+            return false;
+        }
+
+        if (instanceIt->processHandle) {
+            CloseHandle(static_cast<HANDLE>(instanceIt->processHandle));
+            instanceIt->processHandle = nullptr;
+        }
+
+        const fs::path executablePath = instanceIt->workingDirectory / "RTBPlayer.exe";
+        return LaunchPlayerProcess(executablePath, instanceIt->workingDirectory, playerIndex);
+    }
+
+    bool MultiplayerTestLauncher::LaunchAllPrepared()
+    {
+        RefreshProcessStates();
+
+        if (instances.empty()) {
+            SetResult(false, "No multiplayer test players prepared.");
+            return false;
+        }
+
+        int launchedCount = 0;
+        const std::vector<int> playerIndices = [&]() {
+            std::vector<int> result;
+            result.reserve(instances.size());
+            for (const PlayerInstance& instance : instances) {
+                if (!instance.running) {
+                    result.push_back(instance.playerIndex);
+                }
+            }
+            return result;
+        }();
+
+        if (playerIndices.empty()) {
+            SetResult(true, "All prepared multiplayer test players are already running.");
+            return true;
+        }
+
+        for (int playerIndex : playerIndices) {
+            const bool launched = LaunchPreparedPlayer(playerIndex);
+            if (!launched) {
+                return false;
+            }
+
+            ++launchedCount;
+        }
+
+        SetResult(true, "Launched " + std::to_string(launchedCount) + " multiplayer test players.");
+        return true;
+    }
+
+    void MultiplayerTestLauncher::StopPlayer(int playerIndex)
+    {
+        auto instanceIt = std::find_if(instances.begin(), instances.end(),
+            [playerIndex](const PlayerInstance& instance) {
+                return instance.playerIndex == playerIndex;
+            });
+
+        if (instanceIt == instances.end()) {
+            SetResult(false, "Player" + std::to_string(playerIndex) + " is not prepared.");
+            return;
+        }
+
+        HANDLE processHandle = static_cast<HANDLE>(instanceIt->processHandle);
+        if (!processHandle) {
+            instanceIt->running = false;
+            SetResult(true, "Player" + std::to_string(playerIndex) + " is not running.");
+            return;
+        }
+
+        DWORD exitCode = 0;
+        if (GetExitCodeProcess(processHandle, &exitCode) && exitCode == STILL_ACTIVE) {
+            TerminateProcess(processHandle, 0);
+            WaitForSingleObject(processHandle, 2000);
+        }
+
+        CloseHandle(processHandle);
+        instanceIt->processHandle = nullptr;
+        instanceIt->processId = 0;
+        instanceIt->running = false;
+        instanceIt->exitCode = 0;
+        SetResult(true, "Stopped Player" + std::to_string(playerIndex) + ".");
     }
 
     void MultiplayerTestLauncher::StopAll()
@@ -328,13 +510,28 @@ namespace RTBEditor {
 
         CloseHandle(processInfo.hThread);
 
-        PlayerInstance instance;
-        instance.playerIndex = playerIndex;
-        instance.processId = processInfo.dwProcessId;
-        instance.processHandle = processInfo.hProcess;
-        instance.workingDirectory = workingDirectory;
-        instance.running = true;
-        instances.push_back(instance);
+        auto instanceIt = std::find_if(instances.begin(), instances.end(),
+            [playerIndex](const PlayerInstance& instance) {
+                return instance.playerIndex == playerIndex;
+            });
+
+        if (instanceIt != instances.end()) {
+            instanceIt->processId = processInfo.dwProcessId;
+            instanceIt->processHandle = processInfo.hProcess;
+            instanceIt->workingDirectory = workingDirectory;
+            instanceIt->running = true;
+            instanceIt->exitCode = 0;
+        } else {
+            PlayerInstance instance;
+            instance.playerIndex = playerIndex;
+            instance.processId = processInfo.dwProcessId;
+            instance.processHandle = processInfo.hProcess;
+            instance.workingDirectory = workingDirectory;
+            instance.running = true;
+            instances.push_back(instance);
+        }
+
+        SetResult(true, "Launched Player" + std::to_string(playerIndex) + ".");
         return true;
     }
 
@@ -343,12 +540,19 @@ namespace RTBEditor {
         int playerIndex,
         const LaunchSettings& settings)
     {
-        EditorOnlineSettings editorOnlineSettings = EditorOnlineSettingsStore::Load();
+        const EditorOnlineSettings editorOnlineSettings = settings.overrideOnlineSettings
+            ? settings.onlineSettings
+            : EditorOnlineSettingsStore::Load();
         RTBEngine::Online::OnlineConfig onlineConfig;
         EditorOnlineSettingsStore::ApplyToOnlineConfig(editorOnlineSettings, onlineConfig);
         onlineConfig.loadingInEditor = false;
         onlineConfig.cacheDirectory = (playerDirectory / "EOSCache").string();
-
+        onlineConfig.loginDisplayName =
+            ResolveIndexedPlayerValue(onlineConfig.loginDisplayName, playerIndex, "Player");
+        if (onlineConfig.loginType == RTBEngine::Online::OnlineLoginType::DeveloperAuth) {
+            onlineConfig.developerAuthCredentialName =
+                ResolveIndexedPlayerValue(onlineConfig.developerAuthCredentialName, playerIndex, "Player");
+        }
         std::ofstream cfgFile(playerDirectory / "game.cfg", std::ios::trunc);
         if (!cfgFile.is_open()) {
             SetResult(false, "Could not write game.cfg for Player" + std::to_string(playerIndex) + ".");
@@ -384,6 +588,10 @@ namespace RTBEditor {
         cfgFile << "DisableOverlay=" << (onlineConfig.disableOverlay ? "true" : "false") << "\n";
         cfgFile << "CacheDirectory=" << onlineConfig.cacheDirectory << "\n";
         cfgFile << "TickBudgetMilliseconds=" << onlineConfig.tickBudgetMilliseconds << "\n";
+        cfgFile << "LoginType=" << SerializeLoginType(onlineConfig.loginType) << "\n";
+        cfgFile << "LoginDisplayName=" << onlineConfig.loginDisplayName << "\n";
+        cfgFile << "DeveloperAuthHost=" << onlineConfig.developerAuthHost << "\n";
+        cfgFile << "DeveloperAuthCredentialName=" << onlineConfig.developerAuthCredentialName << "\n";
 
         if (!cfgFile.good()) {
             SetResult(false, "Failed while writing game.cfg for Player" + std::to_string(playerIndex) + ".");

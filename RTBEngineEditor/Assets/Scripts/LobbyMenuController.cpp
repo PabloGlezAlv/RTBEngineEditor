@@ -1,5 +1,7 @@
 #include "LobbyMenuController.h"
 
+#include "OnlineGameplayNet.h"
+
 #include <RTBEngine/Core/Logger.h>
 #include <RTBEngine/Core/Time.h>
 #include <RTBEngine/ECS/SceneManager.h>
@@ -80,6 +82,49 @@ namespace {
         }
 
         return sanitized;
+    }
+
+    bool ContainsPlayerIndexToken(const std::string& value)
+    {
+        return value.find("{index}") != std::string::npos ||
+            value.find("{0}") != std::string::npos;
+    }
+
+    void ReplaceAll(std::string& value, const std::string& token, const std::string& replacement)
+    {
+        std::size_t position = 0;
+        while ((position = value.find(token, position)) != std::string::npos) {
+            value.replace(position, token.size(), replacement);
+            position += replacement.size();
+        }
+    }
+
+    std::string ResolveEditorDevAuthCredential(const std::string& credentialName)
+    {
+        if (credentialName.empty()) {
+            return "Player1";
+        }
+
+        std::string resolved = credentialName;
+        ReplaceAll(resolved, "{index}", "1");
+        ReplaceAll(resolved, "{0}", "1");
+        return resolved;
+    }
+
+    RTBEngine::Online::OnlineLoginOptions BuildLobbyLoginOptions()
+    {
+        RTBEngine::Online::OnlineSystem& online = RTBEngine::Online::OnlineSystem::GetInstance();
+        RTBEngine::Online::OnlineLoginOptions options = online.GetDefaultLoginOptions();
+        if (options.displayName.empty()) {
+            options.displayName = "LobbyPlayer";
+        }
+        if (options.type == RTBEngine::Online::OnlineLoginType::DeveloperAuth &&
+            (options.developerAuthCredentialName.empty() ||
+                ContainsPlayerIndexToken(options.developerAuthCredentialName))) {
+            options.developerAuthCredentialName =
+                ResolveEditorDevAuthCredential(options.developerAuthCredentialName);
+        }
+        return options;
     }
 
     std::string ReadClipboardText()
@@ -187,6 +232,16 @@ void LobbyMenuController::OnStart()
 
 void LobbyMenuController::OnUpdate(float)
 {
+    OnlineGameplayNet::Pump();
+
+    std::string requestedScenePath;
+    if (OnlineGameplayNet::ConsumeStartMatch(requestedScenePath)) {
+        SetStatus("Host started the match.");
+        RTBEngine::Core::Time::SetPaused(false);
+        RTBEngine::ECS::SceneManager::GetInstance().RequestSceneLoad(requestedScenePath.c_str());
+        return;
+    }
+
     CaptureJoinLobbyIdInput();
     ExecutePendingActionIfReady();
     RefreshView();
@@ -357,8 +412,7 @@ void LobbyMenuController::TryAutoLogin()
     }
 
     RTBEngine::Online::OnlineLoginOptions options;
-    options.type = RTBEngine::Online::OnlineLoginType::DeviceId;
-    options.displayName = "LobbyPlayer";
+    options = BuildLobbyLoginOptions();
 
     const RTBEngine::Online::OnlineResult result = identity->Login(options);
     SetStatus(FormatResult(result));
@@ -399,8 +453,7 @@ bool LobbyMenuController::EnsureLoggedInOrQueue(PendingAction action)
     }
 
     RTBEngine::Online::OnlineLoginOptions options;
-    options.type = RTBEngine::Online::OnlineLoginType::DeviceId;
-    options.displayName = "LobbyPlayer";
+    options = BuildLobbyLoginOptions();
 
     const RTBEngine::Online::OnlineResult result = identity->Login(options);
     SetStatus(FormatResult(result));
@@ -617,6 +670,34 @@ void LobbyMenuController::StartGame()
         SetStatus("Game scene path is empty.");
         return;
     }
+
+    if (!EnsureOnlineReady()) {
+        return;
+    }
+
+    RTBEngine::Online::IOnlineLobby* lobby =
+        RTBEngine::Online::OnlineSystem::GetInstance().GetLobby();
+    if (!lobby || lobby->GetCurrentLobby().lobbyId.empty()) {
+        SetStatus("Create or join a lobby before starting the game.");
+        return;
+    }
+
+    if (!lobby->GetCurrentLobby().isOwner) {
+        SetStatus("Only the lobby host can start the game.");
+        return;
+    }
+
+    if (OnlineGameplayNet::GetRemoteLobbyMemberCount() == 0) {
+        SetStatus("Waiting for another lobby member before starting the game.");
+        return;
+    }
+
+    if (!OnlineGameplayNet::BroadcastStartMatch(gameScenePath)) {
+        SetStatus("Could not notify the other lobby members. Wait for Players to show 2+ and try again.");
+        return;
+    }
+
+    SetStatus("Starting match as host.");
 
     RTBEngine::Core::Time::SetPaused(false);
     RTBEngine::ECS::SceneManager::GetInstance().RequestSceneLoad(gameScenePath.c_str());

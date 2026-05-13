@@ -1,5 +1,7 @@
 #pragma once
 
+#include "EditorOnlineSettings.h"
+
 #include <filesystem>
 #include <string>
 #include <vector>
@@ -11,6 +13,8 @@ namespace RTBEditor {
         struct LaunchSettings {
             int playerCount = 2;
             std::string startScene = "Assets/Scenes/LobbyScene.lua";
+            bool overrideOnlineSettings = false;
+            EditorOnlineSettings onlineSettings;
         };
 
         struct PlayerInstance {
@@ -28,7 +32,11 @@ namespace RTBEditor {
         MultiplayerTestLauncher(const MultiplayerTestLauncher&) = delete;
         MultiplayerTestLauncher& operator=(const MultiplayerTestLauncher&) = delete;
 
+        bool Prepare(const LaunchSettings& settings);
         bool PrepareAndLaunch(const LaunchSettings& settings);
+        bool LaunchPreparedPlayer(int playerIndex);
+        bool LaunchAllPrepared();
+        void StopPlayer(int playerIndex);
         void StopAll();
         bool CleanLastRun();
         void RefreshProcessStates();
