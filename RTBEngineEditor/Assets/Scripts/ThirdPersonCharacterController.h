@@ -16,6 +16,7 @@ namespace RTBEngine {
 
     namespace ECS {
         class GameObject;
+        class TrailRenderer;
     }
 
     namespace Physics {
@@ -56,6 +57,7 @@ public:
     float attackSphereRadius = 0.55f;
     float attackSphereDistance = 1.15f;
     RTBEngine::UI::UIJoystick* attackJoystick = nullptr;
+    RTBEngine::ECS::TrailRenderer* attackAimTrail = nullptr;
     std::string idleAnimationFbx;
     std::string walkAnimationFbx;
     std::string runAnimationFbx;
@@ -98,6 +100,7 @@ private:
     void ResolveCameraObject();
     void ResolveHealth();
     void ResolveAnimator();
+    void ResolveAttackAimTrail();
     void DisableCompetingCameraController() const;
     void ApplyCameraFollowTransform();
     void RegisterAnimationSlots();
@@ -110,6 +113,8 @@ private:
     void RebindAttackJoystickSubscription();
     void UnsubscribeFromAttackJoystick();
     void HandleJoystickAttackReleased(const RTBEngine::Math::Vector2& joystickValue);
+    void UpdateAttackAimTrail();
+    void HideAttackAimTrail();
     void UpdateAttack(float deltaTime);
     void UpdateAttackFacingLock(float deltaTime);
     void UpdateMovement(float deltaTime);
