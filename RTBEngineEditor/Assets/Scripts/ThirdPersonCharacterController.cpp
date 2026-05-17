@@ -184,8 +184,6 @@ void ThirdPersonCharacterController::OnUpdate(float deltaTime)
         UpdateAttack(deltaTime);
         return;
     }
-
-    UpdateAttackAimTrail();
 }
 
 void ThirdPersonCharacterController::OnFixedUpdate(float fixedDeltaTime)
@@ -237,6 +235,16 @@ void ThirdPersonCharacterController::OnLateUpdate(float /*deltaTime*/)
     ResolveCameraObject();
     DisableCompetingCameraController();
     ApplyCameraFollowTransform();
+
+    if (!HasLocalGameplayAuthority()) {
+        HideAttackAimTrail();
+        return;
+    }
+
+    if (state == State::Locomotion) {
+        UpdateAttackAimTrail();
+        return;
+    }
 
     if (state != State::Attacking) {
         return;
@@ -563,16 +571,16 @@ void ThirdPersonCharacterController::UpdateAttackAimTrail()
         return;
     }
 
-    const RTBEngine::Math::Vector3 start =
-        owner ? owner->GetWorldPosition() : GetAttackCastOrigin();
-    const RTBEngine::Math::Vector3 end =
-        start + attackDirection * std::min(attackSphereDistance, attackRange);
+    const float trailLength = std::min(attackSphereDistance, attackRange);
+    const RTBEngine::Math::Vector3 start = owner
+        ? owner->GetWorldPosition()
+        : GetAttackCastOrigin();
+    const RTBEngine::Math::Vector3 end = start + attackDirection * trailLength;
     const RTBEngine::Math::Vector3 points[] = {
         start + attackAimTrailOffset,
         end + attackAimTrailOffset
     };
 
-    attackAimTrail->useWorldSpace = true;
     attackAimTrail->SetPoints(points, 2);
     attackAimTrail->SetVisible(true);
 }
