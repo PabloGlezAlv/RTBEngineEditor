@@ -696,7 +696,8 @@ function CreateScene()
                         attackSphereRadius = 0.55,
                         attackSphereDistance = 1.15,
                         attackJoystick = "B4C7E92D-5F22-43A9-8E3B-2A6D7D1A8C10/UIJoystick",
-                        attackAimTrail = "E8682E33-50ED-45D8-BC76-B31113639F9E/TrailRenderer",
+                        attackAimTrail = "7C57C988-6629-4FE8-AFF1-8D4D39C84D1B/TrailRenderer",
+                        attackAimTrailOffset = Vector3(0.00, 0.05, 0.00),
                         idleAnimationFbx = "Assets/Models/AnimationsPlayer/Great Sword Idle.fbx",
                         walkAnimationFbx = "Assets/Models/AnimationsPlayer/Great Sword Walk.fbx",
                         runAnimationFbx = "Assets/Models/AnimationsPlayer/Great Sword Run.fbx",
@@ -707,13 +708,6 @@ function CreateScene()
                         type = "HealthComponent",
                         maxHealth = 100.00,
                         currentHealth = 100.00
-                    },
-                    {
-                        type = "TrailRenderer",
-                        width = 1.10,
-                        color = Vector4(1.00, 1.00, 1.00, 1.00),
-                        visible = false,
-                        useWorldSpace = true
                     },
                     {
                         type = "NetworkTransform",
@@ -739,6 +733,20 @@ function CreateScene()
                     },
                 },
                 children = {
+                    {
+                        name = "Attack Aim Trail",
+                        uuid = "7C57C988-6629-4FE8-AFF1-8D4D39C84D1B",
+                        position = Vector3(0.00, 0.00, 0.00),
+                        components = {
+                            {
+                                type = "TrailRenderer",
+                                width = 1.10,
+                                color = Vector4(1.00, 1.00, 1.00, 1.00),
+                                visible = false,
+                                useWorldSpace = true
+                            },
+                        },
+                    },
                     {
                         name = "Player",
                         uuid = "5200AC9B-039A-416E-82AE-FD5FE1754C95",

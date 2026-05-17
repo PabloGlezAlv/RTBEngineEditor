@@ -123,6 +123,7 @@ RTB_REGISTER_COMPONENT(ThirdPersonCharacterController)
     RTB_PROPERTY_RANGE(attackSphereDistance, 0.05f, 5.0f)
     RTB_PROPERTY_COMPONENT(attackJoystick, UIJoystick)
     RTB_PROPERTY_COMPONENT(attackAimTrail, TrailRenderer)
+    RTB_PROPERTY(attackAimTrailOffset)
     RTB_PROPERTY_FBX(idleAnimationFbx)
     RTB_PROPERTY_FBX(walkAnimationFbx)
     RTB_PROPERTY_FBX(runAnimationFbx)
@@ -366,7 +367,7 @@ void ThirdPersonCharacterController::ResolveAttackAimTrail()
         return;
     }
 
-    attackAimTrail = owner->GetComponent<RTBEngine::ECS::TrailRenderer>();
+    attackAimTrail = owner->GetComponentInChildren<RTBEngine::ECS::TrailRenderer>();
 }
 
 void ThirdPersonCharacterController::DisableCompetingCameraController() const
@@ -562,10 +563,14 @@ void ThirdPersonCharacterController::UpdateAttackAimTrail()
         return;
     }
 
-    const RTBEngine::Math::Vector3 start = GetAttackCastOrigin();
+    const RTBEngine::Math::Vector3 start =
+        owner ? owner->GetWorldPosition() : GetAttackCastOrigin();
     const RTBEngine::Math::Vector3 end =
         start + attackDirection * std::min(attackSphereDistance, attackRange);
-    const RTBEngine::Math::Vector3 points[] = { start, end };
+    const RTBEngine::Math::Vector3 points[] = {
+        start + attackAimTrailOffset,
+        end + attackAimTrailOffset
+    };
 
     attackAimTrail->useWorldSpace = true;
     attackAimTrail->SetPoints(points, 2);

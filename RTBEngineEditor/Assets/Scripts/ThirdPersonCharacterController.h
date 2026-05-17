@@ -58,6 +58,7 @@ public:
     float attackSphereDistance = 1.15f;
     RTBEngine::UI::UIJoystick* attackJoystick = nullptr;
     RTBEngine::ECS::TrailRenderer* attackAimTrail = nullptr;
+    RTBEngine::Math::Vector3 attackAimTrailOffset = RTBEngine::Math::Vector3(0.0f, 0.05f, 0.0f);
     std::string idleAnimationFbx;
     std::string walkAnimationFbx;
     std::string runAnimationFbx;
