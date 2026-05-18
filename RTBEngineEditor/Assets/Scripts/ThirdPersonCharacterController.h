@@ -50,15 +50,14 @@ public:
     float cameraDistance = 11.0f;
     RTBEngine::Math::Vector3 cameraFocusOffset = RTBEngine::Math::Vector3(0.0f, 1.2f, 0.0f);
     RTBEngine::Animation::Animator* animator = nullptr;
-    float attackRange = 1.75f;
     float attackCooldown = 0.8f;
     float attackDamage = 25.0f;
     float attackHitDelay = 0.35f;
-    float attackSphereRadius = 0.55f;
-    float attackSphereDistance = 1.15f;
+    float projectileSpeed = 8.0f;
+    float projectileLifetime = 0.65f;
+    float projectileRadius = 0.275f;
     RTBEngine::UI::UIJoystick* attackJoystick = nullptr;
     RTBEngine::ECS::TrailRenderer* attackAimTrail = nullptr;
-    RTBEngine::Math::Vector3 attackAimTrailOffset = RTBEngine::Math::Vector3(0.0f, 0.05f, 0.0f);
     std::string idleAnimationFbx;
     std::string walkAnimationFbx;
     std::string runAnimationFbx;
@@ -121,6 +120,7 @@ private:
     void UpdateMovement(float deltaTime);
     void UpdateAnimatorLocomotion(bool hasMovementInput, bool isRunning);
     void StartAttack(const RTBEngine::Math::Vector3& attackDirection);
+    void SpawnAttackProjectile();
     void FinishAttack();
     void HandleDeath(const HealthComponent::DeathEvent& eventData);
     void FaceAttackDirection(const RTBEngine::Math::Vector3& attackDirection);
@@ -128,10 +128,9 @@ private:
     RTBEngine::Math::Vector3 GetDesiredMoveDirection(bool& outIsRunning) const;
     RTBEngine::Physics::PhysicsWorld* ResolvePhysicsWorld() const;
     RTBEngine::Math::Vector3 GetAttackCastOrigin() const;
+    RTBEngine::Math::Vector3 GetProjectileLaunchOrigin(const RTBEngine::Math::Vector3& attackDirection) const;
+    float GetProjectileTravelDistance() const;
+    float GetProjectileLaunchClearance() const;
     RTBEngine::Math::Vector3 GetAttackDirectionFromJoystick(const RTBEngine::Math::Vector2& joystickValue) const;
     RTBEngine::Math::Vector3 GetActiveAttackDirection() const;
-    HealthComponent* ResolveHitHealth(RTBEngine::ECS::GameObject* hitObject) const;
-    bool PerformAttackSphereCast(HealthComponent** outHealth,
-                                 RTBEngine::Math::Vector3* outHitPoint,
-                                 RTBEngine::Math::Vector3* outHitDirection);
 };

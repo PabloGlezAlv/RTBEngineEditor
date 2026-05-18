@@ -2,13 +2,16 @@
 
 #include "HealthComponent.h"
 #include "PauseMenuController.h"
+#include "ProjectileComponent.h"
 
 #include <RTBEngine/Animation/Animator.h>
 #include <RTBEngine/Core/Logger.h>
+#include <RTBEngine/Core/ResourceManager.h>
 #include <RTBEngine/ECS/CameraComponent.h>
 #include <RTBEngine/ECS/CapsuleColliderComponent.h>
 #include <RTBEngine/ECS/FreeLookCamera.h>
 #include <RTBEngine/ECS/GameObject.h>
+#include <RTBEngine/ECS/MeshRenderer.h>
 #include <RTBEngine/ECS/RigidBodyComponent.h>
 #include <RTBEngine/ECS/Scene.h>
 #include <RTBEngine/ECS/SceneManager.h>
@@ -115,15 +118,14 @@ RTB_REGISTER_COMPONENT(ThirdPersonCharacterController)
     RTB_PROPERTY_RANGE(cameraDistance, 0.5f, 20.0f)
     RTB_PROPERTY(cameraFocusOffset)
     RTB_PROPERTY_COMPONENT(animator, Animator)
-    RTB_PROPERTY_RANGE(attackRange, 0.1f, 4.0f)
     RTB_PROPERTY_RANGE(attackCooldown, 0.0f, 5.0f)
     RTB_PROPERTY_RANGE(attackDamage, 0.0f, 100.0f)
     RTB_PROPERTY_RANGE(attackHitDelay, 0.0f, 5.0f)
-    RTB_PROPERTY_RANGE(attackSphereRadius, 0.05f, 3.0f)
-    RTB_PROPERTY_RANGE(attackSphereDistance, 0.05f, 5.0f)
+    RTB_PROPERTY_RANGE(projectileSpeed, 0.01f, 50.0f)
+    RTB_PROPERTY_RANGE(projectileLifetime, 0.01f, 10.0f)
+    RTB_PROPERTY_RANGE(projectileRadius, 0.05f, 5.0f)
     RTB_PROPERTY_COMPONENT(attackJoystick, UIJoystick)
     RTB_PROPERTY_COMPONENT(attackAimTrail, TrailRenderer)
-    RTB_PROPERTY(attackAimTrailOffset)
     RTB_PROPERTY_FBX(idleAnimationFbx)
     RTB_PROPERTY_FBX(walkAnimationFbx)
     RTB_PROPERTY_FBX(runAnimationFbx)
@@ -301,12 +303,12 @@ void ThirdPersonCharacterController::ClampSettings()
     turnSpeed = std::max(0.0f, turnSpeed);
     cameraDistance = std::max(0.1f, cameraDistance);
 
-    attackRange = std::max(0.1f, attackRange);
     attackCooldown = std::max(0.0f, attackCooldown);
     attackDamage = std::max(0.0f, attackDamage);
     attackHitDelay = std::max(0.0f, attackHitDelay);
-    attackSphereRadius = std::max(0.05f, attackSphereRadius);
-    attackSphereDistance = std::max(0.05f, attackSphereDistance);
+    projectileSpeed = std::max(0.01f, projectileSpeed);
+    projectileLifetime = std::max(0.01f, projectileLifetime);
+    projectileRadius = std::max(0.05f, projectileRadius);
 }
 
 void ThirdPersonCharacterController::ConfigurePhysicsBody() const
@@ -571,16 +573,14 @@ void ThirdPersonCharacterController::UpdateAttackAimTrail()
         return;
     }
 
-    const float trailLength = std::min(attackSphereDistance, attackRange);
-    const RTBEngine::Math::Vector3 start = owner
-        ? owner->GetWorldPosition()
-        : GetAttackCastOrigin();
-    const RTBEngine::Math::Vector3 end = start + attackDirection * trailLength;
+    const RTBEngine::Math::Vector3 start = GetProjectileLaunchOrigin(attackDirection);
+    const RTBEngine::Math::Vector3 end = start + attackDirection * GetProjectileTravelDistance();
     const RTBEngine::Math::Vector3 points[] = {
-        start + attackAimTrailOffset,
-        end + attackAimTrailOffset
+        start,
+        end
     };
 
+    attackAimTrail->width = projectileRadius * 2.0f;
     attackAimTrail->SetPoints(points, 2);
     attackAimTrail->SetVisible(true);
 }
@@ -604,19 +604,7 @@ void ThirdPersonCharacterController::UpdateAttack(float deltaTime)
 
     attackHitExecuted = true;
 
-    HealthComponent* targetHealth = nullptr;
-    RTBEngine::Math::Vector3 hitPoint;
-    RTBEngine::Math::Vector3 hitDirection;
-    if (!PerformAttackSphereCast(&targetHealth, &hitPoint, &hitDirection) || !targetHealth) {
-        return;
-    }
-
-    HealthComponent::DamageContext damageContext;
-    damageContext.amount = attackDamage;
-    damageContext.instigator = owner;
-    damageContext.hitPoint = hitPoint;
-    damageContext.hitDirection = hitDirection;
-    targetHealth->TakeDamage(attackDamage, damageContext);
+    SpawnAttackProjectile();
 }
 
 void ThirdPersonCharacterController::UpdateAttackFacingLock(float deltaTime)
@@ -760,14 +748,76 @@ void ThirdPersonCharacterController::StartAttack(const RTBEngine::Math::Vector3&
     activeAttackDirection = normalizedAttackDirection;
     FaceAttackDirection(activeAttackDirection);
 
-    state = State::Attacking;
     cooldownRemaining = attackCooldown;
     attackElapsed = 0.0f;
     attackHitExecuted = false;
+    SpawnAttackProjectile();
+    activeAttackDirection = RTBEngine::Math::Vector3::Zero();
 
-    if (animator && attackSlotState.ready && animator->GetClip(kAttackAlias)) {
-        animator->Play(kAttackAlias, false);
+    state = State::Locomotion;
+}
+
+void ThirdPersonCharacterController::SpawnAttackProjectile()
+{
+    if (!owner || attackDamage <= 0.0f) {
+        return;
     }
+
+    RTBEngine::Math::Vector3 attackDirection = GetActiveAttackDirection();
+    attackDirection.y = 0.0f;
+    if (!HasMovementInput(attackDirection)) {
+        return;
+    }
+    attackDirection.Normalize();
+
+    RTBEngine::ECS::GameObject* projectileObject =
+        RTBEngine::ECS::SceneManager::GetInstance().Instantiate("Player Projectile");
+    if (!projectileObject) {
+        return;
+    }
+
+    projectileObject->SetTransient(true);
+
+    const RTBEngine::Math::Vector3 spawnPosition = GetProjectileLaunchOrigin(attackDirection);
+    const float projectileDiameter = projectileRadius * 2.0f;
+    const float projectileYaw = -std::atan2(attackDirection.x, attackDirection.z) * kRadToDeg;
+    const RTBEngine::Math::Quaternion projectileRotation =
+        RTBEngine::Math::Quaternion::FromEulerAngles(0.0f, projectileYaw * kDegToRad, 0.0f);
+
+    projectileObject->GetTransform().SetPosition(spawnPosition);
+    projectileObject->GetTransform().SetRotation(projectileRotation);
+    projectileObject->GetTransform().SetScale(
+        RTBEngine::Math::Vector3(projectileDiameter, projectileDiameter, projectileDiameter));
+
+    RTBEngine::ECS::MeshRenderer* renderer = new RTBEngine::ECS::MeshRenderer();
+    projectileObject->AddComponent(renderer);
+
+    RTBEngine::Core::ResourceManager& resources = RTBEngine::Core::ResourceManager::GetInstance();
+    renderer->SetMesh(resources.GetDefaultSphere());
+    renderer->SetShader(resources.GetShader("basic"));
+
+    RTBEngine::ECS::SphereColliderComponent* sphereCollider =
+        new RTBEngine::ECS::SphereColliderComponent();
+    sphereCollider->SetRadius(projectileRadius);
+    sphereCollider->SetCenterOffset(RTBEngine::Math::Vector3::Zero());
+    sphereCollider->SetIsTrigger(true);
+    projectileObject->AddComponent(sphereCollider);
+
+    ProjectileComponent* projectile = new ProjectileComponent();
+    projectileObject->AddComponent(projectile);
+
+    ProjectileComponent::ProjectileConfig config;
+    config.instigator = owner;
+    config.physicsWorld = ResolvePhysicsWorld();
+    config.origin = spawnPosition;
+    config.direction = attackDirection;
+    config.speed = projectileSpeed;
+    config.maxDistance = GetProjectileTravelDistance();
+    config.radius = projectileRadius;
+    config.damage = attackDamage;
+    config.destroyOnHit = true;
+    config.maxHits = 1;
+    projectile->Initialize(config);
 }
 
 void ThirdPersonCharacterController::FinishAttack()
@@ -908,6 +958,54 @@ RTBEngine::Math::Vector3 ThirdPersonCharacterController::GetAttackCastOrigin() c
     return owner->GetWorldPosition() + (owner->GetWorldRotation() * attackOriginOffset);
 }
 
+RTBEngine::Math::Vector3 ThirdPersonCharacterController::GetProjectileLaunchOrigin(
+    const RTBEngine::Math::Vector3& attackDirection) const
+{
+    if (!owner) {
+        return RTBEngine::Math::Vector3::Zero();
+    }
+
+    RTBEngine::Math::Vector3 planarDirection = attackDirection;
+    planarDirection.y = 0.0f;
+    if (!HasMovementInput(planarDirection)) {
+        planarDirection = GetActiveAttackDirection();
+    }
+    planarDirection.y = 0.0f;
+    if (!HasMovementInput(planarDirection)) {
+        planarDirection = RTBEngine::Math::Vector3::Forward();
+    } else {
+        planarDirection.Normalize();
+    }
+
+    RTBEngine::Math::Vector3 origin = GetAttackCastOrigin();
+    const float minimumCenterHeight = owner->GetWorldPosition().y + projectileRadius;
+    origin.y = std::max(origin.y, minimumCenterHeight);
+    return origin + planarDirection * GetProjectileLaunchClearance();
+}
+
+float ThirdPersonCharacterController::GetProjectileTravelDistance() const
+{
+    return std::max(0.05f, projectileSpeed * projectileLifetime);
+}
+
+float ThirdPersonCharacterController::GetProjectileLaunchClearance() const
+{
+    if (!owner) {
+        return projectileRadius;
+    }
+
+    float ownerRadius = 0.0f;
+    if (auto* capsule = owner->GetComponent<RTBEngine::ECS::CapsuleColliderComponent>()) {
+        ownerRadius = std::max(ownerRadius, capsule->GetRadius());
+    }
+    if (auto* sphere = owner->GetComponent<RTBEngine::ECS::SphereColliderComponent>()) {
+        ownerRadius = std::max(ownerRadius, sphere->GetRadius());
+    }
+
+    constexpr float kProjectileSpawnPadding = 0.05f;
+    return ownerRadius + projectileRadius + kProjectileSpawnPadding;
+}
+
 RTBEngine::Math::Vector3 ThirdPersonCharacterController::GetAttackDirectionFromJoystick(
     const RTBEngine::Math::Vector2& joystickValue) const
 {
@@ -942,69 +1040,3 @@ RTBEngine::Math::Vector3 ThirdPersonCharacterController::GetActiveAttackDirectio
     return attackDirection;
 }
 
-HealthComponent* ThirdPersonCharacterController::ResolveHitHealth(RTBEngine::ECS::GameObject* hitObject) const
-{
-    for (RTBEngine::ECS::GameObject* current = hitObject; current; current = current->GetParent()) {
-        if (current == owner) {
-            return nullptr;
-        }
-
-        if (HealthComponent* targetHealth = current->GetComponent<HealthComponent>()) {
-            if (targetHealth != health && !targetHealth->IsDead()) {
-                return targetHealth;
-            }
-            return nullptr;
-        }
-    }
-
-    return nullptr;
-}
-
-bool ThirdPersonCharacterController::PerformAttackSphereCast(HealthComponent** outHealth,
-                                                             RTBEngine::Math::Vector3* outHitPoint,
-                                                             RTBEngine::Math::Vector3* outHitDirection)
-{
-    if (outHealth) {
-        *outHealth = nullptr;
-    }
-
-    if (!owner) {
-        return false;
-    }
-
-    RTBEngine::Physics::PhysicsWorld* physicsWorld = ResolvePhysicsWorld();
-    if (!physicsWorld) {
-        return false;
-    }
-
-    RTBEngine::Math::Vector3 castStart = GetAttackCastOrigin();
-    RTBEngine::Math::Vector3 castDirection = GetActiveAttackDirection();
-
-    const RTBEngine::Math::Vector3 castEnd = castStart + castDirection * std::min(attackSphereDistance, attackRange);
-    RTBEngine::Physics::PhysicsQueryHit hit;
-    RTBEngine::Physics::PhysicsQueryOptions queryOptions;
-    queryOptions.ignoredObject = owner;
-    queryOptions.ignoreIgnoredObjectHierarchy = true;
-    queryOptions.ignoreTriggers = true;
-
-    if (!physicsWorld->SphereCastClosest(castStart, castEnd, attackSphereRadius, hit, queryOptions)) {
-        return false;
-    }
-
-    HealthComponent* targetHealth = ResolveHitHealth(hit.gameObject);
-    if (!targetHealth) {
-        return false;
-    }
-
-    if (outHealth) {
-        *outHealth = targetHealth;
-    }
-    if (outHitPoint) {
-        *outHitPoint = hit.point;
-    }
-    if (outHitDirection) {
-        *outHitDirection = castDirection;
-    }
-
-    return true;
-}
