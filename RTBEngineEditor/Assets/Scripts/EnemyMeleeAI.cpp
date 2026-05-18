@@ -482,27 +482,8 @@ RTBEngine::Physics::PhysicsWorld* EnemyMeleeAI::ResolvePhysicsWorld() const
     return nullptr;
 }
 
-void EnemyMeleeAI::HandleDamageTaken(const HealthComponent::DamageTakenEvent& eventData)
+void EnemyMeleeAI::HandleDamageTaken(const HealthComponent::DamageTakenEvent& /*eventData*/)
 {
-    if (!owner || state == State::Dying || state == State::Shrinking || state == State::Dead) {
-        return;
-    }
-
-    if (eventData.currentHealth <= 0.0f) {
-        return;
-    }
-
-    state = State::HitReact;
-    attackElapsed = 0.0f;
-    attackHitExecuted = false;
-    hitReactRemaining = hitReactDuration;
-    cooldownRemaining = std::max(cooldownRemaining, attackCooldown * 0.5f);
-
-    if (locomotion && targetTracker) {
-        locomotion->ApplyKnockback(
-            eventData.damage.hitDirection,
-            targetTracker->GetPlanarDirectionTo(owner) * -1.0f);
-    }
 }
 
 void EnemyMeleeAI::HandleDeath(const HealthComponent::DeathEvent& /*eventData*/)
