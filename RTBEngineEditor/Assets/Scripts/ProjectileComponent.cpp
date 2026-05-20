@@ -1,5 +1,7 @@
 #include "ProjectileComponent.h"
 
+#include "CharacterBase.h"
+
 #include <RTBEngine/ECS/GameObject.h>
 #include <RTBEngine/ECS/RigidBodyComponent.h>
 #include <RTBEngine/ECS/Scene.h>
@@ -31,6 +33,21 @@ namespace {
 
         return false;
     }
+
+    int ResolveCharacterTeam(RTBEngine::ECS::GameObject* gameObject)
+    {
+        if (!gameObject) {
+            return static_cast<int>(CharacterTeam::Neutral);
+        }
+
+        for (RTBEngine::ECS::GameObject* current = gameObject; current; current = current->GetParent()) {
+            if (auto* character = current->GetComponent<CharacterBase>()) {
+                return character->GetTeam();
+            }
+        }
+
+        return static_cast<int>(CharacterTeam::Neutral);
+    }
 }
 
 RTB_REGISTER_COMPONENT(ProjectileComponent)
@@ -38,6 +55,8 @@ RTB_REGISTER_COMPONENT(ProjectileComponent)
     RTB_PROPERTY_RANGE(maxDistance, 0.05f, 50.0f)
     RTB_PROPERTY_RANGE(radius, 0.05f, 5.0f)
     RTB_PROPERTY_RANGE(damage, 0.0f, 1000.0f)
+    RTB_PROPERTY_RANGE(instigatorTeam, 0, 8)
+    RTB_PROPERTY(ignoreSameTeam)
     RTB_PROPERTY(destroyOnHit)
     RTB_PROPERTY_RANGE(maxHits, 0, 100)
 RTB_END_REGISTER(ProjectileComponent)
@@ -116,6 +135,11 @@ void ProjectileComponent::Initialize(const ProjectileConfig& config)
     maxDistance = config.maxDistance;
     radius = config.radius;
     damage = config.damage;
+    instigatorTeam = config.instigatorTeam;
+    if (instigatorTeam == static_cast<int>(CharacterTeam::Neutral)) {
+        instigatorTeam = ResolveCharacterTeam(instigator);
+    }
+    ignoreSameTeam = config.ignoreSameTeam;
     destroyOnHit = config.destroyOnHit;
     maxHits = config.maxHits;
     direction = config.direction;
@@ -158,6 +182,8 @@ void ProjectileComponent::InitializeFromOwnerTransform()
     config.maxDistance = maxDistance;
     config.radius = radius;
     config.damage = damage;
+    config.instigatorTeam = instigatorTeam;
+    config.ignoreSameTeam = ignoreSameTeam;
     config.destroyOnHit = destroyOnHit;
     config.maxHits = maxHits;
 
@@ -216,6 +242,13 @@ HealthComponent* ProjectileComponent::ResolveHitHealth(RTBEngine::ECS::GameObjec
         }
 
         if (!targetHealth->IsDead()) {
+            const int targetTeam = ResolveCharacterTeam(current);
+            if (ignoreSameTeam &&
+                instigatorTeam != static_cast<int>(CharacterTeam::Neutral) &&
+                targetTeam == instigatorTeam) {
+                return nullptr;
+            }
+
             return targetHealth;
         }
 

@@ -1,0 +1,64 @@
+#pragma once
+
+#include "CharacterAbility.h"
+
+#include <RTBEngine/Math/Vectors/Vector3.h>
+#include <RTBEngine/Reflection/PropertyMacros.h>
+
+namespace RTBEngine {
+    namespace ECS {
+        class GameObject;
+    }
+
+    namespace Physics {
+        class PhysicsWorld;
+    }
+}
+
+class ProjectileAttackAbility : public CharacterAbility
+{
+public:
+    ProjectileAttackAbility() = default;
+    ~ProjectileAttackAbility() override = default;
+
+    void OnValidate() override;
+
+    RTBEngine::Math::Vector3 attackOriginOffset = RTBEngine::Math::Vector3(0.0f, 0.55f, 0.0f);
+    float cooldown = 0.8f;
+    float damage = 25.0f;
+    float hitDelay = 0.35f;
+    float recoveryDuration = 0.5f;
+    float projectileSpeed = 8.0f;
+    float projectileLifetime = 0.65f;
+    float projectileRadius = 0.275f;
+    bool destroyOnHit = true;
+    int maxHits = 1;
+    bool ignoreSameTeam = true;
+
+    RTB_COMPONENT(ProjectileAttackAbility)
+
+public:
+    bool FireNow(RTBEngine::ECS::GameObject* instigator,
+                 const RTBEngine::Math::Vector3& attackDirection,
+                 RTBEngine::Physics::PhysicsWorld* physicsWorld = nullptr);
+    RTBEngine::Math::Vector3 GetLaunchOrigin(RTBEngine::ECS::GameObject* instigator,
+                                             const RTBEngine::Math::Vector3& attackDirection) const;
+    float GetTravelDistance() const;
+    float GetLaunchClearance(RTBEngine::ECS::GameObject* instigator) const;
+    float GetCooldownSeconds() const { return cooldown; }
+    float GetHitDelaySeconds() const { return hitDelay; }
+    float GetDamageAmount() const { return damage; }
+    float GetProjectileRadius() const { return projectileRadius; }
+
+protected:
+    float GetCooldownDuration() const override { return cooldown; }
+    float GetHitDelayDuration() const override { return hitDelay; }
+    float GetRecoveryDuration() const override { return recoveryDuration; }
+    bool CanActivateAbility(RTBEngine::ECS::GameObject* instigator,
+                            const RTBEngine::Math::Vector3& direction) const override;
+    void ExecuteAbilityHit() override;
+
+private:
+    void ClampSettings();
+    RTBEngine::Physics::PhysicsWorld* ResolvePhysicsWorld(RTBEngine::ECS::GameObject* instigator) const;
+};

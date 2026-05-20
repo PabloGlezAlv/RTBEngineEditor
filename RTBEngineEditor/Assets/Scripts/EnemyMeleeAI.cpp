@@ -4,6 +4,7 @@
 #include "EnemyLocomotionController.h"
 #include "EnemyMeleeAIShared.h"
 #include "EnemyTargetTracker.h"
+#include "MeleeSphereAttackAbility.h"
 
 #include <RTBEngine/ECS/GameObject.h>
 #include <RTBEngine/ECS/RigidBodyComponent.h>
@@ -16,17 +17,13 @@ using ThisClass = EnemyMeleeAI;
 
 RTB_REGISTER_COMPONENT(EnemyMeleeAI)
     RTB_PROPERTY_COMPONENT(health, HealthComponent)
+    RTB_PROPERTY_RANGE(team, 0, 8)
     RTB_PROPERTY_COMPONENT(targetTracker, EnemyTargetTracker)
     RTB_PROPERTY_COMPONENT(animationDriver, EnemyAnimationDriver)
     RTB_PROPERTY_COMPONENT(locomotion, EnemyLocomotionController)
-    RTB_PROPERTY(attackOriginOffset)
+    RTB_PROPERTY_COMPONENT(meleeAttack, MeleeSphereAttackAbility)
     RTB_PROPERTY_RANGE(attackRange, 0.1f, 5.0f)
     RTB_PROPERTY_RANGE(preferredAttackDistance, 0.1f, 5.0f)
-    RTB_PROPERTY_RANGE(attackCooldown, 0.0f, 5.0f)
-    RTB_PROPERTY_RANGE(attackDamage, 0.0f, 100.0f)
-    RTB_PROPERTY_RANGE(attackHitDelay, 0.0f, 10.0f)
-    RTB_PROPERTY_RANGE(attackSphereRadius, 0.05f, 3.0f)
-    RTB_PROPERTY_RANGE(attackSphereDistance, 0.05f, 5.0f)
     RTB_PROPERTY_RANGE(hitReactDuration, 0.0f, 5.0f)
     RTB_PROPERTY_RANGE(deathHoldDuration, 0.0f, 5.0f)
     RTB_PROPERTY_RANGE(shrinkDuration, 0.01f, 10.0f)
@@ -59,11 +56,9 @@ void EnemyMeleeAI::OnUpdate(float deltaTime)
     ClampSettings();
     ResolveDependencies();
     RebindHealthSubscriptions();
-    cooldownRemaining = std::max(0.0f, cooldownRemaining - deltaTime);
 
     switch (state) {
     case State::Attacking:
-        UpdateAttack(deltaTime);
         break;
     case State::HitReact:
         UpdateHitReact(deltaTime);
@@ -120,25 +115,26 @@ void EnemyMeleeAI::OnFixedUpdate(float fixedDeltaTime)
 void EnemyMeleeAI::OnLateUpdate(float /*deltaTime*/)
 {
     ResolveDependencies();
-    if (!animationDriver) {
-        return;
-    }
 
     if (state == State::Attacking) {
-        if (!animationDriver->HasAttackAnimation()) {
-            if (attackHitExecuted &&
-                attackElapsed + EnemyMeleeAIDetail::kAttackCompletionEpsilon >=
-                    attackHitDelay + EnemyMeleeAIDetail::kFallbackAttackDuration) {
+        const bool abilityActive = meleeAttack && meleeAttack->IsAbilityActive();
+
+        if (!animationDriver || !animationDriver->HasAttackAnimation()) {
+            if (!abilityActive) {
                 FinishAttack();
             }
             return;
         }
 
-        if (animationDriver->IsAttackPlaying()) {
+        if (animationDriver->IsAttackPlaying() || abilityActive) {
             return;
         }
 
         FinishAttack();
+        return;
+    }
+
+    if (!animationDriver) {
         return;
     }
 
@@ -170,18 +166,18 @@ void EnemyMeleeAI::OnValidate()
 
 void EnemyMeleeAI::OnDestroy()
 {
+    if (meleeAttack) {
+        meleeAttack->CancelAbility();
+        meleeAttack->ClearTargetContext();
+    }
     UnsubscribeFromHealth();
 }
 
 void EnemyMeleeAI::ClampSettings()
 {
+    team = std::max(0, team);
     attackRange = std::max(0.1f, attackRange);
     preferredAttackDistance = std::clamp(preferredAttackDistance, 0.1f, attackRange);
-    attackCooldown = std::max(0.0f, attackCooldown);
-    attackDamage = std::max(0.0f, attackDamage);
-    attackHitDelay = std::max(0.0f, attackHitDelay);
-    attackSphereRadius = std::max(0.05f, attackSphereRadius);
-    attackSphereDistance = std::max(0.05f, attackSphereDistance);
     hitReactDuration = std::max(0.0f, hitReactDuration);
     deathHoldDuration = std::max(0.0f, deathHoldDuration);
     shrinkDuration = std::max(0.01f, shrinkDuration);
@@ -205,6 +201,16 @@ void EnemyMeleeAI::ResolveDependencies()
     if (!locomotion) {
         locomotion = owner->GetComponent<EnemyLocomotionController>();
     }
+    ResolveMeleeAttack();
+}
+
+void EnemyMeleeAI::ResolveMeleeAttack()
+{
+    if (meleeAttack || !owner) {
+        return;
+    }
+
+    meleeAttack = owner->GetComponent<MeleeSphereAttackAbility>();
 }
 
 void EnemyMeleeAI::RebindHealthSubscriptions()
@@ -261,7 +267,7 @@ void EnemyMeleeAI::UpdateState()
     }
 
     if (targetDistance <= attackRange) {
-        if (cooldownRemaining <= 0.0f) {
+        if (!meleeAttack->IsCoolingDown()) {
             StartAttack();
         } else {
             EnterIdle();
@@ -270,32 +276,6 @@ void EnemyMeleeAI::UpdateState()
     }
 
     EnterChasing();
-}
-
-void EnemyMeleeAI::UpdateAttack(float deltaTime)
-{
-    attackElapsed = std::max(0.0f, attackElapsed + deltaTime);
-    if (attackHitExecuted ||
-        attackElapsed + EnemyMeleeAIDetail::kAttackCompletionEpsilon < attackHitDelay) {
-        return;
-    }
-
-    attackHitExecuted = true;
-
-    RTBEngine::Math::Vector3 hitPoint;
-    RTBEngine::Math::Vector3 hitDirection;
-    if (!PerformAttackSphereCast(&hitPoint, &hitDirection)) {
-        return;
-    }
-
-    if (HealthComponent* targetHealth = targetTracker ? targetTracker->ResolveTargetHealth() : nullptr) {
-        HealthComponent::DamageContext damageContext;
-        damageContext.amount = attackDamage;
-        damageContext.instigator = owner;
-        damageContext.hitPoint = hitPoint;
-        damageContext.hitDirection = hitDirection;
-        targetHealth->TakeDamage(attackDamage, damageContext);
-    }
 }
 
 void EnemyMeleeAI::UpdateHitReact(float deltaTime)
@@ -351,9 +331,19 @@ void EnemyMeleeAI::StartAttack()
         return;
     }
 
+    HealthComponent* targetHealth = targetTracker->ResolveTargetHealth();
+    RTBEngine::ECS::GameObject* targetRoot = targetTracker->targetObject;
+    RTBEngine::Physics::PhysicsWorld* physicsWorld = ResolvePhysicsWorld();
+    RTBEngine::Math::Vector3 attackDirection = targetTracker->GetPlanarDirectionTo(owner);
+
+    meleeAttack->SetTargetContext(targetRoot, targetHealth, physicsWorld);
+    if (!meleeAttack->TryActivate(owner, attackDirection)) {
+        meleeAttack->ClearTargetContext();
+        EnterIdle();
+        return;
+    }
+
     state = State::Attacking;
-    attackElapsed = 0.0f;
-    attackHitExecuted = false;
     if (locomotion) {
         locomotion->StopPlanarMotion();
     }
@@ -364,17 +354,12 @@ void EnemyMeleeAI::StartAttack()
 
 void EnemyMeleeAI::FinishAttack()
 {
-    attackElapsed = 0.0f;
-    attackHitExecuted = false;
-    cooldownRemaining = attackCooldown;
     UpdateState();
 }
 
 void EnemyMeleeAI::EnterIdle()
 {
     state = State::Idle;
-    attackElapsed = 0.0f;
-    attackHitExecuted = false;
 }
 
 void EnemyMeleeAI::EnterChasing()
@@ -395,68 +380,7 @@ void EnemyMeleeAI::EnterRepositioning()
 
 bool EnemyMeleeAI::HasValidCombatSetup() const
 {
-    return owner && targetTracker && locomotion;
-}
-
-bool EnemyMeleeAI::PerformAttackSphereCast(RTBEngine::Math::Vector3* outHitPoint,
-                                           RTBEngine::Math::Vector3* outHitDirection)
-{
-    if (!HasValidCombatSetup() || !targetTracker->HasValidTarget(owner)) {
-        return false;
-    }
-
-    RTBEngine::Physics::PhysicsWorld* physicsWorld = ResolvePhysicsWorld();
-    if (!physicsWorld) {
-        return false;
-    }
-
-    RTBEngine::Math::Vector3 castStart = GetAttackCastOrigin();
-    RTBEngine::Math::Vector3 castDirection = owner->GetWorldRotation() * RTBEngine::Math::Vector3::Forward();
-    castDirection.y = 0.0f;
-    if (!EnemyMeleeAIDetail::HasPlanarDirection(castDirection)) {
-        castDirection = targetTracker->GetPlanarDirectionTo(owner);
-    }
-    if (!EnemyMeleeAIDetail::HasPlanarDirection(castDirection)) {
-        castDirection = RTBEngine::Math::Vector3::Forward();
-    } else {
-        castDirection.Normalize();
-    }
-
-    RTBEngine::Physics::PhysicsQueryHit hit;
-    RTBEngine::Physics::PhysicsQueryOptions queryOptions;
-    queryOptions.ignoredObject = owner;
-    queryOptions.ignoreIgnoredObjectHierarchy = true;
-    queryOptions.ignoreTriggers = true;
-
-    if (!physicsWorld->SphereCastClosest(
-            castStart,
-            castStart + castDirection * attackSphereDistance,
-            attackSphereRadius,
-            hit,
-            queryOptions)) {
-        return false;
-    }
-
-    if (!targetTracker->IsWithinTargetHierarchy(owner, hit.gameObject)) {
-        return false;
-    }
-
-    if (outHitPoint) {
-        *outHitPoint = hit.point;
-    }
-    if (outHitDirection) {
-        *outHitDirection = castDirection;
-    }
-    return true;
-}
-
-RTBEngine::Math::Vector3 EnemyMeleeAI::GetAttackCastOrigin() const
-{
-    if (!owner) {
-        return RTBEngine::Math::Vector3::Zero();
-    }
-
-    return owner->GetWorldPosition() + (owner->GetWorldRotation() * attackOriginOffset);
+    return owner && targetTracker && locomotion && meleeAttack;
 }
 
 RTBEngine::Physics::PhysicsWorld* EnemyMeleeAI::ResolvePhysicsWorld() const
@@ -493,13 +417,15 @@ void EnemyMeleeAI::HandleDeath(const HealthComponent::DeathEvent& /*eventData*/)
     }
 
     state = State::Dying;
-    cooldownRemaining = 0.0f;
-    attackElapsed = 0.0f;
-    attackHitExecuted = false;
     hitReactRemaining = 0.0f;
     deathHoldRemaining = deathHoldDuration;
     shrinkElapsed = 0.0f;
     deathPoseLocked = false;
+
+    if (meleeAttack) {
+        meleeAttack->CancelAbility();
+        meleeAttack->ClearTargetContext();
+    }
 
     if (locomotion) {
         locomotion->StopPlanarMotion();
@@ -508,4 +434,24 @@ void EnemyMeleeAI::HandleDeath(const HealthComponent::DeathEvent& /*eventData*/)
     if (!animationDriver || !animationDriver->PlayDeath()) {
         deathPoseLocked = true;
     }
+}
+
+void EnemyMeleeAI::HandleCharacterDeath(const HealthComponent::DeathEvent& eventData)
+{
+    HandleDeath(eventData);
+}
+
+HealthComponent*& EnemyMeleeAI::AccessHealthSlot()
+{
+    return health;
+}
+
+HealthComponent* EnemyMeleeAI::PeekHealthSlot() const
+{
+    return health;
+}
+
+int EnemyMeleeAI::GetCharacterTeam() const
+{
+    return team;
 }

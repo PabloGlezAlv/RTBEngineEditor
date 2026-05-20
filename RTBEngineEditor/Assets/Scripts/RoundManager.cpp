@@ -7,6 +7,7 @@
 #include "EnemyTargetTracker.h"
 #include "GameSession.h"
 #include "HealthComponent.h"
+#include "MeleeSphereAttackAbility.h"
 #include "RoundUIHandler.h"
 
 #include <RTBEngine/Animation/Animator.h>
@@ -269,6 +270,7 @@ void RoundManager::RebindSpawnedEnemy(RTBEngine::ECS::GameObject* spawnedEnemy)
     auto* animationDriver = spawnedEnemy->GetComponent<EnemyAnimationDriver>();
     auto* locomotion = spawnedEnemy->GetComponent<EnemyLocomotionController>();
     auto* meleeAI = spawnedEnemy->GetComponent<EnemyMeleeAI>();
+    auto* meleeAttack = spawnedEnemy->GetComponent<MeleeSphereAttackAbility>();
     auto* health = spawnedEnemy->GetComponent<HealthComponent>();
     auto* animator = spawnedEnemy->GetComponentInChildren<RTBEngine::Animation::Animator>();
 
@@ -285,6 +287,7 @@ void RoundManager::RebindSpawnedEnemy(RTBEngine::ECS::GameObject* spawnedEnemy)
         meleeAI->targetTracker = targetTracker;
         meleeAI->animationDriver = animationDriver;
         meleeAI->locomotion = locomotion;
+        meleeAI->meleeAttack = meleeAttack;
     }
 }
 

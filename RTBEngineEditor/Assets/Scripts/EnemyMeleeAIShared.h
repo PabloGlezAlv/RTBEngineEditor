@@ -9,8 +9,6 @@ namespace EnemyMeleeAIDetail {
     constexpr float kRadToDeg = 180.0f / kPi;
     constexpr float kDegToRad = kPi / 180.0f;
     constexpr float kDirectionEpsilon = 0.0001f;
-    constexpr float kAttackCompletionEpsilon = 0.0001f;
-    constexpr float kFallbackAttackDuration = 0.45f;
     constexpr const char* kWalkAlias = "EnemyMelee.Walk";
     constexpr const char* kAttackAlias = "EnemyMelee.Attack";
     constexpr const char* kDeathAlias = "EnemyMelee.Death";

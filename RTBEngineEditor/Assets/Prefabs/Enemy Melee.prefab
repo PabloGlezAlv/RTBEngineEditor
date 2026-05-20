@@ -22,19 +22,26 @@ return {
         {
             type = "EnemyMeleeAI",
             health = "753770D2-B00E-4859-B7D3-5ABF1249B014/HealthComponent",
+            team = 2,
             targetTracker = "753770D2-B00E-4859-B7D3-5ABF1249B014/EnemyTargetTracker",
             animationDriver = "753770D2-B00E-4859-B7D3-5ABF1249B014/EnemyAnimationDriver",
             locomotion = "753770D2-B00E-4859-B7D3-5ABF1249B014/EnemyLocomotionController",
-            attackOriginObject = "F179904E-6B6D-4BD4-9CBA-E6C591A632B6",
+            meleeAttack = "753770D2-B00E-4859-B7D3-5ABF1249B014/MeleeSphereAttackAbility",
             attackRange = 1.35,
-            attackCooldown = 0.85,
-            attackDamage = 12.00,
-            attackHitDelay = 0.45,
-            attackSphereRadius = 0.45,
-            attackSphereDistance = 0.95,
             hitReactDuration = 0.40,
             deathHoldDuration = 0.75,
             shrinkDuration = 0.85
+        },
+        {
+            type = "MeleeSphereAttackAbility",
+            attackOriginOffset = Vector3(0.00, 1.05, 0.18),
+            cooldown = 0.85,
+            damage = 12.00,
+            hitDelay = 0.45,
+            recoveryDuration = 0.45,
+            sphereRadius = 0.45,
+            sphereDistance = 0.95,
+            ignoreSameTeam = true
         },
         {
             type = "HealthComponent",

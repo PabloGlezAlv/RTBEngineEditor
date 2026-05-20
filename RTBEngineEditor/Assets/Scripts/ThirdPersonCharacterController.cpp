@@ -2,16 +2,14 @@
 
 #include "HealthComponent.h"
 #include "PauseMenuController.h"
-#include "ProjectileComponent.h"
+#include "ProjectileAttackAbility.h"
 
 #include <RTBEngine/Animation/Animator.h>
 #include <RTBEngine/Core/Logger.h>
-#include <RTBEngine/Core/ResourceManager.h>
 #include <RTBEngine/ECS/CameraComponent.h>
 #include <RTBEngine/ECS/CapsuleColliderComponent.h>
 #include <RTBEngine/ECS/FreeLookCamera.h>
 #include <RTBEngine/ECS/GameObject.h>
-#include <RTBEngine/ECS/MeshRenderer.h>
 #include <RTBEngine/ECS/RigidBodyComponent.h>
 #include <RTBEngine/ECS/Scene.h>
 #include <RTBEngine/ECS/SceneManager.h>
@@ -20,8 +18,6 @@
 #include <RTBEngine/Input/InputManager.h>
 #include <RTBEngine/Input/KeyCode.h>
 #include <RTBEngine/Math/Quaternions/Quaternion.h>
-#include <RTBEngine/Online/IOnlineLobby.h>
-#include <RTBEngine/Online/OnlineSystem.h>
 #include <RTBEngine/Physics/PhysicsUtils.h>
 #include <RTBEngine/Physics/PhysicsWorld.h>
 #include <RTBEngine/UI/Elements/UIJoystick.h>
@@ -36,8 +32,6 @@ namespace {
     constexpr float kRadToDeg = 180.0f / kPi;
     constexpr float kDegToRad = kPi / 180.0f;
     constexpr float kDirectionEpsilon = 0.0001f;
-    constexpr float kAttackCompletionEpsilon = 0.0001f;
-    constexpr float kFallbackAttackDuration = 0.5f;
     constexpr float kFixedCameraYawDegrees = 0.0f;
     constexpr float kFixedCameraPitchDegrees = 50.0f;
     constexpr const char* kIdleAlias = "ThirdPerson.Idle";
@@ -96,34 +90,19 @@ namespace {
         }
     }
 
-    bool HasLocalGameplayAuthority()
-    {
-        RTBEngine::Online::OnlineSystem& online = RTBEngine::Online::OnlineSystem::GetInstance();
-        RTBEngine::Online::IOnlineLobby* lobby = online.GetLobby();
-        if (!online.IsInitialized() || !lobby || lobby->GetCurrentLobby().lobbyId.empty()) {
-            return true;
-        }
-
-        return lobby->GetCurrentLobby().isOwner;
-    }
 }
 
 RTB_REGISTER_COMPONENT(ThirdPersonCharacterController)
     RTB_PROPERTY_GAMEOBJECT(cameraObject)
     RTB_PROPERTY_COMPONENT(health, HealthComponent)
-    RTB_PROPERTY(attackOriginOffset)
+    RTB_PROPERTY_RANGE(team, 0, 8)
     RTB_PROPERTY_RANGE(moveSpeed, 0.0f, 20.0f)
     RTB_PROPERTY_RANGE(sprintMultiplier, 1.0f, 4.0f)
     RTB_PROPERTY_RANGE(turnSpeed, 0.0f, 1440.0f)
     RTB_PROPERTY_RANGE(cameraDistance, 0.5f, 20.0f)
     RTB_PROPERTY(cameraFocusOffset)
     RTB_PROPERTY_COMPONENT(animator, Animator)
-    RTB_PROPERTY_RANGE(attackCooldown, 0.0f, 5.0f)
-    RTB_PROPERTY_RANGE(attackDamage, 0.0f, 100.0f)
-    RTB_PROPERTY_RANGE(attackHitDelay, 0.0f, 5.0f)
-    RTB_PROPERTY_RANGE(projectileSpeed, 0.01f, 50.0f)
-    RTB_PROPERTY_RANGE(projectileLifetime, 0.01f, 10.0f)
-    RTB_PROPERTY_RANGE(projectileRadius, 0.05f, 5.0f)
+    RTB_PROPERTY_COMPONENT(projectileAttack, ProjectileAttackAbility)
     RTB_PROPERTY_COMPONENT(attackJoystick, UIJoystick)
     RTB_PROPERTY_COMPONENT(attackAimTrail, TrailRenderer)
     RTB_PROPERTY_FBX(idleAnimationFbx)
@@ -138,6 +117,7 @@ void ThirdPersonCharacterController::OnStart()
     ClampSettings();
     ResolveHealth();
     ResolveAnimator();
+    ResolveProjectileAttack();
     ResolveAttackAimTrail();
     RegisterAnimationSlots();
     ResolveCameraObject();
@@ -156,6 +136,8 @@ void ThirdPersonCharacterController::OnStart()
 
 void ThirdPersonCharacterController::OnUpdate(float deltaTime)
 {
+    (void)deltaTime;
+
     if (!owner) {
         return;
     }
@@ -168,13 +150,12 @@ void ThirdPersonCharacterController::OnUpdate(float deltaTime)
     ClampSettings();
     ResolveHealth();
     ResolveAnimator();
+    ResolveProjectileAttack();
     ResolveAttackAimTrail();
     RegisterAnimationSlots();
     ResolveCameraObject();
     DisableCompetingCameraController();
     RebindHealthSubscription();
-
-    cooldownRemaining = std::max(0.0f, cooldownRemaining - deltaTime);
 
     if (state == State::Dead) {
         HideAttackAimTrail();
@@ -183,7 +164,6 @@ void ThirdPersonCharacterController::OnUpdate(float deltaTime)
 
     if (state == State::Attacking) {
         HideAttackAimTrail();
-        UpdateAttack(deltaTime);
         return;
     }
 }
@@ -204,6 +184,7 @@ void ThirdPersonCharacterController::OnFixedUpdate(float fixedDeltaTime)
     ClampSettings();
     ResolveHealth();
     ResolveCameraObject();
+    ResolveProjectileAttack();
     ConfigurePhysicsBody();
 
     if (state == State::Dead) {
@@ -256,14 +237,14 @@ void ThirdPersonCharacterController::OnLateUpdate(float /*deltaTime*/)
         animator && attackSlotState.ready && animator->GetClip(kAttackAlias);
 
     if (!hasAttackAnimation) {
-        if (attackHitExecuted &&
-            attackElapsed + kAttackCompletionEpsilon >= attackHitDelay + kFallbackAttackDuration) {
+        if (!projectileAttack || !projectileAttack->IsAbilityActive()) {
             FinishAttack();
         }
         return;
     }
 
-    if (animator->GetCurrentClipName() == kAttackAlias && animator->IsPlaying()) {
+    if ((animator->GetCurrentClipName() == kAttackAlias && animator->IsPlaying()) ||
+        (projectileAttack && projectileAttack->IsAbilityActive())) {
         return;
     }
 
@@ -275,6 +256,7 @@ void ThirdPersonCharacterController::OnValidate()
     ClampSettings();
     ResolveHealth();
     ResolveAnimator();
+    ResolveProjectileAttack();
     ResolveAttackAimTrail();
     if (animator) {
         RegisterAnimationSlots();
@@ -298,17 +280,11 @@ void ThirdPersonCharacterController::OnDestroy()
 
 void ThirdPersonCharacterController::ClampSettings()
 {
+    team = std::max(0, team);
     moveSpeed = std::max(0.0f, moveSpeed);
     sprintMultiplier = std::max(1.0f, sprintMultiplier);
     turnSpeed = std::max(0.0f, turnSpeed);
     cameraDistance = std::max(0.1f, cameraDistance);
-
-    attackCooldown = std::max(0.0f, attackCooldown);
-    attackDamage = std::max(0.0f, attackDamage);
-    attackHitDelay = std::max(0.0f, attackHitDelay);
-    projectileSpeed = std::max(0.01f, projectileSpeed);
-    projectileLifetime = std::max(0.01f, projectileLifetime);
-    projectileRadius = std::max(0.05f, projectileRadius);
 }
 
 void ThirdPersonCharacterController::ConfigurePhysicsBody() const
@@ -355,11 +331,7 @@ void ThirdPersonCharacterController::ResolveCameraObject()
 
 void ThirdPersonCharacterController::ResolveHealth()
 {
-    if (health || !owner) {
-        return;
-    }
-
-    health = owner->GetComponent<HealthComponent>();
+    ResolveCharacterHealth();
 }
 
 void ThirdPersonCharacterController::ResolveAnimator()
@@ -369,6 +341,15 @@ void ThirdPersonCharacterController::ResolveAnimator()
     }
 
     animator = owner->GetComponentInChildren<RTBEngine::Animation::Animator>();
+}
+
+void ThirdPersonCharacterController::ResolveProjectileAttack()
+{
+    if (projectileAttack || !owner) {
+        return;
+    }
+
+    projectileAttack = owner->GetComponent<ProjectileAttackAbility>();
 }
 
 void ThirdPersonCharacterController::ResolveAttackAimTrail()
@@ -483,27 +464,12 @@ void ThirdPersonCharacterController::RegisterAnimationSlot(const char* slotLabel
 
 void ThirdPersonCharacterController::RebindHealthSubscription()
 {
-    if (subscribedHealth == health && deathSubscription.IsValid()) {
-        return;
-    }
-
-    UnsubscribeFromHealth();
-
-    if (!health) {
-        return;
-    }
-
-    subscribedHealth = health;
-    deathSubscription = health->SubscribeToDeath(
-        [this](const HealthComponent::DeathEvent& eventData) {
-            HandleDeath(eventData);
-        });
+    RebindCharacterDeathSubscription();
 }
 
 void ThirdPersonCharacterController::UnsubscribeFromHealth()
 {
-    deathSubscription.Reset();
-    subscribedHealth = nullptr;
+    UnsubscribeCharacterDeath();
 }
 
 void ThirdPersonCharacterController::RebindAttackJoystickSubscription()
@@ -539,8 +505,9 @@ void ThirdPersonCharacterController::HandleJoystickAttackReleased(const RTBEngin
         return;
     }
 
-    if (attackDamage <= 0.0f ||
-        cooldownRemaining > 0.0f ||
+    if (!projectileAttack ||
+        projectileAttack->GetDamageAmount() <= 0.0f ||
+        projectileAttack->IsCoolingDown() ||
         PauseMenuController::IsAnyMenuOpen()) {
         return;
     }
@@ -558,8 +525,9 @@ void ThirdPersonCharacterController::UpdateAttackAimTrail()
 
     if (!attackJoystick ||
         !attackJoystick->IsDragging() ||
-        attackDamage <= 0.0f ||
-        cooldownRemaining > 0.0f ||
+        !projectileAttack ||
+        projectileAttack->GetDamageAmount() <= 0.0f ||
+        projectileAttack->IsCoolingDown() ||
         state != State::Locomotion ||
         PauseMenuController::IsAnyMenuOpen()) {
         HideAttackAimTrail();
@@ -580,7 +548,7 @@ void ThirdPersonCharacterController::UpdateAttackAimTrail()
         end
     };
 
-    attackAimTrail->width = projectileRadius * 2.0f;
+    attackAimTrail->width = GetConfiguredProjectileRadius() * 2.0f;
     attackAimTrail->SetPoints(points, 2);
     attackAimTrail->SetVisible(true);
 }
@@ -593,18 +561,6 @@ void ThirdPersonCharacterController::HideAttackAimTrail()
 
     attackAimTrail->SetVisible(false);
     attackAimTrail->ClearPoints();
-}
-
-void ThirdPersonCharacterController::UpdateAttack(float deltaTime)
-{
-    attackElapsed = std::max(0.0f, attackElapsed + deltaTime);
-    if (attackHitExecuted || attackElapsed + kAttackCompletionEpsilon < attackHitDelay) {
-        return;
-    }
-
-    attackHitExecuted = true;
-
-    SpawnAttackProjectile();
 }
 
 void ThirdPersonCharacterController::UpdateAttackFacingLock(float deltaTime)
@@ -734,7 +690,7 @@ void ThirdPersonCharacterController::StartAttack(const RTBEngine::Math::Vector3&
 {
     HideAttackAimTrail();
 
-    if (state != State::Locomotion) {
+    if (state != State::Locomotion || !projectileAttack) {
         return;
     }
 
@@ -748,76 +704,15 @@ void ThirdPersonCharacterController::StartAttack(const RTBEngine::Math::Vector3&
     activeAttackDirection = normalizedAttackDirection;
     FaceAttackDirection(activeAttackDirection);
 
-    cooldownRemaining = attackCooldown;
-    attackElapsed = 0.0f;
-    attackHitExecuted = false;
-    SpawnAttackProjectile();
-    activeAttackDirection = RTBEngine::Math::Vector3::Zero();
-
-    state = State::Locomotion;
-}
-
-void ThirdPersonCharacterController::SpawnAttackProjectile()
-{
-    if (!owner || attackDamage <= 0.0f) {
+    if (!projectileAttack->TryActivate(owner, activeAttackDirection)) {
+        activeAttackDirection = RTBEngine::Math::Vector3::Zero();
         return;
     }
 
-    RTBEngine::Math::Vector3 attackDirection = GetActiveAttackDirection();
-    attackDirection.y = 0.0f;
-    if (!HasMovementInput(attackDirection)) {
-        return;
+    state = State::Attacking;
+    if (animator && attackSlotState.ready && animator->GetClip(kAttackAlias)) {
+        animator->Play(kAttackAlias, false);
     }
-    attackDirection.Normalize();
-
-    RTBEngine::ECS::GameObject* projectileObject =
-        RTBEngine::ECS::SceneManager::GetInstance().Instantiate("Player Projectile");
-    if (!projectileObject) {
-        return;
-    }
-
-    projectileObject->SetTransient(true);
-
-    const RTBEngine::Math::Vector3 spawnPosition = GetProjectileLaunchOrigin(attackDirection);
-    const float projectileDiameter = projectileRadius * 2.0f;
-    const float projectileYaw = -std::atan2(attackDirection.x, attackDirection.z) * kRadToDeg;
-    const RTBEngine::Math::Quaternion projectileRotation =
-        RTBEngine::Math::Quaternion::FromEulerAngles(0.0f, projectileYaw * kDegToRad, 0.0f);
-
-    projectileObject->GetTransform().SetPosition(spawnPosition);
-    projectileObject->GetTransform().SetRotation(projectileRotation);
-    projectileObject->GetTransform().SetScale(
-        RTBEngine::Math::Vector3(projectileDiameter, projectileDiameter, projectileDiameter));
-
-    RTBEngine::ECS::MeshRenderer* renderer = new RTBEngine::ECS::MeshRenderer();
-    projectileObject->AddComponent(renderer);
-
-    RTBEngine::Core::ResourceManager& resources = RTBEngine::Core::ResourceManager::GetInstance();
-    renderer->SetMesh(resources.GetDefaultSphere());
-    renderer->SetShader(resources.GetShader("basic"));
-
-    RTBEngine::ECS::SphereColliderComponent* sphereCollider =
-        new RTBEngine::ECS::SphereColliderComponent();
-    sphereCollider->SetRadius(projectileRadius);
-    sphereCollider->SetCenterOffset(RTBEngine::Math::Vector3::Zero());
-    sphereCollider->SetIsTrigger(true);
-    projectileObject->AddComponent(sphereCollider);
-
-    ProjectileComponent* projectile = new ProjectileComponent();
-    projectileObject->AddComponent(projectile);
-
-    ProjectileComponent::ProjectileConfig config;
-    config.instigator = owner;
-    config.physicsWorld = ResolvePhysicsWorld();
-    config.origin = spawnPosition;
-    config.direction = attackDirection;
-    config.speed = projectileSpeed;
-    config.maxDistance = GetProjectileTravelDistance();
-    config.radius = projectileRadius;
-    config.damage = attackDamage;
-    config.destroyOnHit = true;
-    config.maxHits = 1;
-    projectile->Initialize(config);
 }
 
 void ThirdPersonCharacterController::FinishAttack()
@@ -826,8 +721,6 @@ void ThirdPersonCharacterController::FinishAttack()
         return;
     }
 
-    attackElapsed = 0.0f;
-    attackHitExecuted = false;
     activeAttackDirection = RTBEngine::Math::Vector3::Zero();
     state = State::Locomotion;
     HideAttackAimTrail();
@@ -840,16 +733,36 @@ void ThirdPersonCharacterController::HandleDeath(const HealthComponent::DeathEve
     }
 
     state = State::Dead;
-    cooldownRemaining = 0.0f;
-    attackElapsed = 0.0f;
-    attackHitExecuted = false;
     activeAttackDirection = RTBEngine::Math::Vector3::Zero();
+    if (projectileAttack) {
+        projectileAttack->CancelAbility();
+    }
     HideAttackAimTrail();
     StopPlanarMotion();
 
     if (animator && deathSlotState.ready && animator->GetClip(kDeathAlias)) {
         animator->Play(kDeathAlias, false);
     }
+}
+
+void ThirdPersonCharacterController::HandleCharacterDeath(const HealthComponent::DeathEvent& eventData)
+{
+    HandleDeath(eventData);
+}
+
+HealthComponent*& ThirdPersonCharacterController::AccessHealthSlot()
+{
+    return health;
+}
+
+HealthComponent* ThirdPersonCharacterController::PeekHealthSlot() const
+{
+    return health;
+}
+
+int ThirdPersonCharacterController::GetCharacterTeam() const
+{
+    return team;
 }
 
 void ThirdPersonCharacterController::FaceAttackDirection(const RTBEngine::Math::Vector3& attackDirection)
@@ -934,76 +847,28 @@ RTBEngine::Math::Vector3 ThirdPersonCharacterController::GetDesiredMoveDirection
     return desiredMove;
 }
 
-RTBEngine::Physics::PhysicsWorld* ThirdPersonCharacterController::ResolvePhysicsWorld() const
-{
-    if (!owner) {
-        return nullptr;
-    }
-
-    if (auto* rbComp = owner->GetComponent<RTBEngine::ECS::RigidBodyComponent>()) {
-        if (rbComp->HasRigidBody() && rbComp->GetRigidBody()) {
-            return rbComp->GetRigidBody()->GetPhysicsWorld();
-        }
-    }
-
-    return nullptr;
-}
-
-RTBEngine::Math::Vector3 ThirdPersonCharacterController::GetAttackCastOrigin() const
-{
-    if (!owner) {
-        return RTBEngine::Math::Vector3::Zero();
-    }
-
-    return owner->GetWorldPosition() + (owner->GetWorldRotation() * attackOriginOffset);
-}
-
 RTBEngine::Math::Vector3 ThirdPersonCharacterController::GetProjectileLaunchOrigin(
     const RTBEngine::Math::Vector3& attackDirection) const
 {
-    if (!owner) {
-        return RTBEngine::Math::Vector3::Zero();
+    if (projectileAttack) {
+        return projectileAttack->GetLaunchOrigin(owner, attackDirection);
     }
 
-    RTBEngine::Math::Vector3 planarDirection = attackDirection;
-    planarDirection.y = 0.0f;
-    if (!HasMovementInput(planarDirection)) {
-        planarDirection = GetActiveAttackDirection();
-    }
-    planarDirection.y = 0.0f;
-    if (!HasMovementInput(planarDirection)) {
-        planarDirection = RTBEngine::Math::Vector3::Forward();
-    } else {
-        planarDirection.Normalize();
-    }
-
-    RTBEngine::Math::Vector3 origin = GetAttackCastOrigin();
-    const float minimumCenterHeight = owner->GetWorldPosition().y + projectileRadius;
-    origin.y = std::max(origin.y, minimumCenterHeight);
-    return origin + planarDirection * GetProjectileLaunchClearance();
+    return RTBEngine::Math::Vector3::Zero();
 }
 
 float ThirdPersonCharacterController::GetProjectileTravelDistance() const
 {
-    return std::max(0.05f, projectileSpeed * projectileLifetime);
+    if (projectileAttack) {
+        return projectileAttack->GetTravelDistance();
+    }
+
+    return 0.0f;
 }
 
-float ThirdPersonCharacterController::GetProjectileLaunchClearance() const
+float ThirdPersonCharacterController::GetConfiguredProjectileRadius() const
 {
-    if (!owner) {
-        return projectileRadius;
-    }
-
-    float ownerRadius = 0.0f;
-    if (auto* capsule = owner->GetComponent<RTBEngine::ECS::CapsuleColliderComponent>()) {
-        ownerRadius = std::max(ownerRadius, capsule->GetRadius());
-    }
-    if (auto* sphere = owner->GetComponent<RTBEngine::ECS::SphereColliderComponent>()) {
-        ownerRadius = std::max(ownerRadius, sphere->GetRadius());
-    }
-
-    constexpr float kProjectileSpawnPadding = 0.05f;
-    return ownerRadius + projectileRadius + kProjectileSpawnPadding;
+    return projectileAttack ? projectileAttack->GetProjectileRadius() : 0.0f;
 }
 
 RTBEngine::Math::Vector3 ThirdPersonCharacterController::GetAttackDirectionFromJoystick(

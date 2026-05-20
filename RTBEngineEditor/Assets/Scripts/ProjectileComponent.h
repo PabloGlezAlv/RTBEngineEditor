@@ -30,6 +30,8 @@ public:
         float maxDistance = 1.15f;
         float radius = 0.55f;
         float damage = 25.0f;
+        int instigatorTeam = 0;
+        bool ignoreSameTeam = true;
         bool destroyOnHit = true;
         int maxHits = 1;
     };
@@ -48,6 +50,8 @@ public:
     float maxDistance = 1.15f;
     float radius = 0.55f;
     float damage = 25.0f;
+    int instigatorTeam = 0;
+    bool ignoreSameTeam = true;
     bool destroyOnHit = true;
     int maxHits = 1;
 
