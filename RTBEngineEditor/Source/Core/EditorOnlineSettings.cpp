@@ -38,27 +38,17 @@ namespace {
         return value;
     }
 
-    std::string GetEnvironmentVariableValue(const char* name)
+    std::filesystem::path GetLocalAppDataDirectory()
     {
         char* value = nullptr;
         size_t valueSize = 0;
-        if (_dupenv_s(&value, &valueSize, name) != 0 || !value) {
-            return {};
+        if (_dupenv_s(&value, &valueSize, "LOCALAPPDATA") != 0 || !value) {
+            return std::filesystem::current_path();
         }
 
         std::string result(value);
         std::free(value);
-        return result;
-    }
-
-    std::filesystem::path GetLocalAppDataDirectory()
-    {
-        const std::string localAppData = GetEnvironmentVariableValue("LOCALAPPDATA");
-        if (!localAppData.empty()) {
-            return std::filesystem::path(localAppData);
-        }
-
-        return std::filesystem::current_path();
+        return std::filesystem::path(result);
     }
 
     bool ParseBool(const std::string& value, bool defaultValue)
@@ -78,8 +68,8 @@ namespace {
     RTBEngine::Online::OnlineBackendType ParseBackend(const std::string& value)
     {
         const std::string normalized = ToUpper(Trim(value));
-        if (normalized == "EOS") {
-            return RTBEngine::Online::OnlineBackendType::EOS;
+        if (normalized == "LAN") {
+            return RTBEngine::Online::OnlineBackendType::LAN;
         }
 
         return RTBEngine::Online::OnlineBackendType::Null;
@@ -101,7 +91,7 @@ namespace {
 
     const char* SerializeBackend(RTBEngine::Online::OnlineBackendType backend)
     {
-        return backend == RTBEngine::Online::OnlineBackendType::EOS ? "EOS" : "Null";
+        return backend == RTBEngine::Online::OnlineBackendType::LAN ? "LAN" : "Null";
     }
 
     const char* SerializeLoginType(RTBEngine::Online::OnlineLoginType loginType)
@@ -117,24 +107,27 @@ namespace {
         }
     }
 
+    std::uint16_t ParsePort(const std::string& value, std::uint16_t defaultValue)
+    {
+        if (value.empty()) {
+            return defaultValue;
+        }
+
+        try {
+            const int port = std::stoi(value);
+            if (port > 0 && port <= 65535) {
+                return static_cast<std::uint16_t>(port);
+            }
+        }
+        catch (...) {
+        }
+
+        return defaultValue;
+    }
+
 }
 
 namespace RTBEditor {
-
-    bool EditorOnlineSettings::HasCompleteEosConfig() const
-    {
-        return !productId.empty() &&
-            !sandboxId.empty() &&
-            !deploymentId.empty() &&
-            !clientId.empty() &&
-            !clientSecret.empty();
-    }
-
-    bool EditorOnlineSettings::HasCompleteDeveloperAuthConfig() const
-    {
-        return loginType != RTBEngine::Online::OnlineLoginType::DeveloperAuth ||
-            (!developerAuthHost.empty() && !developerAuthCredentialName.empty());
-    }
 
     std::filesystem::path EditorOnlineSettingsStore::GetSettingsPath()
     {
@@ -178,19 +171,10 @@ namespace RTBEditor {
 
         settings.enabled = ParseBool(readValue("Enabled"), settings.enabled);
         settings.backend = ParseBackend(readValue("Backend"));
-        settings.productId = readValue("ProductId");
-        settings.sandboxId = readValue("SandboxId");
-        settings.deploymentId = readValue("DeploymentId");
-        settings.clientId = readValue("ClientId");
-        settings.clientSecret = readValue("ClientSecret");
-        settings.disableOverlay = ParseBool(readValue("DisableOverlay"), settings.disableOverlay);
-        settings.loginType = ParseLoginType(readValue("LoginType"));
+        settings.lanGamePort = ParsePort(readValue("LanGamePort"), settings.lanGamePort);
+        settings.lanDiscoveryPort = ParsePort(readValue("LanDiscoveryPort"), settings.lanDiscoveryPort);
+        settings.defaultHostAddress = readValue("DefaultHostAddress");
         settings.loginDisplayName = readValue("LoginDisplayName");
-        settings.developerAuthHost = readValue("DeveloperAuthHost");
-        if (settings.developerAuthHost.empty()) {
-            settings.developerAuthHost = "localhost:6300";
-        }
-        settings.developerAuthCredentialName = readValue("DeveloperAuthCredentialName");
 
         return settings;
     }
@@ -210,19 +194,12 @@ namespace RTBEditor {
         }
 
         file << "# RTBEngineEditor local online settings\n";
-        file << "# This file is stored outside the repo in LOCALAPPDATA.\n";
         file << "Enabled=" << (settings.enabled ? "true" : "false") << "\n";
         file << "Backend=" << SerializeBackend(settings.backend) << "\n";
-        file << "ProductId=" << settings.productId << "\n";
-        file << "SandboxId=" << settings.sandboxId << "\n";
-        file << "DeploymentId=" << settings.deploymentId << "\n";
-        file << "ClientId=" << settings.clientId << "\n";
-        file << "ClientSecret=" << settings.clientSecret << "\n";
-        file << "DisableOverlay=" << (settings.disableOverlay ? "true" : "false") << "\n";
-        file << "LoginType=" << SerializeLoginType(settings.loginType) << "\n";
+        file << "LanGamePort=" << settings.lanGamePort << "\n";
+        file << "LanDiscoveryPort=" << settings.lanDiscoveryPort << "\n";
+        file << "DefaultHostAddress=" << settings.defaultHostAddress << "\n";
         file << "LoginDisplayName=" << settings.loginDisplayName << "\n";
-        file << "DeveloperAuthHost=" << settings.developerAuthHost << "\n";
-        file << "DeveloperAuthCredentialName=" << settings.developerAuthCredentialName << "\n";
 
         return file.good();
     }
@@ -234,17 +211,11 @@ namespace RTBEditor {
         config.failApplicationOnError = false;
         config.loadingInEditor = true;
         config.backend = settings.backend;
-
-        config.productId = settings.productId;
-        config.sandboxId = settings.sandboxId;
-        config.deploymentId = settings.deploymentId;
-        config.clientId = settings.clientId;
-        config.clientSecret = settings.clientSecret;
-        config.disableOverlay = settings.disableOverlay;
-        config.loginType = settings.loginType;
+        config.lanGamePort = settings.lanGamePort;
+        config.lanDiscoveryPort = settings.lanDiscoveryPort;
+        config.defaultHostAddress = settings.defaultHostAddress;
+        config.loginType = RTBEngine::Online::OnlineLoginType::DeviceId;
         config.loginDisplayName = settings.loginDisplayName;
-        config.developerAuthHost = settings.developerAuthHost;
-        config.developerAuthCredentialName = settings.developerAuthCredentialName;
     }
 
 }

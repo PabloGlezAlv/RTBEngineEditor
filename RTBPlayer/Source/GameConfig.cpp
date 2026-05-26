@@ -13,8 +13,8 @@ namespace {
 
     RTBEngine::Online::OnlineBackendType ParseOnlineBackend(const std::string& value)
     {
-        if (value == "EOS" || value == "eos") {
-            return RTBEngine::Online::OnlineBackendType::EOS;
+        if (value == "LAN" || value == "lan") {
+            return RTBEngine::Online::OnlineBackendType::LAN;
         }
 
         return RTBEngine::Online::OnlineBackendType::Null;
@@ -22,16 +22,6 @@ namespace {
 
     RTBEngine::Online::OnlineLoginType ParseLoginType(const std::string& value)
     {
-        if (value == "DeveloperAuth" || value == "developerAuth" ||
-            value == "DevAuth" || value == "devauth") {
-            return RTBEngine::Online::OnlineLoginType::DeveloperAuth;
-        }
-
-        if (value == "AccountPortal" || value == "accountPortal" ||
-            value == "Account_Portal" || value == "account_portal") {
-            return RTBEngine::Online::OnlineLoginType::AccountPortal;
-        }
-
         return RTBEngine::Online::OnlineLoginType::DeviceId;
     }
 
@@ -42,6 +32,20 @@ namespace {
         }
 
         return static_cast<std::uint32_t>(std::stoul(value));
+    }
+
+    std::uint16_t ParsePort(const std::string& value, std::uint16_t defaultValue)
+    {
+        if (value.empty()) {
+            return defaultValue;
+        }
+
+        const std::uint32_t parsed = ParseUInt32(value);
+        if (parsed > 0 && parsed <= 65535) {
+            return static_cast<std::uint16_t>(parsed);
+        }
+
+        return defaultValue;
     }
 
 }
@@ -62,22 +66,18 @@ namespace RTBPlayer {
         std::string currentSection;
 
         while (std::getline(file, line)) {
-            // Skip empty lines and comments
             if (line.empty() || line[0] == '#') continue;
 
-            // Check for section header
             if (line[0] == '[' && line.back() == ']') {
                 currentSection = line.substr(1, line.size() - 2);
                 continue;
             }
 
-            // Parse key=value
             size_t eqPos = line.find('=');
             if (eqPos != std::string::npos) {
                 std::string key = line.substr(0, eqPos);
                 std::string value = line.substr(eqPos + 1);
 
-                // Trim whitespace
                 while (!key.empty() && (key.back() == ' ' || key.back() == '\t')) key.pop_back();
                 while (!value.empty() && (value.front() == ' ' || value.front() == '\t')) value.erase(0, 1);
 
@@ -96,19 +96,13 @@ namespace RTBPlayer {
                     else if (key == "Backend") onlineConfig.backend = ParseOnlineBackend(value);
                     else if (key == "ProductName") onlineConfig.productName = value;
                     else if (key == "ProductVersion") onlineConfig.productVersion = value;
-                    else if (key == "ProductId") onlineConfig.productId = value;
-                    else if (key == "SandboxId") onlineConfig.sandboxId = value;
-                    else if (key == "DeploymentId") onlineConfig.deploymentId = value;
-                    else if (key == "ClientId") onlineConfig.clientId = value;
-                    else if (key == "ClientSecret") onlineConfig.clientSecret = value;
                     else if (key == "IsServer") onlineConfig.isServer = ParseBool(value);
-                    else if (key == "DisableOverlay") onlineConfig.disableOverlay = ParseBool(value);
                     else if (key == "CacheDirectory") onlineConfig.cacheDirectory = value;
                     else if (key == "TickBudgetMilliseconds") onlineConfig.tickBudgetMilliseconds = ParseUInt32(value);
+                    else if (key == "LanGamePort") onlineConfig.lanGamePort = ParsePort(value, onlineConfig.lanGamePort);
+                    else if (key == "LanDiscoveryPort") onlineConfig.lanDiscoveryPort = ParsePort(value, onlineConfig.lanDiscoveryPort);
                     else if (key == "LoginType") onlineConfig.loginType = ParseLoginType(value);
                     else if (key == "LoginDisplayName") onlineConfig.loginDisplayName = value;
-                    else if (key == "DeveloperAuthHost") onlineConfig.developerAuthHost = value;
-                    else if (key == "DeveloperAuthCredentialName") onlineConfig.developerAuthCredentialName = value;
                 }
                 else if (currentSection == "Game") {
                     if (key == "Name") windowTitle = value;
@@ -141,10 +135,9 @@ namespace RTBPlayer {
             else if (key == "window-title") windowTitle = value;
             else if (key == "online-enabled") onlineConfig.enabled = ParseBool(value);
             else if (key == "online-backend") onlineConfig.backend = ParseOnlineBackend(value);
-            else if (key == "login") onlineConfig.loginType = ParseLoginType(value);
             else if (key == "display-name") onlineConfig.loginDisplayName = value;
-            else if (key == "devauth-host") onlineConfig.developerAuthHost = value;
-            else if (key == "devauth-credential") onlineConfig.developerAuthCredentialName = value;
+            else if (key == "lan-game-port") onlineConfig.lanGamePort = ParsePort(value, onlineConfig.lanGamePort);
+            else if (key == "lan-discovery-port") onlineConfig.lanDiscoveryPort = ParsePort(value, onlineConfig.lanDiscoveryPort);
             else if (key == "cache-directory") onlineConfig.cacheDirectory = value;
         }
     }

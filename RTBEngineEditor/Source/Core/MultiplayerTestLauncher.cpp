@@ -5,8 +5,6 @@
 #include "../Project/Project.h"
 
 #include <RTBEngine/Core/Logger.h>
-#include <RTBEngine/Online/OnlineConfig.h>
-
 #include <Windows.h>
 
 #include <algorithm>
@@ -44,7 +42,7 @@ namespace {
 
     std::string SerializeBackend(RTBEngine::Online::OnlineBackendType backend)
     {
-        return backend == RTBEngine::Online::OnlineBackendType::EOS ? "EOS" : "Null";
+        return backend == RTBEngine::Online::OnlineBackendType::LAN ? "LAN" : "Null";
     }
 
     std::string SerializeLoginType(RTBEngine::Online::OnlineLoginType loginType)
@@ -59,6 +57,9 @@ namespace {
             return "DeviceId";
         }
     }
+
+    constexpr const char* kDefaultOnlineProductName = "RTBEngine";
+    constexpr const char* kDefaultOnlineProductVersion = "0.1.0";
 
     bool ContainsPlayerIndexToken(const std::string& value)
     {
@@ -465,7 +466,7 @@ namespace RTBEditor {
                 return false;
             }
 
-            fs::create_directories(playerDirectory / "EOSCache");
+            fs::create_directories(playerDirectory / "OnlineCache");
 
             if (!WritePlayerConfig(playerDirectory, playerIndex, settings)) {
                 return false;
@@ -543,16 +544,11 @@ namespace RTBEditor {
         const EditorOnlineSettings editorOnlineSettings = settings.overrideOnlineSettings
             ? settings.onlineSettings
             : EditorOnlineSettingsStore::Load();
-        RTBEngine::Online::OnlineConfig onlineConfig;
-        EditorOnlineSettingsStore::ApplyToOnlineConfig(editorOnlineSettings, onlineConfig);
-        onlineConfig.loadingInEditor = false;
-        onlineConfig.cacheDirectory = (playerDirectory / "EOSCache").string();
-        onlineConfig.loginDisplayName =
-            ResolveIndexedPlayerValue(onlineConfig.loginDisplayName, playerIndex, "Player");
-        if (onlineConfig.loginType == RTBEngine::Online::OnlineLoginType::DeveloperAuth) {
-            onlineConfig.developerAuthCredentialName =
-                ResolveIndexedPlayerValue(onlineConfig.developerAuthCredentialName, playerIndex, "Player");
-        }
+        const std::string cacheDirectory = (playerDirectory / "OnlineCache").string();
+        const std::string loginDisplayName =
+            ResolveIndexedPlayerValue(editorOnlineSettings.loginDisplayName, playerIndex, "Player");
+        const std::uint16_t lanGamePort = static_cast<std::uint16_t>(27015 + playerIndex * 2);
+        const std::uint16_t lanDiscoveryPort = editorOnlineSettings.lanDiscoveryPort;
         std::ofstream cfgFile(playerDirectory / "game.cfg", std::ios::trunc);
         if (!cfgFile.is_open()) {
             SetResult(false, "Could not write game.cfg for Player" + std::to_string(playerIndex) + ".");
@@ -574,24 +570,18 @@ namespace RTBEditor {
         cfgFile << "StartScene=" << NormalizeReferencePath(settings.startScene) << "\n";
 
         cfgFile << "\n[Online]\n";
-        cfgFile << "Enabled=" << (onlineConfig.enabled ? "true" : "false") << "\n";
-        cfgFile << "FailApplicationOnError=" << (onlineConfig.failApplicationOnError ? "true" : "false") << "\n";
-        cfgFile << "Backend=" << SerializeBackend(onlineConfig.backend) << "\n";
-        cfgFile << "ProductName=" << onlineConfig.productName << "\n";
-        cfgFile << "ProductVersion=" << onlineConfig.productVersion << "\n";
-        cfgFile << "ProductId=" << onlineConfig.productId << "\n";
-        cfgFile << "SandboxId=" << onlineConfig.sandboxId << "\n";
-        cfgFile << "DeploymentId=" << onlineConfig.deploymentId << "\n";
-        cfgFile << "ClientId=" << onlineConfig.clientId << "\n";
-        cfgFile << "ClientSecret=" << onlineConfig.clientSecret << "\n";
-        cfgFile << "IsServer=" << (onlineConfig.isServer ? "true" : "false") << "\n";
-        cfgFile << "DisableOverlay=" << (onlineConfig.disableOverlay ? "true" : "false") << "\n";
-        cfgFile << "CacheDirectory=" << onlineConfig.cacheDirectory << "\n";
-        cfgFile << "TickBudgetMilliseconds=" << onlineConfig.tickBudgetMilliseconds << "\n";
-        cfgFile << "LoginType=" << SerializeLoginType(onlineConfig.loginType) << "\n";
-        cfgFile << "LoginDisplayName=" << onlineConfig.loginDisplayName << "\n";
-        cfgFile << "DeveloperAuthHost=" << onlineConfig.developerAuthHost << "\n";
-        cfgFile << "DeveloperAuthCredentialName=" << onlineConfig.developerAuthCredentialName << "\n";
+        cfgFile << "Enabled=" << (editorOnlineSettings.enabled ? "true" : "false") << "\n";
+        cfgFile << "FailApplicationOnError=false\n";
+        cfgFile << "Backend=" << SerializeBackend(editorOnlineSettings.backend) << "\n";
+        cfgFile << "ProductName=" << kDefaultOnlineProductName << "\n";
+        cfgFile << "ProductVersion=" << kDefaultOnlineProductVersion << "\n";
+        cfgFile << "IsServer=false\n";
+        cfgFile << "CacheDirectory=" << cacheDirectory << "\n";
+        cfgFile << "TickBudgetMilliseconds=0\n";
+        cfgFile << "LanGamePort=" << lanGamePort << "\n";
+        cfgFile << "LanDiscoveryPort=" << lanDiscoveryPort << "\n";
+        cfgFile << "LoginType=" << SerializeLoginType(RTBEngine::Online::OnlineLoginType::DeviceId) << "\n";
+        cfgFile << "LoginDisplayName=" << loginDisplayName << "\n";
 
         if (!cfgFile.good()) {
             SetResult(false, "Failed while writing game.cfg for Player" + std::to_string(playerIndex) + ".");

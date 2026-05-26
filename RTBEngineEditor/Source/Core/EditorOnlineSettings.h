@@ -11,20 +11,11 @@ namespace RTBEditor {
 #pragma warning(disable: 4251)
     struct EditorOnlineSettings {
         bool enabled = true;
-        RTBEngine::Online::OnlineBackendType backend = RTBEngine::Online::OnlineBackendType::Null;
-        std::string productId;
-        std::string sandboxId;
-        std::string deploymentId;
-        std::string clientId;
-        std::string clientSecret;
-        bool disableOverlay = false;
-        RTBEngine::Online::OnlineLoginType loginType = RTBEngine::Online::OnlineLoginType::DeviceId;
+        RTBEngine::Online::OnlineBackendType backend = RTBEngine::Online::OnlineBackendType::LAN;
+        std::uint16_t lanGamePort = 27015;
+        std::uint16_t lanDiscoveryPort = 27016;
+        std::string defaultHostAddress;
         std::string loginDisplayName;
-        std::string developerAuthHost = "localhost:6300";
-        std::string developerAuthCredentialName;
-
-        bool HasCompleteEosConfig() const;
-        bool HasCompleteDeveloperAuthConfig() const;
     };
 #pragma warning(pop)
 

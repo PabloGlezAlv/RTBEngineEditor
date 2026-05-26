@@ -84,6 +84,9 @@ namespace {
             return "DeviceId";
         }
     }
+
+    constexpr const char* kDefaultOnlineProductName = "RTBEngine";
+    constexpr const char* kDefaultOnlineProductVersion = "0.1.0";
 }
 
 namespace RTBEditor {
@@ -316,28 +319,20 @@ namespace RTBEditor {
             cfgFile << "StartScene=" << NormalizeReferencePath(settings.startScene) << "\n";
 
             const EditorOnlineSettings editorOnlineSettings = EditorOnlineSettingsStore::Load();
-            RTBEngine::Online::OnlineConfig onlineConfig;
-            EditorOnlineSettingsStore::ApplyToOnlineConfig(editorOnlineSettings, onlineConfig);
 
             cfgFile << "\n[Online]\n";
-            cfgFile << "Enabled=" << (onlineConfig.enabled ? "true" : "false") << "\n";
-            cfgFile << "FailApplicationOnError=" << (onlineConfig.failApplicationOnError ? "true" : "false") << "\n";
-            cfgFile << "Backend=" << (onlineConfig.backend == RTBEngine::Online::OnlineBackendType::EOS ? "EOS" : "Null") << "\n";
-            cfgFile << "ProductName=" << onlineConfig.productName << "\n";
-            cfgFile << "ProductVersion=" << onlineConfig.productVersion << "\n";
-            cfgFile << "ProductId=" << onlineConfig.productId << "\n";
-            cfgFile << "SandboxId=" << onlineConfig.sandboxId << "\n";
-            cfgFile << "DeploymentId=" << onlineConfig.deploymentId << "\n";
-            cfgFile << "ClientId=" << onlineConfig.clientId << "\n";
-            cfgFile << "ClientSecret=" << onlineConfig.clientSecret << "\n";
-            cfgFile << "IsServer=" << (onlineConfig.isServer ? "true" : "false") << "\n";
-            cfgFile << "DisableOverlay=" << (onlineConfig.disableOverlay ? "true" : "false") << "\n";
-            cfgFile << "CacheDirectory=" << onlineConfig.cacheDirectory << "\n";
-            cfgFile << "TickBudgetMilliseconds=" << onlineConfig.tickBudgetMilliseconds << "\n";
-            cfgFile << "LoginType=" << SerializeLoginType(onlineConfig.loginType) << "\n";
-            cfgFile << "LoginDisplayName=" << onlineConfig.loginDisplayName << "\n";
-            cfgFile << "DeveloperAuthHost=" << onlineConfig.developerAuthHost << "\n";
-            cfgFile << "DeveloperAuthCredentialName=" << onlineConfig.developerAuthCredentialName << "\n";
+            cfgFile << "Enabled=" << (editorOnlineSettings.enabled ? "true" : "false") << "\n";
+            cfgFile << "FailApplicationOnError=false\n";
+            cfgFile << "Backend=" << (editorOnlineSettings.backend == RTBEngine::Online::OnlineBackendType::LAN ? "LAN" : "Null") << "\n";
+            cfgFile << "ProductName=" << kDefaultOnlineProductName << "\n";
+            cfgFile << "ProductVersion=" << kDefaultOnlineProductVersion << "\n";
+            cfgFile << "IsServer=false\n";
+            cfgFile << "CacheDirectory=\n";
+            cfgFile << "TickBudgetMilliseconds=0\n";
+            cfgFile << "LanGamePort=" << editorOnlineSettings.lanGamePort << "\n";
+            cfgFile << "LanDiscoveryPort=" << editorOnlineSettings.lanDiscoveryPort << "\n";
+            cfgFile << "LoginType=" << SerializeLoginType(RTBEngine::Online::OnlineLoginType::DeviceId) << "\n";
+            cfgFile << "LoginDisplayName=" << editorOnlineSettings.loginDisplayName << "\n";
 
             cfgFile.close();
             return true;

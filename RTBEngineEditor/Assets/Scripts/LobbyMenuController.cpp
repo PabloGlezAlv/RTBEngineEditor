@@ -77,7 +77,7 @@ namespace {
             }
 
             if (IsAllowedLobbyIdCharacter(character)) {
-                sanitized.push_back(character);
+                sanitized.push_back(static_cast<char>(std::toupper(static_cast<unsigned char>(character))));
             }
         }
 
@@ -524,32 +524,32 @@ void LobbyMenuController::CaptureJoinLobbyIdInput()
     }
 
     bool changed = false;
-    changed |= AppendIfPressed(input, KeyCode::A, 'a', joinLobbyId);
-    changed |= AppendIfPressed(input, KeyCode::B, 'b', joinLobbyId);
-    changed |= AppendIfPressed(input, KeyCode::C, 'c', joinLobbyId);
-    changed |= AppendIfPressed(input, KeyCode::D, 'd', joinLobbyId);
-    changed |= AppendIfPressed(input, KeyCode::E, 'e', joinLobbyId);
-    changed |= AppendIfPressed(input, KeyCode::F, 'f', joinLobbyId);
-    changed |= AppendIfPressed(input, KeyCode::G, 'g', joinLobbyId);
-    changed |= AppendIfPressed(input, KeyCode::H, 'h', joinLobbyId);
-    changed |= AppendIfPressed(input, KeyCode::I, 'i', joinLobbyId);
-    changed |= AppendIfPressed(input, KeyCode::J, 'j', joinLobbyId);
-    changed |= AppendIfPressed(input, KeyCode::K, 'k', joinLobbyId);
-    changed |= AppendIfPressed(input, KeyCode::L, 'l', joinLobbyId);
-    changed |= AppendIfPressed(input, KeyCode::M, 'm', joinLobbyId);
-    changed |= AppendIfPressed(input, KeyCode::N, 'n', joinLobbyId);
-    changed |= AppendIfPressed(input, KeyCode::O, 'o', joinLobbyId);
-    changed |= AppendIfPressed(input, KeyCode::P, 'p', joinLobbyId);
-    changed |= AppendIfPressed(input, KeyCode::Q, 'q', joinLobbyId);
-    changed |= AppendIfPressed(input, KeyCode::R, 'r', joinLobbyId);
-    changed |= AppendIfPressed(input, KeyCode::S, 's', joinLobbyId);
-    changed |= AppendIfPressed(input, KeyCode::T, 't', joinLobbyId);
-    changed |= AppendIfPressed(input, KeyCode::U, 'u', joinLobbyId);
-    changed |= AppendIfPressed(input, KeyCode::V, 'v', joinLobbyId);
-    changed |= AppendIfPressed(input, KeyCode::W, 'w', joinLobbyId);
-    changed |= AppendIfPressed(input, KeyCode::X, 'x', joinLobbyId);
-    changed |= AppendIfPressed(input, KeyCode::Y, 'y', joinLobbyId);
-    changed |= AppendIfPressed(input, KeyCode::Z, 'z', joinLobbyId);
+    changed |= AppendIfPressed(input, KeyCode::A, 'A', joinLobbyId);
+    changed |= AppendIfPressed(input, KeyCode::B, 'B', joinLobbyId);
+    changed |= AppendIfPressed(input, KeyCode::C, 'C', joinLobbyId);
+    changed |= AppendIfPressed(input, KeyCode::D, 'D', joinLobbyId);
+    changed |= AppendIfPressed(input, KeyCode::E, 'E', joinLobbyId);
+    changed |= AppendIfPressed(input, KeyCode::F, 'F', joinLobbyId);
+    changed |= AppendIfPressed(input, KeyCode::G, 'G', joinLobbyId);
+    changed |= AppendIfPressed(input, KeyCode::H, 'H', joinLobbyId);
+    changed |= AppendIfPressed(input, KeyCode::I, 'I', joinLobbyId);
+    changed |= AppendIfPressed(input, KeyCode::J, 'J', joinLobbyId);
+    changed |= AppendIfPressed(input, KeyCode::K, 'K', joinLobbyId);
+    changed |= AppendIfPressed(input, KeyCode::L, 'L', joinLobbyId);
+    changed |= AppendIfPressed(input, KeyCode::M, 'M', joinLobbyId);
+    changed |= AppendIfPressed(input, KeyCode::N, 'N', joinLobbyId);
+    changed |= AppendIfPressed(input, KeyCode::O, 'O', joinLobbyId);
+    changed |= AppendIfPressed(input, KeyCode::P, 'P', joinLobbyId);
+    changed |= AppendIfPressed(input, KeyCode::Q, 'Q', joinLobbyId);
+    changed |= AppendIfPressed(input, KeyCode::R, 'R', joinLobbyId);
+    changed |= AppendIfPressed(input, KeyCode::S, 'S', joinLobbyId);
+    changed |= AppendIfPressed(input, KeyCode::T, 'T', joinLobbyId);
+    changed |= AppendIfPressed(input, KeyCode::U, 'U', joinLobbyId);
+    changed |= AppendIfPressed(input, KeyCode::V, 'V', joinLobbyId);
+    changed |= AppendIfPressed(input, KeyCode::W, 'W', joinLobbyId);
+    changed |= AppendIfPressed(input, KeyCode::X, 'X', joinLobbyId);
+    changed |= AppendIfPressed(input, KeyCode::Y, 'Y', joinLobbyId);
+    changed |= AppendIfPressed(input, KeyCode::Z, 'Z', joinLobbyId);
     changed |= AppendIfPressed(input, KeyCode::Num0, '0', joinLobbyId);
     changed |= AppendIfPressed(input, KeyCode::Num1, '1', joinLobbyId);
     changed |= AppendIfPressed(input, KeyCode::Num2, '2', joinLobbyId);
