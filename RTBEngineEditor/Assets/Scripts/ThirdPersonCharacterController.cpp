@@ -1,6 +1,8 @@
 #include "ThirdPersonCharacterController.h"
 
 #include "HealthComponent.h"
+#include "NetworkIdentity.h"
+#include "OnlineGameplayNet.h"
 #include "PauseMenuController.h"
 #include "ProjectileAttackAbility.h"
 
@@ -126,7 +128,9 @@ void ThirdPersonCharacterController::OnStart()
     RebindHealthSubscription();
     RebindAttackJoystickSubscription();
     UpdateAnimatorLocomotion(false, false);
-    ApplyCameraFollowTransform();
+    if (IsLocallyControlled()) {
+        ApplyCameraFollowTransform();
+    }
     RTBEngine::Input::InputManager::GetInstance().SetMouseRelativeMode(false);
 
     if (health && health->IsDead()) {
@@ -142,7 +146,7 @@ void ThirdPersonCharacterController::OnUpdate(float deltaTime)
         return;
     }
 
-    if (!HasLocalGameplayAuthority()) {
+    if (!IsLocallyControlled()) {
         HideAttackAimTrail();
         return;
     }
@@ -174,10 +178,14 @@ void ThirdPersonCharacterController::OnFixedUpdate(float fixedDeltaTime)
         return;
     }
 
-    if (!HasLocalGameplayAuthority()) {
-        HideAttackAimTrail();
-        StopPlanarMotion();
-        UpdateAnimatorLocomotion(false, false);
+    if (OnlineGameplayNet::IsInOnlineLobby() &&
+        !OnlineGameplayNet::IsLobbyHost() &&
+        IsLocallyControlled()) {
+        SendNetworkInput();
+        return;
+    }
+
+    if (!HasSimulationAuthority()) {
         return;
     }
 
@@ -215,14 +223,14 @@ void ThirdPersonCharacterController::OnLateUpdate(float /*deltaTime*/)
         return;
     }
 
-    ResolveCameraObject();
-    DisableCompetingCameraController();
-    ApplyCameraFollowTransform();
-
-    if (!HasLocalGameplayAuthority()) {
+    if (!IsLocallyControlled()) {
         HideAttackAimTrail();
         return;
     }
+
+    ResolveCameraObject();
+    DisableCompetingCameraController();
+    ApplyCameraFollowTransform();
 
     if (state == State::Locomotion) {
         UpdateAttackAimTrail();
@@ -267,7 +275,9 @@ void ThirdPersonCharacterController::OnValidate()
     RebindAttackJoystickSubscription();
     HideAttackAimTrail();
     UpdateAnimatorLocomotion(false, false);
-    ApplyCameraFollowTransform();
+    if (IsLocallyControlled()) {
+        ApplyCameraFollowTransform();
+    }
 }
 
 void ThirdPersonCharacterController::OnDestroy()
@@ -501,7 +511,7 @@ void ThirdPersonCharacterController::HandleJoystickAttackReleased(const RTBEngin
 {
     HideAttackAimTrail();
 
-    if (!HasLocalGameplayAuthority()) {
+    if (!IsLocallyControlled()) {
         return;
     }
 
@@ -827,6 +837,26 @@ RTBEngine::Math::Vector3 ThirdPersonCharacterController::GetDesiredMoveDirection
         return RTBEngine::Math::Vector3::Zero();
     }
 
+    if (const NetworkIdentity* identity = owner->GetComponent<NetworkIdentity>()) {
+        if (OnlineGameplayNet::IsInOnlineLobby() &&
+            OnlineGameplayNet::IsLobbyHost() &&
+            !identity->IsLocallyControlled()) {
+            OnlineGameplayNet::PlayerInputSnapshot remoteInput;
+            if (OnlineGameplayNet::TryGetLatestInputForUser(identity->networkOwnerUserId, remoteInput)) {
+                RTBEngine::Math::Vector3 desiredMove(remoteInput.moveX, 0.0f, remoteInput.moveZ);
+                if (!HasMovementInput(desiredMove)) {
+                    return RTBEngine::Math::Vector3::Zero();
+                }
+
+                desiredMove.Normalize();
+                outIsRunning = remoteInput.sprint;
+                return desiredMove;
+            }
+
+            return RTBEngine::Math::Vector3::Zero();
+        }
+    }
+
     RTBEngine::Input::InputManager& input = RTBEngine::Input::InputManager::GetInstance();
     RTBEngine::Math::Vector3 forward = RTBEngine::Math::Vector3::Forward();
     RTBEngine::Math::Vector3 right = RTBEngine::Math::Vector3::Forward().Cross(RTBEngine::Math::Vector3::Up());
@@ -903,5 +933,23 @@ RTBEngine::Math::Vector3 ThirdPersonCharacterController::GetActiveAttackDirectio
 
     attackDirection.Normalize();
     return attackDirection;
+}
+
+void ThirdPersonCharacterController::SendNetworkInput()
+{
+    if (!owner || OnlineGameplayNet::IsLobbyHost()) {
+        return;
+    }
+
+    bool isRunning = false;
+    const RTBEngine::Math::Vector3 desiredMove = GetDesiredMoveDirection(isRunning);
+
+    OnlineGameplayNet::PlayerInputSnapshot snapshot;
+    snapshot.senderUserId = OnlineGameplayNet::GetLocalUserId();
+    snapshot.sequenceNumber = ++inputSequenceNumber;
+    snapshot.moveX = desiredMove.x;
+    snapshot.moveZ = desiredMove.z;
+    snapshot.sprint = isRunning;
+    OnlineGameplayNet::SendPlayerInput(snapshot);
 }
 

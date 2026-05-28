@@ -1,8 +1,8 @@
 #include "CharacterBase.h"
 
+#include "NetworkIdentity.h"
+
 #include <RTBEngine/ECS/GameObject.h>
-#include <RTBEngine/Online/IOnlineLobby.h>
-#include <RTBEngine/Online/OnlineSystem.h>
 
 bool CharacterBase::IsCharacterDead() const
 {
@@ -45,13 +45,35 @@ void CharacterBase::UnsubscribeCharacterDeath()
     subscribedCharacterHealth = nullptr;
 }
 
-bool CharacterBase::HasLocalGameplayAuthority() const
+bool CharacterBase::HasSimulationAuthority() const
 {
-    RTBEngine::Online::OnlineSystem& online = RTBEngine::Online::OnlineSystem::GetInstance();
-    RTBEngine::Online::IOnlineLobby* lobby = online.GetLobby();
-    if (!online.IsInitialized() || !lobby || lobby->GetCurrentLobby().lobbyId.empty()) {
+    if (!owner) {
         return true;
     }
 
-    return lobby->GetCurrentLobby().isOwner;
+    const NetworkIdentity* identity = owner->GetComponent<NetworkIdentity>();
+    if (!identity) {
+        return true;
+    }
+
+    return identity->IsSimulatedByHost();
+}
+
+bool CharacterBase::IsLocallyControlled() const
+{
+    if (!owner) {
+        return true;
+    }
+
+    const NetworkIdentity* identity = owner->GetComponent<NetworkIdentity>();
+    if (!identity) {
+        return true;
+    }
+
+    return identity->IsLocallyControlled();
+}
+
+bool CharacterBase::HasLocalGameplayAuthority() const
+{
+    return HasSimulationAuthority();
 }

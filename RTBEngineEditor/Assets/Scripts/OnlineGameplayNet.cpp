@@ -18,13 +18,15 @@
 namespace {
 
     constexpr std::uint32_t kMagic = 0x4E425452; // "RTBN" in little-endian memory.
-    constexpr std::uint16_t kProtocolVersion = 1;
+    constexpr std::uint16_t kProtocolVersion = 2;
     constexpr std::uint8_t kControlChannel = 0;
     constexpr std::uint8_t kSnapshotChannel = 1;
+    constexpr std::uint8_t kInputChannel = 2;
 
     enum class MessageType : std::uint8_t {
         StartMatch = 1,
-        TransformSnapshot = 2
+        TransformSnapshot = 2,
+        PlayerInput = 3
     };
 
     struct PacketCursor {
@@ -34,6 +36,7 @@ namespace {
 
     std::deque<std::string> pendingStartMatches;
     std::unordered_map<std::string, OnlineGameplayNet::TransformSnapshot> latestTransforms;
+    std::unordered_map<std::string, OnlineGameplayNet::PlayerInputSnapshot> latestInputs;
 
     template <typename T>
     void AppendValue(std::vector<std::uint8_t>& outBytes, const T& value)
@@ -129,6 +132,18 @@ namespace {
         return bytes;
     }
 
+    std::vector<std::uint8_t> BuildPlayerInputPacket(const OnlineGameplayNet::PlayerInputSnapshot& snapshot)
+    {
+        std::vector<std::uint8_t> bytes;
+        AppendHeader(bytes, MessageType::PlayerInput);
+        AppendValue(bytes, snapshot.sequenceNumber);
+        AppendValue(bytes, snapshot.moveX);
+        AppendValue(bytes, snapshot.moveZ);
+        const std::uint8_t sprintFlag = snapshot.sprint ? 1 : 0;
+        AppendValue(bytes, sprintFlag);
+        return bytes;
+    }
+
     RTBEngine::Online::IOnlineLobby* GetLobby()
     {
         return RTBEngine::Online::OnlineSystem::GetInstance().GetLobby();
@@ -169,6 +184,60 @@ namespace {
         return peers;
     }
 
+    bool SendToHost(
+        const std::vector<std::uint8_t>& bytes,
+        std::uint8_t channel,
+        RTBEngine::Online::OnlinePacketReliability reliability)
+    {
+        RTBEngine::Online::IOnlineTransport* transport = GetTransport();
+        RTBEngine::Online::IOnlineLobby* lobby = GetLobby();
+        if (!transport || !transport->IsAvailable() || !lobby || lobby->GetCurrentLobby().lobbyId.empty()) {
+            return false;
+        }
+
+        const RTBEngine::Online::OnlineUserId hostUserId = lobby->GetCurrentLobby().ownerUserId;
+        if (!hostUserId.IsValid()) {
+            return false;
+        }
+
+        const RTBEngine::Online::OnlineResult result =
+            transport->SendPacket(hostUserId, channel, bytes, reliability);
+        if (!result.success) {
+            RTB_WARN("OnlineGameplayNet: failed to send packet to host. " + result.message);
+        }
+
+        return result.success;
+    }
+
+    bool SendToRemoteLobbyMembers(
+        const std::vector<std::uint8_t>& bytes,
+        std::uint8_t channel,
+        RTBEngine::Online::OnlinePacketReliability reliability)
+    {
+        RTBEngine::Online::IOnlineTransport* transport = GetTransport();
+        if (!transport || !transport->IsAvailable()) {
+            RTB_WARN("OnlineGameplayNet: online transport is not available for outgoing packet.");
+            return false;
+        }
+
+        bool sentAny = false;
+        for (const RTBEngine::Online::OnlineUserId& peer : GetRemoteLobbyMembers()) {
+            const RTBEngine::Online::OnlineResult result =
+                transport->SendPacket(peer, channel, bytes, reliability);
+            if (!result.success) {
+                RTB_WARN("OnlineGameplayNet: failed to send packet to " + peer.ToString() +
+                    ". " + result.message);
+            }
+            sentAny = sentAny || result.success;
+        }
+
+        if (!sentAny) {
+            RTB_WARN("OnlineGameplayNet: no remote lobby members accepted the outgoing packet.");
+        }
+
+        return sentAny;
+    }
+
     void HandlePacket(const RTBEngine::Online::OnlinePacket& packet)
     {
         PacketCursor cursor{ packet.payload };
@@ -202,36 +271,23 @@ namespace {
             }
 
             latestTransforms[snapshot.objectKey] = snapshot;
-        }
-    }
-
-    bool SendToRemoteLobbyMembers(
-        const std::vector<std::uint8_t>& bytes,
-        std::uint8_t channel,
-        RTBEngine::Online::OnlinePacketReliability reliability)
-    {
-        RTBEngine::Online::IOnlineTransport* transport = GetTransport();
-        if (!transport || !transport->IsAvailable()) {
-            RTB_WARN("OnlineGameplayNet: online transport is not available for outgoing packet.");
-            return false;
+            return;
         }
 
-        bool sentAny = false;
-        for (const RTBEngine::Online::OnlineUserId& peer : GetRemoteLobbyMembers()) {
-            const RTBEngine::Online::OnlineResult result =
-                transport->SendPacket(peer, channel, bytes, reliability);
-            if (!result.success) {
-                RTB_WARN("OnlineGameplayNet: failed to send packet to " + peer.ToString() +
-                    ". " + result.message);
+        if (messageType == MessageType::PlayerInput) {
+            OnlineGameplayNet::PlayerInputSnapshot snapshot;
+            snapshot.senderUserId = packet.senderUserId;
+            std::uint8_t sprintFlag = 0;
+            if (!ReadValue(cursor, snapshot.sequenceNumber) ||
+                !ReadValue(cursor, snapshot.moveX) ||
+                !ReadValue(cursor, snapshot.moveZ) ||
+                !ReadValue(cursor, sprintFlag)) {
+                return;
             }
-            sentAny = sentAny || result.success;
-        }
 
-        if (!sentAny) {
-            RTB_WARN("OnlineGameplayNet: no remote lobby members accepted the outgoing packet.");
+            snapshot.sprint = sprintFlag != 0;
+            latestInputs[snapshot.senderUserId.ToString()] = snapshot;
         }
-
-        return sentAny;
     }
 
 }
@@ -257,10 +313,65 @@ bool OnlineGameplayNet::IsInOnlineLobby()
     return lobby && !lobby->GetCurrentLobby().lobbyId.empty();
 }
 
+bool OnlineGameplayNet::IsLobbyHost()
+{
+    return IsLobbyOwner();
+}
+
 bool OnlineGameplayNet::IsLobbyOwner()
 {
     RTBEngine::Online::IOnlineLobby* lobby = GetLobby();
     return lobby && !lobby->GetCurrentLobby().lobbyId.empty() && lobby->GetCurrentLobby().isOwner;
+}
+
+RTBEngine::Online::OnlineUserId OnlineGameplayNet::GetLocalUserId()
+{
+    RTBEngine::Online::IOnlineIdentity* identity = GetIdentity();
+    return identity ? identity->GetLocalUserId() : RTBEngine::Online::OnlineUserId();
+}
+
+RTBEngine::Online::OnlineUserId OnlineGameplayNet::GetLobbyHostUserId()
+{
+    RTBEngine::Online::IOnlineLobby* lobby = GetLobby();
+    return lobby ? lobby->GetCurrentLobby().ownerUserId : RTBEngine::Online::OnlineUserId();
+}
+
+std::vector<RTBEngine::Online::OnlineUserId> OnlineGameplayNet::GetOrderedLobbyMembers()
+{
+    std::vector<RTBEngine::Online::OnlineUserId> members;
+
+    RTBEngine::Online::IOnlineLobby* lobby = GetLobby();
+    if (!lobby || lobby->GetCurrentLobby().lobbyId.empty()) {
+        return members;
+    }
+
+    const RTBEngine::Online::OnlineLobbyInfo& lobbyInfo = lobby->GetCurrentLobby();
+    if (lobbyInfo.ownerUserId.IsValid()) {
+        members.push_back(lobbyInfo.ownerUserId);
+    }
+
+    for (const RTBEngine::Online::OnlineUserId& member : lobbyInfo.memberUserIds) {
+        if (!member.IsValid() || member == lobbyInfo.ownerUserId) {
+            continue;
+        }
+
+        members.push_back(member);
+    }
+
+    return members;
+}
+
+std::size_t OnlineGameplayNet::GetLocalPlayerIndex()
+{
+    const RTBEngine::Online::OnlineUserId localUserId = GetLocalUserId();
+    const std::vector<RTBEngine::Online::OnlineUserId> members = GetOrderedLobbyMembers();
+    for (std::size_t index = 0; index < members.size(); ++index) {
+        if (members[index] == localUserId) {
+            return index;
+        }
+    }
+
+    return 0;
 }
 
 std::size_t OnlineGameplayNet::GetRemoteLobbyMemberCount()
@@ -287,6 +398,31 @@ bool OnlineGameplayNet::ConsumeStartMatch(std::string& outScenePath)
     return true;
 }
 
+bool OnlineGameplayNet::SendPlayerInput(const PlayerInputSnapshot& snapshot)
+{
+    if (IsLobbyHost()) {
+        return false;
+    }
+
+    return SendToHost(
+        BuildPlayerInputPacket(snapshot),
+        kInputChannel,
+        RTBEngine::Online::OnlinePacketReliability::Unreliable);
+}
+
+bool OnlineGameplayNet::TryGetLatestInputForUser(
+    const std::string& ownerUserIdKey,
+    PlayerInputSnapshot& outSnapshot)
+{
+    const auto it = latestInputs.find(ownerUserIdKey);
+    if (it == latestInputs.end()) {
+        return false;
+    }
+
+    outSnapshot = it->second;
+    return true;
+}
+
 bool OnlineGameplayNet::BroadcastTransform(const TransformSnapshot& snapshot)
 {
     return SendToRemoteLobbyMembers(
@@ -295,7 +431,7 @@ bool OnlineGameplayNet::BroadcastTransform(const TransformSnapshot& snapshot)
         RTBEngine::Online::OnlinePacketReliability::Unreliable);
 }
 
-bool OnlineGameplayNet::ConsumeLatestTransform(const std::string& objectKey, TransformSnapshot& outSnapshot)
+bool OnlineGameplayNet::TryGetLatestTransform(const std::string& objectKey, TransformSnapshot& outSnapshot)
 {
     const auto it = latestTransforms.find(objectKey);
     if (it == latestTransforms.end()) {
@@ -303,6 +439,5 @@ bool OnlineGameplayNet::ConsumeLatestTransform(const std::string& objectKey, Tra
     }
 
     outSnapshot = it->second;
-    latestTransforms.erase(it);
     return true;
 }

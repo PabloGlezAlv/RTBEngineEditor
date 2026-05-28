@@ -1,5 +1,7 @@
 #pragma once
 
+#include "OnlineGameplayNet.h"
+
 #include <RTBEngine/ECS/Component.h>
 #include <RTBEngine/Reflection/PropertyMacros.h>
 
@@ -11,23 +13,29 @@ public:
     ~NetworkTransform() override = default;
 
     std::string objectKey;
-    float sendRate = 15.0f;
+    float sendRate = 20.0f;
     float interpolationSpeed = 14.0f;
     bool replicatePosition = true;
     bool replicateRotation = true;
 
     RTB_COMPONENT(NetworkTransform)
 
+public:
     void OnStart() override;
     void OnUpdate(float deltaTime) override;
+    void OnFixedUpdate(float fixedDeltaTime) override;
+    void OnLateUpdate(float deltaTime) override;
     void OnValidate() override;
 
 private:
     float sendTimer = 0.0f;
     std::string resolvedObjectKey;
+    bool hasCachedSnapshot = false;
+    OnlineGameplayNet::TransformSnapshot cachedSnapshot;
 
     void ResolveObjectKey();
-    bool HasLocalAuthority() const;
+    bool HasSendAuthority() const;
+    bool HasReceiveAuthority() const;
     void SendSnapshot(float deltaTime);
     void ApplyRemoteSnapshot(float deltaTime);
 };

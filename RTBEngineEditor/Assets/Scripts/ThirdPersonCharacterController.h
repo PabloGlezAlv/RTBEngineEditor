@@ -10,6 +10,8 @@
 #include <RTBEngine/Reflection/PropertyMacros.h>
 #include <string>
 
+#include <cstdint>
+
 namespace RTBEngine {
     namespace Animation {
         class Animator;
@@ -127,4 +129,7 @@ private:
     float GetConfiguredProjectileRadius() const;
     RTBEngine::Math::Vector3 GetAttackDirectionFromJoystick(const RTBEngine::Math::Vector2& joystickValue) const;
     RTBEngine::Math::Vector3 GetActiveAttackDirection() const;
+    void SendNetworkInput();
+
+    std::uint32_t inputSequenceNumber = 0;
 };

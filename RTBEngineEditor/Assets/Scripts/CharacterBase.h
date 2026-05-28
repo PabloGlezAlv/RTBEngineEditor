@@ -31,6 +31,8 @@ protected:
     void ResolveCharacterHealth();
     void RebindCharacterDeathSubscription();
     void UnsubscribeCharacterDeath();
+    bool HasSimulationAuthority() const;
+    bool IsLocallyControlled() const;
     bool HasLocalGameplayAuthority() const;
 
     virtual HealthComponent*& AccessHealthSlot() = 0;

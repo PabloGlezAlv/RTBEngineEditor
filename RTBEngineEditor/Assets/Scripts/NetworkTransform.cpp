@@ -1,5 +1,6 @@
 #include "NetworkTransform.h"
 
+#include "NetworkIdentity.h"
 #include "OnlineGameplayNet.h"
 
 #include <RTBEngine/ECS/GameObject.h>
@@ -57,16 +58,37 @@ void NetworkTransform::OnStart()
 
 void NetworkTransform::OnUpdate(float deltaTime)
 {
+    (void)deltaTime;
+
+    if (!owner) {
+        return;
+    }
+
+    OnlineGameplayNet::Pump();
+}
+
+void NetworkTransform::OnFixedUpdate(float fixedDeltaTime)
+{
     if (!owner || !OnlineGameplayNet::IsInOnlineLobby()) {
         return;
     }
 
     ResolveObjectKey();
-    OnlineGameplayNet::Pump();
 
-    if (HasLocalAuthority()) {
-        SendSnapshot(deltaTime);
-    } else {
+    if (HasSendAuthority()) {
+        SendSnapshot(fixedDeltaTime);
+    }
+}
+
+void NetworkTransform::OnLateUpdate(float deltaTime)
+{
+    if (!owner || !OnlineGameplayNet::IsInOnlineLobby()) {
+        return;
+    }
+
+    ResolveObjectKey();
+
+    if (HasReceiveAuthority()) {
         ApplyRemoteSnapshot(deltaTime);
     }
 }
@@ -85,6 +107,14 @@ void NetworkTransform::ResolveObjectKey()
         return;
     }
 
+    if (const NetworkIdentity* identity = owner->GetComponent<NetworkIdentity>()) {
+        const std::string identityKey = identity->GetNetworkObjectKey();
+        if (!identityKey.empty()) {
+            resolvedObjectKey = identityKey;
+            return;
+        }
+    }
+
     if (!objectKey.empty()) {
         resolvedObjectKey = objectKey;
         return;
@@ -95,10 +125,14 @@ void NetworkTransform::ResolveObjectKey()
         : owner->GetUUID();
 }
 
-bool NetworkTransform::HasLocalAuthority() const
+bool NetworkTransform::HasSendAuthority() const
 {
-    // V1 follows the current architecture: the lobby owner is the authoritative host.
-    return !OnlineGameplayNet::IsInOnlineLobby() || OnlineGameplayNet::IsLobbyOwner();
+    return !OnlineGameplayNet::IsInOnlineLobby() || OnlineGameplayNet::IsLobbyHost();
+}
+
+bool NetworkTransform::HasReceiveAuthority() const
+{
+    return OnlineGameplayNet::IsInOnlineLobby() && !OnlineGameplayNet::IsLobbyHost();
 }
 
 void NetworkTransform::SendSnapshot(float deltaTime)
@@ -129,8 +163,13 @@ void NetworkTransform::ApplyRemoteSnapshot(float deltaTime)
     }
 
     OnlineGameplayNet::TransformSnapshot snapshot;
-    if (!OnlineGameplayNet::ConsumeLatestTransform(resolvedObjectKey, snapshot)) {
+    if (OnlineGameplayNet::TryGetLatestTransform(resolvedObjectKey, snapshot)) {
+        cachedSnapshot = snapshot;
+        hasCachedSnapshot = true;
+    } else if (!hasCachedSnapshot) {
         return;
+    } else {
+        snapshot = cachedSnapshot;
     }
 
     const float t = std::clamp(interpolationSpeed * std::max(0.0f, deltaTime), 0.0f, 1.0f);

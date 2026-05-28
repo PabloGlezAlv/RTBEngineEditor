@@ -687,6 +687,17 @@ function CreateScene()
                 }
             },
             {
+                name = "OnlinePlayers",
+                uuid = "B1A2C3D4-E5F6-7890-ABCD-EF1234567891",
+                components = {
+                    {
+                        type = "OnlinePlayerManager",
+                        localPlayerObject = "E8682E33-50ED-45D8-BC76-B31113639F9E",
+                        remoteSpawnOffsetX = 2.50
+                    },
+                }
+            },
+            {
                 name = "Player GO",
                 uuid = "E8682E33-50ED-45D8-BC76-B31113639F9E",
                 components = {
@@ -730,9 +741,13 @@ function CreateScene()
                         currentHealth = 100.00
                     },
                     {
+                        type = "NetworkIdentity",
+                        networkOwnerUserId = "",
+                        networkPlayerSlot = -1
+                    },
+                    {
                         type = "NetworkTransform",
-                        objectKey = "PlayerGO",
-                        sendRate = 15.00,
+                        sendRate = 20.00,
                         interpolationSpeed = 14.00,
                         replicatePosition = true,
                         replicateRotation = true
