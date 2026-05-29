@@ -27,6 +27,7 @@ bool NetworkIdentity::IsLocallyControlled() const
         return true;
     }
 
+    // Prefer slot index: identical on host and client (unlike Local vs NetworkPeer ids).
     if (networkPlayerSlot >= 0) {
         return static_cast<int>(OnlineGameplayNet::GetLocalPlayerIndex()) == networkPlayerSlot;
     }

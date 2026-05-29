@@ -93,7 +93,6 @@ namespace RTBEditor {
     {
         const EditorOnlineSettings settings = EditorOnlineSettingsStore::Load();
         onlineSettingsEnabled = settings.enabled;
-        onlineBackendIndex = settings.backend == RTBEngine::Online::OnlineBackendType::LAN ? 1 : 0;
         lanGamePort = settings.lanGamePort;
         lanDiscoveryPort = settings.lanDiscoveryPort;
         CopyToBuffer(defaultHostAddress, settings.defaultHostAddress);
@@ -106,9 +105,6 @@ namespace RTBEditor {
     {
         EditorOnlineSettings settings;
         settings.enabled = onlineSettingsEnabled;
-        settings.backend = onlineBackendIndex == 1
-            ? RTBEngine::Online::OnlineBackendType::LAN
-            : RTBEngine::Online::OnlineBackendType::Null;
         settings.lanGamePort = static_cast<std::uint16_t>(std::max(1, lanGamePort));
         settings.lanDiscoveryPort = static_cast<std::uint16_t>(std::max(1, lanDiscoveryPort));
         settings.defaultHostAddress = ReadBuffer(defaultHostAddress);
@@ -121,15 +117,8 @@ namespace RTBEditor {
         ImGui::TextUnformatted("Configuracion Online");
         ImGui::Checkbox("Online Enabled", &onlineSettingsEnabled);
 
-        const char* backendItems[] = { "Null", "LAN/UDP" };
-        ImGui::SetNextItemWidth(170.0f);
-        ImGui::Combo("Backend", &onlineBackendIndex, backendItems, IM_ARRAYSIZE(backendItems));
-
-        const bool usingLan = onlineBackendIndex == 1;
-        BeginDisabledIf(!usingLan);
         ImGui::InputInt("LAN Game Port", &lanGamePort);
         ImGui::InputInt("LAN Discovery Port", &lanDiscoveryPort);
-        EndDisabledIf(!usingLan);
 
         ImGui::SetNextItemWidth(230.0f);
         ImGui::InputText("Login Display Name", loginDisplayName, sizeof(loginDisplayName));

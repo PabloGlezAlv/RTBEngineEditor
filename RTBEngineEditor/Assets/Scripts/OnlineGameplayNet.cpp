@@ -19,9 +19,9 @@ namespace {
 
     constexpr std::uint32_t kMagic = 0x4E425452; // "RTBN" in little-endian memory.
     constexpr std::uint16_t kProtocolVersion = 2;
-    constexpr std::uint8_t kControlChannel = 0;
-    constexpr std::uint8_t kSnapshotChannel = 1;
-    constexpr std::uint8_t kInputChannel = 2;
+    constexpr std::uint8_t kControlChannel = 0;   // reliable control (StartMatch)
+    constexpr std::uint8_t kSnapshotChannel = 1; // unreliable transforms (~20 Hz)
+    constexpr std::uint8_t kInputChannel = 2;    // unreliable client input (~FixedUpdate)
 
     enum class MessageType : std::uint8_t {
         StartMatch = 1,
@@ -35,7 +35,9 @@ namespace {
     };
 
     std::deque<std::string> pendingStartMatches;
+    // Last-known snapshots keyed by objectKey (PlayerSlot_N). Not erased on read.
     std::unordered_map<std::string, OnlineGameplayNet::TransformSnapshot> latestTransforms;
+    // Last input per remote sender (host reads these when simulating client pawns).
     std::unordered_map<std::string, OnlineGameplayNet::PlayerInputSnapshot> latestInputs;
 
     template <typename T>

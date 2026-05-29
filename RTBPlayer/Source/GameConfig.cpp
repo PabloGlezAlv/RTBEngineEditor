@@ -11,15 +11,6 @@ namespace {
         return value == "true" || value == "1" || value == "True" || value == "TRUE";
     }
 
-    RTBEngine::Online::OnlineBackendType ParseOnlineBackend(const std::string& value)
-    {
-        if (value == "LAN" || value == "lan") {
-            return RTBEngine::Online::OnlineBackendType::LAN;
-        }
-
-        return RTBEngine::Online::OnlineBackendType::Null;
-    }
-
     RTBEngine::Online::OnlineLoginType ParseLoginType(const std::string& value)
     {
         return RTBEngine::Online::OnlineLoginType::DeviceId;
@@ -93,7 +84,6 @@ namespace RTBPlayer {
                 else if (currentSection == "Online") {
                     if (key == "Enabled") onlineConfig.enabled = ParseBool(value);
                     else if (key == "FailApplicationOnError") onlineConfig.failApplicationOnError = ParseBool(value);
-                    else if (key == "Backend") onlineConfig.backend = ParseOnlineBackend(value);
                     else if (key == "ProductName") onlineConfig.productName = value;
                     else if (key == "ProductVersion") onlineConfig.productVersion = value;
                     else if (key == "IsServer") onlineConfig.isServer = ParseBool(value);
@@ -134,7 +124,6 @@ namespace RTBPlayer {
             if (key == "start-scene") startScene = value;
             else if (key == "window-title") windowTitle = value;
             else if (key == "online-enabled") onlineConfig.enabled = ParseBool(value);
-            else if (key == "online-backend") onlineConfig.backend = ParseOnlineBackend(value);
             else if (key == "display-name") onlineConfig.loginDisplayName = value;
             else if (key == "lan-game-port") onlineConfig.lanGamePort = ParsePort(value, onlineConfig.lanGamePort);
             else if (key == "lan-discovery-port") onlineConfig.lanDiscoveryPort = ParsePort(value, onlineConfig.lanDiscoveryPort);

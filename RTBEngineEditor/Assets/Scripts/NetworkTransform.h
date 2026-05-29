@@ -12,7 +12,7 @@ public:
     NetworkTransform() = default;
     ~NetworkTransform() override = default;
 
-    std::string objectKey;
+    std::string objectKey;  // optional override; usually resolved from NetworkIdentity
     float sendRate = 20.0f;
     float interpolationSpeed = 14.0f;
     bool replicatePosition = true;
@@ -34,8 +34,8 @@ private:
     OnlineGameplayNet::TransformSnapshot cachedSnapshot;
 
     void ResolveObjectKey();
-    bool HasSendAuthority() const;
-    bool HasReceiveAuthority() const;
+    bool HasSendAuthority() const;     // true on host (or offline)
+    bool HasReceiveAuthority() const;  // true on clients in online lobby
     void SendSnapshot(float deltaTime);
     void ApplyRemoteSnapshot(float deltaTime);
 };

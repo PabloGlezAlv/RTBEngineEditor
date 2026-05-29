@@ -323,7 +323,6 @@ namespace RTBEditor {
             cfgFile << "\n[Online]\n";
             cfgFile << "Enabled=" << (editorOnlineSettings.enabled ? "true" : "false") << "\n";
             cfgFile << "FailApplicationOnError=false\n";
-            cfgFile << "Backend=" << (editorOnlineSettings.backend == RTBEngine::Online::OnlineBackendType::LAN ? "LAN" : "Null") << "\n";
             cfgFile << "ProductName=" << kDefaultOnlineProductName << "\n";
             cfgFile << "ProductVersion=" << kDefaultOnlineProductVersion << "\n";
             cfgFile << "IsServer=false\n";

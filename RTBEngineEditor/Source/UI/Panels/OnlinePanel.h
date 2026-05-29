@@ -34,7 +34,6 @@ namespace RTBEditor {
         void DrawMultiplayerTestSection();
 
         bool onlineSettingsEnabled = true;
-        int onlineBackendIndex = 1;
         int lanGamePort = 27015;
         int lanDiscoveryPort = 27016;
         char defaultHostAddress[128] = "";

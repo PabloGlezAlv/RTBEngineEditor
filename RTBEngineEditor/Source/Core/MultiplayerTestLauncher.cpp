@@ -40,11 +40,6 @@ namespace {
         return fs::current_path();
     }
 
-    std::string SerializeBackend(RTBEngine::Online::OnlineBackendType backend)
-    {
-        return backend == RTBEngine::Online::OnlineBackendType::LAN ? "LAN" : "Null";
-    }
-
     std::string SerializeLoginType(RTBEngine::Online::OnlineLoginType loginType)
     {
         switch (loginType) {
@@ -572,7 +567,6 @@ namespace RTBEditor {
         cfgFile << "\n[Online]\n";
         cfgFile << "Enabled=" << (editorOnlineSettings.enabled ? "true" : "false") << "\n";
         cfgFile << "FailApplicationOnError=false\n";
-        cfgFile << "Backend=" << SerializeBackend(editorOnlineSettings.backend) << "\n";
         cfgFile << "ProductName=" << kDefaultOnlineProductName << "\n";
         cfgFile << "ProductVersion=" << kDefaultOnlineProductVersion << "\n";
         cfgFile << "IsServer=false\n";

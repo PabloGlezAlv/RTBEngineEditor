@@ -64,6 +64,7 @@ void NetworkTransform::OnUpdate(float deltaTime)
         return;
     }
 
+    // Pull UDP packets into latestTransforms / latestInputs buffers.
     OnlineGameplayNet::Pump();
 }
 
@@ -75,6 +76,7 @@ void NetworkTransform::OnFixedUpdate(float fixedDeltaTime)
 
     ResolveObjectKey();
 
+    // Host sends authoritative state after the physics step for this pawn.
     if (HasSendAuthority()) {
         SendSnapshot(fixedDeltaTime);
     }
@@ -88,6 +90,7 @@ void NetworkTransform::OnLateUpdate(float deltaTime)
 
     ResolveObjectKey();
 
+    // Clients apply network state after SyncPhysicsToTransforms to avoid fighting Bullet.
     if (HasReceiveAuthority()) {
         ApplyRemoteSnapshot(deltaTime);
     }
@@ -169,6 +172,7 @@ void NetworkTransform::ApplyRemoteSnapshot(float deltaTime)
     } else if (!hasCachedSnapshot) {
         return;
     } else {
+        // Keep interpolating toward the last received snapshot between UDP packets.
         snapshot = cachedSnapshot;
     }
 

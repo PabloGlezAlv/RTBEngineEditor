@@ -178,6 +178,7 @@ void ThirdPersonCharacterController::OnFixedUpdate(float fixedDeltaTime)
         return;
     }
 
+    // Client local pawn: capture WASD and send to host (no local physics simulation).
     if (OnlineGameplayNet::IsInOnlineLobby() &&
         !OnlineGameplayNet::IsLobbyHost() &&
         IsLocallyControlled()) {
@@ -185,6 +186,7 @@ void ThirdPersonCharacterController::OnFixedUpdate(float fixedDeltaTime)
         return;
     }
 
+    // Proxies on clients and any pawn without host simulation skip movement.
     if (!HasSimulationAuthority()) {
         return;
     }
@@ -223,6 +225,7 @@ void ThirdPersonCharacterController::OnLateUpdate(float /*deltaTime*/)
         return;
     }
 
+    // Only the local human player's pawn drives the follow camera.
     if (!IsLocallyControlled()) {
         HideAttackAimTrail();
         return;
@@ -838,6 +841,7 @@ RTBEngine::Math::Vector3 ThirdPersonCharacterController::GetDesiredMoveDirection
     }
 
     if (const NetworkIdentity* identity = owner->GetComponent<NetworkIdentity>()) {
+        // Host simulating a remote client's pawn: read last PlayerInput from OnlineGameplayNet.
         if (OnlineGameplayNet::IsInOnlineLobby() &&
             OnlineGameplayNet::IsLobbyHost() &&
             !identity->IsLocallyControlled()) {
@@ -944,6 +948,7 @@ void ThirdPersonCharacterController::SendNetworkInput()
     bool isRunning = false;
     const RTBEngine::Math::Vector3 desiredMove = GetDesiredMoveDirection(isRunning);
 
+    // Pack planar world direction; host applies it when simulating this client's slot.
     OnlineGameplayNet::PlayerInputSnapshot snapshot;
     snapshot.senderUserId = OnlineGameplayNet::GetLocalUserId();
     snapshot.sequenceNumber = ++inputSequenceNumber;

@@ -65,16 +65,6 @@ namespace {
         return defaultValue;
     }
 
-    RTBEngine::Online::OnlineBackendType ParseBackend(const std::string& value)
-    {
-        const std::string normalized = ToUpper(Trim(value));
-        if (normalized == "LAN") {
-            return RTBEngine::Online::OnlineBackendType::LAN;
-        }
-
-        return RTBEngine::Online::OnlineBackendType::Null;
-    }
-
     RTBEngine::Online::OnlineLoginType ParseLoginType(const std::string& value)
     {
         const std::string normalized = ToUpper(Trim(value));
@@ -87,11 +77,6 @@ namespace {
         }
 
         return RTBEngine::Online::OnlineLoginType::DeviceId;
-    }
-
-    const char* SerializeBackend(RTBEngine::Online::OnlineBackendType backend)
-    {
-        return backend == RTBEngine::Online::OnlineBackendType::LAN ? "LAN" : "Null";
     }
 
     const char* SerializeLoginType(RTBEngine::Online::OnlineLoginType loginType)
@@ -170,7 +155,6 @@ namespace RTBEditor {
         };
 
         settings.enabled = ParseBool(readValue("Enabled"), settings.enabled);
-        settings.backend = ParseBackend(readValue("Backend"));
         settings.lanGamePort = ParsePort(readValue("LanGamePort"), settings.lanGamePort);
         settings.lanDiscoveryPort = ParsePort(readValue("LanDiscoveryPort"), settings.lanDiscoveryPort);
         settings.defaultHostAddress = readValue("DefaultHostAddress");
@@ -195,7 +179,6 @@ namespace RTBEditor {
 
         file << "# RTBEngineEditor local online settings\n";
         file << "Enabled=" << (settings.enabled ? "true" : "false") << "\n";
-        file << "Backend=" << SerializeBackend(settings.backend) << "\n";
         file << "LanGamePort=" << settings.lanGamePort << "\n";
         file << "LanDiscoveryPort=" << settings.lanDiscoveryPort << "\n";
         file << "DefaultHostAddress=" << settings.defaultHostAddress << "\n";
@@ -210,7 +193,6 @@ namespace RTBEditor {
         config.enabled = settings.enabled;
         config.failApplicationOnError = false;
         config.loadingInEditor = true;
-        config.backend = settings.backend;
         config.lanGamePort = settings.lanGamePort;
         config.lanDiscoveryPort = settings.lanDiscoveryPort;
         config.defaultHostAddress = settings.defaultHostAddress;

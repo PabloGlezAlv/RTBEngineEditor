@@ -56,6 +56,7 @@ bool CharacterBase::HasSimulationAuthority() const
         return true;
     }
 
+    // Online: only the lobby host runs movement/physics. Offline: always true.
     return identity->IsSimulatedByHost();
 }
 
@@ -70,10 +71,12 @@ bool CharacterBase::IsLocallyControlled() const
         return true;
     }
 
+    // True for the human player on this machine (camera + client input send).
     return identity->IsLocallyControlled();
 }
 
 bool CharacterBase::HasLocalGameplayAuthority() const
 {
+    // Legacy alias kept for existing call sites; means simulation authority.
     return HasSimulationAuthority();
 }
