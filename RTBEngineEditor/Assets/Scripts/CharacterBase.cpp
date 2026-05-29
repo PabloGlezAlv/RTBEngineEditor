@@ -1,6 +1,6 @@
 #include "CharacterBase.h"
 
-#include "NetworkIdentity.h"
+#include <RTBEngine/ECS/NetworkIdentity.h>
 
 #include <RTBEngine/ECS/GameObject.h>
 
@@ -51,7 +51,7 @@ bool CharacterBase::HasSimulationAuthority() const
         return true;
     }
 
-    const NetworkIdentity* identity = owner->GetComponent<NetworkIdentity>();
+    const RTBEngine::ECS::NetworkIdentity* identity = owner->GetComponent<RTBEngine::ECS::NetworkIdentity>();
     if (!identity) {
         return true;
     }
@@ -66,7 +66,7 @@ bool CharacterBase::IsLocallyControlled() const
         return true;
     }
 
-    const NetworkIdentity* identity = owner->GetComponent<NetworkIdentity>();
+    const RTBEngine::ECS::NetworkIdentity* identity = owner->GetComponent<RTBEngine::ECS::NetworkIdentity>();
     if (!identity) {
         return true;
     }

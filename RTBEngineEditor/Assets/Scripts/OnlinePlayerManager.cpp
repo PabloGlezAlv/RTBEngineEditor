@@ -1,7 +1,7 @@
 #include "OnlinePlayerManager.h"
 
-#include "NetworkIdentity.h"
-#include "OnlineGameplayNet.h"
+#include <RTBEngine/ECS/NetworkIdentity.h>
+#include <RTBEngine/Online/OnlineGameplayNet.h>
 #include "ThirdPersonCharacterController.h"
 
 #include <RTBEngine/Core/Logger.h>
@@ -20,7 +20,7 @@ RTB_END_REGISTER(OnlinePlayerManager)
 
 void OnlinePlayerManager::OnStart()
 {
-    if (!OnlineGameplayNet::IsInOnlineLobby()) {
+    if (!RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby()) {
         return;
     }
 
@@ -34,14 +34,14 @@ void OnlinePlayerManager::ConfigureOnlinePlayers()
         return;
     }
 
-    const std::vector<RTBEngine::Online::OnlineUserId> members = OnlineGameplayNet::GetOrderedLobbyMembers();
+    const std::vector<RTBEngine::Online::OnlineUserId> members = RTBEngine::Online::OnlineGameplayNet::GetOrderedLobbyMembers();
     if (members.size() < 2) {
         RTB_WARN("[OnlinePlayerManager] Expected at least two lobby members for online play.");
         return;
     }
 
-    const RTBEngine::Online::OnlineUserId localUserId = OnlineGameplayNet::GetLocalUserId();
-    const std::size_t localPlayerIndex = OnlineGameplayNet::GetLocalPlayerIndex();
+    const RTBEngine::Online::OnlineUserId localUserId = RTBEngine::Online::OnlineGameplayNet::GetLocalUserId();
+    const std::size_t localPlayerIndex = RTBEngine::Online::OnlineGameplayNet::GetLocalPlayerIndex();
     ConfigurePawn(localPlayerObject, members[localPlayerIndex], static_cast<int>(localPlayerIndex));
 
     for (std::size_t memberIndex = 0; memberIndex < members.size(); ++memberIndex) {
@@ -69,7 +69,7 @@ void OnlinePlayerManager::ConfigurePawn(
         return;
     }
 
-    NetworkIdentity* identity = pawn->GetComponent<NetworkIdentity>();
+    RTBEngine::ECS::NetworkIdentity* identity = pawn->GetComponent<RTBEngine::ECS::NetworkIdentity>();
     if (!identity) {
         RTB_WARN("[OnlinePlayerManager] Pawn '" + pawn->GetName() + "' is missing NetworkIdentity.");
         return;
@@ -84,7 +84,7 @@ void OnlinePlayerManager::ConfigurePawn(
             controller->SetUpdateTickEnabled(false);
             // On clients, disable the controller entirely (display-only proxy).
             // On host, keep FixedUpdate enabled so remote pawns are still simulated.
-            if (!OnlineGameplayNet::IsLobbyHost()) {
+            if (!RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
                 controller->SetEnabled(false);
             }
         }
@@ -96,7 +96,7 @@ void OnlinePlayerManager::ConfigurePawn(
     }
 
     // Host runs Bullet simulation for all pawns; clients are kinematic display proxies.
-    if (OnlineGameplayNet::IsLobbyHost()) {
+    if (RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
         rigidBodyComponent->bodyType = RTBEngine::Physics::RigidBodyType::Dynamic;
     } else {
         rigidBodyComponent->bodyType = RTBEngine::Physics::RigidBodyType::Kinematic;

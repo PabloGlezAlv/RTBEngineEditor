@@ -1,8 +1,8 @@
 #include "ThirdPersonCharacterController.h"
 
 #include "HealthComponent.h"
-#include "NetworkIdentity.h"
-#include "OnlineGameplayNet.h"
+#include <RTBEngine/ECS/NetworkIdentity.h>
+#include <RTBEngine/Online/OnlineGameplayNet.h>
 #include "PauseMenuController.h"
 #include "ProjectileAttackAbility.h"
 
@@ -179,8 +179,8 @@ void ThirdPersonCharacterController::OnFixedUpdate(float fixedDeltaTime)
     }
 
     // Client local pawn: capture WASD and send to host (no local physics simulation).
-    if (OnlineGameplayNet::IsInOnlineLobby() &&
-        !OnlineGameplayNet::IsLobbyHost() &&
+    if (RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby() &&
+        !RTBEngine::Online::OnlineGameplayNet::IsLobbyHost() &&
         IsLocallyControlled()) {
         SendNetworkInput();
         return;
@@ -840,13 +840,13 @@ RTBEngine::Math::Vector3 ThirdPersonCharacterController::GetDesiredMoveDirection
         return RTBEngine::Math::Vector3::Zero();
     }
 
-    if (const NetworkIdentity* identity = owner->GetComponent<NetworkIdentity>()) {
+    if (const RTBEngine::ECS::NetworkIdentity* identity = owner->GetComponent<RTBEngine::ECS::NetworkIdentity>()) {
         // Host simulating a remote client's pawn: read last PlayerInput from OnlineGameplayNet.
-        if (OnlineGameplayNet::IsInOnlineLobby() &&
-            OnlineGameplayNet::IsLobbyHost() &&
+        if (RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby() &&
+            RTBEngine::Online::OnlineGameplayNet::IsLobbyHost() &&
             !identity->IsLocallyControlled()) {
-            OnlineGameplayNet::PlayerInputSnapshot remoteInput;
-            if (OnlineGameplayNet::TryGetLatestInputForUser(identity->networkOwnerUserId, remoteInput)) {
+            RTBEngine::Online::OnlineGameplayNet::PlayerInputSnapshot remoteInput;
+            if (RTBEngine::Online::OnlineGameplayNet::TryGetLatestInputForUser(identity->networkOwnerUserId, remoteInput)) {
                 RTBEngine::Math::Vector3 desiredMove(remoteInput.moveX, 0.0f, remoteInput.moveZ);
                 if (!HasMovementInput(desiredMove)) {
                     return RTBEngine::Math::Vector3::Zero();
@@ -941,7 +941,7 @@ RTBEngine::Math::Vector3 ThirdPersonCharacterController::GetActiveAttackDirectio
 
 void ThirdPersonCharacterController::SendNetworkInput()
 {
-    if (!owner || OnlineGameplayNet::IsLobbyHost()) {
+    if (!owner || RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
         return;
     }
 
@@ -949,12 +949,12 @@ void ThirdPersonCharacterController::SendNetworkInput()
     const RTBEngine::Math::Vector3 desiredMove = GetDesiredMoveDirection(isRunning);
 
     // Pack planar world direction; host applies it when simulating this client's slot.
-    OnlineGameplayNet::PlayerInputSnapshot snapshot;
-    snapshot.senderUserId = OnlineGameplayNet::GetLocalUserId();
+    RTBEngine::Online::OnlineGameplayNet::PlayerInputSnapshot snapshot;
+    snapshot.senderUserId = RTBEngine::Online::OnlineGameplayNet::GetLocalUserId();
     snapshot.sequenceNumber = ++inputSequenceNumber;
     snapshot.moveX = desiredMove.x;
     snapshot.moveZ = desiredMove.z;
     snapshot.sprint = isRunning;
-    OnlineGameplayNet::SendPlayerInput(snapshot);
+    RTBEngine::Online::OnlineGameplayNet::SendPlayerInput(snapshot);
 }
 

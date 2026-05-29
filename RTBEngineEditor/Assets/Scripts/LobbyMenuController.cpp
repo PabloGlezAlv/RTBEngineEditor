@@ -1,6 +1,6 @@
 #include "LobbyMenuController.h"
 
-#include "OnlineGameplayNet.h"
+#include <RTBEngine/Online/OnlineGameplayNet.h>
 
 #include <RTBEngine/Core/Logger.h>
 #include <RTBEngine/Core/Time.h>
@@ -232,10 +232,8 @@ void LobbyMenuController::OnStart()
 
 void LobbyMenuController::OnUpdate(float)
 {
-    OnlineGameplayNet::Pump();
-
     std::string requestedScenePath;
-    if (OnlineGameplayNet::ConsumeStartMatch(requestedScenePath)) {
+    if (RTBEngine::Online::OnlineGameplayNet::ConsumeStartMatch(requestedScenePath)) {
         SetStatus("Host started the match.");
         RTBEngine::Core::Time::SetPaused(false);
         RTBEngine::ECS::SceneManager::GetInstance().RequestSceneLoad(requestedScenePath.c_str());
@@ -687,12 +685,12 @@ void LobbyMenuController::StartGame()
         return;
     }
 
-    if (OnlineGameplayNet::GetRemoteLobbyMemberCount() == 0) {
+    if (RTBEngine::Online::OnlineGameplayNet::GetRemoteLobbyMemberCount() == 0) {
         SetStatus("Waiting for another lobby member before starting the game.");
         return;
     }
 
-    if (!OnlineGameplayNet::BroadcastStartMatch(gameScenePath)) {
+    if (!RTBEngine::Online::OnlineGameplayNet::BroadcastStartMatch(gameScenePath)) {
         SetStatus("Could not notify the other lobby members. Wait for Players to show 2+ and try again.");
         return;
     }
