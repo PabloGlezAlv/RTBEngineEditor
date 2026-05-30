@@ -38,6 +38,7 @@ namespace RTBEditor {
         int lanDiscoveryPort = 27016;
         char defaultHostAddress[128] = "";
         char loginDisplayName[64] = "";
+        char defaultStartScene[260] = "Assets/Scenes/MainMenu.lua";
         char sessionDisplayName[64] = "EditorUser";
         char lobbyCode[32] = "";
         char joinHostAddress[128] = "";
@@ -51,7 +52,6 @@ namespace RTBEditor {
 
         MultiplayerTestLauncher multiplayerLauncher;
         int multiplayerPlayerCount = 2;
-        char multiplayerStartScene[260] = "Assets/Scenes/LobbyScene.lua";
     };
 
 }

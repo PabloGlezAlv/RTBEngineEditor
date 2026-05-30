@@ -1,9 +1,12 @@
 #pragma once
 
+#include <RTBEngine/Core/Event.h>
 #include <RTBEngine/ECS/Component.h>
+#include <RTBEngine/Online/IOnlineLobby.h>
 #include <RTBEngine/Reflection/PropertyMacros.h>
 
 #include <string>
+#include <vector>
 
 namespace RTBEngine {
     namespace UI {
@@ -20,6 +23,7 @@ public:
     RTBEngine::UI::UIText* statusText = nullptr;
     RTBEngine::UI::UIText* lobbyIdText = nullptr;
     RTBEngine::UI::UIText* playerCountText = nullptr;
+    RTBEngine::UI::UIText* eventLogText = nullptr;
     RTBEngine::UI::UIText* joinHintText = nullptr;
 
     RTBEngine::UI::UIButton* createButton = nullptr;
@@ -51,8 +55,18 @@ private:
     PendingAction pendingAction = PendingAction::None;
     std::string lastActionMessage;
     bool callbacksBound = false;
+    std::vector<std::string> eventLogLines;
+    RTBEngine::Online::OnlineLobbyState previousLobbyState = RTBEngine::Online::OnlineLobbyState::NotInLobby;
+    bool loggedCreateEvent = false;
+    bool loggedJoinEvent = false;
+    RTBEngine::Core::EventSubscription memberJoinedSubscription;
 
     void BindButtons();
+    void SubscribeLobbyEvents();
+    void AppendEventLog(const std::string& line);
+    void RefreshEventLogText();
+    std::string GetLocalDisplayName() const;
+    void DetectLobbyEvents();
     void RefreshView();
     void RefreshButtonState();
     void TryAutoLogin();

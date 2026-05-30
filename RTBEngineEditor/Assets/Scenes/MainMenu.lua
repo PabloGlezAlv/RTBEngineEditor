@@ -60,6 +60,12 @@ function CreateScene()
                     {
                         type = "CursorUnlocker"
                     },
+                    {
+                        type = "MainMenuController",
+                        playerNameInput = "8A6DDA41-9A67-4B95-A2B6-E2159C420101/UIInputField",
+                        playButton = "2E0ED540-A92F-40A9-B2E7-4906659B3E6E/UIButton",
+                        lobbyScenePath = "Assets/Scenes/LobbyScene.lua"
+                    },
                 },
                 children = {
                     {
@@ -213,10 +219,6 @@ function CreateScene()
                                 hoverOutTimeSec = 0.18,
                                 pressInTimeSec = 0.08,
                                 pressOutTimeSec = 0.12
-                            },
-                            {
-                                type = "SceneChangeButton",
-                                scenePath = "Assets/Scenes/LobbyScene.lua"
                             },
                         },
                         children = {

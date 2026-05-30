@@ -159,6 +159,10 @@ namespace RTBEditor {
         settings.lanDiscoveryPort = ParsePort(readValue("LanDiscoveryPort"), settings.lanDiscoveryPort);
         settings.defaultHostAddress = readValue("DefaultHostAddress");
         settings.loginDisplayName = readValue("LoginDisplayName");
+        settings.defaultStartScene = readValue("DefaultStartScene");
+        if (settings.defaultStartScene.empty()) {
+            settings.defaultStartScene = "Assets/Scenes/MainMenu.lua";
+        }
 
         return settings;
     }
@@ -183,6 +187,7 @@ namespace RTBEditor {
         file << "LanDiscoveryPort=" << settings.lanDiscoveryPort << "\n";
         file << "DefaultHostAddress=" << settings.defaultHostAddress << "\n";
         file << "LoginDisplayName=" << settings.loginDisplayName << "\n";
+        file << "DefaultStartScene=" << settings.defaultStartScene << "\n";
 
         return file.good();
     }

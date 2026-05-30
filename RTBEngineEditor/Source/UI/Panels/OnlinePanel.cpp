@@ -99,6 +99,7 @@ namespace RTBEditor {
         CopyToBuffer(joinHostAddress, settings.defaultHostAddress);
         CopyToBuffer(loginDisplayName, settings.loginDisplayName);
         CopyToBuffer(sessionDisplayName, settings.loginDisplayName);
+        CopyToBuffer(defaultStartScene, settings.defaultStartScene);
     }
 
     EditorOnlineSettings OnlinePanel::BuildSettingsFromFields() const
@@ -109,6 +110,10 @@ namespace RTBEditor {
         settings.lanDiscoveryPort = static_cast<std::uint16_t>(std::max(1, lanDiscoveryPort));
         settings.defaultHostAddress = ReadBuffer(defaultHostAddress);
         settings.loginDisplayName = ReadBuffer(loginDisplayName);
+        settings.defaultStartScene = ReadBuffer(defaultStartScene);
+        if (settings.defaultStartScene.empty()) {
+            settings.defaultStartScene = "Assets/Scenes/MainMenu.lua";
+        }
         return settings;
     }
 
@@ -125,6 +130,9 @@ namespace RTBEditor {
         ImGui::SetNextItemWidth(-1.0f);
         ImGui::InputText("Host remoto por defecto (IP o DNS)", defaultHostAddress, sizeof(defaultHostAddress));
         ImGui::TextDisabled("Internet sin EOS: abrir/reenviar puertos UDP en el host.");
+        ImGui::SetNextItemWidth(-1.0f);
+        ImGui::InputText("Escena por defecto", defaultStartScene, sizeof(defaultStartScene));
+        ImGui::TextDisabled("Usada por Multiplayer Test y como escena inicial al lanzar jugadores.");
 
         const EditorOnlineSettings currentSettings = BuildSettingsFromFields();
         if (ImGui::Button("Reload")) {
@@ -265,13 +273,13 @@ namespace RTBEditor {
         ImGui::InputInt("Player Count", &multiplayerPlayerCount);
         multiplayerPlayerCount = std::clamp(multiplayerPlayerCount, 2, 6);
         ImGui::SetNextItemWidth(-1.0f);
-        ImGui::InputText("Start Scene", multiplayerStartScene, sizeof(multiplayerStartScene));
+        ImGui::InputText("Start Scene", defaultStartScene, sizeof(defaultStartScene));
 
         const EditorOnlineSettings launchOnlineSettings = BuildSettingsFromFields();
         if (ImGui::Button("Prepare Players")) {
             MultiplayerTestLauncher::LaunchSettings settings;
             settings.playerCount = multiplayerPlayerCount;
-            settings.startScene = multiplayerStartScene;
+            settings.startScene = ReadBuffer(defaultStartScene);
             settings.overrideOnlineSettings = true;
             settings.onlineSettings = launchOnlineSettings;
             multiplayerLauncher.Prepare(settings);

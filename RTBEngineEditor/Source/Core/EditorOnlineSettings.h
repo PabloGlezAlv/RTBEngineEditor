@@ -15,6 +15,7 @@ namespace RTBEditor {
         std::uint16_t lanDiscoveryPort = 27016;
         std::string defaultHostAddress;
         std::string loginDisplayName;
+        std::string defaultStartScene = "Assets/Scenes/MainMenu.lua";
     };
 #pragma warning(pop)
 

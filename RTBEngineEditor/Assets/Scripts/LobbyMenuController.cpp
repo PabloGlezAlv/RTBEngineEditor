@@ -116,7 +116,7 @@ namespace {
         RTBEngine::Online::OnlineSystem& online = RTBEngine::Online::OnlineSystem::GetInstance();
         RTBEngine::Online::OnlineLoginOptions options = online.GetDefaultLoginOptions();
         if (options.displayName.empty()) {
-            options.displayName = "LobbyPlayer";
+            options.displayName = "Player";
         }
         if (options.type == RTBEngine::Online::OnlineLoginType::DeveloperAuth &&
             (options.developerAuthCredentialName.empty() ||
@@ -207,6 +207,7 @@ RTB_REGISTER_COMPONENT(LobbyMenuController)
     RTB_PROPERTY_COMPONENT(statusText, UIText)
     RTB_PROPERTY_COMPONENT(lobbyIdText, UIText)
     RTB_PROPERTY_COMPONENT(playerCountText, UIText)
+    RTB_PROPERTY_COMPONENT(eventLogText, UIText)
     RTB_PROPERTY_COMPONENT(joinHintText, UIText)
     RTB_PROPERTY_COMPONENT(createButton, UIButton)
     RTB_PROPERTY_COMPONENT(joinButton, UIButton)
@@ -225,7 +226,11 @@ void LobbyMenuController::OnStart()
     SetTimeMode(RTBEngine::ECS::ComponentTimeMode::Unscaled);
     SetUpdateTickEnabled(true);
     maxMembers = std::clamp(maxMembers, 2, 6);
+    previousLobbyState = RTBEngine::Online::OnlineLobbyState::NotInLobby;
+    loggedCreateEvent = false;
+    loggedJoinEvent = false;
     BindButtons();
+    SubscribeLobbyEvents();
     TryAutoLogin();
     RefreshView();
 }
@@ -251,6 +256,7 @@ void LobbyMenuController::OnDestroy()
     // button pointers here; the buttons own and destroy their callbacks safely.
     callbacksBound = false;
     pendingAction = PendingAction::None;
+    memberJoinedSubscription.Reset();
     createButton = nullptr;
     joinButton = nullptr;
     copyLobbyIdButton = nullptr;
@@ -259,6 +265,7 @@ void LobbyMenuController::OnDestroy()
     statusText = nullptr;
     lobbyIdText = nullptr;
     playerCountText = nullptr;
+    eventLogText = nullptr;
     joinHintText = nullptr;
 }
 
@@ -297,29 +304,125 @@ void LobbyMenuController::BindButtons()
     callbacksBound = true;
 }
 
+void LobbyMenuController::SubscribeLobbyEvents()
+{
+    memberJoinedSubscription.Reset();
+
+    RTBEngine::Online::IOnlineLobby* lobby =
+        RTBEngine::Online::OnlineSystem::GetInstance().GetLobby();
+    if (!lobby) {
+        return;
+    }
+
+    memberJoinedSubscription = lobby->SubscribeMemberJoined(
+        [this](const RTBEngine::Online::OnlineLobbyMemberJoinedEvent& event) {
+            if (event.displayName.empty()) {
+                return;
+            }
+
+            AppendEventLog(event.displayName + " joined the lobby");
+        });
+}
+
+void LobbyMenuController::AppendEventLog(const std::string& line)
+{
+    if (line.empty()) {
+        return;
+    }
+
+    if (!eventLogLines.empty() && eventLogLines.back() == line) {
+        return;
+    }
+
+    constexpr std::size_t kMaxEventLogLines = 8;
+    eventLogLines.push_back(line);
+    if (eventLogLines.size() > kMaxEventLogLines) {
+        eventLogLines.erase(eventLogLines.begin());
+    }
+
+    RefreshEventLogText();
+}
+
+void LobbyMenuController::RefreshEventLogText()
+{
+    if (!eventLogText) {
+        return;
+    }
+
+    if (eventLogLines.empty()) {
+        eventLogText->SetText("");
+        return;
+    }
+
+    std::string combined = eventLogLines.front();
+    for (std::size_t index = 1; index < eventLogLines.size(); ++index) {
+        combined += '\n';
+        combined += eventLogLines[index];
+    }
+
+    eventLogText->SetText(combined);
+}
+
+std::string LobbyMenuController::GetLocalDisplayName() const
+{
+    RTBEngine::Online::OnlineSystem& online = RTBEngine::Online::OnlineSystem::GetInstance();
+    if (const RTBEngine::Online::IOnlineIdentity* identity = online.GetIdentity()) {
+        if (identity->IsLoggedIn() && !identity->GetDisplayName().empty()) {
+            return identity->GetDisplayName();
+        }
+    }
+
+    const std::string& sessionName = online.GetSessionDisplayName();
+    return sessionName.empty() ? "Player" : sessionName;
+}
+
+void LobbyMenuController::DetectLobbyEvents()
+{
+    RTBEngine::Online::IOnlineLobby* lobby =
+        RTBEngine::Online::OnlineSystem::GetInstance().GetLobby();
+    if (!lobby) {
+        previousLobbyState = RTBEngine::Online::OnlineLobbyState::NotInLobby;
+        return;
+    }
+
+    const RTBEngine::Online::OnlineLobbyState currentState = lobby->GetState();
+    const RTBEngine::Online::OnlineLobbyInfo& currentLobby = lobby->GetCurrentLobby();
+    const bool hasLobby = !currentLobby.lobbyId.empty();
+
+    if (currentState == RTBEngine::Online::OnlineLobbyState::InLobby && hasLobby) {
+        if (previousLobbyState != RTBEngine::Online::OnlineLobbyState::InLobby) {
+            if (currentLobby.isOwner && !loggedCreateEvent) {
+                AppendEventLog(GetLocalDisplayName() + " has created the lobby");
+                loggedCreateEvent = true;
+            } else if (previousLobbyState == RTBEngine::Online::OnlineLobbyState::Joining &&
+                !currentLobby.isOwner &&
+                !loggedJoinEvent) {
+                AppendEventLog(GetLocalDisplayName() + " joined the lobby");
+                loggedJoinEvent = true;
+            }
+        }
+    } else if (!hasLobby || currentState == RTBEngine::Online::OnlineLobbyState::NotInLobby) {
+        if (!eventLogLines.empty()) {
+            eventLogLines.clear();
+            RefreshEventLogText();
+        }
+        loggedCreateEvent = false;
+        loggedJoinEvent = false;
+    }
+
+    previousLobbyState = currentState;
+}
+
 void LobbyMenuController::RefreshView()
 {
     RTBEngine::Online::OnlineSystem& online = RTBEngine::Online::OnlineSystem::GetInstance();
-    RTBEngine::Online::IOnlineIdentity* identity = online.GetIdentity();
     RTBEngine::Online::IOnlineLobby* lobby = online.GetLobby();
 
-    std::string status = lastActionMessage.empty() ? "Choose how to enter the lobby." : lastActionMessage;
-    status += "\nOnline: ";
-    status += RTBEngine::Online::ToString(online.GetState());
+    DetectLobbyEvents();
 
-    if (identity) {
-        status += " | Login: ";
-        status += RTBEngine::Online::ToString(identity->GetLoginStatus());
-    } else {
-        status += " | Login: unavailable";
-    }
-
-    if (lobby) {
-        status += " | Lobby: ";
-        status += RTBEngine::Online::ToString(lobby->GetState());
-    } else {
-        status += " | Lobby: unavailable";
-    }
+    const std::string status = lastActionMessage.empty()
+        ? "Choose how to enter the lobby."
+        : lastActionMessage;
 
     if (statusText) {
         statusText->SetText(status);
@@ -603,7 +706,7 @@ void LobbyMenuController::CreateLobby()
 void LobbyMenuController::JoinLobby()
 {
     if (joinLobbyId.empty()) {
-        SetStatus("Join needs a Lobby ID. Runtime text input is the next UI step.");
+        SetStatus("Join needs a Lobby ID. Type or paste one, then press Join Lobby.");
         return;
     }
 

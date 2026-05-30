@@ -57,6 +57,7 @@ function CreateScene()
                         statusText = "C2786523-71A6-4329-AC85-55D5A5CB4001/UIText",
                         lobbyIdText = "E6727C41-8D17-45C9-9A26-A1D133A94001/UIText",
                         playerCountText = "2D0F2F5B-8CF3-45C2-9918-B4D177294001/UIText",
+                        eventLogText = "F8A91C20-4E2B-4D9A-8C15-2B6E4D890001/UIText",
                         joinHintText = "2BE1B91B-BE70-44B7-8E8B-923EA89F4001/UIText",
                         createButton = "F510EC7C-B006-494D-A1B1-A0EC72854001/UIButton",
                         joinButton = "1A33655A-FD08-4408-8B67-617BA5C94001/UIButton",
@@ -108,7 +109,7 @@ function CreateScene()
                                 anchorMax = Vector2(0.50, 0.50),
                                 pivot = Vector2(0.50, 0.50),
                                 anchoredPosition = Vector2(0.00, 0.00),
-                                sizeDelta = Vector2(720.00, 620.00),
+                                sizeDelta = Vector2(720.00, 660.00),
                                 rotation = 0.00,
                                 scale = Vector2(1.00, 1.00)
                             },
@@ -281,12 +282,35 @@ function CreateScene()
                                 }
                             },
                             {
+                                name = "EventLogText",
+                                uuid = "F8A91C20-4E2B-4D9A-8C15-2B6E4D890001",
+                                components = {
+                                    {
+                                        type = "UIText",
+                                        text = "",
+                                        color = Color(0.82, 0.86, 0.94, 1.00),
+                                        fontSize = 15.00,
+                                        alignment = "Left",
+                                        font = nil,
+                                        isVisible = true,
+                                        raycastTarget = false,
+                                        anchorMin = Vector2(0.50, 1.00),
+                                        anchorMax = Vector2(0.50, 1.00),
+                                        pivot = Vector2(0.50, 1.00),
+                                        anchoredPosition = Vector2(0.00, -300.00),
+                                        sizeDelta = Vector2(640.00, 96.00),
+                                        rotation = 0.00,
+                                        scale = Vector2(1.00, 1.00)
+                                    },
+                                }
+                            },
+                            {
                                 name = "JoinHintText",
                                 uuid = "2BE1B91B-BE70-44B7-8E8B-923EA89F4001",
                                 components = {
                                     {
                                         type = "UIText",
-                                        text = "Join button is wired. Runtime text input comes next.",
+                                        text = "Type or paste a Lobby ID, then press Join Lobby.",
                                         color = Color(0.72, 0.78, 0.90, 1.00),
                                         fontSize = 16.00,
                                         alignment = "Center",
@@ -296,7 +320,7 @@ function CreateScene()
                                         anchorMin = Vector2(0.50, 1.00),
                                         anchorMax = Vector2(0.50, 1.00),
                                         pivot = Vector2(0.50, 1.00),
-                                        anchoredPosition = Vector2(0.00, -292.00),
+                                        anchoredPosition = Vector2(0.00, -404.00),
                                         sizeDelta = Vector2(640.00, 30.00),
                                         rotation = 0.00,
                                         scale = Vector2(1.00, 1.00)
@@ -318,7 +342,7 @@ function CreateScene()
                                         anchorMin = Vector2(0.50, 1.00),
                                         anchorMax = Vector2(0.50, 1.00),
                                         pivot = Vector2(0.50, 1.00),
-                                        anchoredPosition = Vector2(-165.00, -330.00),
+                                        anchoredPosition = Vector2(-165.00, -442.00),
                                         sizeDelta = Vector2(300.00, 54.00),
                                         rotation = 0.00,
                                         scale = Vector2(1.00, 1.00)
@@ -392,7 +416,7 @@ function CreateScene()
                                         anchorMin = Vector2(0.50, 1.00),
                                         anchorMax = Vector2(0.50, 1.00),
                                         pivot = Vector2(0.50, 1.00),
-                                        anchoredPosition = Vector2(165.00, -330.00),
+                                        anchoredPosition = Vector2(165.00, -442.00),
                                         sizeDelta = Vector2(300.00, 54.00),
                                         rotation = 0.00,
                                         scale = Vector2(1.00, 1.00)
@@ -466,7 +490,7 @@ function CreateScene()
                                         anchorMin = Vector2(0.50, 1.00),
                                         anchorMax = Vector2(0.50, 1.00),
                                         pivot = Vector2(0.50, 1.00),
-                                        anchoredPosition = Vector2(-165.00, -404.00),
+                                        anchoredPosition = Vector2(-165.00, -516.00),
                                         sizeDelta = Vector2(300.00, 54.00),
                                         rotation = 0.00,
                                         scale = Vector2(1.00, 1.00)
@@ -540,7 +564,7 @@ function CreateScene()
                                         anchorMin = Vector2(0.50, 1.00),
                                         anchorMax = Vector2(0.50, 1.00),
                                         pivot = Vector2(0.50, 1.00),
-                                        anchoredPosition = Vector2(165.00, -404.00),
+                                        anchoredPosition = Vector2(165.00, -516.00),
                                         sizeDelta = Vector2(300.00, 54.00),
                                         rotation = 0.00,
                                         scale = Vector2(1.00, 1.00)
@@ -614,7 +638,7 @@ function CreateScene()
                                         anchorMin = Vector2(0.50, 1.00),
                                         anchorMax = Vector2(0.50, 1.00),
                                         pivot = Vector2(0.50, 1.00),
-                                        anchoredPosition = Vector2(0.00, -500.00),
+                                        anchoredPosition = Vector2(0.00, -590.00),
                                         sizeDelta = Vector2(260.00, 46.00),
                                         rotation = 0.00,
                                         scale = Vector2(1.00, 1.00)

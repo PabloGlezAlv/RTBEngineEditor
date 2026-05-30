@@ -164,7 +164,7 @@ namespace RTBEditor {
         LaunchSettings settings = requestedSettings;
         settings.playerCount = std::clamp(settings.playerCount, 2, 6);
         if (settings.startScene.empty()) {
-            settings.startScene = "Assets/Scenes/LobbyScene.lua";
+            settings.startScene = "Assets/Scenes/MainMenu.lua";
         }
 
         StopAll();
@@ -187,12 +187,13 @@ namespace RTBEditor {
         const fs::path scriptProjectPath = project->GetGameScriptsProjectPath();
         if (fs::exists(scriptProjectPath)) {
             const fs::path scriptBuildDirectory = lastRunDirectory / "ScriptBuild";
+            // RTBPlayer.exe in RTBEngine_SDK/Bin is built Release; GameScripts must match RTBEngine.dll ABI.
             const ScriptCompileResult compileResult = BuildSystem::CompileScriptsToDirectory(
                 scriptProjectPath.string(),
                 scriptBuildDirectory,
-                "Debug");
+                "Release");
             if (compileResult != ScriptCompileResult::Success) {
-                SetResult(false, "GameScripts Debug build failed.");
+                SetResult(false, "GameScripts Release build failed.");
                 return false;
             }
 
