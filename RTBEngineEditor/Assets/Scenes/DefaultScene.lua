@@ -702,6 +702,18 @@ function CreateScene()
                 uuid = "E8682E33-50ED-45D8-BC76-B31113639F9E",
                 components = {
                     {
+                        type = "NetworkIdentity",
+                        networkOwnerUserId = "",
+                        networkPlayerSlot = -1
+                    },
+                    {
+                        type = "NetworkTransform",
+                        sendRate = 20.00,
+                        interpolationSpeed = 14.00,
+                        replicatePosition = true,
+                        replicateRotation = true
+                    },
+                    {
                         type = "ThirdPersonCharacterController",
                         cameraObject = "0E7CE370-7C0E-45A8-89CA-AD7A3E70C216",
                         health = "E8682E33-50ED-45D8-BC76-B31113639F9E/HealthComponent",
@@ -739,18 +751,6 @@ function CreateScene()
                         type = "HealthComponent",
                         maxHealth = 100.00,
                         currentHealth = 100.00
-                    },
-                    {
-                        type = "NetworkIdentity",
-                        networkOwnerUserId = "",
-                        networkPlayerSlot = -1
-                    },
-                    {
-                        type = "NetworkTransform",
-                        sendRate = 20.00,
-                        interpolationSpeed = 14.00,
-                        replicatePosition = true,
-                        replicateRotation = true
                     },
                     {
                         type = "RigidBodyComponent",

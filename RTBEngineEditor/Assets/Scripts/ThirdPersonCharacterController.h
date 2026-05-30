@@ -114,6 +114,9 @@ private:
     void UpdateAttackFacingLock(float deltaTime);
     void UpdateMovement(float deltaTime);
     void UpdateAnimatorLocomotion(bool hasMovementInput, bool isRunning);
+    bool UsesReplicatedAnimator() const;
+    void UpdateAnimatorFromLocalInput();
+    void UpdateAnimatorFromReplicatedMotion(float deltaTime);
     void StartAttack(const RTBEngine::Math::Vector3& attackDirection);
     void FinishAttack();
     void HandleDeath(const HealthComponent::DeathEvent& eventData);
@@ -132,4 +135,6 @@ private:
     void SendNetworkInput();
 
     std::uint32_t inputSequenceNumber = 0;
+    RTBEngine::Math::Vector3 lastReplicatedWorldPosition = RTBEngine::Math::Vector3::Zero();
+    bool hasReplicatedMotionSample = false;
 };

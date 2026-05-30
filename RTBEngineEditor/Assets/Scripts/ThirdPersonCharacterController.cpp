@@ -116,6 +116,7 @@ RTB_END_REGISTER(ThirdPersonCharacterController)
 
 void ThirdPersonCharacterController::OnStart()
 {
+    hasReplicatedMotionSample = false;
     ClampSettings();
     ResolveHealth();
     ResolveAnimator();
@@ -178,15 +179,19 @@ void ThirdPersonCharacterController::OnFixedUpdate(float fixedDeltaTime)
         return;
     }
 
-    // Client local pawn: capture WASD and send to host (no local physics simulation).
+    ResolveAnimator();
+    RegisterAnimationSlots();
+
+    // Client local pawn: send input to host and drive animator locally (transform comes from network).
     if (RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby() &&
         !RTBEngine::Online::OnlineGameplayNet::IsLobbyHost() &&
         IsLocallyControlled()) {
         SendNetworkInput();
+        UpdateAnimatorFromLocalInput();
         return;
     }
 
-    // Proxies on clients and any pawn without host simulation skip movement.
+    // Proxies without host simulation skip movement (animator for clients runs in LateUpdate).
     if (!HasSimulationAuthority()) {
         return;
     }
@@ -219,15 +224,20 @@ void ThirdPersonCharacterController::OnFixedUpdate(float fixedDeltaTime)
     UpdateMovement(fixedDeltaTime);
 }
 
-void ThirdPersonCharacterController::OnLateUpdate(float /*deltaTime*/)
+void ThirdPersonCharacterController::OnLateUpdate(float deltaTime)
 {
     if (!owner) {
         return;
     }
 
-    // Only the local human player's pawn drives the follow camera.
     if (!IsLocallyControlled()) {
         HideAttackAimTrail();
+        // Runs after NetworkTransform when that component is listed earlier on the pawn.
+        if (UsesReplicatedAnimator()) {
+            ResolveAnimator();
+            RegisterAnimationSlots();
+            UpdateAnimatorFromReplicatedMotion(deltaTime);
+        }
         return;
     }
 
@@ -669,6 +679,57 @@ void ThirdPersonCharacterController::UpdateMovement(float deltaTime)
     }
 
     UpdateAnimatorLocomotion(true, isRunning);
+}
+
+bool ThirdPersonCharacterController::UsesReplicatedAnimator() const
+{
+    return RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby() &&
+        !HasSimulationAuthority() &&
+        !IsLocallyControlled();
+}
+
+void ThirdPersonCharacterController::UpdateAnimatorFromLocalInput()
+{
+    if (state == State::Dead) {
+        return;
+    }
+
+    if (PauseMenuController::IsAnyMenuOpen()) {
+        UpdateAnimatorLocomotion(false, false);
+        return;
+    }
+
+    bool isRunning = false;
+    const RTBEngine::Math::Vector3 desiredMove = GetDesiredMoveDirection(isRunning);
+    UpdateAnimatorLocomotion(HasMovementInput(desiredMove), isRunning);
+}
+
+void ThirdPersonCharacterController::UpdateAnimatorFromReplicatedMotion(float deltaTime)
+{
+    if (!owner || state != State::Locomotion) {
+        return;
+    }
+
+    const RTBEngine::Math::Vector3 currentPosition = owner->GetWorldPosition();
+    if (!hasReplicatedMotionSample) {
+        lastReplicatedWorldPosition = currentPosition;
+        hasReplicatedMotionSample = true;
+        UpdateAnimatorLocomotion(false, false);
+        return;
+    }
+
+    RTBEngine::Math::Vector3 delta = currentPosition - lastReplicatedWorldPosition;
+    delta.y = 0.0f;
+    lastReplicatedWorldPosition = currentPosition;
+
+    const float timestep = std::max(deltaTime, 0.0001f);
+    const float planarSpeed = delta.Length() / timestep;
+    const float walkThreshold = std::max(0.05f, moveSpeed * 0.12f);
+    const float runThreshold = std::max(walkThreshold + 0.05f, moveSpeed * sprintMultiplier * 0.55f);
+
+    const bool hasMovementInput = planarSpeed >= walkThreshold;
+    const bool isRunning = planarSpeed >= runThreshold;
+    UpdateAnimatorLocomotion(hasMovementInput, isRunning);
 }
 
 void ThirdPersonCharacterController::UpdateAnimatorLocomotion(bool hasMovementInput, bool isRunning)

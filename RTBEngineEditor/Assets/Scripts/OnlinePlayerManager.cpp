@@ -80,13 +80,11 @@ void OnlinePlayerManager::ConfigurePawn(
 
     if (ThirdPersonCharacterController* controller = pawn->GetComponent<ThirdPersonCharacterController>()) {
         if (!identity->IsLocallyControlled()) {
-            // Remote pawns never drive camera or read local WASD in Update/LateUpdate.
-            controller->SetUpdateTickEnabled(false);
-            // On clients, disable the controller entirely (display-only proxy).
-            // On host, keep FixedUpdate enabled so remote pawns are still simulated.
-            if (!RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
-                controller->SetEnabled(false);
+            if (RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
+                // Host only needs FixedUpdate for remote simulation; skip Update/LateUpdate camera logic.
+                controller->SetUpdateTickEnabled(false);
             }
+            // Clients keep Update/LateUpdate enabled so animator can run after NetworkTransform in LateUpdate.
         }
     }
 
