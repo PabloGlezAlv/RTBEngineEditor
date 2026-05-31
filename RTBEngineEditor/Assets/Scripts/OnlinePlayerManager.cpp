@@ -1,5 +1,8 @@
 #include "OnlinePlayerManager.h"
 
+#include "OnlineGameNetMessages.h"
+#include "ProjectileAttackAbility.h"
+
 #include <RTBEngine/ECS/NetworkIdentity.h>
 #include <RTBEngine/Online/OnlineGameplayNet.h>
 #include "ThirdPersonCharacterController.h"
@@ -24,7 +27,25 @@ void OnlinePlayerManager::OnStart()
         return;
     }
 
+    GameNet::OnlineGameNetSubsystem::Init();
     ConfigureOnlinePlayers();
+}
+
+void OnlinePlayerManager::OnDestroy()
+{
+    GameNet::OnlineGameNetSubsystem::Shutdown();
+}
+
+void OnlinePlayerManager::OnFixedUpdate(float /*fixedDeltaTime*/)
+{
+    if (!RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby()) {
+        return;
+    }
+
+    GameNet::ProjectileSpawnSnapshot spawnSnapshot;
+    while (GameNet::OnlineGameNetSubsystem::TryConsumeProjectileSpawn(spawnSnapshot)) {
+        ProjectileAttackAbility::SpawnFromNetworkSnapshot(spawnSnapshot);
+    }
 }
 
 void OnlinePlayerManager::ConfigureOnlinePlayers()

@@ -142,6 +142,7 @@ void ProjectileComponent::Initialize(const ProjectileConfig& config)
     ignoreSameTeam = config.ignoreSameTeam;
     destroyOnHit = config.destroyOnHit;
     maxHits = config.maxHits;
+    applyDamage = config.applyDamage;
     direction = config.direction;
     direction.y = 0.0f;
     if (!HasPlanarDirection(direction)) {
@@ -286,6 +287,10 @@ bool ProjectileComponent::HandleSweepHit(const RTBEngine::Math::Vector3& previou
     const float hitFraction = std::clamp(hit.fraction, 0.0f, 1.0f);
     outResolvedPosition = previousPosition + (nextPosition - previousPosition) * hitFraction;
     outResolvedPosition.y = fixedHeight;
+
+    if (!applyDamage) {
+        return destroyOnHit;
+    }
 
     HealthComponent* targetHealth = ResolveHitHealth(hit.gameObject);
     if (!targetHealth || HasAlreadyHit(targetHealth)) {

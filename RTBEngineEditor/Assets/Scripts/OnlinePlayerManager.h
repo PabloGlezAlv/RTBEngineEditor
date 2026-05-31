@@ -21,6 +21,8 @@ public:
 
 public:
     void OnStart() override;
+    void OnDestroy() override;
+    void OnFixedUpdate(float fixedDeltaTime) override;
 
 private:
     std::unique_ptr<RTBEngine::ECS::Prefab> playerPrefab;

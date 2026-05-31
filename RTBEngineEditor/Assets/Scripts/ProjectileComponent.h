@@ -34,6 +34,7 @@ public:
         bool ignoreSameTeam = true;
         bool destroyOnHit = true;
         int maxHits = 1;
+        bool applyDamage = true;
     };
 
     ProjectileComponent() = default;
@@ -54,6 +55,7 @@ public:
     bool ignoreSameTeam = true;
     bool destroyOnHit = true;
     int maxHits = 1;
+    bool applyDamage = true;
 
     RTB_COMPONENT(ProjectileComponent)
 

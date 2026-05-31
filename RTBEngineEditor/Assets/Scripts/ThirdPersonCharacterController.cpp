@@ -2,6 +2,8 @@
 
 #include "HealthComponent.h"
 #include <RTBEngine/ECS/NetworkIdentity.h>
+#include "OnlineGameNetMessages.h"
+
 #include <RTBEngine/Online/OnlineGameplayNet.h>
 #include "PauseMenuController.h"
 #include "ProjectileAttackAbility.h"
@@ -141,8 +143,6 @@ void ThirdPersonCharacterController::OnStart()
 
 void ThirdPersonCharacterController::OnUpdate(float deltaTime)
 {
-    (void)deltaTime;
-
     if (!owner) {
         return;
     }
@@ -169,6 +169,7 @@ void ThirdPersonCharacterController::OnUpdate(float deltaTime)
 
     if (state == State::Attacking) {
         HideAttackAimTrail();
+        UpdatePredictedAttackVisual(deltaTime);
         return;
     }
 }
@@ -219,6 +220,11 @@ void ThirdPersonCharacterController::OnFixedUpdate(float fixedDeltaTime)
         HideAttackAimTrail();
         UpdateAttackFacingLock(fixedDeltaTime);
         return;
+    }
+
+    if (RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby() &&
+        RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
+        TryProcessRemoteAttackInput();
     }
 
     UpdateMovement(fixedDeltaTime);
@@ -535,7 +541,16 @@ void ThirdPersonCharacterController::HandleJoystickAttackReleased(const RTBEngin
         return;
     }
 
-    StartAttack(GetAttackDirectionFromJoystick(joystickValue));
+    const RTBEngine::Math::Vector3 attackDirection = GetAttackDirectionFromJoystick(joystickValue);
+    if (RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby() &&
+        !RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
+        ++networkAttackSequence;
+        pendingNetworkAttackDirection = attackDirection;
+        PlayPredictedAttackVisual(attackDirection);
+        return;
+    }
+
+    StartAttack(attackDirection);
 }
 
 void ThirdPersonCharacterController::UpdateAttackAimTrail()
@@ -1009,7 +1024,6 @@ void ThirdPersonCharacterController::SendNetworkInput()
     bool isRunning = false;
     const RTBEngine::Math::Vector3 desiredMove = GetDesiredMoveDirection(isRunning);
 
-    // Pack planar world direction; host applies it when simulating this client's slot.
     RTBEngine::Online::OnlineGameplayNet::PlayerInputSnapshot snapshot;
     snapshot.senderUserId = RTBEngine::Online::OnlineGameplayNet::GetLocalUserId();
     snapshot.sequenceNumber = ++inputSequenceNumber;
@@ -1017,5 +1031,90 @@ void ThirdPersonCharacterController::SendNetworkInput()
     snapshot.moveZ = desiredMove.z;
     snapshot.sprint = isRunning;
     RTBEngine::Online::OnlineGameplayNet::SendPlayerInput(snapshot);
+
+    if (networkAttackSequence > 0) {
+        GameNet::PlayerCombatInput combatInput;
+        combatInput.senderUserId = snapshot.senderUserId;
+        combatInput.attackSequence = networkAttackSequence;
+        combatInput.attackDirX = pendingNetworkAttackDirection.x;
+        combatInput.attackDirZ = pendingNetworkAttackDirection.z;
+        GameNet::OnlineGameNetSubsystem::SendCombatInput(combatInput);
+    }
+}
+
+void ThirdPersonCharacterController::TryProcessRemoteAttackInput()
+{
+    if (!owner || IsLocallyControlled() || !projectileAttack) {
+        return;
+    }
+
+    RTBEngine::ECS::NetworkIdentity* identity = owner->GetComponent<RTBEngine::ECS::NetworkIdentity>();
+    if (!identity || identity->networkOwnerUserId.empty()) {
+        return;
+    }
+
+    GameNet::PlayerCombatInput remoteCombat;
+    if (!GameNet::OnlineGameNetSubsystem::TryGetLatestCombatInputForUser(
+            identity->networkOwnerUserId,
+            remoteCombat)) {
+        return;
+    }
+
+    if (remoteCombat.attackSequence == 0 ||
+        remoteCombat.attackSequence == lastProcessedRemoteAttackSequence) {
+        return;
+    }
+
+    lastProcessedRemoteAttackSequence = remoteCombat.attackSequence;
+
+    RTBEngine::Math::Vector3 attackDirection(remoteCombat.attackDirX, 0.0f, remoteCombat.attackDirZ);
+    if (!HasMovementInput(attackDirection)) {
+        return;
+    }
+
+    StartAttack(attackDirection);
+}
+
+void ThirdPersonCharacterController::PlayPredictedAttackVisual(const RTBEngine::Math::Vector3& attackDirection)
+{
+    HideAttackAimTrail();
+
+    if (state != State::Locomotion || !projectileAttack) {
+        return;
+    }
+
+    RTBEngine::Math::Vector3 normalizedAttackDirection = attackDirection;
+    normalizedAttackDirection.y = 0.0f;
+    if (!HasMovementInput(normalizedAttackDirection)) {
+        return;
+    }
+
+    normalizedAttackDirection.Normalize();
+    activeAttackDirection = normalizedAttackDirection;
+    FaceAttackDirection(activeAttackDirection);
+    state = State::Attacking;
+
+    if (animator && attackSlotState.ready && animator->GetClip(kAttackAlias)) {
+        animator->Play(kAttackAlias, false);
+    }
+
+    predictedAttackVisualTimeRemaining =
+        projectileAttack->GetHitDelaySeconds() + projectileAttack->GetRecoverySeconds();
+}
+
+void ThirdPersonCharacterController::UpdatePredictedAttackVisual(float deltaTime)
+{
+    if (predictedAttackVisualTimeRemaining <= 0.0f || state != State::Attacking) {
+        return;
+    }
+
+    if (projectileAttack && projectileAttack->IsAbilityActive()) {
+        return;
+    }
+
+    predictedAttackVisualTimeRemaining = std::max(0.0f, predictedAttackVisualTimeRemaining - deltaTime);
+    if (predictedAttackVisualTimeRemaining <= 0.0f) {
+        FinishAttack();
+    }
 }
 

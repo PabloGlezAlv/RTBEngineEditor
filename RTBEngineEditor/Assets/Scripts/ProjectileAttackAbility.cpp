@@ -4,6 +4,12 @@
 #include "ProjectileComponent.h"
 
 #include <RTBEngine/Core/ResourceManager.h>
+#include <RTBEngine/ECS/NetworkIdentity.h>
+#include <RTBEngine/ECS/Scene.h>
+#include <RTBEngine/ECS/SceneManager.h>
+#include "OnlineGameNetMessages.h"
+
+#include <RTBEngine/Online/OnlineGameplayNet.h>
 #include <RTBEngine/ECS/CapsuleColliderComponent.h>
 #include <RTBEngine/ECS/GameObject.h>
 #include <RTBEngine/ECS/MeshRenderer.h>
@@ -67,6 +73,51 @@ bool ProjectileAttackAbility::FireNow(RTBEngine::ECS::GameObject* instigator,
                                       const RTBEngine::Math::Vector3& attackDirection,
                                       RTBEngine::Physics::PhysicsWorld* physicsWorld)
 {
+    return SpawnProjectile(instigator, attackDirection, physicsWorld, true);
+}
+
+bool ProjectileAttackAbility::SpawnFromNetworkSnapshot(
+    const GameNet::ProjectileSpawnSnapshot& snapshot)
+{
+    RTBEngine::ECS::GameObject* instigator = FindPawnByPlayerSlot(snapshot.ownerPlayerSlot);
+    if (!instigator) {
+        return false;
+    }
+
+    RTBEngine::Math::Vector3 direction = snapshot.direction;
+    direction.y = 0.0f;
+    if (!HasPlanarDirection(direction)) {
+        return false;
+    }
+
+    ProjectileAttackAbility* ability = instigator->GetComponent<ProjectileAttackAbility>();
+    if (!ability) {
+        return false;
+    }
+
+    ability->damage = snapshot.damage;
+    ability->projectileSpeed = snapshot.speed;
+    ability->projectileLifetime = std::max(0.01f, snapshot.maxDistance / std::max(0.01f, snapshot.speed));
+    ability->projectileRadius = snapshot.radius;
+    ability->ignoreSameTeam = snapshot.ignoreSameTeam;
+    ability->destroyOnHit = snapshot.destroyOnHit;
+    ability->maxHits = snapshot.maxHits;
+
+    RTBEngine::Math::Vector3 origin = snapshot.origin;
+    return ability->SpawnProjectile(
+        instigator,
+        direction,
+        ability->ResolvePhysicsWorld(instigator),
+        false,
+        &origin);
+}
+
+bool ProjectileAttackAbility::SpawnProjectile(RTBEngine::ECS::GameObject* instigator,
+                                              const RTBEngine::Math::Vector3& attackDirection,
+                                              RTBEngine::Physics::PhysicsWorld* physicsWorld,
+                                              bool broadcastOnlineSpawn,
+                                              const RTBEngine::Math::Vector3* spawnOriginOverride)
+{
     ClampSettings();
 
     if (!instigator || damage <= 0.0f) {
@@ -89,7 +140,9 @@ bool ProjectileAttackAbility::FireNow(RTBEngine::ECS::GameObject* instigator,
     projectileObject->SetTransient(true);
     projectileObject->SetCollisionLayerByName("Projectiles");
 
-    const RTBEngine::Math::Vector3 spawnPosition = GetLaunchOrigin(instigator, planarDirection);
+    const RTBEngine::Math::Vector3 spawnPosition = spawnOriginOverride
+        ? *spawnOriginOverride
+        : GetLaunchOrigin(instigator, planarDirection);
     const float projectileDiameter = projectileRadius * 2.0f;
     const float projectileYaw = -std::atan2(planarDirection.x, planarDirection.z) * kRadToDeg;
     const RTBEngine::Math::Quaternion projectileRotation =
@@ -129,8 +182,56 @@ bool ProjectileAttackAbility::FireNow(RTBEngine::ECS::GameObject* instigator,
     config.damage = damage;
     config.destroyOnHit = destroyOnHit;
     config.maxHits = maxHits;
+    config.applyDamage = !RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby() ||
+        RTBEngine::Online::OnlineGameplayNet::IsLobbyHost();
     projectile->Initialize(config);
+
+    if (broadcastOnlineSpawn &&
+        RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby() &&
+        RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
+        RTBEngine::ECS::NetworkIdentity* identity = instigator->GetComponent<RTBEngine::ECS::NetworkIdentity>();
+        if (identity && identity->networkPlayerSlot >= 0) {
+            static std::uint32_t nextProjectileSpawnId = 1;
+
+            GameNet::ProjectileSpawnSnapshot snapshot;
+            snapshot.spawnId = nextProjectileSpawnId++;
+            snapshot.ownerPlayerSlot = identity->networkPlayerSlot;
+            snapshot.origin = spawnPosition;
+            snapshot.direction = planarDirection;
+            snapshot.speed = projectileSpeed;
+            snapshot.maxDistance = config.maxDistance;
+            snapshot.radius = projectileRadius;
+            snapshot.damage = damage;
+            snapshot.instigatorTeam = config.instigatorTeam;
+            snapshot.ignoreSameTeam = ignoreSameTeam;
+            snapshot.destroyOnHit = destroyOnHit;
+            snapshot.maxHits = maxHits;
+            GameNet::OnlineGameNetSubsystem::BroadcastProjectileSpawn(snapshot);
+        }
+    }
+
     return true;
+}
+
+RTBEngine::ECS::GameObject* ProjectileAttackAbility::FindPawnByPlayerSlot(int playerSlot)
+{
+    RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
+    if (!scene || playerSlot < 0) {
+        return nullptr;
+    }
+
+    for (const auto& gameObject : scene->GetGameObjects()) {
+        if (!gameObject) {
+            continue;
+        }
+
+        RTBEngine::ECS::NetworkIdentity* identity = gameObject->GetComponent<RTBEngine::ECS::NetworkIdentity>();
+        if (identity && identity->networkPlayerSlot == playerSlot) {
+            return gameObject.get();
+        }
+    }
+
+    return nullptr;
 }
 
 RTBEngine::Math::Vector3 ProjectileAttackAbility::GetLaunchOrigin(
@@ -192,7 +293,20 @@ bool ProjectileAttackAbility::CanActivateAbility(
 
 void ProjectileAttackAbility::ExecuteAbilityHit()
 {
-    FireNow(GetActiveInstigator(), GetActiveDirection());
+    RTBEngine::ECS::GameObject* instigator = GetActiveInstigator();
+    if (!instigator) {
+        return;
+    }
+
+    if (RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby()) {
+        const RTBEngine::ECS::NetworkIdentity* identity =
+            instigator->GetComponent<RTBEngine::ECS::NetworkIdentity>();
+        if (identity && !identity->IsSimulatedByHost()) {
+            return;
+        }
+    }
+
+    FireNow(instigator, GetActiveDirection());
 }
 
 void ProjectileAttackAbility::ClampSettings()

@@ -133,8 +133,15 @@ private:
     RTBEngine::Math::Vector3 GetAttackDirectionFromJoystick(const RTBEngine::Math::Vector2& joystickValue) const;
     RTBEngine::Math::Vector3 GetActiveAttackDirection() const;
     void SendNetworkInput();
+    void TryProcessRemoteAttackInput();
+    void PlayPredictedAttackVisual(const RTBEngine::Math::Vector3& attackDirection);
+    void UpdatePredictedAttackVisual(float deltaTime);
 
     std::uint32_t inputSequenceNumber = 0;
+    std::uint32_t networkAttackSequence = 0;
+    std::uint32_t lastProcessedRemoteAttackSequence = 0;
+    RTBEngine::Math::Vector3 pendingNetworkAttackDirection = RTBEngine::Math::Vector3::Zero();
+    float predictedAttackVisualTimeRemaining = 0.0f;
     RTBEngine::Math::Vector3 lastReplicatedWorldPosition = RTBEngine::Math::Vector3::Zero();
     bool hasReplicatedMotionSample = false;
 };

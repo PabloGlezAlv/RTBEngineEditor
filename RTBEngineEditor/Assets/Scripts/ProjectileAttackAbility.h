@@ -5,6 +5,10 @@
 #include <RTBEngine/Math/Vectors/Vector3.h>
 #include <RTBEngine/Reflection/PropertyMacros.h>
 
+namespace GameNet {
+    struct ProjectileSpawnSnapshot;
+}
+
 namespace RTBEngine {
     namespace ECS {
         class GameObject;
@@ -41,12 +45,14 @@ public:
     bool FireNow(RTBEngine::ECS::GameObject* instigator,
                  const RTBEngine::Math::Vector3& attackDirection,
                  RTBEngine::Physics::PhysicsWorld* physicsWorld = nullptr);
+    static bool SpawnFromNetworkSnapshot(const GameNet::ProjectileSpawnSnapshot& snapshot);
     RTBEngine::Math::Vector3 GetLaunchOrigin(RTBEngine::ECS::GameObject* instigator,
                                              const RTBEngine::Math::Vector3& attackDirection) const;
     float GetTravelDistance() const;
     float GetLaunchClearance(RTBEngine::ECS::GameObject* instigator) const;
     float GetCooldownSeconds() const { return cooldown; }
     float GetHitDelaySeconds() const { return hitDelay; }
+    float GetRecoverySeconds() const { return recoveryDuration; }
     float GetDamageAmount() const { return damage; }
     float GetProjectileRadius() const { return projectileRadius; }
 
@@ -60,5 +66,11 @@ protected:
 
 private:
     void ClampSettings();
+    bool SpawnProjectile(RTBEngine::ECS::GameObject* instigator,
+                         const RTBEngine::Math::Vector3& attackDirection,
+                         RTBEngine::Physics::PhysicsWorld* physicsWorld,
+                         bool broadcastOnlineSpawn,
+                         const RTBEngine::Math::Vector3* spawnOriginOverride = nullptr);
     RTBEngine::Physics::PhysicsWorld* ResolvePhysicsWorld(RTBEngine::ECS::GameObject* instigator) const;
+    static RTBEngine::ECS::GameObject* FindPawnByPlayerSlot(int playerSlot);
 };
