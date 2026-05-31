@@ -1,6 +1,7 @@
 #include "MultiplayerTestLauncher.h"
 
 #include "EditorOnlineSettings.h"
+#include <RTBEngine/Physics/PhysicsLayerSettings.h>
 #include "../Build/BuildSystem.h"
 #include "../Project/Project.h"
 
@@ -448,6 +449,16 @@ namespace RTBEditor {
 
             if (!scriptsDllPath.empty() && fs::exists(scriptsDllPath)) {
                 fs::copy_file(scriptsDllPath, playerDirectory / "GameScripts.dll", fs::copy_options::overwrite_existing);
+            }
+
+            const fs::path physicsLayersSource =
+                project->GetProjectDirectory() /
+                RTBEngine::Physics::PhysicsLayerSettings::GetDefaultSettingsFileName();
+            if (fs::exists(physicsLayersSource)) {
+                fs::copy_file(
+                    physicsLayersSource,
+                    playerDirectory / RTBEngine::Physics::PhysicsLayerSettings::GetDefaultSettingsFileName(),
+                    fs::copy_options::overwrite_existing);
             }
 
             if (!CopyDirectoryTree(project->GetAssetRootPath(), playerDirectory / "Assets", error)) {

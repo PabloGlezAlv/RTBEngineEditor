@@ -87,6 +87,7 @@ bool ProjectileAttackAbility::FireNow(RTBEngine::ECS::GameObject* instigator,
     }
 
     projectileObject->SetTransient(true);
+    projectileObject->SetCollisionLayerByName("Projectiles");
 
     const RTBEngine::Math::Vector3 spawnPosition = GetLaunchOrigin(instigator, planarDirection);
     const float projectileDiameter = projectileRadius * 2.0f;

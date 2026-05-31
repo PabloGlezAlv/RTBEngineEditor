@@ -12,6 +12,7 @@
 #include <RTBEngine/Math/Quaternions/Quaternion.h>
 #include <RTBEngine/ECS/SceneManager.h>
 #include <RTBEngine/ECS/Scene.h>
+#include <RTBEngine/Physics/PhysicsLayerSettings.h>
 #include <RTBEngine/ECS/MissingComponent.h>
 #include <RTBEngine/Reflection/TypeInfo.h>
 #include <RTBEngine/Core/ResourceManager.h>
@@ -376,6 +377,32 @@ namespace RTBEditor {
             if (ImGui::InputText("##Name", buffer, sizeof(buffer))) {
                 context.selectedGameObject->SetName(buffer);
                 RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+            }
+
+            {
+                RTBEngine::Physics::PhysicsLayerSettings& layerSettings =
+                    RTBEngine::Physics::PhysicsLayerSettings::Get();
+                const int layerCount = layerSettings.GetLayerCount();
+                const int currentLayer = context.selectedGameObject->GetCollisionLayer();
+                const char* preview = layerSettings.GetLayerName(currentLayer).c_str();
+
+                ImGui::SetNextItemWidth(180.0f);
+                if (ImGui::BeginCombo("Collision layer", preview)) {
+                    for (int layerIndex = 0; layerIndex < layerCount; ++layerIndex) {
+                        const bool selected = layerIndex == currentLayer;
+                        const std::string& layerName = layerSettings.GetLayerName(layerIndex);
+                        if (ImGui::Selectable(layerName.c_str(), selected)) {
+                            context.selectedGameObject->SetCollisionLayer(layerIndex);
+                            layerSettings.ApplyToGameObject(context.selectedGameObject);
+                            RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                        }
+
+                        if (selected) {
+                            ImGui::SetItemDefaultFocus();
+                        }
+                    }
+                    ImGui::EndCombo();
+                }
             }
 
             if (context.selectedGameObject->IsPrefabInstance()) {

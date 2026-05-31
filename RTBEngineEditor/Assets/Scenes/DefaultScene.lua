@@ -700,6 +700,7 @@ function CreateScene()
             {
                 name = "Player GO",
                 uuid = "E8682E33-50ED-45D8-BC76-B31113639F9E",
+                collisionLayer = "Characters",
                 components = {
                     {
                         type = "NetworkIdentity",

@@ -1,5 +1,6 @@
 #include "Project.h"
 #include <RTBEngine/Core/Logger.h>
+#include <RTBEngine/Physics/PhysicsLayerSettings.h>
 #include <fstream>
 #include <sstream>
 #include <filesystem>
@@ -53,6 +54,14 @@ namespace RTBEditor {
         }
 
         activeProject = this;
+
+        const std::filesystem::path physicsLayersPath =
+            projectDirectory / RTBEngine::Physics::PhysicsLayerSettings::GetDefaultSettingsFileName();
+        auto& physicsLayers = RTBEngine::Physics::PhysicsLayerSettings::Get();
+        if (!physicsLayers.LoadFromFile(physicsLayersPath)) {
+            physicsLayers.ResetToDefaults();
+            physicsLayers.SaveToFile(physicsLayersPath);
+        }
 
         return true;
     }

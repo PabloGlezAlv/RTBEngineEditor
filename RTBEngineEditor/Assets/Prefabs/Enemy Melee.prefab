@@ -1,5 +1,6 @@
 return {
     name = "Enemy Melee",
+    collisionLayer = "Characters",
     position = Vector3(-3.00, 0.00, 0.00),
     components = {
         {
