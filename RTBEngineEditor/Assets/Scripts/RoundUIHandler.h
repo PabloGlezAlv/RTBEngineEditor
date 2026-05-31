@@ -18,6 +18,8 @@ public:
     RTBEngine::UI::UIText* countdownText = nullptr;
     std::string roundPrefix = "Round ";
     std::string countdownPrefix = "Start in ";
+    std::string endGameCountdownPrefix = "Game over in ";
+    std::string respawnCountdownPrefix = "Revive in ";
 
     RTB_COMPONENT(RoundUIHandler)
 
@@ -25,11 +27,19 @@ public:
     void ShowRound(int roundNumber);
     void ShowCountdown(int secondsRemaining);
     void HideCountdown();
+    void ShowEndGameCountdown(int secondsRemaining);
+    void HideEndGameCountdown();
+    void ShowRespawnCountdown(int secondsRemaining);
+    void HideRespawnCountdown();
 
 private:
     int currentRound = 0;
     int currentCountdownSeconds = 0;
     bool countdownVisible = false;
+    int currentEndGameSeconds = 0;
+    bool endGameCountdownVisible = false;
+    int currentRespawnSeconds = 0;
+    bool respawnCountdownVisible = false;
 
     void ApplyState() const;
 };

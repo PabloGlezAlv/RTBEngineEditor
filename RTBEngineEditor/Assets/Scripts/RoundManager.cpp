@@ -1,5 +1,12 @@
 #include "RoundManager.h"
 
+#include "OnlineGameNetMessages.h"
+#include "OnlinePlayerManager.h"
+#include "ThirdPersonCharacterController.h"
+
+#include <RTBEngine/ECS/NetworkIdentity.h>
+#include <RTBEngine/Online/OnlineGameplayNet.h>
+
 #include "EnemyAnimationDriver.h"
 #include "EnemyLocomotionController.h"
 #include "EnemyMeleeAI.h"
@@ -29,7 +36,8 @@ RTB_REGISTER_COMPONENT(RoundManager)
     RTB_PROPERTY_RANGE(baseEnemiesPerRound, 1.0f, 100.0f)
     RTB_PROPERTY_RANGE(additionalEnemiesPerRound, 0.0f, 50.0f)
     RTB_PROPERTY_RANGE(winningRound, 1.0f, 100.0f)
-    RTB_PROPERTY_RANGE(finalSceneDelay, 0.0f, 30.0f)
+    RTB_PROPERTY_RANGE(playerRespawnDelay, 0.0f, 120.0f)
+    RTB_PROPERTY_RANGE(teamWipeSceneDelay, 0.0f, 30.0f)
     RTB_PROPERTY(finalScenePath)
 RTB_END_REGISTER(RoundManager)
 
@@ -39,9 +47,11 @@ void RoundManager::OnStart()
     hasRequestedEndScene = false;
     finalSceneLoadRequested = false;
     finalSceneDelayRemaining = 0.0f;
+    localRespawnPending = false;
+    localRespawnRemaining = 0.0f;
     ClampSettings();
     ResolveDependencies();
-    RebindPlayerDeathSubscription();
+    RefreshTrackedPlayers();
     RefreshSpawnPoints();
     CreateEnemyPrefabFromTemplate();
 
@@ -62,12 +72,16 @@ void RoundManager::OnStart()
 
 void RoundManager::OnUpdate(float deltaTime)
 {
+    ClampSettings();
+    ResolveDependencies();
+    RefreshTrackedPlayers();
+
     if (hasRequestedEndScene) {
         UpdateFinalSceneTransition(deltaTime);
         return;
     }
 
-    ClampSettings();
+    UpdateLocalRespawnCountdown(deltaTime);
     RefreshSpawnPoints();
     CleanupSpawnedEnemies();
 
@@ -95,7 +109,7 @@ void RoundManager::OnValidate()
 
 void RoundManager::OnDestroy()
 {
-    UnsubscribeFromPlayerHealth();
+    trackedPlayers.clear();
 }
 
 void RoundManager::ClampSettings()
@@ -104,7 +118,8 @@ void RoundManager::ClampSettings()
     baseEnemiesPerRound = std::max(1, baseEnemiesPerRound);
     additionalEnemiesPerRound = std::max(0, additionalEnemiesPerRound);
     winningRound = std::max(1, winningRound);
-    finalSceneDelay = std::max(0.0f, finalSceneDelay);
+    playerRespawnDelay = std::max(0.0f, playerRespawnDelay);
+    teamWipeSceneDelay = std::max(0.0f, teamWipeSceneDelay);
 }
 
 void RoundManager::ResolveDependencies()
@@ -113,15 +128,80 @@ void RoundManager::ResolveDependencies()
         uiHandler = owner->GetComponent<RoundUIHandler>();
     }
 
+    if (RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby()) {
+        RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
+        if (scene) {
+            for (const auto& gameObject : scene->GetGameObjects()) {
+                if (!gameObject) {
+                    continue;
+                }
+
+                OnlinePlayerManager* onlinePlayers = gameObject->GetComponent<OnlinePlayerManager>();
+                if (onlinePlayers && onlinePlayers->localPlayerObject) {
+                    playerObject = onlinePlayers->localPlayerObject;
+                    break;
+                }
+            }
+        }
+    }
+
     if (!playerObject) {
         return;
     }
 
-    if (!playerHealth || playerHealth->GetOwner() != playerObject) {
-        playerHealth = playerObject->GetComponent<HealthComponent>();
-        if (!playerHealth) {
-            playerHealth = playerObject->GetComponentInChildren<HealthComponent>();
+    HealthComponent* resolvedHealth = playerObject->GetComponent<HealthComponent>();
+    if (!resolvedHealth) {
+        resolvedHealth = playerObject->GetComponentInChildren<HealthComponent>();
+    }
+
+    playerHealth = resolvedHealth;
+}
+
+void RoundManager::RefreshTrackedPlayers()
+{
+    RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
+    if (!scene) {
+        trackedPlayers.clear();
+        cachedPlayerScanVersion = 0;
+        return;
+    }
+
+    const uint32_t hierarchyVersion = RTBEngine::ECS::GameObject::GetHierarchyVersion();
+    if (!trackedPlayers.empty() && hierarchyVersion == cachedPlayerScanVersion) {
+        return;
+    }
+
+    cachedPlayerScanVersion = hierarchyVersion;
+    trackedPlayers.clear();
+
+    for (const auto& gameObject : scene->GetGameObjects()) {
+        if (!gameObject) {
+            continue;
         }
+
+        ThirdPersonCharacterController* controller = gameObject->GetComponent<ThirdPersonCharacterController>();
+        if (!controller || controller->team != static_cast<int>(CharacterTeam::Player)) {
+            continue;
+        }
+
+        HealthComponent* health = gameObject->GetComponent<HealthComponent>();
+        if (!health) {
+            health = gameObject->GetComponentInChildren<HealthComponent>();
+        }
+
+        if (!health) {
+            continue;
+        }
+
+        TrackedPlayer trackedPlayer;
+        trackedPlayer.pawn = gameObject.get();
+        trackedPlayer.health = health;
+        trackedPlayer.deathSubscription = health->SubscribeToDeath(
+            [this, health](const HealthComponent::DeathEvent&) {
+                HandleAnyPlayerDeath(health);
+            });
+
+        trackedPlayers.push_back(std::move(trackedPlayer));
     }
 }
 
@@ -332,38 +412,175 @@ void RoundManager::UpdateCountdownText()
     uiHandler->ShowCountdown(displayedCountdownSeconds);
 }
 
-void RoundManager::RebindPlayerDeathSubscription()
+bool RoundManager::AreAllPlayersDead() const
 {
-    if (subscribedPlayerHealth == playerHealth && playerDeathSubscription.IsValid()) {
+    if (trackedPlayers.empty()) {
+        if (playerHealth) {
+            return playerHealth->IsDead();
+        }
+
+        return false;
+    }
+
+    for (const TrackedPlayer& trackedPlayer : trackedPlayers) {
+        if (!trackedPlayer.health || !trackedPlayer.health->IsDead()) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+void RoundManager::HandleAnyPlayerDeath(HealthComponent* deadHealth)
+{
+    if (hasRequestedEndScene || !deadHealth) {
         return;
     }
 
-    UnsubscribeFromPlayerHealth();
+    if (AreAllPlayersDead()) {
+        if (trackedPlayers.size() <= 1) {
+            if (playerHealth && deadHealth == playerHealth && IsTrackedPlayerLocallyControlled() &&
+                !localRespawnPending) {
+                BeginLocalRespawnCountdown();
+            }
+        } else {
+            BeginTeamWipe();
+        }
 
-    if (!playerHealth) {
         return;
     }
 
-    subscribedPlayerHealth = playerHealth;
-    playerDeathSubscription = playerHealth->SubscribeToDeath(
-        [this](const HealthComponent::DeathEvent&) {
-            HandlePlayerDeath();
-        });
+    if (!playerHealth || deadHealth != playerHealth || !IsTrackedPlayerLocallyControlled()) {
+        return;
+    }
 
-    if (playerHealth->IsDead()) {
-        HandlePlayerDeath();
+    if (!localRespawnPending) {
+        BeginLocalRespawnCountdown();
     }
 }
 
-void RoundManager::UnsubscribeFromPlayerHealth()
+void RoundManager::BeginLocalRespawnCountdown()
 {
-    playerDeathSubscription.Reset();
-    subscribedPlayerHealth = nullptr;
+    localRespawnPending = true;
+    localRespawnRemaining = playerRespawnDelay;
+    displayedRespawnSeconds = -1;
+
+    if (uiHandler) {
+        if (localRespawnRemaining > 0.0f) {
+            uiHandler->ShowRespawnCountdown(static_cast<int>(std::ceil(localRespawnRemaining)));
+        } else {
+            uiHandler->HideRespawnCountdown();
+        }
+    }
+
+    if (localRespawnRemaining <= 0.0f) {
+        ReviveLocalPlayer();
+    }
 }
 
-void RoundManager::HandlePlayerDeath()
+void RoundManager::CancelLocalRespawnCountdown()
 {
+    localRespawnPending = false;
+    localRespawnRemaining = 0.0f;
+    displayedRespawnSeconds = -1;
+
+    if (uiHandler) {
+        uiHandler->HideRespawnCountdown();
+    }
+}
+
+void RoundManager::UpdateLocalRespawnCountdown(float deltaTime)
+{
+    if (!localRespawnPending || hasRequestedEndScene) {
+        return;
+    }
+
+    localRespawnRemaining = std::max(0.0f, localRespawnRemaining - std::max(0.0f, deltaTime));
+
+    if (uiHandler) {
+        const int respawnSeconds = static_cast<int>(std::ceil(localRespawnRemaining));
+        if (respawnSeconds != displayedRespawnSeconds) {
+            displayedRespawnSeconds = respawnSeconds;
+            if (localRespawnRemaining > 0.0f) {
+                uiHandler->ShowRespawnCountdown(respawnSeconds);
+            } else {
+                uiHandler->HideRespawnCountdown();
+            }
+        }
+    }
+
+    if (localRespawnRemaining <= 0.0f) {
+        ReviveLocalPlayer();
+    }
+}
+
+void RoundManager::ReviveLocalPlayer()
+{
+    CancelLocalRespawnCountdown();
+
+    if (!playerObject) {
+        return;
+    }
+
+    RevivePlayerPawn(playerObject);
+}
+
+void RoundManager::RevivePlayerPawn(RTBEngine::ECS::GameObject* pawn)
+{
+    if (!pawn) {
+        return;
+    }
+
+    if (RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby()) {
+        RTBEngine::ECS::NetworkIdentity* identity = pawn->GetComponent<RTBEngine::ECS::NetworkIdentity>();
+        if (!identity || identity->networkPlayerSlot < 0) {
+            return;
+        }
+
+        const int playerSlot = identity->networkPlayerSlot;
+        if (RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
+            GameNet::OnlineGameNetSubsystem::ApplyPlayerReviveForSlot(playerSlot);
+            GameNet::OnlineGameNetSubsystem::BroadcastPlayerRevive(playerSlot);
+        } else {
+            GameNet::OnlineGameNetSubsystem::RequestPlayerRevive(playerSlot);
+        }
+
+        return;
+    }
+
+    HealthComponent* health = pawn->GetComponent<HealthComponent>();
+    if (!health) {
+        health = pawn->GetComponentInChildren<HealthComponent>();
+    }
+
+    if (health && health->IsDead()) {
+        health->Revive();
+    }
+
+    if (ThirdPersonCharacterController* controller = pawn->GetComponent<ThirdPersonCharacterController>()) {
+        controller->ReviveFromDeath();
+    }
+}
+
+void RoundManager::BeginTeamWipe()
+{
+    CancelLocalRespawnCountdown();
     EndGame(GameResult::Lose);
+}
+
+bool RoundManager::IsTrackedPlayerLocallyControlled() const
+{
+    if (!playerObject) {
+        return false;
+    }
+
+    const RTBEngine::ECS::NetworkIdentity* identity =
+        playerObject->GetComponent<RTBEngine::ECS::NetworkIdentity>();
+    if (!identity) {
+        return true;
+    }
+
+    return identity->IsLocallyControlled();
 }
 
 void RoundManager::EndGame(GameResult result)
@@ -374,12 +591,18 @@ void RoundManager::EndGame(GameResult result)
 
     hasRequestedEndScene = true;
     finalSceneLoadRequested = false;
-    finalSceneDelayRemaining = std::max(0.0f, finalSceneDelay);
+    finalSceneDelayRemaining = std::max(0.0f, teamWipeSceneDelay);
+    displayedEndGameSeconds = -1;
     state = State::Stopped;
     GameSession::GetInstance().SetResult(result);
 
     if (uiHandler) {
         uiHandler->HideCountdown();
+        if (finalSceneDelayRemaining > 0.0f) {
+            uiHandler->ShowEndGameCountdown(static_cast<int>(std::ceil(finalSceneDelayRemaining)));
+        } else {
+            uiHandler->HideEndGameCountdown();
+        }
     }
 
     if (finalSceneDelayRemaining <= 0.0f) {
@@ -394,6 +617,19 @@ void RoundManager::UpdateFinalSceneTransition(float deltaTime)
     }
 
     finalSceneDelayRemaining = std::max(0.0f, finalSceneDelayRemaining - std::max(0.0f, deltaTime));
+
+    if (uiHandler) {
+        const int endGameSeconds = static_cast<int>(std::ceil(finalSceneDelayRemaining));
+        if (endGameSeconds != displayedEndGameSeconds) {
+            displayedEndGameSeconds = endGameSeconds;
+            if (finalSceneDelayRemaining > 0.0f) {
+                uiHandler->ShowEndGameCountdown(endGameSeconds);
+            } else {
+                uiHandler->HideEndGameCountdown();
+            }
+        }
+    }
+
     if (finalSceneDelayRemaining <= 0.0f) {
         RequestFinalScene();
     }

@@ -567,7 +567,8 @@ function CreateScene()
                         baseEnemiesPerRound = 2,
                         additionalEnemiesPerRound = 1,
                         winningRound = 5,
-                        finalSceneDelay = 5.00,
+                        playerRespawnDelay = 30.00,
+                        teamWipeSceneDelay = 5.00,
                         finalScenePath = "Assets/Scenes/FinalScene.lua"
                     },
                 }

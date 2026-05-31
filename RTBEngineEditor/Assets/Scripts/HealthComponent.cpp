@@ -58,6 +58,17 @@ void HealthComponent::Heal(float amount)
     NotifyHealthChanged(false);
 }
 
+void HealthComponent::Revive()
+{
+    if (!IsDead()) {
+        return;
+    }
+
+    currentHealth = maxHealth;
+    ClampHealth();
+    NotifyHealthChanged(true);
+}
+
 void HealthComponent::TakeDamage(float amount)
 {
     TakeDamage(amount, {});

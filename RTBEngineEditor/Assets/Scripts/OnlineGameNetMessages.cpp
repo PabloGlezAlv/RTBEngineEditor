@@ -1,5 +1,11 @@
 #include "OnlineGameNetMessages.h"
 
+#include "HealthComponent.h"
+#include "ThirdPersonCharacterController.h"
+
+#include <RTBEngine/ECS/NetworkIdentity.h>
+#include <RTBEngine/ECS/Scene.h>
+#include <RTBEngine/ECS/SceneManager.h>
 #include <RTBEngine/Online/OnlineGameplayNet.h>
 #include <RTBEngine/Online/OnlineMessageBus.h>
 #include <RTBEngine/Online/OnlineMessageCodec.h>
@@ -105,6 +111,90 @@ namespace GameNet {
             pendingProjectileSpawns.push_back(snapshot);
         }
 
+        RTBEngine::ECS::GameObject* FindPawnByPlayerSlot(int playerSlot)
+        {
+            RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
+            if (!scene || playerSlot < 0) {
+                return nullptr;
+            }
+
+            for (const auto& gameObject : scene->GetGameObjects()) {
+                if (!gameObject) {
+                    continue;
+                }
+
+                RTBEngine::ECS::NetworkIdentity* identity = gameObject->GetComponent<RTBEngine::ECS::NetworkIdentity>();
+                if (identity && identity->networkPlayerSlot == playerSlot) {
+                    return gameObject.get();
+                }
+            }
+
+            return nullptr;
+        }
+
+        void HandlePlayerDeathState(const RTBEngine::Online::OnlineMessageContext& context)
+        {
+            std::size_t offset = 0;
+            int playerSlot = -1;
+            if (!RTBEngine::Online::OnlineMessageCodec::ReadValue(
+                    context.payload,
+                    context.payloadSize,
+                    offset,
+                    playerSlot) ||
+                playerSlot < 0) {
+                return;
+            }
+
+            OnlineGameNetSubsystem::ApplyPlayerDeathForSlot(playerSlot);
+        }
+
+        void HandlePlayerRevive(const RTBEngine::Online::OnlineMessageContext& context)
+        {
+            std::size_t offset = 0;
+            int playerSlot = -1;
+            if (!RTBEngine::Online::OnlineMessageCodec::ReadValue(
+                    context.payload,
+                    context.payloadSize,
+                    offset,
+                    playerSlot) ||
+                playerSlot < 0) {
+                return;
+            }
+
+            OnlineGameNetSubsystem::ApplyPlayerReviveForSlot(playerSlot);
+        }
+
+        void HandlePlayerReviveRequest(const RTBEngine::Online::OnlineMessageContext& context)
+        {
+            if (!RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
+                return;
+            }
+
+            std::size_t offset = 0;
+            int playerSlot = -1;
+            if (!RTBEngine::Online::OnlineMessageCodec::ReadValue(
+                    context.payload,
+                    context.payloadSize,
+                    offset,
+                    playerSlot) ||
+                playerSlot < 0) {
+                return;
+            }
+
+            RTBEngine::ECS::GameObject* pawn = FindPawnByPlayerSlot(playerSlot);
+            if (!pawn) {
+                return;
+            }
+
+            HealthComponent* health = pawn->GetComponent<HealthComponent>();
+            if (!health || !health->IsDead()) {
+                return;
+            }
+
+            OnlineGameNetSubsystem::ApplyPlayerReviveForSlot(playerSlot);
+            OnlineGameNetSubsystem::BroadcastPlayerRevive(playerSlot);
+        }
+
     }
 
     void OnlineGameNetSubsystem::Init()
@@ -115,6 +205,9 @@ namespace GameNet {
 
         RTBEngine::Online::OnlineMessageBus::RegisterHandler(kPlayerCombatInput, &HandleCombatInput);
         RTBEngine::Online::OnlineMessageBus::RegisterHandler(kProjectileSpawn, &HandleProjectileSpawn);
+        RTBEngine::Online::OnlineMessageBus::RegisterHandler(kPlayerDeathState, &HandlePlayerDeathState);
+        RTBEngine::Online::OnlineMessageBus::RegisterHandler(kPlayerRevive, &HandlePlayerRevive);
+        RTBEngine::Online::OnlineMessageBus::RegisterHandler(kPlayerReviveRequest, &HandlePlayerReviveRequest);
         subsystemInitialized = true;
     }
 
@@ -126,6 +219,9 @@ namespace GameNet {
 
         RTBEngine::Online::OnlineMessageBus::UnregisterHandler(kPlayerCombatInput);
         RTBEngine::Online::OnlineMessageBus::UnregisterHandler(kProjectileSpawn);
+        RTBEngine::Online::OnlineMessageBus::UnregisterHandler(kPlayerDeathState);
+        RTBEngine::Online::OnlineMessageBus::UnregisterHandler(kPlayerRevive);
+        RTBEngine::Online::OnlineMessageBus::UnregisterHandler(kPlayerReviveRequest);
         latestCombatInputs.clear();
         pendingProjectileSpawns.clear();
         subsystemInitialized = false;
@@ -181,6 +277,100 @@ namespace GameNet {
         outSnapshot = pendingProjectileSpawns.front();
         pendingProjectileSpawns.pop_front();
         return true;
+    }
+
+    bool OnlineGameNetSubsystem::BroadcastPlayerDeath(int playerSlot)
+    {
+        if (!RTBEngine::Online::OnlineGameplayNet::IsLobbyHost() || playerSlot < 0) {
+            return false;
+        }
+
+        Init();
+        std::vector<std::uint8_t> payload;
+        RTBEngine::Online::OnlineMessageCodec::AppendValue(payload, playerSlot);
+        return RTBEngine::Online::OnlineMessageBus::BroadcastToClients(
+            kPlayerDeathState,
+            payload,
+            kPlayerDeathChannel,
+            RTBEngine::Online::OnlinePacketReliability::Reliable);
+    }
+
+    void OnlineGameNetSubsystem::ApplyPlayerDeathForSlot(int playerSlot)
+    {
+        RTBEngine::ECS::GameObject* pawn = FindPawnByPlayerSlot(playerSlot);
+        if (!pawn) {
+            return;
+        }
+
+        HealthComponent* health = pawn->GetComponent<HealthComponent>();
+        if (!health) {
+            return;
+        }
+
+        if (!health->IsDead()) {
+            HealthComponent::DamageContext context;
+            health->TakeDamage(health->maxHealth + 1.0f, context);
+            return;
+        }
+
+        if (ThirdPersonCharacterController* controller =
+                pawn->GetComponent<ThirdPersonCharacterController>()) {
+            controller->ForceDeathState();
+        }
+    }
+
+    bool OnlineGameNetSubsystem::BroadcastPlayerRevive(int playerSlot)
+    {
+        if (!RTBEngine::Online::OnlineGameplayNet::IsLobbyHost() || playerSlot < 0) {
+            return false;
+        }
+
+        Init();
+        std::vector<std::uint8_t> payload;
+        RTBEngine::Online::OnlineMessageCodec::AppendValue(payload, playerSlot);
+        return RTBEngine::Online::OnlineMessageBus::BroadcastToClients(
+            kPlayerRevive,
+            payload,
+            kPlayerReviveChannel,
+            RTBEngine::Online::OnlinePacketReliability::Reliable);
+    }
+
+    void OnlineGameNetSubsystem::ApplyPlayerReviveForSlot(int playerSlot)
+    {
+        RTBEngine::ECS::GameObject* pawn = FindPawnByPlayerSlot(playerSlot);
+        if (!pawn) {
+            return;
+        }
+
+        HealthComponent* health = pawn->GetComponent<HealthComponent>();
+        if (!health) {
+            return;
+        }
+
+        if (health->IsDead()) {
+            health->Revive();
+        }
+
+        if (ThirdPersonCharacterController* controller =
+                pawn->GetComponent<ThirdPersonCharacterController>()) {
+            controller->ReviveFromDeath();
+        }
+    }
+
+    bool OnlineGameNetSubsystem::RequestPlayerRevive(int playerSlot)
+    {
+        if (RTBEngine::Online::OnlineGameplayNet::IsLobbyHost() || playerSlot < 0) {
+            return false;
+        }
+
+        Init();
+        std::vector<std::uint8_t> payload;
+        RTBEngine::Online::OnlineMessageCodec::AppendValue(payload, playerSlot);
+        return RTBEngine::Online::OnlineMessageBus::SendToHost(
+            kPlayerReviveRequest,
+            payload,
+            kPlayerReviveChannel,
+            RTBEngine::Online::OnlinePacketReliability::Reliable);
     }
 
 }

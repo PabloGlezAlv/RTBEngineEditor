@@ -47,6 +47,13 @@ namespace GameNet {
 
         static bool BroadcastProjectileSpawn(const ProjectileSpawnSnapshot& snapshot);
         static bool TryConsumeProjectileSpawn(ProjectileSpawnSnapshot& outSnapshot);
+
+        static bool BroadcastPlayerDeath(int playerSlot);
+        static void ApplyPlayerDeathForSlot(int playerSlot);
+
+        static bool BroadcastPlayerRevive(int playerSlot);
+        static void ApplyPlayerReviveForSlot(int playerSlot);
+        static bool RequestPlayerRevive(int playerSlot);
     };
 
 }

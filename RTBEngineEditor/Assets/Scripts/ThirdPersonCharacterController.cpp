@@ -4,6 +4,7 @@
 #include <RTBEngine/ECS/NetworkIdentity.h>
 #include "OnlineGameNetMessages.h"
 
+#include <RTBEngine/ECS/NetworkIdentity.h>
 #include <RTBEngine/Online/OnlineGameplayNet.h>
 #include "PauseMenuController.h"
 #include "ProjectileAttackAbility.h"
@@ -184,6 +185,12 @@ void ThirdPersonCharacterController::OnFixedUpdate(float fixedDeltaTime)
     RegisterAnimationSlots();
 
     // Client local pawn: send input to host and drive animator locally (transform comes from network).
+    if (state == State::Dead) {
+        HideAttackAimTrail();
+        StopPlanarMotion();
+        return;
+    }
+
     if (RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby() &&
         !RTBEngine::Online::OnlineGameplayNet::IsLobbyHost() &&
         IsLocallyControlled()) {
@@ -249,6 +256,15 @@ void ThirdPersonCharacterController::OnLateUpdate(float deltaTime)
 
     ResolveCameraObject();
     DisableCompetingCameraController();
+
+    if (state == State::Dead && deathCameraFrozen) {
+        if (cameraObject) {
+            cameraObject->GetTransform().SetPosition(frozenCameraWorldPosition);
+            cameraObject->GetTransform().SetRotation(frozenCameraWorldRotation);
+        }
+        return;
+    }
+
     ApplyCameraFollowTransform();
 
     if (state == State::Locomotion) {
@@ -402,9 +418,40 @@ void ThirdPersonCharacterController::DisableCompetingCameraController() const
     }
 }
 
+void ThirdPersonCharacterController::ForceDeathState()
+{
+    if (health && health->IsDead()) {
+        HandleDeath(health->GetLastDeathEvent());
+        return;
+    }
+
+    HealthComponent::DeathEvent eventData;
+    HandleDeath(eventData);
+}
+
+void ThirdPersonCharacterController::ReviveFromDeath()
+{
+    if (state != State::Dead) {
+        return;
+    }
+
+    state = State::Locomotion;
+    deathCameraFrozen = false;
+    activeAttackDirection = RTBEngine::Math::Vector3::Zero();
+    HideAttackAimTrail();
+
+    ResolveAnimator();
+    RegisterAnimationSlots();
+    UpdateAnimatorLocomotion(false, false);
+}
+
 void ThirdPersonCharacterController::ApplyCameraFollowTransform()
 {
     if (!owner || !cameraObject) {
+        return;
+    }
+
+    if (state == State::Dead && deathCameraFrozen && IsLocallyControlled()) {
         return;
     }
 
@@ -829,8 +876,25 @@ void ThirdPersonCharacterController::HandleDeath(const HealthComponent::DeathEve
     HideAttackAimTrail();
     StopPlanarMotion();
 
+    ResolveCameraObject();
+    if (IsLocallyControlled() && cameraObject) {
+        deathCameraFrozen = true;
+        frozenCameraWorldPosition = cameraObject->GetWorldPosition();
+        frozenCameraWorldRotation = cameraObject->GetWorldRotation();
+    }
+
     if (animator && deathSlotState.ready && animator->GetClip(kDeathAlias)) {
         animator->Play(kDeathAlias, false);
+    }
+
+    if (RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby() &&
+        RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
+        if (const RTBEngine::ECS::NetworkIdentity* identity =
+                owner ? owner->GetComponent<RTBEngine::ECS::NetworkIdentity>() : nullptr) {
+            if (identity && identity->networkPlayerSlot >= 0) {
+                GameNet::OnlineGameNetSubsystem::BroadcastPlayerDeath(identity->networkPlayerSlot);
+            }
+        }
     }
 }
 

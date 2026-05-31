@@ -9,6 +9,8 @@ RTB_REGISTER_COMPONENT(RoundUIHandler)
     RTB_PROPERTY_COMPONENT(countdownText, UIText)
     RTB_PROPERTY(roundPrefix)
     RTB_PROPERTY(countdownPrefix)
+    RTB_PROPERTY(endGameCountdownPrefix)
+    RTB_PROPERTY(respawnCountdownPrefix)
 RTB_END_REGISTER(RoundUIHandler)
 
 void RoundUIHandler::OnStart()
@@ -40,6 +42,32 @@ void RoundUIHandler::HideCountdown()
     ApplyState();
 }
 
+void RoundUIHandler::ShowEndGameCountdown(int secondsRemaining)
+{
+    currentEndGameSeconds = std::max(0, secondsRemaining);
+    endGameCountdownVisible = true;
+    ApplyState();
+}
+
+void RoundUIHandler::HideEndGameCountdown()
+{
+    endGameCountdownVisible = false;
+    ApplyState();
+}
+
+void RoundUIHandler::ShowRespawnCountdown(int secondsRemaining)
+{
+    currentRespawnSeconds = std::max(0, secondsRemaining);
+    respawnCountdownVisible = true;
+    ApplyState();
+}
+
+void RoundUIHandler::HideRespawnCountdown()
+{
+    respawnCountdownVisible = false;
+    ApplyState();
+}
+
 void RoundUIHandler::ApplyState() const
 {
     if (roundText) {
@@ -51,6 +79,16 @@ void RoundUIHandler::ApplyState() const
     }
 
     if (!countdownText) {
+        return;
+    }
+
+    if (endGameCountdownVisible) {
+        countdownText->SetText(endGameCountdownPrefix + std::to_string(currentEndGameSeconds));
+        return;
+    }
+
+    if (respawnCountdownVisible) {
+        countdownText->SetText(respawnCountdownPrefix + std::to_string(currentRespawnSeconds));
         return;
     }
 

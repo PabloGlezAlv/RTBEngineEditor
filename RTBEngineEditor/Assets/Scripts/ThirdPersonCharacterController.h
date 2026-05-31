@@ -46,6 +46,9 @@ public:
     void OnValidate() override;
     void OnDestroy() override;
 
+    void ForceDeathState();
+    void ReviveFromDeath();
+
     RTBEngine::ECS::GameObject* cameraObject = nullptr;
     HealthComponent* health = nullptr;
     int team = static_cast<int>(CharacterTeam::Player);
@@ -144,4 +147,7 @@ private:
     float predictedAttackVisualTimeRemaining = 0.0f;
     RTBEngine::Math::Vector3 lastReplicatedWorldPosition = RTBEngine::Math::Vector3::Zero();
     bool hasReplicatedMotionSample = false;
+    bool deathCameraFrozen = false;
+    RTBEngine::Math::Vector3 frozenCameraWorldPosition = RTBEngine::Math::Vector3::Zero();
+    RTBEngine::Math::Quaternion frozenCameraWorldRotation = RTBEngine::Math::Quaternion::Identity();
 };

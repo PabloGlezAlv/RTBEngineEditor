@@ -62,6 +62,7 @@ public:
     void SetMaxHealth(float value);
     void SetCurrentHealth(float value);
     void Heal(float amount);
+    void Revive();
     void TakeDamage(float amount);
     void TakeDamage(float amount, const DamageContext& context);
 
