@@ -52,6 +52,11 @@ namespace GameNet {
         std::uint32_t networkId = 0;
     };
 
+    struct EnemyAttackSnapshot {
+        std::uint32_t networkId = 0;
+        std::uint32_t attackSequence = 0;
+    };
+
     class OnlineGameNetSubsystem {
     public:
         static void Init();
@@ -85,6 +90,9 @@ namespace GameNet {
         static bool BroadcastEnemyDeath(std::uint32_t networkId);
         static void ApplyEnemyDeath(std::uint32_t networkId);
         static bool HasEnemyWithNetworkId(std::uint32_t networkId);
+
+        static bool BroadcastEnemyAttack(const EnemyAttackSnapshot& snapshot);
+        static void ApplyEnemyAttack(std::uint32_t networkId, std::uint32_t attackSequence);
     };
 
 }

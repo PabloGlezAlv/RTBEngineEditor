@@ -13,6 +13,7 @@ namespace GameNet {
     constexpr std::uint16_t kEnemyDeathState = 70;
     constexpr std::uint16_t kRoundStart = 71;
     constexpr std::uint16_t kPlayerNetworkBind = 72;
+    constexpr std::uint16_t kEnemyAttack = 73;
 
     constexpr std::uint8_t kCombatInputChannel = 4;
     constexpr std::uint8_t kProjectileChannel = 5;
@@ -22,5 +23,6 @@ namespace GameNet {
     constexpr std::uint8_t kEnemyDeathChannel = 9;
     constexpr std::uint8_t kRoundStartChannel = 10;
     constexpr std::uint8_t kPlayerNetworkBindChannel = 11;
+    constexpr std::uint8_t kEnemyAttackChannel = 12;
 
 }

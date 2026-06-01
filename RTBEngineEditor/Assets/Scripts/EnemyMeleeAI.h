@@ -48,6 +48,8 @@ public:
     float deathHoldDuration = 0.75f;
     float shrinkDuration = 0.85f;
 
+    void PlayReplicatedAttack(std::uint32_t attackSequence);
+
     RTB_COMPONENT(EnemyMeleeAI)
 
 private:
@@ -70,6 +72,8 @@ private:
     RTBEngine::Math::Vector3 initialScale = RTBEngine::Math::Vector3::One();
     RTBEngine::Math::Vector3 lastReplicatedPosition = RTBEngine::Math::Vector3::Zero();
     bool hasReplicatedPosition = false;
+    std::uint32_t networkAttackSequence = 0;
+    std::uint32_t lastProcessedReplicatedAttackSequence = 0;
     HealthComponent* subscribedHealth = nullptr;
     RTBEngine::Core::EventSubscription damageTakenSubscription;
     RTBEngine::Core::EventSubscription deathSubscription;

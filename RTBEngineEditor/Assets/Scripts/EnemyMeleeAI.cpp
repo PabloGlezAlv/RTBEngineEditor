@@ -145,6 +145,15 @@ void EnemyMeleeAI::OnLateUpdate(float deltaTime)
     ResolveDependencies();
 
     if (!HasSimulationAuthority()) {
+        if (state == State::Attacking) {
+            if (animationDriver && animationDriver->IsAttackPlaying()) {
+                return;
+            }
+
+            state = State::Idle;
+            return;
+        }
+
         UpdateReplicatedLocomotionAnimation(deltaTime);
         return;
     }
@@ -380,6 +389,45 @@ void EnemyMeleeAI::StartAttack()
     if (locomotion) {
         locomotion->StopPlanarMotion();
     }
+    if (animationDriver) {
+        animationDriver->PlayAttack();
+    }
+
+    if (RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby() &&
+        RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
+        if (RTBEngine::ECS::NetworkIdentity* identity = owner->GetComponent<RTBEngine::ECS::NetworkIdentity>()) {
+            if (identity->HasNetworkId()) {
+                ++networkAttackSequence;
+                GameNet::EnemyAttackSnapshot attackSnapshot;
+                attackSnapshot.networkId = identity->GetNetworkId();
+                attackSnapshot.attackSequence = networkAttackSequence;
+                GameNet::OnlineGameNetSubsystem::BroadcastEnemyAttack(attackSnapshot);
+            }
+        }
+    }
+}
+
+void EnemyMeleeAI::PlayReplicatedAttack(std::uint32_t attackSequence)
+{
+    if (!owner || HasSimulationAuthority() || attackSequence == 0) {
+        return;
+    }
+
+    if (attackSequence <= lastProcessedReplicatedAttackSequence) {
+        return;
+    }
+
+    lastProcessedReplicatedAttackSequence = attackSequence;
+
+    if (state == State::Dying || state == State::Shrinking || state == State::Dead) {
+        return;
+    }
+
+    state = State::Attacking;
+    if (locomotion) {
+        locomotion->StopPlanarMotion();
+    }
+
     if (animationDriver) {
         animationDriver->PlayAttack();
     }

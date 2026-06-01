@@ -1,5 +1,6 @@
 #include "OnlineGameNetMessages.h"
 
+#include "EnemyMeleeAI.h"
 #include "HealthComponent.h"
 #include "ThirdPersonCharacterController.h"
 
@@ -349,6 +350,32 @@ namespace GameNet {
             pendingPlayerNetworkBinds.push_back(snapshot);
         }
 
+        void HandleEnemyAttack(const RTBEngine::Online::OnlineMessageContext& context)
+        {
+            if (RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
+                return;
+            }
+
+            std::size_t offset = 0;
+            EnemyAttackSnapshot snapshot;
+            if (!RTBEngine::Online::OnlineMessageCodec::ReadValue(
+                    context.payload,
+                    context.payloadSize,
+                    offset,
+                    snapshot.networkId) ||
+                !RTBEngine::Online::OnlineMessageCodec::ReadValue(
+                    context.payload,
+                    context.payloadSize,
+                    offset,
+                    snapshot.attackSequence) ||
+                snapshot.networkId == RTBEngine::Online::OnlineGameplayNet::kInvalidNetworkObjectId ||
+                snapshot.attackSequence == 0) {
+                return;
+            }
+
+            OnlineGameNetSubsystem::ApplyEnemyAttack(snapshot.networkId, snapshot.attackSequence);
+        }
+
     }
 
     void OnlineGameNetSubsystem::Init()
@@ -366,6 +393,7 @@ namespace GameNet {
         RTBEngine::Online::OnlineMessageBus::RegisterHandler(kRoundStart, &HandleRoundStart);
         RTBEngine::Online::OnlineMessageBus::RegisterHandler(kEnemyDeathState, &HandleEnemyDeathState);
         RTBEngine::Online::OnlineMessageBus::RegisterHandler(kPlayerNetworkBind, &HandlePlayerNetworkBind);
+        RTBEngine::Online::OnlineMessageBus::RegisterHandler(kEnemyAttack, &HandleEnemyAttack);
         subsystemInitialized = true;
     }
 
@@ -384,6 +412,7 @@ namespace GameNet {
         RTBEngine::Online::OnlineMessageBus::UnregisterHandler(kRoundStart);
         RTBEngine::Online::OnlineMessageBus::UnregisterHandler(kEnemyDeathState);
         RTBEngine::Online::OnlineMessageBus::UnregisterHandler(kPlayerNetworkBind);
+        RTBEngine::Online::OnlineMessageBus::UnregisterHandler(kEnemyAttack);
         latestCombatInputs.clear();
         pendingProjectileSpawns.clear();
         pendingEnemySpawns.clear();
@@ -681,6 +710,40 @@ namespace GameNet {
     bool OnlineGameNetSubsystem::HasEnemyWithNetworkId(std::uint32_t networkId)
     {
         return FindGameObjectByNetworkId(networkId) != nullptr;
+    }
+
+    bool OnlineGameNetSubsystem::BroadcastEnemyAttack(const EnemyAttackSnapshot& snapshot)
+    {
+        if (!RTBEngine::Online::OnlineGameplayNet::IsLobbyHost() ||
+            snapshot.networkId == RTBEngine::Online::OnlineGameplayNet::kInvalidNetworkObjectId ||
+            snapshot.attackSequence == 0) {
+            return false;
+        }
+
+        Init();
+        std::vector<std::uint8_t> payload;
+        RTBEngine::Online::OnlineMessageCodec::AppendValue(payload, snapshot.networkId);
+        RTBEngine::Online::OnlineMessageCodec::AppendValue(payload, snapshot.attackSequence);
+        return RTBEngine::Online::OnlineMessageBus::BroadcastToClients(
+            kEnemyAttack,
+            payload,
+            kEnemyAttackChannel,
+            RTBEngine::Online::OnlinePacketReliability::Unreliable);
+    }
+
+    void OnlineGameNetSubsystem::ApplyEnemyAttack(std::uint32_t networkId, std::uint32_t attackSequence)
+    {
+        RTBEngine::ECS::GameObject* enemy = FindGameObjectByNetworkId(networkId);
+        if (!enemy) {
+            return;
+        }
+
+        EnemyMeleeAI* meleeAI = enemy->GetComponent<EnemyMeleeAI>();
+        if (!meleeAI) {
+            return;
+        }
+
+        meleeAI->PlayReplicatedAttack(attackSequence);
     }
 
 }
