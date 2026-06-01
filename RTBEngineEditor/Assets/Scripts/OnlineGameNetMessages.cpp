@@ -24,15 +24,12 @@ namespace GameNet {
         std::deque<ProjectileSpawnSnapshot> pendingProjectileSpawns;
         std::deque<EnemySpawnSnapshot> pendingEnemySpawns;
         std::deque<RoundStartSnapshot> pendingRoundStarts;
-
-        std::string BuildEnemyNetworkKeyInternal(int roundNumber, int spawnIndex)
-        {
-            return "Enemy_R" + std::to_string(roundNumber) + "_I" + std::to_string(spawnIndex);
-        }
+        std::deque<PlayerNetworkBindSnapshot> pendingPlayerNetworkBinds;
 
         std::vector<std::uint8_t> BuildEnemySpawnPayload(const EnemySpawnSnapshot& snapshot)
         {
             std::vector<std::uint8_t> bytes;
+            RTBEngine::Online::OnlineMessageCodec::AppendValue(bytes, snapshot.networkId);
             RTBEngine::Online::OnlineMessageCodec::AppendValue(bytes, snapshot.roundNumber);
             RTBEngine::Online::OnlineMessageCodec::AppendValue(bytes, snapshot.spawnPointIndex);
             RTBEngine::Online::OnlineMessageCodec::AppendValue(bytes, snapshot.spawnIndex);
@@ -47,10 +44,10 @@ namespace GameNet {
             return bytes;
         }
 
-        RTBEngine::ECS::GameObject* FindEnemyByNetworkKey(const std::string& networkObjectKey)
+        RTBEngine::ECS::GameObject* FindGameObjectByNetworkId(std::uint32_t networkId)
         {
             RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
-            if (!scene || networkObjectKey.empty()) {
+            if (!scene || networkId == RTBEngine::Online::OnlineGameplayNet::kInvalidNetworkObjectId) {
                 return nullptr;
             }
 
@@ -59,13 +56,11 @@ namespace GameNet {
                     continue;
                 }
 
-                RTBEngine::ECS::NetworkTransform* networkTransform =
-                    gameObject->GetComponent<RTBEngine::ECS::NetworkTransform>();
-                if (!networkTransform || networkTransform->objectKey != networkObjectKey) {
-                    continue;
+                RTBEngine::ECS::NetworkIdentity* identity =
+                    gameObject->GetComponent<RTBEngine::ECS::NetworkIdentity>();
+                if (identity && identity->GetNetworkId() == networkId) {
+                    return gameObject.get();
                 }
-
-                return gameObject.get();
             }
 
             return nullptr;
@@ -256,6 +251,11 @@ namespace GameNet {
                     context.payload,
                     context.payloadSize,
                     offset,
+                    snapshot.networkId) ||
+                !RTBEngine::Online::OnlineMessageCodec::ReadValue(
+                    context.payload,
+                    context.payloadSize,
+                    offset,
                     snapshot.roundNumber) ||
                 !RTBEngine::Online::OnlineMessageCodec::ReadValue(
                     context.payload,
@@ -267,6 +267,7 @@ namespace GameNet {
                     context.payloadSize,
                     offset,
                     snapshot.spawnIndex) ||
+                snapshot.networkId == RTBEngine::Online::OnlineGameplayNet::kInvalidNetworkObjectId ||
                 snapshot.roundNumber < 1 ||
                 snapshot.spawnPointIndex < 0 ||
                 snapshot.spawnIndex < 0) {
@@ -309,17 +310,43 @@ namespace GameNet {
             }
 
             std::size_t offset = 0;
-            std::string networkObjectKey;
-            if (!RTBEngine::Online::OnlineMessageCodec::ReadString(
+            std::uint32_t networkId = RTBEngine::Online::OnlineGameplayNet::kInvalidNetworkObjectId;
+            if (!RTBEngine::Online::OnlineMessageCodec::ReadValue(
                     context.payload,
                     context.payloadSize,
                     offset,
-                    networkObjectKey) ||
-                networkObjectKey.empty()) {
+                    networkId) ||
+                networkId == RTBEngine::Online::OnlineGameplayNet::kInvalidNetworkObjectId) {
                 return;
             }
 
-            OnlineGameNetSubsystem::ApplyEnemyDeath(networkObjectKey);
+            OnlineGameNetSubsystem::ApplyEnemyDeath(networkId);
+        }
+
+        void HandlePlayerNetworkBind(const RTBEngine::Online::OnlineMessageContext& context)
+        {
+            if (RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
+                return;
+            }
+
+            std::size_t offset = 0;
+            PlayerNetworkBindSnapshot snapshot;
+            if (!RTBEngine::Online::OnlineMessageCodec::ReadValue(
+                    context.payload,
+                    context.payloadSize,
+                    offset,
+                    snapshot.playerSlot) ||
+                !RTBEngine::Online::OnlineMessageCodec::ReadValue(
+                    context.payload,
+                    context.payloadSize,
+                    offset,
+                    snapshot.networkId) ||
+                snapshot.playerSlot < 0 ||
+                snapshot.networkId == RTBEngine::Online::OnlineGameplayNet::kInvalidNetworkObjectId) {
+                return;
+            }
+
+            pendingPlayerNetworkBinds.push_back(snapshot);
         }
 
     }
@@ -338,6 +365,7 @@ namespace GameNet {
         RTBEngine::Online::OnlineMessageBus::RegisterHandler(kEnemySpawn, &HandleEnemySpawn);
         RTBEngine::Online::OnlineMessageBus::RegisterHandler(kRoundStart, &HandleRoundStart);
         RTBEngine::Online::OnlineMessageBus::RegisterHandler(kEnemyDeathState, &HandleEnemyDeathState);
+        RTBEngine::Online::OnlineMessageBus::RegisterHandler(kPlayerNetworkBind, &HandlePlayerNetworkBind);
         subsystemInitialized = true;
     }
 
@@ -355,10 +383,13 @@ namespace GameNet {
         RTBEngine::Online::OnlineMessageBus::UnregisterHandler(kEnemySpawn);
         RTBEngine::Online::OnlineMessageBus::UnregisterHandler(kRoundStart);
         RTBEngine::Online::OnlineMessageBus::UnregisterHandler(kEnemyDeathState);
+        RTBEngine::Online::OnlineMessageBus::UnregisterHandler(kPlayerNetworkBind);
         latestCombatInputs.clear();
         pendingProjectileSpawns.clear();
         pendingEnemySpawns.clear();
         pendingRoundStarts.clear();
+        pendingPlayerNetworkBinds.clear();
+        RTBEngine::Online::OnlineGameplayNet::ResetNetworkSession();
         subsystemInitialized = false;
     }
 
@@ -508,14 +539,60 @@ namespace GameNet {
             RTBEngine::Online::OnlinePacketReliability::Reliable);
     }
 
-    std::string OnlineGameNetSubsystem::BuildEnemyNetworkKey(int roundNumber, int spawnIndex)
+    bool OnlineGameNetSubsystem::BroadcastPlayerNetworkBind(const PlayerNetworkBindSnapshot& snapshot)
     {
-        return BuildEnemyNetworkKeyInternal(roundNumber, spawnIndex);
+        if (!RTBEngine::Online::OnlineGameplayNet::IsLobbyHost() ||
+            snapshot.playerSlot < 0 ||
+            snapshot.networkId == RTBEngine::Online::OnlineGameplayNet::kInvalidNetworkObjectId) {
+            return false;
+        }
+
+        Init();
+        std::vector<std::uint8_t> payload;
+        RTBEngine::Online::OnlineMessageCodec::AppendValue(payload, snapshot.playerSlot);
+        RTBEngine::Online::OnlineMessageCodec::AppendValue(payload, snapshot.networkId);
+        return RTBEngine::Online::OnlineMessageBus::BroadcastToClients(
+            kPlayerNetworkBind,
+            payload,
+            kPlayerNetworkBindChannel,
+            RTBEngine::Online::OnlinePacketReliability::Reliable);
+    }
+
+    bool OnlineGameNetSubsystem::TryConsumePlayerNetworkBind(PlayerNetworkBindSnapshot& outSnapshot)
+    {
+        if (pendingPlayerNetworkBinds.empty()) {
+            return false;
+        }
+
+        outSnapshot = pendingPlayerNetworkBinds.front();
+        pendingPlayerNetworkBinds.pop_front();
+        return true;
+    }
+
+    void OnlineGameNetSubsystem::ApplyPlayerNetworkBind(int playerSlot, std::uint32_t networkId)
+    {
+        RTBEngine::ECS::GameObject* pawn = FindPawnByPlayerSlot(playerSlot);
+        if (!pawn || networkId == RTBEngine::Online::OnlineGameplayNet::kInvalidNetworkObjectId) {
+            return;
+        }
+
+        RTBEngine::ECS::NetworkIdentity* identity = pawn->GetComponent<RTBEngine::ECS::NetworkIdentity>();
+        if (!identity) {
+            return;
+        }
+
+        identity->SetNetworkId(networkId);
+
+        if (RTBEngine::ECS::NetworkTransform* networkTransform =
+                pawn->GetComponent<RTBEngine::ECS::NetworkTransform>()) {
+            networkTransform->OnValidate();
+        }
     }
 
     bool OnlineGameNetSubsystem::BroadcastEnemySpawn(const EnemySpawnSnapshot& snapshot)
     {
         if (!RTBEngine::Online::OnlineGameplayNet::IsLobbyHost() ||
+            snapshot.networkId == RTBEngine::Online::OnlineGameplayNet::kInvalidNetworkObjectId ||
             snapshot.roundNumber < 1 ||
             snapshot.spawnPointIndex < 0 ||
             snapshot.spawnIndex < 0) {
@@ -568,15 +645,16 @@ namespace GameNet {
         return true;
     }
 
-    bool OnlineGameNetSubsystem::BroadcastEnemyDeath(const std::string& networkObjectKey)
+    bool OnlineGameNetSubsystem::BroadcastEnemyDeath(std::uint32_t networkId)
     {
-        if (!RTBEngine::Online::OnlineGameplayNet::IsLobbyHost() || networkObjectKey.empty()) {
+        if (!RTBEngine::Online::OnlineGameplayNet::IsLobbyHost() ||
+            networkId == RTBEngine::Online::OnlineGameplayNet::kInvalidNetworkObjectId) {
             return false;
         }
 
         Init();
         std::vector<std::uint8_t> payload;
-        RTBEngine::Online::OnlineMessageCodec::AppendString(payload, networkObjectKey);
+        RTBEngine::Online::OnlineMessageCodec::AppendValue(payload, networkId);
         return RTBEngine::Online::OnlineMessageBus::BroadcastToClients(
             kEnemyDeathState,
             payload,
@@ -584,9 +662,9 @@ namespace GameNet {
             RTBEngine::Online::OnlinePacketReliability::Reliable);
     }
 
-    void OnlineGameNetSubsystem::ApplyEnemyDeath(const std::string& networkObjectKey)
+    void OnlineGameNetSubsystem::ApplyEnemyDeath(std::uint32_t networkId)
     {
-        RTBEngine::ECS::GameObject* enemy = FindEnemyByNetworkKey(networkObjectKey);
+        RTBEngine::ECS::GameObject* enemy = FindGameObjectByNetworkId(networkId);
         if (!enemy) {
             return;
         }
@@ -600,9 +678,9 @@ namespace GameNet {
         health->TakeDamage(health->maxHealth + 1.0f, context);
     }
 
-    bool OnlineGameNetSubsystem::HasEnemyWithNetworkKey(const std::string& networkObjectKey)
+    bool OnlineGameNetSubsystem::HasEnemyWithNetworkId(std::uint32_t networkId)
     {
-        return FindEnemyByNetworkKey(networkObjectKey) != nullptr;
+        return FindGameObjectByNetworkId(networkId) != nullptr;
     }
 
 }

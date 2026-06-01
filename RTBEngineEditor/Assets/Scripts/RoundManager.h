@@ -88,7 +88,11 @@ public:
     std::string enemyPrefabName = "Enemy Melee";
 
     void ApplyNetworkRoundStart(int roundNumber, int enemyCount);
-    void ApplyNetworkEnemySpawn(int roundNumber, int spawnPointIndex, int spawnIndex);
+    void ApplyNetworkEnemySpawn(
+        int roundNumber,
+        int spawnPointIndex,
+        int spawnIndex,
+        std::uint32_t networkId);
     bool CanSpawnEnemies() const;
 
     RTB_COMPONENT(RoundManager)
@@ -183,11 +187,12 @@ private:
     RTBEngine::ECS::GameObject* SpawnEnemyAt(
         RTBEngine::ECS::GameObject* spawnPoint,
         int roundNumber,
-        int spawnIndex);
+        int spawnIndex,
+        std::uint32_t networkId = 0);
 
     void RebindSpawnedEnemy(RTBEngine::ECS::GameObject* spawnedEnemy);
 
-    void ConfigureOnlineEnemy(RTBEngine::ECS::GameObject* spawnedEnemy, int roundNumber, int spawnIndex);
+    void ConfigureOnlineEnemy(RTBEngine::ECS::GameObject* spawnedEnemy, std::uint32_t networkId);
 
     RTBEngine::ECS::GameObject* FindBestEnemyTarget(RTBEngine::ECS::GameObject* requester = nullptr) const;
 

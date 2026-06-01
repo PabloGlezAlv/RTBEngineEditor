@@ -8,7 +8,7 @@
 #include "OnlineGameNetMessages.h"
 
 #include <RTBEngine/ECS/GameObject.h>
-#include <RTBEngine/ECS/NetworkTransform.h>
+#include <RTBEngine/ECS/NetworkIdentity.h>
 #include <RTBEngine/ECS/RigidBodyComponent.h>
 #include <RTBEngine/Math/Math.h>
 #include <RTBEngine/Online/OnlineGameplayNet.h>
@@ -499,10 +499,9 @@ void EnemyMeleeAI::HandleDeath(const HealthComponent::DeathEvent& /*eventData*/)
 
     if (RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby() &&
         RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
-        if (RTBEngine::ECS::NetworkTransform* networkTransform =
-                owner->GetComponent<RTBEngine::ECS::NetworkTransform>()) {
-            if (!networkTransform->objectKey.empty()) {
-                GameNet::OnlineGameNetSubsystem::BroadcastEnemyDeath(networkTransform->objectKey);
+        if (RTBEngine::ECS::NetworkIdentity* identity = owner->GetComponent<RTBEngine::ECS::NetworkIdentity>()) {
+            if (identity->HasNetworkId()) {
+                GameNet::OnlineGameNetSubsystem::BroadcastEnemyDeath(identity->GetNetworkId());
             }
         }
     }

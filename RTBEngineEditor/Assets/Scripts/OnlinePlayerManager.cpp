@@ -42,6 +42,18 @@ namespace {
         return nullptr;
     }
 
+    void ProcessPlayerNetworkBinds()
+    {
+        if (RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
+            return;
+        }
+
+        GameNet::PlayerNetworkBindSnapshot bind;
+        while (GameNet::OnlineGameNetSubsystem::TryConsumePlayerNetworkBind(bind)) {
+            GameNet::OnlineGameNetSubsystem::ApplyPlayerNetworkBind(bind.playerSlot, bind.networkId);
+        }
+    }
+
     void ProcessNetworkRoundEvents()
     {
         if (RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
@@ -63,7 +75,8 @@ namespace {
             roundManager->ApplyNetworkEnemySpawn(
                 enemySpawn.roundNumber,
                 enemySpawn.spawnPointIndex,
-                enemySpawn.spawnIndex);
+                enemySpawn.spawnIndex,
+                enemySpawn.networkId);
         }
     }
 
@@ -90,6 +103,7 @@ void OnlinePlayerManager::OnUpdate(float /*deltaTime*/)
         return;
     }
 
+    ProcessPlayerNetworkBinds();
     ProcessNetworkRoundEvents();
 }
 
@@ -161,9 +175,22 @@ void OnlinePlayerManager::ConfigurePawn(
     identity->SetOwnerUserId(ownerUserId);
     identity->SetNetworkPlayerSlot(playerSlot);
 
-    if (RTBEngine::ECS::NetworkTransform* networkTransform = pawn->GetComponent<RTBEngine::ECS::NetworkTransform>()) {
-        networkTransform->objectKey = "PlayerSlot_" + std::to_string(playerSlot);
-        networkTransform->OnValidate();
+    if (RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
+        const std::uint32_t networkId =
+            RTBEngine::Online::OnlineGameplayNet::AllocateNetworkObjectId();
+        if (networkId != RTBEngine::Online::OnlineGameplayNet::kInvalidNetworkObjectId) {
+            identity->SetNetworkId(networkId);
+
+            if (RTBEngine::ECS::NetworkTransform* networkTransform =
+                    pawn->GetComponent<RTBEngine::ECS::NetworkTransform>()) {
+                networkTransform->OnValidate();
+            }
+
+            GameNet::PlayerNetworkBindSnapshot bind;
+            bind.playerSlot = playerSlot;
+            bind.networkId = networkId;
+            GameNet::OnlineGameNetSubsystem::BroadcastPlayerNetworkBind(bind);
+        }
     }
 
     if (ThirdPersonCharacterController* controller = pawn->GetComponent<ThirdPersonCharacterController>()) {

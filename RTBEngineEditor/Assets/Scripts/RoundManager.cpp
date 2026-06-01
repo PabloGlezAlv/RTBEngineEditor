@@ -149,13 +149,19 @@ void RoundManager::ApplyNetworkRoundStart(int roundNumber, int enemyCount)
         uiHandler->ShowRound(currentRound);
         uiHandler->HideCountdown();
     }
-
-    SpawnRoundEnemies(enemyCount, true);
 }
 
-void RoundManager::ApplyNetworkEnemySpawn(int roundNumber, int spawnPointIndex, int spawnIndex)
+void RoundManager::ApplyNetworkEnemySpawn(
+    int roundNumber,
+    int spawnPointIndex,
+    int spawnIndex,
+    std::uint32_t networkId)
 {
-    if (hasRequestedEndScene || roundNumber < 1 || spawnPointIndex < 0 || spawnIndex < 0) {
+    if (hasRequestedEndScene ||
+        roundNumber < 1 ||
+        spawnPointIndex < 0 ||
+        spawnIndex < 0 ||
+        networkId == RTBEngine::Online::OnlineGameplayNet::kInvalidNetworkObjectId) {
         return;
     }
 
@@ -167,7 +173,8 @@ void RoundManager::ApplyNetworkEnemySpawn(int roundNumber, int spawnPointIndex, 
     }
 
     RTBEngine::ECS::GameObject* spawnPoint = spawnPoints[static_cast<size_t>(spawnPointIndex)];
-    RTBEngine::ECS::GameObject* spawnedEnemy = SpawnEnemyAt(spawnPoint, roundNumber, spawnIndex);
+    RTBEngine::ECS::GameObject* spawnedEnemy =
+        SpawnEnemyAt(spawnPoint, roundNumber, spawnIndex, networkId);
     if (!spawnedEnemy) {
         return;
     }
@@ -451,7 +458,10 @@ void RoundManager::SpawnRoundEnemies(int count, bool allowClientSpawn)
 
         if (RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby() &&
             RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
+            RTBEngine::ECS::NetworkIdentity* identity =
+                spawnedEnemy->GetComponent<RTBEngine::ECS::NetworkIdentity>();
             GameNet::EnemySpawnSnapshot snapshot;
+            snapshot.networkId = identity ? identity->GetNetworkId() : 0;
             snapshot.roundNumber = currentRound;
             snapshot.spawnPointIndex = spawnPointIndex;
             snapshot.spawnIndex = index;
@@ -468,18 +478,28 @@ RTBEngine::ECS::GameObject* RoundManager::SpawnEnemyAt(RTBEngine::ECS::GameObjec
 RTBEngine::ECS::GameObject* RoundManager::SpawnEnemyAt(
     RTBEngine::ECS::GameObject* spawnPoint,
     int roundNumber,
-    int spawnIndex)
+    int spawnIndex,
+    std::uint32_t networkId)
 {
     RTBEngine::ECS::Prefab* spawnPrefab = ResolveEnemySpawnPrefab();
     if (!spawnPoint || !spawnPrefab || roundNumber < 1 || spawnIndex < 0) {
         return nullptr;
     }
 
-    const std::string networkKey =
-        GameNet::OnlineGameNetSubsystem::BuildEnemyNetworkKey(roundNumber, spawnIndex);
-    if (RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby() &&
-        GameNet::OnlineGameNetSubsystem::HasEnemyWithNetworkKey(networkKey)) {
-        return nullptr;
+    const bool isOnline = RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby();
+    if (isOnline) {
+        if (networkId == RTBEngine::Online::OnlineGameplayNet::kInvalidNetworkObjectId &&
+            RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
+            networkId = RTBEngine::Online::OnlineGameplayNet::AllocateNetworkObjectId();
+        }
+
+        if (networkId == RTBEngine::Online::OnlineGameplayNet::kInvalidNetworkObjectId) {
+            return nullptr;
+        }
+
+        if (GameNet::OnlineGameNetSubsystem::HasEnemyWithNetworkId(networkId)) {
+            return nullptr;
+        }
     }
 
     RTBEngine::ECS::GameObject* spawnedEnemy =
@@ -491,7 +511,7 @@ RTBEngine::ECS::GameObject* RoundManager::SpawnEnemyAt(
         return nullptr;
     }
 
-    ConfigureOnlineEnemy(spawnedEnemy, roundNumber, spawnIndex);
+    ConfigureOnlineEnemy(spawnedEnemy, networkId);
     RebindSpawnedEnemy(spawnedEnemy);
     return spawnedEnemy;
 }
@@ -529,18 +549,22 @@ void RoundManager::RebindSpawnedEnemy(RTBEngine::ECS::GameObject* spawnedEnemy)
 
 void RoundManager::ConfigureOnlineEnemy(
     RTBEngine::ECS::GameObject* spawnedEnemy,
-    int roundNumber,
-    int spawnIndex)
+    std::uint32_t networkId)
 {
-    if (!spawnedEnemy || roundNumber < 1 || spawnIndex < 0) {
+    if (!spawnedEnemy) {
         return;
     }
 
-    if (RTBEngine::ECS::NetworkTransform* networkTransform =
-            spawnedEnemy->GetComponent<RTBEngine::ECS::NetworkTransform>()) {
-        networkTransform->objectKey =
-            GameNet::OnlineGameNetSubsystem::BuildEnemyNetworkKey(roundNumber, spawnIndex);
-        networkTransform->OnValidate();
+    if (networkId != RTBEngine::Online::OnlineGameplayNet::kInvalidNetworkObjectId) {
+        if (RTBEngine::ECS::NetworkIdentity* identity =
+                spawnedEnemy->GetComponent<RTBEngine::ECS::NetworkIdentity>()) {
+            identity->SetNetworkId(networkId);
+        }
+
+        if (RTBEngine::ECS::NetworkTransform* networkTransform =
+                spawnedEnemy->GetComponent<RTBEngine::ECS::NetworkTransform>()) {
+            networkTransform->OnValidate();
+        }
     }
 
     if (!RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby()) {

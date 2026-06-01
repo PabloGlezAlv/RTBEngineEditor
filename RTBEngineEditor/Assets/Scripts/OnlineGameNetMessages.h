@@ -36,6 +36,7 @@ namespace GameNet {
     };
 
     struct EnemySpawnSnapshot {
+        std::uint32_t networkId = 0;
         int roundNumber = 0;
         int spawnPointIndex = 0;
         int spawnIndex = 0;
@@ -44,6 +45,11 @@ namespace GameNet {
     struct RoundStartSnapshot {
         int roundNumber = 0;
         int enemyCount = 0;
+    };
+
+    struct PlayerNetworkBindSnapshot {
+        int playerSlot = -1;
+        std::uint32_t networkId = 0;
     };
 
     class OnlineGameNetSubsystem {
@@ -66,16 +72,19 @@ namespace GameNet {
         static void ApplyPlayerReviveForSlot(int playerSlot);
         static bool RequestPlayerRevive(int playerSlot);
 
-        static std::string BuildEnemyNetworkKey(int roundNumber, int spawnIndex);
+        static bool BroadcastPlayerNetworkBind(const PlayerNetworkBindSnapshot& snapshot);
+        static bool TryConsumePlayerNetworkBind(PlayerNetworkBindSnapshot& outSnapshot);
+        static void ApplyPlayerNetworkBind(int playerSlot, std::uint32_t networkId);
+
         static bool BroadcastEnemySpawn(const EnemySpawnSnapshot& snapshot);
         static bool TryConsumeEnemySpawn(EnemySpawnSnapshot& outSnapshot);
 
         static bool BroadcastRoundStart(const RoundStartSnapshot& snapshot);
         static bool TryConsumeRoundStart(RoundStartSnapshot& outSnapshot);
 
-        static bool BroadcastEnemyDeath(const std::string& networkObjectKey);
-        static void ApplyEnemyDeath(const std::string& networkObjectKey);
-        static bool HasEnemyWithNetworkKey(const std::string& networkObjectKey);
+        static bool BroadcastEnemyDeath(std::uint32_t networkId);
+        static void ApplyEnemyDeath(std::uint32_t networkId);
+        static bool HasEnemyWithNetworkId(std::uint32_t networkId);
     };
 
 }
