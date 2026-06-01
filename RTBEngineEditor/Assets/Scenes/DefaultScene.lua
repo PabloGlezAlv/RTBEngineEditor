@@ -561,6 +561,7 @@ function CreateScene()
                     {
                         type = "RoundManager",
                         enemyTemplate = "753770D2-B00E-4859-B7D3-5ABF1249B014",
+                        enemyPrefabName = "Enemy Melee",
                         playerObject = "E8682E33-50ED-45D8-BC76-B31113639F9E",
                         uiHandler = "62E6AE07-7DC2-42B3-8F0E-AA7CA40264F0/RoundUIHandler",
                         roundCountdownDuration = 5.00,

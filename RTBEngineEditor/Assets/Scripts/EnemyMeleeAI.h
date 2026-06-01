@@ -68,6 +68,8 @@ private:
     float shrinkElapsed = 0.0f;
     bool deathPoseLocked = false;
     RTBEngine::Math::Vector3 initialScale = RTBEngine::Math::Vector3::One();
+    RTBEngine::Math::Vector3 lastReplicatedPosition = RTBEngine::Math::Vector3::Zero();
+    bool hasReplicatedPosition = false;
     HealthComponent* subscribedHealth = nullptr;
     RTBEngine::Core::EventSubscription damageTakenSubscription;
     RTBEngine::Core::EventSubscription deathSubscription;
@@ -87,6 +89,7 @@ private:
     void EnterChasing();
     void EnterRepositioning();
     bool HasValidCombatSetup() const;
+    void UpdateReplicatedLocomotionAnimation(float deltaTime);
     RTBEngine::Physics::PhysicsWorld* ResolvePhysicsWorld() const;
     void HandleDamageTaken(const HealthComponent::DamageTakenEvent& eventData);
     void HandleDeath(const HealthComponent::DeathEvent& eventData);

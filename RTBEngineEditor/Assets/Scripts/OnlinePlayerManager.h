@@ -21,6 +21,7 @@ public:
 
 public:
     void OnStart() override;
+    void OnUpdate(float deltaTime) override;
     void OnDestroy() override;
     void OnFixedUpdate(float fixedDeltaTime) override;
 

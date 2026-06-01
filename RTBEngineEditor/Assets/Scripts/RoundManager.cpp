@@ -5,6 +5,8 @@
 #include "ThirdPersonCharacterController.h"
 
 #include <RTBEngine/ECS/NetworkIdentity.h>
+#include <RTBEngine/ECS/NetworkTransform.h>
+#include <RTBEngine/ECS/RigidBodyComponent.h>
 #include <RTBEngine/Online/OnlineGameplayNet.h>
 
 #include "EnemyAnimationDriver.h"
@@ -20,11 +22,13 @@
 #include <RTBEngine/Animation/Animator.h>
 #include <RTBEngine/Core/Logger.h>
 #include <RTBEngine/ECS/GameObject.h>
+#include <RTBEngine/ECS/PrefabRegistry.h>
 #include <RTBEngine/ECS/Scene.h>
 #include <RTBEngine/ECS/SceneManager.h>
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 
 using ThisClass = RoundManager;
 
@@ -39,6 +43,7 @@ RTB_REGISTER_COMPONENT(RoundManager)
     RTB_PROPERTY_RANGE(playerRespawnDelay, 0.0f, 120.0f)
     RTB_PROPERTY_RANGE(teamWipeSceneDelay, 0.0f, 30.0f)
     RTB_PROPERTY(finalScenePath)
+    RTB_PROPERTY(enemyPrefabName)
 RTB_END_REGISTER(RoundManager)
 
 void RoundManager::OnStart()
@@ -51,12 +56,17 @@ void RoundManager::OnStart()
     localRespawnRemaining = 0.0f;
     ClampSettings();
     ResolveDependencies();
+
+    if (RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby()) {
+        GameNet::OnlineGameNetSubsystem::Init();
+    }
+
     RefreshTrackedPlayers();
     RefreshSpawnPoints();
     CreateEnemyPrefabFromTemplate();
 
-    if (!enemyPrefab) {
-        RTB_WARN("[RoundManager] Assign an enemyTemplate GameObject to spawn rounds.");
+    if (!ResolveEnemySpawnPrefab()) {
+        RTB_WARN("[RoundManager] Assign an enemyTemplate or a valid enemyPrefabName to spawn rounds.");
         state = State::Stopped;
         return;
     }
@@ -90,7 +100,9 @@ void RoundManager::OnUpdate(float deltaTime)
         UpdateCountdown(deltaTime);
         break;
     case State::RoundActive:
-        if (spawnedEnemies.empty()) {
+        if (spawnedEnemies.empty() &&
+            (!RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby() ||
+             RTBEngine::Online::OnlineGameplayNet::IsLobbyHost())) {
             BeginCountdownForRound(currentRound + 1);
         }
         break;
@@ -98,6 +110,86 @@ void RoundManager::OnUpdate(float deltaTime)
     default:
         break;
     }
+}
+
+void RoundManager::OnFixedUpdate(float /*fixedDeltaTime*/)
+{
+}
+
+void RoundManager::ApplyNetworkRoundStart(int roundNumber, int enemyCount)
+{
+    if (hasRequestedEndScene || roundNumber < 1 || enemyCount < 1) {
+        return;
+    }
+
+    if (state == State::RoundActive &&
+        currentRound == roundNumber &&
+        static_cast<int>(spawnedEnemies.size()) >= enemyCount) {
+        return;
+    }
+
+    if (roundNumber >= winningRound) {
+        return;
+    }
+
+    RefreshSpawnPoints();
+    CreateEnemyPrefabFromTemplate();
+    if (!ResolveEnemySpawnPrefab() || spawnPoints.empty()) {
+        RTB_WARN("[RoundManager] Cannot apply network round start: spawn setup is incomplete.");
+        return;
+    }
+
+    currentRound = roundNumber;
+    nextRound = roundNumber;
+    state = State::RoundActive;
+    countdownRemaining = 0.0f;
+    displayedCountdownSeconds = -1;
+
+    if (uiHandler) {
+        uiHandler->ShowRound(currentRound);
+        uiHandler->HideCountdown();
+    }
+
+    SpawnRoundEnemies(enemyCount, true);
+}
+
+void RoundManager::ApplyNetworkEnemySpawn(int roundNumber, int spawnPointIndex, int spawnIndex)
+{
+    if (hasRequestedEndScene || roundNumber < 1 || spawnPointIndex < 0 || spawnIndex < 0) {
+        return;
+    }
+
+    RefreshSpawnPoints();
+    CreateEnemyPrefabFromTemplate();
+    if (!ResolveEnemySpawnPrefab() ||
+        static_cast<size_t>(spawnPointIndex) >= spawnPoints.size()) {
+        return;
+    }
+
+    RTBEngine::ECS::GameObject* spawnPoint = spawnPoints[static_cast<size_t>(spawnPointIndex)];
+    RTBEngine::ECS::GameObject* spawnedEnemy = SpawnEnemyAt(spawnPoint, roundNumber, spawnIndex);
+    if (!spawnedEnemy) {
+        return;
+    }
+
+    spawnedEnemies.push_back(spawnedEnemy);
+
+    if (state != State::RoundActive || currentRound < roundNumber) {
+        currentRound = roundNumber;
+        nextRound = roundNumber;
+        state = State::RoundActive;
+        countdownRemaining = 0.0f;
+        displayedCountdownSeconds = -1;
+        if (uiHandler) {
+            uiHandler->ShowRound(currentRound);
+            uiHandler->HideCountdown();
+        }
+    }
+}
+
+bool RoundManager::CanSpawnEnemies() const
+{
+    return ResolveEnemySpawnPrefab() != nullptr && !spawnPoints.empty();
 }
 
 void RoundManager::OnValidate()
@@ -247,11 +339,30 @@ void RoundManager::CreateEnemyPrefabFromTemplate()
     enemyTemplate = nullptr;
 }
 
+RTBEngine::ECS::Prefab* RoundManager::ResolveEnemySpawnPrefab() const
+{
+    if (enemyPrefab) {
+        return enemyPrefab.get();
+    }
+
+    if (enemyPrefabName.empty()) {
+        return nullptr;
+    }
+
+    return RTBEngine::ECS::PrefabRegistry::GetInstance().Get(enemyPrefabName);
+}
+
 void RoundManager::UpdateCountdown(float deltaTime)
 {
     countdownRemaining = std::max(0.0f, countdownRemaining - deltaTime);
 
     if (countdownRemaining <= 0.0f) {
+        if (RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby() &&
+            !RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
+            countdownRemaining = 0.0f;
+            return;
+        }
+
         StartRound();
         return;
     }
@@ -266,7 +377,7 @@ void RoundManager::StartRound()
         return;
     }
 
-    if (!enemyPrefab || spawnPoints.empty()) {
+    if (!ResolveEnemySpawnPrefab() || spawnPoints.empty()) {
         state = State::Stopped;
         if (uiHandler) {
             uiHandler->HideCountdown();
@@ -283,7 +394,17 @@ void RoundManager::StartRound()
         uiHandler->HideCountdown();
     }
 
-    SpawnRoundEnemies(GetEnemyCountForRound(currentRound));
+    const int enemyCount = GetEnemyCountForRound(currentRound);
+
+    if (RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby() &&
+        RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
+        GameNet::RoundStartSnapshot roundStart;
+        roundStart.roundNumber = currentRound;
+        roundStart.enemyCount = enemyCount;
+        GameNet::OnlineGameNetSubsystem::BroadcastRoundStart(roundStart);
+    }
+
+    SpawnRoundEnemies(enemyCount);
 }
 
 void RoundManager::BeginCountdownForRound(int roundNumber)
@@ -305,37 +426,72 @@ void RoundManager::BeginCountdownForRound(int roundNumber)
     UpdateCountdownText();
 }
 
-void RoundManager::SpawnRoundEnemies(int count)
+void RoundManager::SpawnRoundEnemies(int count, bool allowClientSpawn)
 {
-    if (!enemyPrefab || spawnPoints.empty()) {
+    RTBEngine::ECS::Prefab* spawnPrefab = ResolveEnemySpawnPrefab();
+    if (!spawnPrefab || spawnPoints.empty() || count < 1) {
+        return;
+    }
+
+    if (RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby() &&
+        !RTBEngine::Online::OnlineGameplayNet::IsLobbyHost() &&
+        !allowClientSpawn) {
         return;
     }
 
     for (int index = 0; index < count; ++index) {
-        RTBEngine::ECS::GameObject* spawnPoint =
-            spawnPoints[static_cast<size_t>(index) % spawnPoints.size()];
-        RTBEngine::ECS::GameObject* spawnedEnemy = SpawnEnemyAt(spawnPoint);
-        if (spawnedEnemy) {
-            spawnedEnemies.push_back(spawnedEnemy);
+        const int spawnPointIndex = static_cast<int>(index % spawnPoints.size());
+        RTBEngine::ECS::GameObject* spawnPoint = spawnPoints[static_cast<size_t>(spawnPointIndex)];
+        RTBEngine::ECS::GameObject* spawnedEnemy = SpawnEnemyAt(spawnPoint, currentRound, index);
+        if (!spawnedEnemy) {
+            continue;
+        }
+
+        spawnedEnemies.push_back(spawnedEnemy);
+
+        if (RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby() &&
+            RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
+            GameNet::EnemySpawnSnapshot snapshot;
+            snapshot.roundNumber = currentRound;
+            snapshot.spawnPointIndex = spawnPointIndex;
+            snapshot.spawnIndex = index;
+            GameNet::OnlineGameNetSubsystem::BroadcastEnemySpawn(snapshot);
         }
     }
 }
 
 RTBEngine::ECS::GameObject* RoundManager::SpawnEnemyAt(RTBEngine::ECS::GameObject* spawnPoint)
 {
-    if (!spawnPoint || !enemyPrefab) {
+    return SpawnEnemyAt(spawnPoint, currentRound, static_cast<int>(spawnedEnemies.size()));
+}
+
+RTBEngine::ECS::GameObject* RoundManager::SpawnEnemyAt(
+    RTBEngine::ECS::GameObject* spawnPoint,
+    int roundNumber,
+    int spawnIndex)
+{
+    RTBEngine::ECS::Prefab* spawnPrefab = ResolveEnemySpawnPrefab();
+    if (!spawnPoint || !spawnPrefab || roundNumber < 1 || spawnIndex < 0) {
+        return nullptr;
+    }
+
+    const std::string networkKey =
+        GameNet::OnlineGameNetSubsystem::BuildEnemyNetworkKey(roundNumber, spawnIndex);
+    if (RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby() &&
+        GameNet::OnlineGameNetSubsystem::HasEnemyWithNetworkKey(networkKey)) {
         return nullptr;
     }
 
     RTBEngine::ECS::GameObject* spawnedEnemy =
         RTBEngine::ECS::SceneManager::GetInstance().Instantiate(
-            *enemyPrefab,
+            *spawnPrefab,
             spawnPoint->GetWorldPosition(),
             spawnPoint->GetWorldRotation());
     if (!spawnedEnemy) {
         return nullptr;
     }
 
+    ConfigureOnlineEnemy(spawnedEnemy, roundNumber, spawnIndex);
     RebindSpawnedEnemy(spawnedEnemy);
     return spawnedEnemy;
 }
@@ -355,7 +511,7 @@ void RoundManager::RebindSpawnedEnemy(RTBEngine::ECS::GameObject* spawnedEnemy)
     auto* animator = spawnedEnemy->GetComponentInChildren<RTBEngine::Animation::Animator>();
 
     if (targetTracker) {
-        targetTracker->SetTarget(playerObject);
+        targetTracker->SetTarget(FindBestEnemyTarget(spawnedEnemy));
     }
 
     if (animationDriver) {
@@ -369,6 +525,63 @@ void RoundManager::RebindSpawnedEnemy(RTBEngine::ECS::GameObject* spawnedEnemy)
         meleeAI->locomotion = locomotion;
         meleeAI->meleeAttack = meleeAttack;
     }
+}
+
+void RoundManager::ConfigureOnlineEnemy(
+    RTBEngine::ECS::GameObject* spawnedEnemy,
+    int roundNumber,
+    int spawnIndex)
+{
+    if (!spawnedEnemy || roundNumber < 1 || spawnIndex < 0) {
+        return;
+    }
+
+    if (RTBEngine::ECS::NetworkTransform* networkTransform =
+            spawnedEnemy->GetComponent<RTBEngine::ECS::NetworkTransform>()) {
+        networkTransform->objectKey =
+            GameNet::OnlineGameNetSubsystem::BuildEnemyNetworkKey(roundNumber, spawnIndex);
+        networkTransform->OnValidate();
+    }
+
+    if (!RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby()) {
+        return;
+    }
+
+    if (RTBEngine::ECS::RigidBodyComponent* rigidBody =
+            spawnedEnemy->GetComponent<RTBEngine::ECS::RigidBodyComponent>()) {
+        rigidBody->bodyType = RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()
+            ? RTBEngine::Physics::RigidBodyType::Dynamic
+            : RTBEngine::Physics::RigidBodyType::Kinematic;
+        rigidBody->OnValidate();
+    }
+}
+
+RTBEngine::ECS::GameObject* RoundManager::FindBestEnemyTarget(RTBEngine::ECS::GameObject* requester) const
+{
+    RTBEngine::ECS::GameObject* bestTarget = nullptr;
+    float bestDistanceSquared = std::numeric_limits<float>::max();
+    const RTBEngine::Math::Vector3 requesterPosition =
+        requester ? requester->GetWorldPosition() : RTBEngine::Math::Vector3::Zero();
+
+    for (const TrackedPlayer& trackedPlayer : trackedPlayers) {
+        if (!trackedPlayer.pawn || !trackedPlayer.health || trackedPlayer.health->IsDead()) {
+            continue;
+        }
+
+        RTBEngine::Math::Vector3 offset = trackedPlayer.pawn->GetWorldPosition() - requesterPosition;
+        offset.y = 0.0f;
+        const float distanceSquared = offset.LengthSquared();
+        if (distanceSquared < bestDistanceSquared) {
+            bestDistanceSquared = distanceSquared;
+            bestTarget = trackedPlayer.pawn;
+        }
+    }
+
+    if (bestTarget) {
+        return bestTarget;
+    }
+
+    return playerObject;
 }
 
 void RoundManager::CleanupSpawnedEnemies()

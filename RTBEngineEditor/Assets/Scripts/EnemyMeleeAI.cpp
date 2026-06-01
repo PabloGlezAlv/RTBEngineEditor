@@ -5,10 +5,13 @@
 #include "EnemyMeleeAIShared.h"
 #include "EnemyTargetTracker.h"
 #include "MeleeSphereAttackAbility.h"
+#include "OnlineGameNetMessages.h"
 
 #include <RTBEngine/ECS/GameObject.h>
+#include <RTBEngine/ECS/NetworkTransform.h>
 #include <RTBEngine/ECS/RigidBodyComponent.h>
 #include <RTBEngine/Math/Math.h>
+#include <RTBEngine/Online/OnlineGameplayNet.h>
 #include <RTBEngine/Physics/PhysicsWorld.h>
 
 #include <algorithm>
@@ -37,10 +40,16 @@ void EnemyMeleeAI::OnStart()
 
     if (owner) {
         initialScale = owner->GetTransform().GetScale();
+        lastReplicatedPosition = owner->GetWorldPosition();
+        hasReplicatedPosition = true;
     }
 
     if (health && health->IsDead()) {
         HandleDeath(health->GetLastDeathEvent());
+        return;
+    }
+
+    if (!HasSimulationAuthority()) {
         return;
     }
 
@@ -56,6 +65,20 @@ void EnemyMeleeAI::OnUpdate(float deltaTime)
     ClampSettings();
     ResolveDependencies();
     RebindHealthSubscriptions();
+
+    if (!HasSimulationAuthority()) {
+        switch (state) {
+        case State::Dying:
+            UpdateDying(deltaTime);
+            break;
+        case State::Shrinking:
+            UpdateShrinking(deltaTime);
+            break;
+        default:
+            break;
+        }
+        return;
+    }
 
     switch (state) {
     case State::Attacking:
@@ -88,6 +111,11 @@ void EnemyMeleeAI::OnFixedUpdate(float fixedDeltaTime)
         return;
     }
 
+    if (!HasSimulationAuthority()) {
+        locomotion->StopPlanarMotion();
+        return;
+    }
+
     switch (state) {
     case State::Chasing:
         if (targetTracker) {
@@ -112,9 +140,14 @@ void EnemyMeleeAI::OnFixedUpdate(float fixedDeltaTime)
     }
 }
 
-void EnemyMeleeAI::OnLateUpdate(float /*deltaTime*/)
+void EnemyMeleeAI::OnLateUpdate(float deltaTime)
 {
     ResolveDependencies();
+
+    if (!HasSimulationAuthority()) {
+        UpdateReplicatedLocomotionAnimation(deltaTime);
+        return;
+    }
 
     if (state == State::Attacking) {
         const bool abilityActive = meleeAttack && meleeAttack->IsAbilityActive();
@@ -406,6 +439,35 @@ RTBEngine::Physics::PhysicsWorld* EnemyMeleeAI::ResolvePhysicsWorld() const
     return nullptr;
 }
 
+void EnemyMeleeAI::UpdateReplicatedLocomotionAnimation(float deltaTime)
+{
+    if (!owner || !animationDriver || deltaTime <= 0.0f) {
+        return;
+    }
+
+    if (state == State::Attacking) {
+        return;
+    }
+
+    const RTBEngine::Math::Vector3 currentPosition = owner->GetWorldPosition();
+    if (!hasReplicatedPosition) {
+        lastReplicatedPosition = currentPosition;
+        hasReplicatedPosition = true;
+        return;
+    }
+
+    RTBEngine::Math::Vector3 displacement = currentPosition - lastReplicatedPosition;
+    displacement.y = 0.0f;
+    lastReplicatedPosition = currentPosition;
+
+    constexpr float kMinWalkSpeed = 0.15f;
+    const float planarSpeed = displacement.Length() / deltaTime;
+    if (planarSpeed >= kMinWalkSpeed &&
+        (state == State::Chasing || state == State::Repositioning || state == State::Idle)) {
+        animationDriver->PlayWalkLoop();
+    }
+}
+
 void EnemyMeleeAI::HandleDamageTaken(const HealthComponent::DamageTakenEvent& /*eventData*/)
 {
 }
@@ -433,6 +495,16 @@ void EnemyMeleeAI::HandleDeath(const HealthComponent::DeathEvent& /*eventData*/)
 
     if (!animationDriver || !animationDriver->PlayDeath()) {
         deathPoseLocked = true;
+    }
+
+    if (RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby() &&
+        RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
+        if (RTBEngine::ECS::NetworkTransform* networkTransform =
+                owner->GetComponent<RTBEngine::ECS::NetworkTransform>()) {
+            if (!networkTransform->objectKey.empty()) {
+                GameNet::OnlineGameNetSubsystem::BroadcastEnemyDeath(networkTransform->objectKey);
+            }
+        }
     }
 }
 

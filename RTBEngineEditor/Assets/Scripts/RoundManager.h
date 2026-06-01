@@ -58,6 +58,8 @@ public:
 
     void OnUpdate(float deltaTime) override;
 
+    void OnFixedUpdate(float fixedDeltaTime) override;
+
     void OnValidate() override;
 
     void OnDestroy() override;
@@ -83,12 +85,13 @@ public:
     float teamWipeSceneDelay = 5.0f;
 
     std::string finalScenePath = "Assets/Scenes/FinalScene.lua";
+    std::string enemyPrefabName = "Enemy Melee";
 
-
+    void ApplyNetworkRoundStart(int roundNumber, int enemyCount);
+    void ApplyNetworkEnemySpawn(int roundNumber, int spawnPointIndex, int spawnIndex);
+    bool CanSpawnEnemies() const;
 
     RTB_COMPONENT(RoundManager)
-
-
 
 private:
 
@@ -165,17 +168,28 @@ private:
 
     void CreateEnemyPrefabFromTemplate();
 
+    RTBEngine::ECS::Prefab* ResolveEnemySpawnPrefab() const;
+
     void UpdateCountdown(float deltaTime);
 
     void StartRound();
 
     void BeginCountdownForRound(int roundNumber);
 
-    void SpawnRoundEnemies(int count);
+    void SpawnRoundEnemies(int count, bool allowClientSpawn = false);
 
     RTBEngine::ECS::GameObject* SpawnEnemyAt(RTBEngine::ECS::GameObject* spawnPoint);
 
+    RTBEngine::ECS::GameObject* SpawnEnemyAt(
+        RTBEngine::ECS::GameObject* spawnPoint,
+        int roundNumber,
+        int spawnIndex);
+
     void RebindSpawnedEnemy(RTBEngine::ECS::GameObject* spawnedEnemy);
+
+    void ConfigureOnlineEnemy(RTBEngine::ECS::GameObject* spawnedEnemy, int roundNumber, int spawnIndex);
+
+    RTBEngine::ECS::GameObject* FindBestEnemyTarget(RTBEngine::ECS::GameObject* requester = nullptr) const;
 
     void CleanupSpawnedEnemies();
 

@@ -35,6 +35,17 @@ namespace GameNet {
         int maxHits = 1;
     };
 
+    struct EnemySpawnSnapshot {
+        int roundNumber = 0;
+        int spawnPointIndex = 0;
+        int spawnIndex = 0;
+    };
+
+    struct RoundStartSnapshot {
+        int roundNumber = 0;
+        int enemyCount = 0;
+    };
+
     class OnlineGameNetSubsystem {
     public:
         static void Init();
@@ -54,6 +65,17 @@ namespace GameNet {
         static bool BroadcastPlayerRevive(int playerSlot);
         static void ApplyPlayerReviveForSlot(int playerSlot);
         static bool RequestPlayerRevive(int playerSlot);
+
+        static std::string BuildEnemyNetworkKey(int roundNumber, int spawnIndex);
+        static bool BroadcastEnemySpawn(const EnemySpawnSnapshot& snapshot);
+        static bool TryConsumeEnemySpawn(EnemySpawnSnapshot& outSnapshot);
+
+        static bool BroadcastRoundStart(const RoundStartSnapshot& snapshot);
+        static bool TryConsumeRoundStart(RoundStartSnapshot& outSnapshot);
+
+        static bool BroadcastEnemyDeath(const std::string& networkObjectKey);
+        static void ApplyEnemyDeath(const std::string& networkObjectKey);
+        static bool HasEnemyWithNetworkKey(const std::string& networkObjectKey);
     };
 
 }

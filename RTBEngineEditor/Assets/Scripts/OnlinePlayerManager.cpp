@@ -2,8 +2,12 @@
 
 #include "OnlineGameNetMessages.h"
 #include "ProjectileAttackAbility.h"
+#include "RoundManager.h"
 
 #include <RTBEngine/ECS/NetworkIdentity.h>
+#include <RTBEngine/ECS/NetworkTransform.h>
+#include <RTBEngine/ECS/Scene.h>
+#include <RTBEngine/ECS/SceneManager.h>
 #include <RTBEngine/Online/OnlineGameplayNet.h>
 #include "ThirdPersonCharacterController.h"
 
@@ -15,6 +19,55 @@
 #include <RTBEngine/Physics/RigidBody.h>
 
 using ThisClass = OnlinePlayerManager;
+
+namespace {
+
+    RoundManager* FindRoundManager()
+    {
+        RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
+        if (!scene) {
+            return nullptr;
+        }
+
+        for (const auto& gameObject : scene->GetGameObjects()) {
+            if (!gameObject) {
+                continue;
+            }
+
+            if (RoundManager* roundManager = gameObject->GetComponent<RoundManager>()) {
+                return roundManager;
+            }
+        }
+
+        return nullptr;
+    }
+
+    void ProcessNetworkRoundEvents()
+    {
+        if (RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
+            return;
+        }
+
+        RoundManager* roundManager = FindRoundManager();
+        if (!roundManager) {
+            return;
+        }
+
+        GameNet::RoundStartSnapshot roundStart;
+        while (GameNet::OnlineGameNetSubsystem::TryConsumeRoundStart(roundStart)) {
+            roundManager->ApplyNetworkRoundStart(roundStart.roundNumber, roundStart.enemyCount);
+        }
+
+        GameNet::EnemySpawnSnapshot enemySpawn;
+        while (GameNet::OnlineGameNetSubsystem::TryConsumeEnemySpawn(enemySpawn)) {
+            roundManager->ApplyNetworkEnemySpawn(
+                enemySpawn.roundNumber,
+                enemySpawn.spawnPointIndex,
+                enemySpawn.spawnIndex);
+        }
+    }
+
+}
 
 RTB_REGISTER_COMPONENT(OnlinePlayerManager)
     RTB_PROPERTY_GAMEOBJECT(localPlayerObject)
@@ -29,6 +82,15 @@ void OnlinePlayerManager::OnStart()
 
     GameNet::OnlineGameNetSubsystem::Init();
     ConfigureOnlinePlayers();
+}
+
+void OnlinePlayerManager::OnUpdate(float /*deltaTime*/)
+{
+    if (!RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby()) {
+        return;
+    }
+
+    ProcessNetworkRoundEvents();
 }
 
 void OnlinePlayerManager::OnDestroy()
@@ -98,6 +160,11 @@ void OnlinePlayerManager::ConfigurePawn(
 
     identity->SetOwnerUserId(ownerUserId);
     identity->SetNetworkPlayerSlot(playerSlot);
+
+    if (RTBEngine::ECS::NetworkTransform* networkTransform = pawn->GetComponent<RTBEngine::ECS::NetworkTransform>()) {
+        networkTransform->objectKey = "PlayerSlot_" + std::to_string(playerSlot);
+        networkTransform->OnValidate();
+    }
 
     if (ThirdPersonCharacterController* controller = pawn->GetComponent<ThirdPersonCharacterController>()) {
         if (!identity->IsLocallyControlled()) {

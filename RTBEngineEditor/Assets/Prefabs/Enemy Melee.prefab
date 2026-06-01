@@ -4,6 +4,18 @@ return {
     position = Vector3(-3.00, 0.00, 0.00),
     components = {
         {
+            type = "NetworkIdentity",
+            networkOwnerUserId = "",
+            networkPlayerSlot = -1
+        },
+        {
+            type = "NetworkTransform",
+            sendRate = 20.00,
+            interpolationSpeed = 14.00,
+            replicatePosition = true,
+            replicateRotation = true
+        },
+        {
             type = "EnemyTargetTracker",
             targetObject = "E8682E33-50ED-45D8-BC76-B31113639F9E"
         },
