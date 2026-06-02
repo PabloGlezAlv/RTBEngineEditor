@@ -1,5 +1,7 @@
 #include "HealthComponent.h"
 
+#include "OnlineGameNetMessages.h"
+
 #include <algorithm>
 #include <cmath>
 
@@ -157,11 +159,12 @@ void HealthComponent::ClampHealth()
 
 void HealthComponent::NotifyHealthChanged(bool forceNotify)
 {
+    const HealthChangedEvent eventData = GetHealthChangedEvent();
+    GameNet::OnlineGameNetSubsystem::TrySyncPlayerHealthFromComponent(this, eventData.normalizedHealth);
+
     if (!forceNotify && !healthChangedEvent.HasListeners()) {
         return;
     }
-
-    const HealthChangedEvent eventData = GetHealthChangedEvent();
     static constexpr float kFloatEpsilon = 0.0001f;
     const bool stateChanged =
         !hasLastNotifiedEvent ||

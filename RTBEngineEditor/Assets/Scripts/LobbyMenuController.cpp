@@ -1,5 +1,7 @@
 #include "LobbyMenuController.h"
 
+#include "OnlineGameNetMessages.h"
+
 #include <RTBEngine/Online/OnlineGameplayNet.h>
 
 #include <RTBEngine/Core/Logger.h>
@@ -240,6 +242,7 @@ void LobbyMenuController::OnUpdate(float)
     std::string requestedScenePath;
     if (RTBEngine::Online::OnlineGameplayNet::ConsumeStartMatch(requestedScenePath)) {
         SetStatus("Host started the match.");
+        GameNet::OnlineGameNetSubsystem::Init();
         RTBEngine::Core::Time::SetPaused(false);
         RTBEngine::ECS::SceneManager::GetInstance().RequestSceneLoad(requestedScenePath.c_str());
         return;
@@ -762,6 +765,7 @@ void LobbyMenuController::FinishLobby()
     const RTBEngine::Online::OnlineResult result = lobby->GetCurrentLobby().isOwner
         ? lobby->DestroyLobby()
         : lobby->LeaveLobby();
+    GameNet::OnlineGameNetSubsystem::Shutdown();
     SetStatus(FormatResult(result));
 }
 
@@ -800,6 +804,7 @@ void LobbyMenuController::StartGame()
 
     SetStatus("Starting match as host.");
 
+    GameNet::OnlineGameNetSubsystem::Init();
     RTBEngine::Core::Time::SetPaused(false);
     RTBEngine::ECS::SceneManager::GetInstance().RequestSceneLoad(gameScenePath.c_str());
 }

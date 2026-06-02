@@ -11,6 +11,8 @@
 #include <unordered_map>
 #include <vector>
 
+class HealthComponent;
+
 namespace GameNet {
 
     struct PlayerCombatInput {
@@ -52,6 +54,17 @@ namespace GameNet {
         std::uint32_t networkId = 0;
     };
 
+    struct PlayerSessionSnapshot {
+        int playerSlot = -1;
+        std::string ownerUserIdKey;
+        std::string displayName;
+    };
+
+    struct PlayerHealthSnapshot {
+        int playerSlot = -1;
+        float normalizedHealth = 1.0f;
+    };
+
     struct EnemyAttackSnapshot {
         std::uint32_t networkId = 0;
         std::uint32_t attackSequence = 0;
@@ -80,6 +93,12 @@ namespace GameNet {
         static bool BroadcastPlayerNetworkBind(const PlayerNetworkBindSnapshot& snapshot);
         static bool TryConsumePlayerNetworkBind(PlayerNetworkBindSnapshot& outSnapshot);
         static void ApplyPlayerNetworkBind(int playerSlot, std::uint32_t networkId);
+        static void ApplyPlayerNetworkBind(const PlayerNetworkBindSnapshot& snapshot);
+
+        static bool BroadcastPlayerSessionSnapshot(const PlayerSessionSnapshot& snapshot);
+        static void ApplyPlayerSessionSnapshot(const PlayerSessionSnapshot& snapshot);
+
+        static void TrySyncPlayerHealthFromComponent(::HealthComponent* health, float normalizedHealth);
 
         static bool BroadcastEnemySpawn(const EnemySpawnSnapshot& snapshot);
         static bool TryConsumeEnemySpawn(EnemySpawnSnapshot& outSnapshot);

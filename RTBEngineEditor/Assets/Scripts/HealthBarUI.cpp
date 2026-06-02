@@ -31,6 +31,11 @@ void HealthBarUI::OnValidate()
     UpdateVisuals();
 }
 
+void HealthBarUI::RefreshBinding()
+{
+    OnValidate();
+}
+
 void HealthBarUI::OnDestroy()
 {
     UnsubscribeFromHealth();

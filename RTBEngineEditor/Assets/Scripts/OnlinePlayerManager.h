@@ -6,6 +6,8 @@
 #include <RTBEngine/Online/OnlineUser.h>
 #include <RTBEngine/Reflection/PropertyMacros.h>
 
+#include "OnlineGameNetMessages.h"
+
 #include <memory>
 #include <vector>
 
@@ -28,6 +30,13 @@ public:
 private:
     std::unique_ptr<RTBEngine::ECS::Prefab> playerPrefab;
     std::vector<RTBEngine::ECS::GameObject*> spawnedRemotePawns;
+    std::vector<GameNet::PlayerNetworkBindSnapshot> authoritativePlayerBinds;
+    std::vector<GameNet::PlayerSessionSnapshot> authoritativePlayerSessionProfiles;
+    float bindRebroadcastTimer = 0.0f;
+    float bindRebroadcastElapsed = 0.0f;
+
+    void RegisterPlayerSessionProfiles(
+        const std::vector<RTBEngine::Online::OnlineUserId>& members);
 
     void ConfigureOnlinePlayers();
     void ConfigurePawn(

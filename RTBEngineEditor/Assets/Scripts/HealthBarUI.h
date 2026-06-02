@@ -24,6 +24,8 @@ public:
     RTBEngine::Math::Vector4 midHealthColor = RTBEngine::Math::Vector4(0.95f, 0.74f, 0.16f, 1.0f);
     RTBEngine::Math::Vector4 lowHealthColor = RTBEngine::Math::Vector4(0.82f, 0.18f, 0.18f, 1.0f);
 
+    void RefreshBinding();
+
     RTB_COMPONENT(HealthBarUI)
 
     void OnStart() override;

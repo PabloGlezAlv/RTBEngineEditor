@@ -66,14 +66,17 @@ function CreateScene()
                         renderMode = "ScreenSpaceOverlay",
                         canvasSize = Vector2(1920.00, 1080.00),
                         pixelsPerUnit = 100.00,
-                        sortOrder = 0
+                        sortOrder = 0,
+                        faceCamera = false
                     },
                     {
                         type = "RoundUIHandler",
                         roundText = "D7D85F5A-5A9A-4E6A-8AA2-9032EC0F0B11/UIText",
                         countdownText = "A5C9F5F4-2D0B-4D2C-9FE5-443A683E1A22/UIText",
                         roundPrefix = "Round ",
-                        countdownPrefix = "Start in "
+                        countdownPrefix = "Start in ",
+                        endGameCountdownPrefix = "Game over in ",
+                        respawnCountdownPrefix = "Revive in "
                     },
                     {
                         type = "PauseMenuController",
@@ -173,91 +176,6 @@ function CreateScene()
                                         pivot = Vector2(0.50, 0.50),
                                         anchoredPosition = Vector2(0.00, 0.00),
                                         sizeDelta = Vector2(84.00, 84.00),
-                                        rotation = 0.00,
-                                        scale = Vector2(1.00, 1.00)
-                                    },
-                                }
-                            },
-                        }
-                    },
-                    {
-                        name = "Slider",
-                        uuid = "5DF934F7-228E-4AFE-82E3-D6B742F023D6",
-                        components = {
-                            {
-                                type = "UIPanel",
-                                backgroundColor = Color(0.69, 0.69, 0.69, 1.00),
-                                borderColor = Color(1.00, 1.00, 1.00, 1.00),
-                                borderThickness = 1.00,
-                                hasBorder = false,
-                                isVisible = true,
-                                raycastTarget = true,
-                                anchorMin = Vector2(0.00, 0.00),
-                                anchorMax = Vector2(0.00, 0.00),
-                                pivot = Vector2(0.00, 0.50),
-                                anchoredPosition = Vector2(10.00, 30.00),
-                                sizeDelta = Vector2(200.00, 20.00),
-                                rotation = 0.00,
-                                scale = Vector2(1.00, 1.00)
-                            },
-                            {
-                                type = "UISlider",
-                                minValue = 0.00,
-                                maxValue = 1.00,
-                                value = 0.50,
-                                interactable = false,
-                                fillPanel = "BCE29D83-01B6-4B80-989F-85CB5E49C359/UIPanel",
-                                handlePanel = "96F2BB4D-DF67-4728-87D6-56904800DDC0/UIPanel"
-                            },
-                            {
-                                type = "HealthBarUI",
-                                health = "E8682E33-50ED-45D8-BC76-B31113639F9E/HealthComponent",
-                                fillPanel = "BCE29D83-01B6-4B80-989F-85CB5E49C359/UIPanel",
-                                highHealthColor = Color(0.12, 0.78, 0.24, 1.00),
-                                midHealthColor = Color(0.95, 0.74, 0.16, 1.00),
-                                lowHealthColor = Color(0.82, 0.18, 0.18, 1.00)
-                            },
-                        },
-                        children = {
-                            {
-                                name = "Fill",
-                                uuid = "BCE29D83-01B6-4B80-989F-85CB5E49C359",
-                                components = {
-                                    {
-                                        type = "UIPanel",
-                                        backgroundColor = Color(0.11, 0.20, 1.00, 1.00),
-                                        borderColor = Color(1.00, 1.00, 1.00, 1.00),
-                                        borderThickness = 1.00,
-                                        hasBorder = false,
-                                        isVisible = true,
-                                        raycastTarget = false,
-                                        anchorMin = Vector2(0.00, 0.00),
-                                        anchorMax = Vector2(0.00, 1.00),
-                                        pivot = Vector2(0.00, 0.50),
-                                        anchoredPosition = Vector2(0.00, 0.00),
-                                        sizeDelta = Vector2(100.00, 0.00),
-                                        rotation = 0.00,
-                                        scale = Vector2(1.00, 1.00)
-                                    },
-                                }
-                            },
-                            {
-                                name = "Handle",
-                                uuid = "96F2BB4D-DF67-4728-87D6-56904800DDC0",
-                                components = {
-                                    {
-                                        type = "UIPanel",
-                                        backgroundColor = Color(0.92, 0.92, 0.92, 1.00),
-                                        borderColor = Color(1.00, 1.00, 1.00, 1.00),
-                                        borderThickness = 1.00,
-                                        hasBorder = false,
-                                        isVisible = false,
-                                        raycastTarget = false,
-                                        anchorMin = Vector2(0.00, 0.50),
-                                        anchorMax = Vector2(0.00, 0.50),
-                                        pivot = Vector2(0.50, 0.50),
-                                        anchoredPosition = Vector2(100.00, 0.00),
-                                        sizeDelta = Vector2(20.00, 20.00),
                                         rotation = 0.00,
                                         scale = Vector2(1.00, 1.00)
                                     },
@@ -495,73 +413,12 @@ function CreateScene()
                 }
             },
             {
-                name = "WorldSpaceCanvasTest",
-                uuid = "1A5CC89B-B19E-4B64-B0B0-8013A8CE7D2B",
-                position = Vector3(0.00, 1.35, 1.50),
-                components = {
-                    {
-                        type = "Canvas",
-                        renderMode = "WorldSpace",
-                        canvasSize = Vector2(256.00, 256.00),
-                        pixelsPerUnit = 128.00,
-                        sortOrder = 10
-                    },
-                },
-                children = {
-                    {
-                        name = "WorldSpaceLogo",
-                        uuid = "3E6E79B6-0F02-46BF-98F0-AB2070C70448",
-                        components = {
-                            {
-                                type = "UIImage",
-                                texture = "Default/Textures/logo.png",
-                                tintColor = Color(1.00, 1.00, 1.00, 0.85),
-                                preserveAspect = true,
-                                isVisible = true,
-                                raycastTarget = false,
-                                anchorMin = Vector2(0.50, 0.50),
-                                anchorMax = Vector2(0.50, 0.50),
-                                pivot = Vector2(0.50, 0.50),
-                                anchoredPosition = Vector2(0.00, 32.00),
-                                sizeDelta = Vector2(160.00, 160.00),
-                                rotation = 0.00,
-                                scale = Vector2(1.00, 1.00)
-                            },
-                        }
-                    },
-                    {
-                        name = "WorldSpaceText",
-                        uuid = "C0CC8AF9-6F29-4B07-A64F-5FF1D434DB93",
-                        components = {
-                            {
-                                type = "UIText",
-                                text = "World Text",
-                                color = Color(0.20, 0.95, 1.00, 1.00),
-                                fontSize = 28.00,
-                                alignment = "Center",
-                                font = nil,
-                                isVisible = true,
-                                raycastTarget = false,
-                                anchorMin = Vector2(0.50, 0.50),
-                                anchorMax = Vector2(0.50, 0.50),
-                                pivot = Vector2(0.50, 0.50),
-                                anchoredPosition = Vector2(-106.00, 70.00),
-                                sizeDelta = Vector2(240.00, 48.00),
-                                rotation = 0.00,
-                                scale = Vector2(1.00, 1.00)
-                            },
-                        }
-                    },
-                }
-            },
-            {
                 name = "RoundManager",
                 uuid = "4A7C26F9-7F62-4A3A-B8F0-91A4B36C1601",
                 components = {
                     {
                         type = "RoundManager",
                         enemyTemplate = "753770D2-B00E-4859-B7D3-5ABF1249B014",
-                        enemyPrefabName = "Enemy Melee",
                         playerObject = "E8682E33-50ED-45D8-BC76-B31113639F9E",
                         uiHandler = "62E6AE07-7DC2-42B3-8F0E-AA7CA40264F0/RoundUIHandler",
                         roundCountdownDuration = 5.00,
@@ -570,7 +427,8 @@ function CreateScene()
                         winningRound = 5,
                         playerRespawnDelay = 30.00,
                         teamWipeSceneDelay = 5.00,
-                        finalScenePath = "Assets/Scenes/FinalScene.lua"
+                        finalScenePath = "Assets/Scenes/FinalScene.lua",
+                        enemyPrefabName = "Enemy Melee"
                     },
                 }
             },
@@ -637,6 +495,7 @@ function CreateScene()
             {
                 name = "Enemy Melee",
                 uuid = "753770D2-B00E-4859-B7D3-5ABF1249B014",
+                collisionLayer = "Characters",
                 prefab = "Enemy Melee",
                 position = Vector3(-3.00, 0.00, 0.00),
                 overrides = {
@@ -645,32 +504,21 @@ function CreateScene()
                             targetObject = "E8682E33-50ED-45D8-BC76-B31113639F9E",
                         },
                         { type = "EnemyAnimationDriver",
-                            animator = "CF634CD8-CB91-4A67-ACD4-A49519873137/Animator",
+                            animator = "F48597B7-5877-4183-8D6A-DA9EAFBB96E8/Animator",
                         },
                         { type = "EnemyMeleeAI",
                             health = "753770D2-B00E-4859-B7D3-5ABF1249B014/HealthComponent",
-                            team = 2,
                             targetTracker = "753770D2-B00E-4859-B7D3-5ABF1249B014/EnemyTargetTracker",
                             animationDriver = "753770D2-B00E-4859-B7D3-5ABF1249B014/EnemyAnimationDriver",
                             locomotion = "753770D2-B00E-4859-B7D3-5ABF1249B014/EnemyLocomotionController",
                             meleeAttack = "753770D2-B00E-4859-B7D3-5ABF1249B014/MeleeSphereAttackAbility",
-                        },
-                        { type = "MeleeSphereAttackAbility",
-                            attackOriginOffset = Vector3(0.00, 1.05, 0.18),
-                            cooldown = 0.85,
-                            damage = 12.00,
-                            hitDelay = 0.45,
-                            recoveryDuration = 0.45,
-                            sphereRadius = 0.45,
-                            sphereDistance = 0.95,
-                            ignoreSameTeam = true,
                         },
                     },
                 },
                 children = {
                     {
                         name = "EnemyAttackOrigin",
-                        uuid = "37055392-7A0D-4A98-BF67-8FCD102C701E",
+                        uuid = "C1A8FF8C-7F5A-4653-8EA0-E735F6E6134B",
                         prefab = "EnemyAttackOrigin",
                         position = Vector3(0.00, 1.00, 0.85),
                         overrides = {
@@ -678,7 +526,7 @@ function CreateScene()
                     },
                     {
                         name = "Enemy Model",
-                        uuid = "CF634CD8-CB91-4A67-ACD4-A49519873137",
+                        uuid = "F48597B7-5877-4183-8D6A-DA9EAFBB96E8",
                         prefab = "Enemy Model",
                         scale = Vector3(0.01, 0.01, 0.01),
                         overrides = {
@@ -745,7 +593,7 @@ function CreateScene()
                         recoveryDuration = 0.50,
                         projectileSpeed = 8.00,
                         projectileLifetime = 0.65,
-                        projectileRadius = 0.275,
+                        projectileRadius = 0.28,
                         destroyOnHit = true,
                         maxHits = 1,
                         ignoreSameTeam = true
@@ -772,6 +620,169 @@ function CreateScene()
                 },
                 children = {
                     {
+                        name = "PlayerNameplate",
+                        uuid = "A1000001-0001-4000-8000-000000000001",
+                        position = Vector3(0.00, 2.20, 0.00),
+                        children = {
+                            {
+                                name = "NameplateCanvas",
+                                uuid = "A1000001-0002-4000-8000-000000000002",
+                                components = {
+                                    {
+                                        type = "Canvas",
+                                        renderMode = "WorldSpace",
+                                        canvasSize = Vector2(200.00, 72.00),
+                                        pixelsPerUnit = 100.00,
+                                        sortOrder = 25,
+                                        faceCamera = true
+                                    },
+                                    {
+                                        type = "MissingComponent"
+                                    },
+                                },
+                                children = {
+                                    {
+                                        name = "NameplateRoot",
+                                        uuid = "A1000001-0003-4000-8000-000000000003",
+                                        components = {
+                                            {
+                                                type = "UIPanel",
+                                                backgroundColor = Color(0.05, 0.05, 0.08, 0.72),
+                                                borderColor = Color(1.00, 1.00, 1.00, 0.25),
+                                                borderThickness = 1.00,
+                                                hasBorder = true,
+                                                isVisible = true,
+                                                raycastTarget = false,
+                                                anchorMin = Vector2(0.50, 0.50),
+                                                anchorMax = Vector2(0.50, 0.50),
+                                                pivot = Vector2(0.50, 0.50),
+                                                anchoredPosition = Vector2(0.00, 0.00),
+                                                sizeDelta = Vector2(184.00, 35.00),
+                                                rotation = 0.00,
+                                                scale = Vector2(1.00, 1.00)
+                                            },
+                                            {
+                                                type = "UIVerticalLayout",
+                                                padding = Vector2(6.00, 6.00),
+                                                spacing = 4.00
+                                            },
+                                        },
+                                        children = {
+                                            {
+                                                name = "DisplayName",
+                                                uuid = "A1000001-0004-4000-8000-000000000004",
+                                                components = {
+                                                    {
+                                                        type = "UIText",
+                                                        text = "Player",
+                                                        color = Color(1.00, 1.00, 1.00, 1.00),
+                                                        fontSize = 14.00,
+                                                        alignment = "Center",
+                                                        font = nil,
+                                                        isVisible = true,
+                                                        raycastTarget = false,
+                                                        anchorMin = Vector2(0.00, 1.00),
+                                                        anchorMax = Vector2(0.00, 1.00),
+                                                        pivot = Vector2(0.00, 1.00),
+                                                        anchoredPosition = Vector2(6.00, -6.00),
+                                                        sizeDelta = Vector2(168.00, 18.00),
+                                                        rotation = 0.00,
+                                                        scale = Vector2(1.00, 1.00)
+                                                    },
+                                                }
+                                            },
+                                            {
+                                                name = "NameplateHealthTrack",
+                                                uuid = "A1000001-0005-4000-8000-000000000005",
+                                                components = {
+                                                    {
+                                                        type = "UIPanel",
+                                                        backgroundColor = Color(0.28, 0.28, 0.28, 1.00),
+                                                        borderColor = Color(1.00, 1.00, 1.00, 1.00),
+                                                        borderThickness = 1.00,
+                                                        hasBorder = false,
+                                                        isVisible = true,
+                                                        raycastTarget = false,
+                                                        anchorMin = Vector2(0.00, 1.00),
+                                                        anchorMax = Vector2(0.00, 1.00),
+                                                        pivot = Vector2(0.00, 1.00),
+                                                        anchoredPosition = Vector2(6.00, -28.00),
+                                                        sizeDelta = Vector2(168.00, 14.00),
+                                                        rotation = 0.00,
+                                                        scale = Vector2(1.00, 1.00)
+                                                    },
+                                                    {
+                                                        type = "UISlider",
+                                                        minValue = 0.00,
+                                                        maxValue = 1.00,
+                                                        value = 1.00,
+                                                        interactable = false,
+                                                        fillPanel = "A1000001-0006-4000-8000-000000000006/UIPanel",
+                                                        handlePanel = "A1000001-0007-4000-8000-000000000007/UIPanel"
+                                                    },
+                                                    {
+                                                        type = "HealthBarUI",
+                                                        health = "E8682E33-50ED-45D8-BC76-B31113639F9E/HealthComponent",
+                                                        fillPanel = "A1000001-0006-4000-8000-000000000006/UIPanel",
+                                                        highHealthColor = Color(0.12, 0.78, 0.24, 1.00),
+                                                        midHealthColor = Color(0.95, 0.74, 0.16, 1.00),
+                                                        lowHealthColor = Color(0.82, 0.18, 0.18, 1.00)
+                                                    },
+                                                },
+                                                children = {
+                                                    {
+                                                        name = "NameplateFill",
+                                                        uuid = "A1000001-0006-4000-8000-000000000006",
+                                                        components = {
+                                                            {
+                                                                type = "UIPanel",
+                                                                backgroundColor = Color(0.12, 0.78, 0.24, 1.00),
+                                                                borderColor = Color(1.00, 1.00, 1.00, 1.00),
+                                                                borderThickness = 1.00,
+                                                                hasBorder = false,
+                                                                isVisible = true,
+                                                                raycastTarget = false,
+                                                                anchorMin = Vector2(0.00, 0.00),
+                                                                anchorMax = Vector2(0.00, 1.00),
+                                                                pivot = Vector2(0.00, 0.50),
+                                                                anchoredPosition = Vector2(0.00, 0.00),
+                                                                sizeDelta = Vector2(168.00, 0.00),
+                                                                rotation = 0.00,
+                                                                scale = Vector2(1.00, 1.00)
+                                                            },
+                                                        }
+                                                    },
+                                                    {
+                                                        name = "NameplateHandle",
+                                                        uuid = "A1000001-0007-4000-8000-000000000007",
+                                                        components = {
+                                                            {
+                                                                type = "UIPanel",
+                                                                backgroundColor = Color(0.92, 0.92, 0.92, 1.00),
+                                                                borderColor = Color(1.00, 1.00, 1.00, 1.00),
+                                                                borderThickness = 1.00,
+                                                                hasBorder = false,
+                                                                isVisible = false,
+                                                                raycastTarget = false,
+                                                                anchorMin = Vector2(0.00, 0.50),
+                                                                anchorMax = Vector2(0.00, 0.50),
+                                                                pivot = Vector2(0.50, 0.50),
+                                                                anchoredPosition = Vector2(168.00, 0.00),
+                                                                sizeDelta = Vector2(8.00, 8.00),
+                                                                rotation = 0.00,
+                                                                scale = Vector2(1.00, 1.00)
+                                                            },
+                                                        }
+                                                    },
+                                                }
+                                            },
+                                        }
+                                    },
+                                }
+                            },
+                        }
+                    },
+                    {
                         name = "Attack Aim Trail",
                         uuid = "7C57C988-6629-4FE8-AFF1-8D4D39C84D1B",
                         components = {
@@ -791,7 +802,7 @@ function CreateScene()
                             {
                                 type = "Animator",
                                 modelRef = "Assets/Models/Player.fbx",
-                                currentClipName = "ThirdPerson.Idle",
+                                currentClipName = "Attack",
                                 defaultClip = "",
                                 speed = 1.00,
                                 playing = true,
@@ -853,13 +864,13 @@ function CreateScene()
                                                                 name = "mixamorig:LeftShoulder",
                                                                 uuid = "8F079083-2A6E-4B60-9663-F23B483F1EBE",
                                                                 position = Vector3(6.34, 14.95, -4.64),
-                                                                rotation = Quaternion.FromEulerAngles(-79.11, 89.74, -168.87),
+                                                                rotation = Quaternion.FromEulerAngles(79.09, 89.74, 168.36),
                                                                 children = {
                                                                     {
                                                                         name = "mixamorig:LeftArm",
                                                                         uuid = "A0AA69EE-ECD3-475E-9131-68CD84714AD9",
                                                                         position = Vector3(0.00, 9.14, -0.00),
-                                                                        rotation = Quaternion.FromEulerAngles(10.59, -1.15, 1.22),
+                                                                        rotation = Quaternion.FromEulerAngles(10.62, -0.76, 0.87),
                                                                         children = {
                                                                             {
                                                                                 name = "mixamorig:LeftForeArm",
@@ -876,7 +887,7 @@ function CreateScene()
                                                                                                 name = "mixamorig:LeftHandThumb1",
                                                                                                 uuid = "9F00811D-BEB8-4B88-84D2-FE33F71E229A",
                                                                                                 position = Vector3(-2.01, 3.66, 1.52),
-                                                                                                rotation = Quaternion.FromEulerAngles(24.21, -11.46, 31.88),
+                                                                                                rotation = Quaternion.FromEulerAngles(21.18, 16.54, 33.84),
                                                                                                 children = {
                                                                                                     {
                                                                                                         name = "mixamorig:LeftHandThumb2",
@@ -1026,13 +1037,13 @@ function CreateScene()
                                                                 name = "mixamorig:RightShoulder",
                                                                 uuid = "A3EC7C3A-EB28-4791-B5FA-CC662AFCA5AF",
                                                                 position = Vector3(-6.34, 14.95, -4.64),
-                                                                rotation = Quaternion.FromEulerAngles(-79.11, -89.74, 168.87),
+                                                                rotation = Quaternion.FromEulerAngles(79.09, -89.74, -168.36),
                                                                 children = {
                                                                     {
                                                                         name = "mixamorig:RightArm",
                                                                         uuid = "F7892167-C8F8-4CFE-9F5B-3641B6B9814E",
                                                                         position = Vector3(-0.00, 9.14, -0.00),
-                                                                        rotation = Quaternion.FromEulerAngles(10.59, 1.15, -1.22),
+                                                                        rotation = Quaternion.FromEulerAngles(10.62, 0.76, -0.87),
                                                                         children = {
                                                                             {
                                                                                 name = "mixamorig:RightForeArm",
@@ -1049,7 +1060,7 @@ function CreateScene()
                                                                                                 name = "mixamorig:RightHandThumb1",
                                                                                                 uuid = "B4613E40-45A0-4491-9522-28FEE313CA5F",
                                                                                                 position = Vector3(2.01, 3.66, 1.52),
-                                                                                                rotation = Quaternion.FromEulerAngles(24.34, 11.05, -31.77),
+                                                                                                rotation = Quaternion.FromEulerAngles(20.86, -16.87, -34.01),
                                                                                                 children = {
                                                                                                     {
                                                                                                         name = "mixamorig:RightHandThumb2",
@@ -1219,13 +1230,13 @@ function CreateScene()
                                                         name = "mixamorig:LeftFoot",
                                                         uuid = "C4679F0E-6B5A-4CDA-A6B5-7B51C0B8B483",
                                                         position = Vector3(0.00, 40.82, -0.00),
-                                                        rotation = Quaternion.FromEulerAngles(-34.50, 1.69, -0.63),
+                                                        rotation = Quaternion.FromEulerAngles(-34.30, 4.32, -4.02),
                                                         children = {
                                                             {
                                                                 name = "mixamorig:LeftToeBase",
                                                                 uuid = "49416134-C362-480D-A843-27C2EF3AA04D",
                                                                 position = Vector3(0.00, 18.00, 0.00),
-                                                                rotation = Quaternion.FromEulerAngles(-61.41, -4.81, -5.08),
+                                                                rotation = Quaternion.FromEulerAngles(-61.51, 1.77, -2.41),
                                                                 children = {
                                                                     {
                                                                         name = "mixamorig:LeftToe_End",
@@ -1256,13 +1267,13 @@ function CreateScene()
                                                         name = "mixamorig:RightFoot",
                                                         uuid = "7A80B74F-EA09-4537-917E-3D8868EA0136",
                                                         position = Vector3(0.00, 40.82, -0.00),
-                                                        rotation = Quaternion.FromEulerAngles(-34.50, -1.69, 0.63),
+                                                        rotation = Quaternion.FromEulerAngles(-34.30, -4.32, 4.02),
                                                         children = {
                                                             {
                                                                 name = "mixamorig:RightToeBase",
                                                                 uuid = "3434220A-3088-46D8-9B0F-C2BCA301CA63",
                                                                 position = Vector3(-0.00, 18.00, 0.00),
-                                                                rotation = Quaternion.FromEulerAngles(-61.39, -4.30, 4.81),
+                                                                rotation = Quaternion.FromEulerAngles(-44.52, -47.95, 47.99),
                                                                 children = {
                                                                     {
                                                                         name = "mixamorig:RightToe_End",
