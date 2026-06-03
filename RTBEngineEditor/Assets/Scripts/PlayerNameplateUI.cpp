@@ -119,14 +119,13 @@ bool PlayerNameplateUI::ShouldStopRefreshing() const
         return true;
     }
 
+    if (identity->networkPlayerSlot < 0) {
+        return false;
+    }
+
     if (identity->IsLocallyControlled()) {
         return true;
     }
 
-    if (identity->networkPlayerSlot >= 0 &&
-        online.HasPlayerSessionProfile(identity->networkPlayerSlot)) {
-        return true;
-    }
-
-    return false;
+    return online.HasPlayerSessionProfile(identity->networkPlayerSlot);
 }

@@ -637,7 +637,9 @@ function CreateScene()
                                         faceCamera = true
                                     },
                                     {
-                                        type = "MissingComponent"
+                                        type = "PlayerNameplateUI",
+                                        displayNameText = "A1000001-0004-4000-8000-000000000004/UIText",
+                                        healthBarUI = "A1000001-0005-4000-8000-000000000005/HealthBarUI"
                                     },
                                 },
                                 children = {
