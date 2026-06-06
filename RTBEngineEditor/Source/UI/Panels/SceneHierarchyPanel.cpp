@@ -310,7 +310,11 @@ namespace RTBEditor {
 
         // Using pointer as ID to ensure uniqueness
         int styleColorCount = 0;
-        if (gameObject->IsTransient()) {
+        if (!gameObject->IsActiveInHierarchy()) {
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.45f, 0.45f, 0.45f, 0.65f));
+            styleColorCount++;
+        }
+        else if (gameObject->IsTransient()) {
             ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 0.6f, 0.6f, 0.7f));
             styleColorCount++;
         }

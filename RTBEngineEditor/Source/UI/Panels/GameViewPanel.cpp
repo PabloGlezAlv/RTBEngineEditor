@@ -29,7 +29,7 @@ namespace RTBEditor {
             }
 
             RTBEngine::UI::Canvas* canvas = obj->GetComponent<RTBEngine::UI::Canvas>();
-            if (!canvas || !canvas->IsEnabled() || !obj->IsActive()) {
+            if (!canvas || !canvas->IsEnabled() || !obj->IsActiveInHierarchy()) {
                 continue;
             }
 

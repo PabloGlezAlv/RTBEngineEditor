@@ -370,7 +370,19 @@ namespace RTBEditor {
             ImGui::TextDisabled("Modo multi-objeto: la edicion de propiedades no esta disponible.");
         } else if (context.selectedGameObject) {
             auto& name = context.selectedGameObject->GetName();
-            
+
+            bool isActive = context.selectedGameObject->IsActive();
+            if (ImGui::Checkbox("##Active", &isActive)) {
+                context.selectedGameObject->SetActive(isActive);
+                RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+            }
+            if (ImGui::IsItemHovered()) {
+                ImGui::SetTooltip("Activar o desactivar el GameObject");
+            }
+
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+
             char buffer[256];
             memset(buffer, 0, sizeof(buffer));
             strncpy_s(buffer, sizeof(buffer), name.c_str(), _TRUNCATE);
