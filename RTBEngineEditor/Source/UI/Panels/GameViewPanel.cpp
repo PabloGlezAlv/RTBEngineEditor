@@ -2,16 +2,74 @@
 #include <imgui.h>
 #include <RTBEngine/Core/Window.h>
 #include <RTBEngine/ECS/SceneManager.h>
+#include <RTBEngine/ECS/GameObject.h>
 #include <RTBEngine/UI/CanvasSystem.h>
+#include <RTBEngine/UI/Canvas.h>
+#include <algorithm>
 
 namespace RTBEditor {
 
     GameViewPanel::GameViewPanel() {
         framebuffer = std::make_unique<RTBEngine::Rendering::Framebuffer>();
-        framebuffer->CreateWithColorAndDepth(1280, 720);
+        framebuffer->CreateWithColorAndDepth(renderWidth, renderHeight);
     }
 
     GameViewPanel::~GameViewPanel() {}
+
+    void GameViewPanel::ResolveReferenceResolution(RTBEngine::ECS::Scene* scene) {
+        referenceResolution = RTBEngine::Math::Vector2(1920.0f, 1080.0f);
+        if (!scene) {
+            return;
+        }
+
+        for (const auto& objPtr : scene->GetGameObjects()) {
+            RTBEngine::ECS::GameObject* obj = objPtr.get();
+            if (!obj) {
+                continue;
+            }
+
+            RTBEngine::UI::Canvas* canvas = obj->GetComponent<RTBEngine::UI::Canvas>();
+            if (!canvas || !canvas->IsEnabled() || !obj->IsActive()) {
+                continue;
+            }
+
+            if (canvas->GetRenderMode() == RTBEngine::UI::Canvas::RenderMode::WorldSpace) {
+                continue;
+            }
+
+            referenceResolution = canvas->GetCanvasSize();
+            return;
+        }
+    }
+
+    void GameViewPanel::UpdatePreviewLayout(const RTBEngine::Math::Vector2& availableSize) {
+        const float refWidth = std::max(1.0f, referenceResolution.x);
+        const float refHeight = std::max(1.0f, referenceResolution.y);
+        const float safeZoom = std::max(0.01f, previewZoom);
+
+        const float fitScale = std::min(
+            availableSize.x / refWidth,
+            availableSize.y / refHeight
+        );
+
+        displayScale = fitScale * safeZoom;
+
+        const float displayWidth = refWidth * displayScale;
+        const float displayHeight = refHeight * displayScale;
+
+        displayOffset.x = std::max(0.0f, (availableSize.x - displayWidth) * 0.5f);
+        displayOffset.y = std::max(0.0f, (availableSize.y - displayHeight) * 0.5f);
+
+        viewportWidth = static_cast<uint32_t>(std::max(1.0f, displayWidth));
+        viewportHeight = static_cast<uint32_t>(std::max(1.0f, displayHeight));
+
+        renderWidth = static_cast<uint32_t>(refWidth);
+        renderHeight = static_cast<uint32_t>(refHeight);
+
+        if (framebuffer) {
+            framebuffer->Resize(renderWidth, renderHeight);
+        }
+    }
 
     void GameViewPanel::OnUIRender(EditorContext& context) {
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
@@ -19,73 +77,95 @@ namespace RTBEditor {
         isFocused = ImGui::IsWindowFocused();
         isHovered = ImGui::IsWindowHovered();
 
-        // Check resize
+        RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
+        ResolveReferenceResolution(scene);
+
+        ImGui::PopStyleVar();
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(8, 6));
+        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(8, 4));
+
+        ImGui::SetNextItemWidth(160.0f);
+        ImGui::SliderFloat("Zoom##GameView", &previewZoom, 0.25f, 2.0f, "%.2fx");
+        ImGui::SameLine();
+        ImGui::Text("Ref %.0fx%.0f", referenceResolution.x, referenceResolution.y);
+
+        ImGui::PopStyleVar(2);
+
+        const ImVec2 separatorStart = ImGui::GetCursorScreenPos();
+        const float separatorWidth = ImGui::GetContentRegionAvail().x;
+        ImGui::GetWindowDrawList()->AddLine(
+            separatorStart,
+            ImVec2(separatorStart.x + separatorWidth, separatorStart.y),
+            IM_COL32(80, 80, 80, 255)
+        );
+        ImGui::Dummy(ImVec2(0.0f, 1.0f));
+
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+
         ImVec2 availableSize = ImGui::GetContentRegionAvail();
-        uint32_t newWidth = (uint32_t)availableSize.x;
-        uint32_t newHeight = (uint32_t)availableSize.y;
+        UpdatePreviewLayout(RTBEngine::Math::Vector2(availableSize.x, availableSize.y));
 
-        if (newWidth > 0 && newHeight > 0) {
-            if (viewportWidth != newWidth || viewportHeight != newHeight) {
-                viewportWidth = newWidth;
-                viewportHeight = newHeight;
-                framebuffer->Resize(viewportWidth, viewportHeight);
-            }
-        }
+        const ImVec2 viewportAreaOrigin = ImGui::GetCursorScreenPos();
+        const ImVec2 displayOrigin(
+            viewportAreaOrigin.x + displayOffset.x,
+            viewportAreaOrigin.y + displayOffset.y
+        );
 
-        // Get the position where content starts (for UI offset calculation)
-        ImVec2 contentPos = ImGui::GetCursorScreenPos();
-
-        // Draw texture
-        GLuint textureID = framebuffer->GetColorTextureID();
-        if (textureID != 0) {
+        GLuint textureID = framebuffer ? framebuffer->GetColorTextureID() : 0;
+        if (textureID != 0 && viewportWidth > 0 && viewportHeight > 0) {
+            ImGui::SetCursorScreenPos(displayOrigin);
             ImGui::Image(
                 (void*)(intptr_t)textureID,
                 ImVec2((float)viewportWidth, (float)viewportHeight),
-                ImVec2(0, 1), // Flip Y
+                ImVec2(0, 1),
                 ImVec2(1, 0)
             );
         }
 
         UpdateMouseCapture(context);
 
-        // Render scene UI on top of the game view
-        RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
-        if (scene && viewportWidth > 0 && viewportHeight > 0) {
-            RTBEngine::Math::Vector2 screenSize((float)viewportWidth, (float)viewportHeight);
-            RTBEngine::Math::Vector2 offset(contentPos.x, contentPos.y);
+        if (scene && viewportWidth > 0 && viewportHeight > 0 && displayScale > 0.0f) {
+            RTBEngine::Math::Vector2 logicalSize(referenceResolution.x, referenceResolution.y);
+            RTBEngine::Math::Vector2 screenOffset(displayOrigin.x, displayOrigin.y);
 
             auto& canvasSystem = RTBEngine::UI::CanvasSystem::GetInstance();
-
-            // Update CanvasSystem to collect active canvases
             canvasSystem.Update(scene);
-            canvasSystem.UpdateAllRectTransforms(screenSize);
+            canvasSystem.UpdateAllRectTransforms(logicalSize);
 
-            // Dispatch pointer events — only when mouse is inside the game viewport
             ImVec2 mousePos = ImGui::GetMousePos();
-            bool mouseInViewport = mousePos.x >= contentPos.x && mousePos.x <= contentPos.x + (float)viewportWidth
-                                && mousePos.y >= contentPos.y && mousePos.y <= contentPos.y + (float)viewportHeight;
+            const float displayWidth = static_cast<float>(viewportWidth);
+            const float displayHeight = static_cast<float>(viewportHeight);
+            const bool mouseInViewport = mousePos.x >= displayOrigin.x && mousePos.x <= displayOrigin.x + displayWidth
+                                      && mousePos.y >= displayOrigin.y && mousePos.y <= displayOrigin.y + displayHeight;
             if (mouseInViewport && context.state == EditorState::Play && !IsGameOwningMouse(context)) {
-                RTBEngine::Math::Vector2 localMouse(mousePos.x - contentPos.x, mousePos.y - contentPos.y);
+                RTBEngine::Math::Vector2 localMouse(
+                    (mousePos.x - displayOrigin.x) / displayScale,
+                    (mousePos.y - displayOrigin.y) / displayScale
+                );
                 canvasSystem.ProcessInput(localMouse);
             }
 
-            // Render UI elements into the ImGui draw list
             ImDrawList* drawList = ImGui::GetWindowDrawList();
-            canvasSystem.RenderToDrawList(drawList, screenSize, offset);
+            canvasSystem.RenderToDrawList(drawList, logicalSize, screenOffset, displayScale);
 
-            // Draw interaction area outline for the selected UI object
             if (context.selectedGameObject) {
                 auto rects = canvasSystem.GetRaycastRectsForGameObject(context.selectedGameObject);
                 for (const auto& rect : rects) {
-                    ImVec2 rMin(rect.x + offset.x, rect.y + offset.y);
-                    ImVec2 rMax(rect.x + rect.z + offset.x, rect.y + rect.w + offset.y);
+                    ImVec2 rMin(
+                        rect.x * displayScale + screenOffset.x,
+                        rect.y * displayScale + screenOffset.y
+                    );
+                    ImVec2 rMax(
+                        (rect.x + rect.z) * displayScale + screenOffset.x,
+                        (rect.y + rect.w) * displayScale + screenOffset.y
+                    );
                     drawList->AddRect(rMin, rMax, IM_COL32(255, 0, 0, 220), 0.0f, 0, 1.5f);
                 }
             }
         }
 
-        ImGui::End();
         ImGui::PopStyleVar();
+        ImGui::End();
     }
 
     void GameViewPanel::ReleaseMouseCapture(EditorContext& context) {

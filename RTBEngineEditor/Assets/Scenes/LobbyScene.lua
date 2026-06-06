@@ -14,7 +14,7 @@ function CreateScene()
                         fov = 60.00,
                         nearClip = 0.10,
                         farClip = 1000.00,
-                        projectionType = 0,
+                        projectionType = "Perspective",
                         orthographicSize = 10.00,
                         syncWithTransform = true,
                         isMainCamera = true
@@ -24,7 +24,7 @@ function CreateScene()
             {
                 name = "Directional Light",
                 uuid = "9F2A3B3B-FD20-41CC-8452-86B5322C7001",
-                rotation = Quaternion.FromEulerAngles(-10.00, -35.00, 0.00),
+                rotation = Quaternion.FromEulerAngles(-3.27, -36.09, 9.46),
                 components = {
                     {
                         type = "LightComponent",
@@ -47,7 +47,9 @@ function CreateScene()
                         type = "Canvas",
                         renderMode = "ScreenSpaceOverlay",
                         canvasSize = Vector2(1920.00, 1080.00),
-                        sortOrder = 0
+                        pixelsPerUnit = 100.00,
+                        sortOrder = 0,
+                        faceCamera = false
                     },
                     {
                         type = "CursorUnlocker"
@@ -78,8 +80,8 @@ function CreateScene()
                         components = {
                             {
                                 type = "UIImage",
-                                texture = "Assets/UI/MainMenuBG.png",
-                                tintColor = Color(0.38, 0.43, 0.58, 1.00),
+                                texture = "Assets/UI/GuildSlate/bg_lobby.png",
+                                tintColor = Color(1.00, 1.00, 1.00, 1.00),
                                 preserveAspect = false,
                                 isVisible = true,
                                 raycastTarget = false,
@@ -99,10 +101,10 @@ function CreateScene()
                         components = {
                             {
                                 type = "UIPanel",
-                                backgroundColor = Color(0.08, 0.09, 0.12, 0.88),
-                                borderColor = Color(0.62, 0.69, 0.94, 1.00),
-                                borderThickness = 2.00,
-                                hasBorder = true,
+                                backgroundColor = Color(0.00, 0.00, 0.00, 0.00),
+                                borderColor = Color(0.00, 0.00, 0.00, 0.00),
+                                borderThickness = 0.00,
+                                hasBorder = false,
                                 isVisible = true,
                                 raycastTarget = false,
                                 anchorMin = Vector2(0.50, 0.50),
@@ -116,13 +118,34 @@ function CreateScene()
                         },
                         children = {
                             {
+                                name = "PanelFrame",
+                                uuid = "A1F3E2D1-5C4B-4A3E-9F8E-7D6C5B4A3001",
+                                components = {
+                                    {
+                                        type = "UIImage",
+                                        texture = "Assets/UI/GuildSlate/panel_large.png",
+                                        tintColor = Color(1.00, 1.00, 1.00, 1.00),
+                                        preserveAspect = false,
+                                        isVisible = true,
+                                        raycastTarget = false,
+                                        anchorMin = Vector2(0.00, 0.00),
+                                        anchorMax = Vector2(1.00, 1.00),
+                                        pivot = Vector2(0.50, 0.50),
+                                        anchoredPosition = Vector2(0.00, 0.00),
+                                        sizeDelta = Vector2(0.00, 0.00),
+                                        rotation = 0.00,
+                                        scale = Vector2(1.00, 1.00)
+                                    },
+                                }
+                            },
+                            {
                                 name = "Title",
                                 uuid = "F41A6476-1872-40AD-859F-5FB733994001",
                                 components = {
                                     {
                                         type = "UIText",
                                         text = "Online Lobby",
-                                        color = Color(1.00, 1.00, 1.00, 1.00),
+                                        color = Color(0.91, 0.66, 0.29, 1.00),
                                         fontSize = 42.00,
                                         alignment = "Center",
                                         font = nil,
@@ -131,7 +154,7 @@ function CreateScene()
                                         anchorMin = Vector2(0.50, 1.00),
                                         anchorMax = Vector2(0.50, 1.00),
                                         pivot = Vector2(0.50, 1.00),
-                                        anchoredPosition = Vector2(0.00, -44.00),
+                                        anchoredPosition = Vector2(0.00, -65.00),
                                         sizeDelta = Vector2(560.00, 58.00),
                                         rotation = 0.00,
                                         scale = Vector2(1.00, 1.00)
@@ -145,7 +168,7 @@ function CreateScene()
                                     {
                                         type = "UIText",
                                         text = "Choose how to enter the lobby.",
-                                        color = Color(0.86, 0.90, 1.00, 1.00),
+                                        color = Color(0.75, 0.77, 0.82, 1.00),
                                         fontSize = 20.00,
                                         alignment = "Center",
                                         font = nil,
@@ -154,7 +177,7 @@ function CreateScene()
                                         anchorMin = Vector2(0.50, 1.00),
                                         anchorMax = Vector2(0.50, 1.00),
                                         pivot = Vector2(0.50, 1.00),
-                                        anchoredPosition = Vector2(0.00, -122.00),
+                                        anchoredPosition = Vector2(0.00, -134.00),
                                         sizeDelta = Vector2(620.00, 92.00),
                                         rotation = 0.00,
                                         scale = Vector2(1.00, 1.00)
@@ -190,9 +213,9 @@ function CreateScene()
                                 components = {
                                     {
                                         type = "UIPanel",
-                                        backgroundColor = Color(0.26, 0.28, 0.38, 1.00),
-                                        borderColor = Color(1.00, 1.00, 1.00, 1.00),
-                                        borderThickness = 1.00,
+                                        backgroundColor = Color(0.20, 0.20, 0.20, 0.00),
+                                        borderColor = Color(0.00, 0.00, 0.00, 0.00),
+                                        borderThickness = 0.00,
                                         hasBorder = false,
                                         isVisible = true,
                                         raycastTarget = true,
@@ -206,26 +229,29 @@ function CreateScene()
                                     },
                                     {
                                         type = "UIButton",
-                                        normalColor = Color(1.00, 1.00, 1.00, 0.23),
-                                        hoveredColor = Color(0.90, 0.90, 0.90, 0.44),
-                                        pressedColor = Color(0.70, 0.70, 0.70, 1.00),
-                                        disabledColor = Color(0.50, 0.50, 0.50, 0.50),
+                                        normalColor = Color(1.00, 1.00, 1.00, 0.00),
+                                        hoveredColor = Color(1.00, 1.00, 1.00, 0.00),
+                                        pressedColor = Color(1.00, 1.00, 1.00, 0.00),
+                                        disabledColor = Color(0.50, 0.50, 0.50, 0.00),
                                         interactable = false,
                                         enableDefaultHoverVisuals = false
                                     },
                                     {
                                         type = "ButtonStyle",
-                                        backgroundPanel = "D37CC43E-2B4F-42A1-A91F-E0830D7C4001/UIPanel",
+                                        backgroundImage = "B2F4E3D2-6C5B-4B4F-AF9E-8E7D6C5B4001/UIImage",
                                         label = "91675087-65CA-4A28-958F-E8F7C7214001/UIText",
-                                        normalPanelColor = Color(0.26, 0.28, 0.38, 1.00),
-                                        normalTextColor = Color(1.00, 1.00, 1.00, 1.00),
-                                        hoverPanelColor = Color(0.39, 0.43, 0.62, 1.00),
-                                        hoverTextColor = Color(1.00, 0.96, 0.68, 1.00),
-                                        hoverScaleBoost = 1.04,
+                                        normalTexture = "Assets/UI/GuildSlate/btn_secondary_normal.png",
+                                        hoverTexture = "Assets/UI/GuildSlate/btn_secondary_hover.png",
+                                        pressedTexture = "Assets/UI/GuildSlate/btn_secondary_pressed.png",
+                                        normalTextColor = Color(0.96, 0.94, 0.88, 1.00),
+                                        normalImageTint = Color(1.00, 1.00, 1.00, 1.00),
+                                        hoverTextColor = Color(1.00, 0.82, 0.47, 1.00),
+                                        hoverImageTint = Color(1.00, 1.00, 1.00, 1.00),
+                                        hoverScaleBoost = 1.05,
                                         hoverRotationDeg = 0.00,
-                                        clickPanelColor = Color(0.18, 0.20, 0.31, 1.00),
-                                        clickTextColor = Color(0.86, 0.90, 1.00, 1.00),
-                                        clickScaleBoost = 0.96,
+                                        clickTextColor = Color(0.86, 0.84, 0.78, 1.00),
+                                        clickImageTint = Color(0.92, 0.92, 0.92, 1.00),
+                                        clickScaleBoost = 0.97,
                                         hoverInTimeSec = 0.12,
                                         hoverOutTimeSec = 0.18,
                                         pressInTimeSec = 0.08,
@@ -233,6 +259,27 @@ function CreateScene()
                                     },
                                 },
                                 children = {
+                                    {
+                                        name = "Background",
+                                        uuid = "B2F4E3D2-6C5B-4B4F-AF9E-8E7D6C5B4001",
+                                        components = {
+                                            {
+                                                type = "UIImage",
+                                                texture = "Assets/UI/GuildSlate/btn_secondary_normal.png",
+                                                tintColor = Color(1.00, 1.00, 1.00, 1.00),
+                                                preserveAspect = false,
+                                                isVisible = true,
+                                                raycastTarget = false,
+                                                anchorMin = Vector2(0.00, 0.00),
+                                                anchorMax = Vector2(1.00, 1.00),
+                                                pivot = Vector2(0.50, 0.50),
+                                                anchoredPosition = Vector2(0.00, 0.00),
+                                                sizeDelta = Vector2(0.00, 0.00),
+                                                rotation = 0.00,
+                                                scale = Vector2(1.00, 1.00)
+                                            },
+                                        }
+                                    },
                                     {
                                         name = "Text",
                                         uuid = "91675087-65CA-4A28-958F-E8F7C7214001",
@@ -265,7 +312,7 @@ function CreateScene()
                                     {
                                         type = "UIText",
                                         text = "Players: 0 / 6",
-                                        color = Color(0.78, 0.94, 0.80, 1.00),
+                                        color = Color(0.24, 0.75, 0.63, 1.00),
                                         fontSize = 18.00,
                                         alignment = "Center",
                                         font = nil,
@@ -288,7 +335,7 @@ function CreateScene()
                                     {
                                         type = "UIText",
                                         text = "",
-                                        color = Color(0.82, 0.86, 0.94, 1.00),
+                                        color = Color(0.65, 0.68, 0.74, 1.00),
                                         fontSize = 15.00,
                                         alignment = "Left",
                                         font = nil,
@@ -311,7 +358,7 @@ function CreateScene()
                                     {
                                         type = "UIText",
                                         text = "Type or paste a Lobby ID, then press Join Lobby.",
-                                        color = Color(0.72, 0.78, 0.90, 1.00),
+                                        color = Color(0.58, 0.62, 0.70, 1.00),
                                         fontSize = 16.00,
                                         alignment = "Center",
                                         font = nil,
@@ -320,7 +367,7 @@ function CreateScene()
                                         anchorMin = Vector2(0.50, 1.00),
                                         anchorMax = Vector2(0.50, 1.00),
                                         pivot = Vector2(0.50, 1.00),
-                                        anchoredPosition = Vector2(0.00, -404.00),
+                                        anchoredPosition = Vector2(0.00, -376.00),
                                         sizeDelta = Vector2(640.00, 30.00),
                                         rotation = 0.00,
                                         scale = Vector2(1.00, 1.00)
@@ -333,9 +380,9 @@ function CreateScene()
                                 components = {
                                     {
                                         type = "UIPanel",
-                                        backgroundColor = Color(0.15, 0.28, 0.47, 1.00),
-                                        borderColor = Color(1.00, 1.00, 1.00, 1.00),
-                                        borderThickness = 1.00,
+                                        backgroundColor = Color(0.20, 0.20, 0.20, 0.00),
+                                        borderColor = Color(0.00, 0.00, 0.00, 0.00),
+                                        borderThickness = 0.00,
                                         hasBorder = false,
                                         isVisible = true,
                                         raycastTarget = true,
@@ -349,26 +396,29 @@ function CreateScene()
                                     },
                                     {
                                         type = "UIButton",
-                                        normalColor = Color(1.00, 1.00, 1.00, 0.23),
-                                        hoveredColor = Color(0.90, 0.90, 0.90, 0.44),
-                                        pressedColor = Color(0.70, 0.70, 0.70, 1.00),
-                                        disabledColor = Color(0.50, 0.50, 0.50, 0.50),
+                                        normalColor = Color(1.00, 1.00, 1.00, 0.00),
+                                        hoveredColor = Color(1.00, 1.00, 1.00, 0.00),
+                                        pressedColor = Color(1.00, 1.00, 1.00, 0.00),
+                                        disabledColor = Color(0.50, 0.50, 0.50, 0.00),
                                         interactable = true,
                                         enableDefaultHoverVisuals = false
                                     },
                                     {
                                         type = "ButtonStyle",
-                                        backgroundPanel = "F510EC7C-B006-494D-A1B1-A0EC72854001/UIPanel",
+                                        backgroundImage = "C3F5E4D3-7D6C-4C5A-BFA0-9F8E7D6C5001/UIImage",
                                         label = "235D9940-2514-42BC-B668-6D3848084001/UIText",
-                                        normalPanelColor = Color(0.15, 0.28, 0.47, 1.00),
-                                        normalTextColor = Color(1.00, 1.00, 1.00, 1.00),
-                                        hoverPanelColor = Color(0.28, 0.42, 0.72, 1.00),
-                                        hoverTextColor = Color(1.00, 0.96, 0.68, 1.00),
-                                        hoverScaleBoost = 1.04,
+                                        normalTexture = "Assets/UI/GuildSlate/btn_primary_normal.png",
+                                        hoverTexture = "Assets/UI/GuildSlate/btn_primary_hover.png",
+                                        pressedTexture = "Assets/UI/GuildSlate/btn_primary_pressed.png",
+                                        normalTextColor = Color(0.96, 0.94, 0.88, 1.00),
+                                        normalImageTint = Color(1.00, 1.00, 1.00, 1.00),
+                                        hoverTextColor = Color(1.00, 0.82, 0.47, 1.00),
+                                        hoverImageTint = Color(1.00, 1.00, 1.00, 1.00),
+                                        hoverScaleBoost = 1.05,
                                         hoverRotationDeg = 0.00,
-                                        clickPanelColor = Color(0.11, 0.22, 0.40, 1.00),
-                                        clickTextColor = Color(0.86, 0.90, 1.00, 1.00),
-                                        clickScaleBoost = 0.96,
+                                        clickTextColor = Color(0.86, 0.84, 0.78, 1.00),
+                                        clickImageTint = Color(0.92, 0.92, 0.92, 1.00),
+                                        clickScaleBoost = 0.97,
                                         hoverInTimeSec = 0.12,
                                         hoverOutTimeSec = 0.18,
                                         pressInTimeSec = 0.08,
@@ -376,6 +426,27 @@ function CreateScene()
                                     },
                                 },
                                 children = {
+                                    {
+                                        name = "Background",
+                                        uuid = "C3F5E4D3-7D6C-4C5A-BFA0-9F8E7D6C5001",
+                                        components = {
+                                            {
+                                                type = "UIImage",
+                                                texture = "Assets/UI/GuildSlate/btn_primary_normal.png",
+                                                tintColor = Color(1.00, 1.00, 1.00, 1.00),
+                                                preserveAspect = false,
+                                                isVisible = true,
+                                                raycastTarget = false,
+                                                anchorMin = Vector2(0.00, 0.00),
+                                                anchorMax = Vector2(1.00, 1.00),
+                                                pivot = Vector2(0.50, 0.50),
+                                                anchoredPosition = Vector2(0.00, 0.00),
+                                                sizeDelta = Vector2(0.00, 0.00),
+                                                rotation = 0.00,
+                                                scale = Vector2(1.00, 1.00)
+                                            },
+                                        }
+                                    },
                                     {
                                         name = "Text",
                                         uuid = "235D9940-2514-42BC-B668-6D3848084001",
@@ -407,9 +478,9 @@ function CreateScene()
                                 components = {
                                     {
                                         type = "UIPanel",
-                                        backgroundColor = Color(0.20, 0.21, 0.30, 1.00),
-                                        borderColor = Color(1.00, 1.00, 1.00, 1.00),
-                                        borderThickness = 1.00,
+                                        backgroundColor = Color(0.20, 0.20, 0.20, 0.00),
+                                        borderColor = Color(0.00, 0.00, 0.00, 0.00),
+                                        borderThickness = 0.00,
                                         hasBorder = false,
                                         isVisible = true,
                                         raycastTarget = true,
@@ -423,26 +494,29 @@ function CreateScene()
                                     },
                                     {
                                         type = "UIButton",
-                                        normalColor = Color(1.00, 1.00, 1.00, 0.23),
-                                        hoveredColor = Color(0.90, 0.90, 0.90, 0.44),
-                                        pressedColor = Color(0.70, 0.70, 0.70, 1.00),
-                                        disabledColor = Color(0.50, 0.50, 0.50, 0.50),
+                                        normalColor = Color(1.00, 1.00, 1.00, 0.00),
+                                        hoveredColor = Color(1.00, 1.00, 1.00, 0.00),
+                                        pressedColor = Color(1.00, 1.00, 1.00, 0.00),
+                                        disabledColor = Color(0.50, 0.50, 0.50, 0.00),
                                         interactable = true,
                                         enableDefaultHoverVisuals = false
                                     },
                                     {
                                         type = "ButtonStyle",
-                                        backgroundPanel = "1A33655A-FD08-4408-8B67-617BA5C94001/UIPanel",
+                                        backgroundImage = "D4F6E5D4-8E7D-4D6B-CFB1-A0AF9F8E6001/UIImage",
                                         label = "7B43110F-D650-42B2-AE35-B79214844001/UIText",
-                                        normalPanelColor = Color(0.20, 0.21, 0.30, 1.00),
-                                        normalTextColor = Color(1.00, 1.00, 1.00, 1.00),
-                                        hoverPanelColor = Color(0.34, 0.36, 0.54, 1.00),
-                                        hoverTextColor = Color(1.00, 0.96, 0.68, 1.00),
-                                        hoverScaleBoost = 1.04,
+                                        normalTexture = "Assets/UI/GuildSlate/btn_secondary_normal.png",
+                                        hoverTexture = "Assets/UI/GuildSlate/btn_secondary_hover.png",
+                                        pressedTexture = "Assets/UI/GuildSlate/btn_secondary_pressed.png",
+                                        normalTextColor = Color(0.96, 0.94, 0.88, 1.00),
+                                        normalImageTint = Color(1.00, 1.00, 1.00, 1.00),
+                                        hoverTextColor = Color(1.00, 0.82, 0.47, 1.00),
+                                        hoverImageTint = Color(1.00, 1.00, 1.00, 1.00),
+                                        hoverScaleBoost = 1.05,
                                         hoverRotationDeg = 0.00,
-                                        clickPanelColor = Color(0.12, 0.13, 0.24, 1.00),
-                                        clickTextColor = Color(0.86, 0.90, 1.00, 1.00),
-                                        clickScaleBoost = 0.96,
+                                        clickTextColor = Color(0.86, 0.84, 0.78, 1.00),
+                                        clickImageTint = Color(0.92, 0.92, 0.92, 1.00),
+                                        clickScaleBoost = 0.97,
                                         hoverInTimeSec = 0.12,
                                         hoverOutTimeSec = 0.18,
                                         pressInTimeSec = 0.08,
@@ -450,6 +524,27 @@ function CreateScene()
                                     },
                                 },
                                 children = {
+                                    {
+                                        name = "Background",
+                                        uuid = "D4F6E5D4-8E7D-4D6B-CFB1-A0AF9F8E6001",
+                                        components = {
+                                            {
+                                                type = "UIImage",
+                                                texture = "Assets/UI/GuildSlate/btn_secondary_normal.png",
+                                                tintColor = Color(1.00, 1.00, 1.00, 1.00),
+                                                preserveAspect = false,
+                                                isVisible = true,
+                                                raycastTarget = false,
+                                                anchorMin = Vector2(0.00, 0.00),
+                                                anchorMax = Vector2(1.00, 1.00),
+                                                pivot = Vector2(0.50, 0.50),
+                                                anchoredPosition = Vector2(0.00, 0.00),
+                                                sizeDelta = Vector2(0.00, 0.00),
+                                                rotation = 0.00,
+                                                scale = Vector2(1.00, 1.00)
+                                            },
+                                        }
+                                    },
                                     {
                                         name = "Text",
                                         uuid = "7B43110F-D650-42B2-AE35-B79214844001",
@@ -481,9 +576,9 @@ function CreateScene()
                                 components = {
                                     {
                                         type = "UIPanel",
-                                        backgroundColor = Color(0.43, 0.18, 0.20, 1.00),
-                                        borderColor = Color(1.00, 1.00, 1.00, 1.00),
-                                        borderThickness = 1.00,
+                                        backgroundColor = Color(0.20, 0.20, 0.20, 0.00),
+                                        borderColor = Color(0.00, 0.00, 0.00, 0.00),
+                                        borderThickness = 0.00,
                                         hasBorder = false,
                                         isVisible = true,
                                         raycastTarget = true,
@@ -497,26 +592,29 @@ function CreateScene()
                                     },
                                     {
                                         type = "UIButton",
-                                        normalColor = Color(1.00, 1.00, 1.00, 0.23),
-                                        hoveredColor = Color(0.90, 0.90, 0.90, 0.44),
-                                        pressedColor = Color(0.70, 0.70, 0.70, 1.00),
-                                        disabledColor = Color(0.50, 0.50, 0.50, 0.50),
+                                        normalColor = Color(1.00, 1.00, 1.00, 0.00),
+                                        hoveredColor = Color(1.00, 1.00, 1.00, 0.00),
+                                        pressedColor = Color(1.00, 1.00, 1.00, 0.00),
+                                        disabledColor = Color(0.50, 0.50, 0.50, 0.00),
                                         interactable = false,
                                         enableDefaultHoverVisuals = false
                                     },
                                     {
                                         type = "ButtonStyle",
-                                        backgroundPanel = "B46F861C-FEA4-47B8-A8D6-BAB71A784001/UIPanel",
+                                        backgroundImage = "E5F7E6D5-9F8E-4E7C-DFC2-B1B0AFAF7001/UIImage",
                                         label = "CC6F3E5A-B403-4FA7-82C4-D0222F4E4001/UIText",
-                                        normalPanelColor = Color(0.43, 0.18, 0.20, 1.00),
-                                        normalTextColor = Color(1.00, 1.00, 1.00, 1.00),
-                                        hoverPanelColor = Color(0.66, 0.27, 0.31, 1.00),
-                                        hoverTextColor = Color(1.00, 0.96, 0.68, 1.00),
-                                        hoverScaleBoost = 1.04,
+                                        normalTexture = "Assets/UI/GuildSlate/btn_danger_normal.png",
+                                        hoverTexture = "Assets/UI/GuildSlate/btn_danger_hover.png",
+                                        pressedTexture = "Assets/UI/GuildSlate/btn_danger_pressed.png",
+                                        normalTextColor = Color(0.96, 0.94, 0.88, 1.00),
+                                        normalImageTint = Color(1.00, 1.00, 1.00, 1.00),
+                                        hoverTextColor = Color(1.00, 0.82, 0.47, 1.00),
+                                        hoverImageTint = Color(1.00, 1.00, 1.00, 1.00),
+                                        hoverScaleBoost = 1.05,
                                         hoverRotationDeg = 0.00,
-                                        clickPanelColor = Color(0.31, 0.11, 0.14, 1.00),
-                                        clickTextColor = Color(0.96, 0.86, 0.86, 1.00),
-                                        clickScaleBoost = 0.96,
+                                        clickTextColor = Color(0.86, 0.84, 0.78, 1.00),
+                                        clickImageTint = Color(0.92, 0.92, 0.92, 1.00),
+                                        clickScaleBoost = 0.97,
                                         hoverInTimeSec = 0.12,
                                         hoverOutTimeSec = 0.18,
                                         pressInTimeSec = 0.08,
@@ -524,6 +622,27 @@ function CreateScene()
                                     },
                                 },
                                 children = {
+                                    {
+                                        name = "Background",
+                                        uuid = "E5F7E6D5-9F8E-4E7C-DFC2-B1B0AFAF7001",
+                                        components = {
+                                            {
+                                                type = "UIImage",
+                                                texture = "Assets/UI/GuildSlate/btn_danger_normal.png",
+                                                tintColor = Color(1.00, 1.00, 1.00, 1.00),
+                                                preserveAspect = false,
+                                                isVisible = true,
+                                                raycastTarget = false,
+                                                anchorMin = Vector2(0.00, 0.00),
+                                                anchorMax = Vector2(1.00, 1.00),
+                                                pivot = Vector2(0.50, 0.50),
+                                                anchoredPosition = Vector2(0.00, 0.00),
+                                                sizeDelta = Vector2(0.00, 0.00),
+                                                rotation = 0.00,
+                                                scale = Vector2(1.00, 1.00)
+                                            },
+                                        }
+                                    },
                                     {
                                         name = "Text",
                                         uuid = "CC6F3E5A-B403-4FA7-82C4-D0222F4E4001",
@@ -555,9 +674,9 @@ function CreateScene()
                                 components = {
                                     {
                                         type = "UIPanel",
-                                        backgroundColor = Color(0.14, 0.40, 0.29, 1.00),
-                                        borderColor = Color(1.00, 1.00, 1.00, 1.00),
-                                        borderThickness = 1.00,
+                                        backgroundColor = Color(0.20, 0.20, 0.20, 0.00),
+                                        borderColor = Color(0.00, 0.00, 0.00, 0.00),
+                                        borderThickness = 0.00,
                                         hasBorder = false,
                                         isVisible = true,
                                         raycastTarget = true,
@@ -571,26 +690,29 @@ function CreateScene()
                                     },
                                     {
                                         type = "UIButton",
-                                        normalColor = Color(1.00, 1.00, 1.00, 0.23),
-                                        hoveredColor = Color(0.90, 0.90, 0.90, 0.44),
-                                        pressedColor = Color(0.70, 0.70, 0.70, 1.00),
-                                        disabledColor = Color(0.50, 0.50, 0.50, 0.50),
+                                        normalColor = Color(1.00, 1.00, 1.00, 0.00),
+                                        hoveredColor = Color(1.00, 1.00, 1.00, 0.00),
+                                        pressedColor = Color(1.00, 1.00, 1.00, 0.00),
+                                        disabledColor = Color(0.50, 0.50, 0.50, 0.00),
                                         interactable = false,
                                         enableDefaultHoverVisuals = false
                                     },
                                     {
                                         type = "ButtonStyle",
-                                        backgroundPanel = "B031EEDB-A10E-42A7-845B-C5B673134001/UIPanel",
+                                        backgroundImage = "F6F8E7D6-0A9F-4F8D-EFD3-C2C1B0B08001/UIImage",
                                         label = "CB8F00A0-9E25-414F-8DC5-5052840B4001/UIText",
-                                        normalPanelColor = Color(0.14, 0.40, 0.29, 1.00),
-                                        normalTextColor = Color(1.00, 1.00, 1.00, 1.00),
-                                        hoverPanelColor = Color(0.24, 0.59, 0.43, 1.00),
-                                        hoverTextColor = Color(1.00, 0.96, 0.68, 1.00),
-                                        hoverScaleBoost = 1.04,
+                                        normalTexture = "Assets/UI/GuildSlate/btn_accent_normal.png",
+                                        hoverTexture = "Assets/UI/GuildSlate/btn_accent_hover.png",
+                                        pressedTexture = "Assets/UI/GuildSlate/btn_accent_pressed.png",
+                                        normalTextColor = Color(0.96, 0.94, 0.88, 1.00),
+                                        normalImageTint = Color(1.00, 1.00, 1.00, 1.00),
+                                        hoverTextColor = Color(1.00, 0.82, 0.47, 1.00),
+                                        hoverImageTint = Color(1.00, 1.00, 1.00, 1.00),
+                                        hoverScaleBoost = 1.05,
                                         hoverRotationDeg = 0.00,
-                                        clickPanelColor = Color(0.10, 0.29, 0.20, 1.00),
-                                        clickTextColor = Color(0.86, 0.96, 0.90, 1.00),
-                                        clickScaleBoost = 0.96,
+                                        clickTextColor = Color(0.86, 0.84, 0.78, 1.00),
+                                        clickImageTint = Color(0.92, 0.92, 0.92, 1.00),
+                                        clickScaleBoost = 0.97,
                                         hoverInTimeSec = 0.12,
                                         hoverOutTimeSec = 0.18,
                                         pressInTimeSec = 0.08,
@@ -598,6 +720,27 @@ function CreateScene()
                                     },
                                 },
                                 children = {
+                                    {
+                                        name = "Background",
+                                        uuid = "F6F8E7D6-0A9F-4F8D-EFD3-C2C1B0B08001",
+                                        components = {
+                                            {
+                                                type = "UIImage",
+                                                texture = "Assets/UI/GuildSlate/btn_accent_normal.png",
+                                                tintColor = Color(1.00, 1.00, 1.00, 1.00),
+                                                preserveAspect = false,
+                                                isVisible = true,
+                                                raycastTarget = false,
+                                                anchorMin = Vector2(0.00, 0.00),
+                                                anchorMax = Vector2(1.00, 1.00),
+                                                pivot = Vector2(0.50, 0.50),
+                                                anchoredPosition = Vector2(0.00, 0.00),
+                                                sizeDelta = Vector2(0.00, 0.00),
+                                                rotation = 0.00,
+                                                scale = Vector2(1.00, 1.00)
+                                            },
+                                        }
+                                    },
                                     {
                                         name = "Text",
                                         uuid = "CB8F00A0-9E25-414F-8DC5-5052840B4001",
@@ -629,9 +772,9 @@ function CreateScene()
                                 components = {
                                     {
                                         type = "UIPanel",
-                                        backgroundColor = Color(0.16, 0.16, 0.18, 1.00),
-                                        borderColor = Color(1.00, 1.00, 1.00, 1.00),
-                                        borderThickness = 1.00,
+                                        backgroundColor = Color(0.20, 0.20, 0.20, 0.00),
+                                        borderColor = Color(0.00, 0.00, 0.00, 0.00),
+                                        borderThickness = 0.00,
                                         hasBorder = false,
                                         isVisible = true,
                                         raycastTarget = true,
@@ -645,26 +788,29 @@ function CreateScene()
                                     },
                                     {
                                         type = "UIButton",
-                                        normalColor = Color(1.00, 1.00, 1.00, 0.23),
-                                        hoveredColor = Color(0.90, 0.90, 0.90, 0.44),
-                                        pressedColor = Color(0.70, 0.70, 0.70, 1.00),
-                                        disabledColor = Color(0.50, 0.50, 0.50, 0.50),
+                                        normalColor = Color(1.00, 1.00, 1.00, 0.00),
+                                        hoveredColor = Color(1.00, 1.00, 1.00, 0.00),
+                                        pressedColor = Color(1.00, 1.00, 1.00, 0.00),
+                                        disabledColor = Color(0.50, 0.50, 0.50, 0.00),
                                         interactable = true,
                                         enableDefaultHoverVisuals = false
                                     },
                                     {
                                         type = "ButtonStyle",
-                                        backgroundPanel = "85E511F8-8200-4182-80CE-2457439E4001/UIPanel",
+                                        backgroundImage = "07F9E8D7-1B0A-4A9E-FFE4-D3D2C1C19001/UIImage",
                                         label = "B0AA3EF1-92B3-4DD5-97C9-B7BD88954001/UIText",
-                                        normalPanelColor = Color(0.16, 0.16, 0.18, 1.00),
-                                        normalTextColor = Color(1.00, 1.00, 1.00, 1.00),
-                                        hoverPanelColor = Color(0.30, 0.30, 0.36, 1.00),
-                                        hoverTextColor = Color(1.00, 0.96, 0.68, 1.00),
-                                        hoverScaleBoost = 1.04,
+                                        normalTexture = "Assets/UI/GuildSlate/btn_secondary_normal.png",
+                                        hoverTexture = "Assets/UI/GuildSlate/btn_secondary_hover.png",
+                                        pressedTexture = "Assets/UI/GuildSlate/btn_secondary_pressed.png",
+                                        normalTextColor = Color(0.96, 0.94, 0.88, 1.00),
+                                        normalImageTint = Color(1.00, 1.00, 1.00, 1.00),
+                                        hoverTextColor = Color(1.00, 0.82, 0.47, 1.00),
+                                        hoverImageTint = Color(1.00, 1.00, 1.00, 1.00),
+                                        hoverScaleBoost = 1.05,
                                         hoverRotationDeg = 0.00,
-                                        clickPanelColor = Color(0.10, 0.10, 0.14, 1.00),
-                                        clickTextColor = Color(0.86, 0.90, 1.00, 1.00),
-                                        clickScaleBoost = 0.96,
+                                        clickTextColor = Color(0.86, 0.84, 0.78, 1.00),
+                                        clickImageTint = Color(0.92, 0.92, 0.92, 1.00),
+                                        clickScaleBoost = 0.97,
                                         hoverInTimeSec = 0.12,
                                         hoverOutTimeSec = 0.18,
                                         pressInTimeSec = 0.08,
@@ -676,6 +822,27 @@ function CreateScene()
                                     },
                                 },
                                 children = {
+                                    {
+                                        name = "Background",
+                                        uuid = "07F9E8D7-1B0A-4A9E-FFE4-D3D2C1C19001",
+                                        components = {
+                                            {
+                                                type = "UIImage",
+                                                texture = "Assets/UI/GuildSlate/btn_secondary_normal.png",
+                                                tintColor = Color(1.00, 1.00, 1.00, 1.00),
+                                                preserveAspect = false,
+                                                isVisible = true,
+                                                raycastTarget = false,
+                                                anchorMin = Vector2(0.00, 0.00),
+                                                anchorMax = Vector2(1.00, 1.00),
+                                                pivot = Vector2(0.50, 0.50),
+                                                anchoredPosition = Vector2(0.00, 0.00),
+                                                sizeDelta = Vector2(0.00, 0.00),
+                                                rotation = 0.00,
+                                                scale = Vector2(1.00, 1.00)
+                                            },
+                                        }
+                                    },
                                     {
                                         name = "Text",
                                         uuid = "B0AA3EF1-92B3-4DD5-97C9-B7BD88954001",

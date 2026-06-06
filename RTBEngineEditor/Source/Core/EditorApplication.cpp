@@ -568,8 +568,8 @@ namespace RTBEditor {
         if (gameView) {
             RTBEngine::Rendering::Framebuffer* framebuffer = gameView->GetFramebuffer();
             RTBEngine::ECS::CameraComponent* mainCamComp = scene->GetMainCamera();
-            int vpWidth = gameView->GetViewportWidth();
-            int vpHeight = gameView->GetViewportHeight();
+            int vpWidth = static_cast<int>(gameView->GetRenderWidth());
+            int vpHeight = static_cast<int>(gameView->GetRenderHeight());
 
             // We only need to render Game view if it exists and has a camera
             if (framebuffer && mainCamComp && vpWidth > 0 && vpHeight > 0) {
