@@ -577,7 +577,7 @@ function CreateScene()
                             targetObject = "E8682E33-50ED-45D8-BC76-B31113639F9E",
                         },
                         { type = "EnemyAnimationDriver",
-                            animator = "74947359-55B1-47D4-863D-78996DFCCE57/Animator",
+                            animator = "2B33A8BD-BDE4-4FE3-B694-475E014C37E0/Animator",
                         },
                         { type = "EnemyMeleeAI",
                             health = "753770D2-B00E-4859-B7D3-5ABF1249B014/HealthComponent",
@@ -591,7 +591,7 @@ function CreateScene()
                 children = {
                     {
                         name = "EnemyAttackOrigin",
-                        uuid = "CE0BC29C-E301-4DD7-B8FF-B7D401C6A03D",
+                        uuid = "0F1E8B7D-ACC2-4A8E-AD1E-470C93EF86C6",
                         prefab = "EnemyAttackOrigin",
                         position = Vector3(0.00, 1.00, 0.85),
                         overrides = {
@@ -599,7 +599,7 @@ function CreateScene()
                     },
                     {
                         name = "Enemy Model",
-                        uuid = "74947359-55B1-47D4-863D-78996DFCCE57",
+                        uuid = "2B33A8BD-BDE4-4FE3-B694-475E014C37E0",
                         prefab = "Enemy Model",
                         scale = Vector3(0.01, 0.01, 0.01),
                         overrides = {
@@ -704,7 +704,7 @@ function CreateScene()
                                     {
                                         type = "Canvas",
                                         renderMode = "WorldSpace",
-                                        canvasSize = Vector2(220.00, 48.00),
+                                        canvasSize = Vector2(200.00, 24.00),
                                         pixelsPerUnit = 100.00,
                                         sortOrder = 25,
                                         faceCamera = true
@@ -719,25 +719,28 @@ function CreateScene()
                                     {
                                         name = "NameplateRoot",
                                         uuid = "A1000001-0003-4000-8000-000000000003",
-                                        components = {
-                                            {
-                                                type = "UIPanel",
-                                                backgroundColor = Color(0.06, 0.07, 0.10, 0.92),
-                                                borderColor = Color(0.91, 0.66, 0.29, 0.55),
-                                                borderThickness = 1.00,
-                                                hasBorder = true,
-                                                isVisible = true,
-                                                raycastTarget = false,
-                                                anchorMin = Vector2(0.50, 0.50),
-                                                anchorMax = Vector2(0.50, 0.50),
-                                                pivot = Vector2(0.50, 0.50),
-                                                anchoredPosition = Vector2(0.00, 0.00),
-                                                sizeDelta = Vector2(195.00, 23.00),
-                                                rotation = 0.00,
-                                                scale = Vector2(1.00, 1.00)
-                                            },
-                                        },
                                         children = {
+                                            {
+                                                name = "FrameImage",
+                                                uuid = "A1000001-0008-4000-8000-000000000008",
+                                                components = {
+                                                    {
+                                                        type = "UIImage",
+                                                        texture = "Assets/UI/GuildSlate/health_nameplate_frame.texture",
+                                                        tintColor = Color(1.00, 1.00, 1.00, 1.00),
+                                                        preserveAspect = false,
+                                                        isVisible = true,
+                                                        raycastTarget = false,
+                                                        anchorMin = Vector2(0.50, 0.50),
+                                                        anchorMax = Vector2(0.50, 0.50),
+                                                        pivot = Vector2(0.50, 0.50),
+                                                        anchoredPosition = Vector2(0.00, 0.00),
+                                                        sizeDelta = Vector2(200.00, 24.00),
+                                                        rotation = 0.00,
+                                                        scale = Vector2(1.00, 1.00)
+                                                    },
+                                                }
+                                            },
                                             {
                                                 name = "DisplayName",
                                                 uuid = "A1000001-0004-4000-8000-000000000004",
@@ -746,16 +749,16 @@ function CreateScene()
                                                         type = "UIText",
                                                         text = "Player",
                                                         color = Color(1.00, 0.82, 0.47, 1.00),
-                                                        fontSize = 14.00,
+                                                        fontSize = 14.40,
                                                         alignment = "Center",
                                                         font = nil,
                                                         isVisible = true,
                                                         raycastTarget = false,
-                                                        anchorMin = Vector2(0.06, 0.58),
-                                                        anchorMax = Vector2(0.94, 0.96),
+                                                        anchorMin = Vector2(0.50, 0.76),
+                                                        anchorMax = Vector2(0.50, 0.76),
                                                         pivot = Vector2(0.50, 0.50),
-                                                        anchoredPosition = Vector2(0.00, 11.00),
-                                                        sizeDelta = Vector2(0.00, 0.00),
+                                                        anchoredPosition = Vector2(0.00, 10.00),
+                                                        sizeDelta = Vector2(184.00, 12.00),
                                                         rotation = 0.00,
                                                         scale = Vector2(1.00, 1.00)
                                                     },
@@ -767,17 +770,17 @@ function CreateScene()
                                                 components = {
                                                     {
                                                         type = "UIPanel",
-                                                        backgroundColor = Color(0.04, 0.05, 0.07, 1.00),
-                                                        borderColor = Color(0.91, 0.66, 0.29, 0.45),
-                                                        borderThickness = 1.00,
-                                                        hasBorder = true,
+                                                        backgroundColor = Color(0.00, 0.00, 0.00, 0.00),
+                                                        borderColor = Color(0.00, 0.00, 0.00, 0.00),
+                                                        borderThickness = 0.00,
+                                                        hasBorder = false,
                                                         isVisible = true,
                                                         raycastTarget = false,
-                                                        anchorMin = Vector2(0.50, 0.00),
-                                                        anchorMax = Vector2(0.50, 0.00),
-                                                        pivot = Vector2(0.50, 0.00),
-                                                        anchoredPosition = Vector2(0.00, 11.00),
-                                                        sizeDelta = Vector2(180.00, 10.00),
+                                                        anchorMin = Vector2(0.50, 0.24),
+                                                        anchorMax = Vector2(0.50, 0.24),
+                                                        pivot = Vector2(0.50, 0.50),
+                                                        anchoredPosition = Vector2(0.00, 0.00),
+                                                        sizeDelta = Vector2(168.00, 5.00),
                                                         rotation = 0.00,
                                                         scale = Vector2(1.00, 1.00)
                                                     },
@@ -801,6 +804,27 @@ function CreateScene()
                                                 },
                                                 children = {
                                                     {
+                                                        name = "TrackImage",
+                                                        uuid = "A1000001-0009-4000-8000-000000000009",
+                                                        components = {
+                                                            {
+                                                                type = "UIImage",
+                                                                texture = "Assets/UI/GuildSlate/health_bar_track.texture",
+                                                                tintColor = Color(1.00, 1.00, 1.00, 1.00),
+                                                                preserveAspect = false,
+                                                                isVisible = true,
+                                                                raycastTarget = false,
+                                                                anchorMin = Vector2(0.50, 0.50),
+                                                                anchorMax = Vector2(0.50, 0.50),
+                                                                pivot = Vector2(0.50, 0.50),
+                                                                anchoredPosition = Vector2(0.00, 0.00),
+                                                                sizeDelta = Vector2(168.00, 5.00),
+                                                                rotation = 0.00,
+                                                                scale = Vector2(1.00, 1.00)
+                                                            },
+                                                        }
+                                                    },
+                                                    {
                                                         name = "NameplateFill",
                                                         uuid = "A1000001-0006-4000-8000-000000000006",
                                                         components = {
@@ -816,7 +840,7 @@ function CreateScene()
                                                                 anchorMax = Vector2(0.00, 0.50),
                                                                 pivot = Vector2(0.00, 0.50),
                                                                 anchoredPosition = Vector2(0.00, 0.00),
-                                                                sizeDelta = Vector2(180.00, 6.00),
+                                                                sizeDelta = Vector2(168.00, 3.00),
                                                                 rotation = 0.00,
                                                                 scale = Vector2(1.00, 1.00)
                                                             },
@@ -837,7 +861,7 @@ function CreateScene()
                                                                 anchorMin = Vector2(0.00, 0.50),
                                                                 anchorMax = Vector2(0.00, 0.50),
                                                                 pivot = Vector2(0.50, 0.50),
-                                                                anchoredPosition = Vector2(180.00, 0.00),
+                                                                anchoredPosition = Vector2(168.00, 0.00),
                                                                 sizeDelta = Vector2(1.00, 1.00),
                                                                 rotation = 0.00,
                                                                 scale = Vector2(1.00, 1.00)
@@ -934,13 +958,13 @@ function CreateScene()
                                                                 name = "mixamorig:LeftShoulder",
                                                                 uuid = "8F079083-2A6E-4B60-9663-F23B483F1EBE",
                                                                 position = Vector3(6.34, 14.95, -4.64),
-                                                                rotation = Quaternion.FromEulerAngles(-79.07, 89.74, -167.85),
+                                                                rotation = Quaternion.FromEulerAngles(79.05, 89.74, 167.34),
                                                                 children = {
                                                                     {
                                                                         name = "mixamorig:LeftArm",
                                                                         uuid = "A0AA69EE-ECD3-475E-9131-68CD84714AD9",
                                                                         position = Vector3(0.00, 9.14, -0.00),
-                                                                        rotation = Quaternion.FromEulerAngles(10.64, -0.48, 0.64),
+                                                                        rotation = Quaternion.FromEulerAngles(10.64, -0.27, 0.50),
                                                                         children = {
                                                                             {
                                                                                 name = "mixamorig:LeftForeArm",
@@ -957,7 +981,7 @@ function CreateScene()
                                                                                                 name = "mixamorig:LeftHandThumb1",
                                                                                                 uuid = "9F00811D-BEB8-4B88-84D2-FE33F71E229A",
                                                                                                 position = Vector3(-2.01, 3.66, 1.52),
-                                                                                                rotation = Quaternion.FromEulerAngles(-10.34, 24.69, 38.07),
+                                                                                                rotation = Quaternion.FromEulerAngles(-26.64, 0.30, 29.95),
                                                                                                 children = {
                                                                                                     {
                                                                                                         name = "mixamorig:LeftHandThumb2",
@@ -1107,13 +1131,13 @@ function CreateScene()
                                                                 name = "mixamorig:RightShoulder",
                                                                 uuid = "A3EC7C3A-EB28-4791-B5FA-CC662AFCA5AF",
                                                                 position = Vector3(-6.34, 14.95, -4.64),
-                                                                rotation = Quaternion.FromEulerAngles(-79.07, -89.74, 167.85),
+                                                                rotation = Quaternion.FromEulerAngles(79.05, -89.74, -167.34),
                                                                 children = {
                                                                     {
                                                                         name = "mixamorig:RightArm",
                                                                         uuid = "F7892167-C8F8-4CFE-9F5B-3641B6B9814E",
                                                                         position = Vector3(-0.00, 9.14, -0.00),
-                                                                        rotation = Quaternion.FromEulerAngles(10.64, 0.48, -0.64),
+                                                                        rotation = Quaternion.FromEulerAngles(10.64, 0.27, -0.50),
                                                                         children = {
                                                                             {
                                                                                 name = "mixamorig:RightForeArm",
@@ -1130,7 +1154,7 @@ function CreateScene()
                                                                                                 name = "mixamorig:RightHandThumb1",
                                                                                                 uuid = "B4613E40-45A0-4491-9522-28FEE313CA5F",
                                                                                                 position = Vector3(2.01, 3.66, 1.52),
-                                                                                                rotation = Quaternion.FromEulerAngles(-10.79, -24.45, -37.95),
+                                                                                                rotation = Quaternion.FromEulerAngles(-26.59, 0.14, -29.98),
                                                                                                 children = {
                                                                                                     {
                                                                                                         name = "mixamorig:RightHandThumb2",
@@ -1300,13 +1324,13 @@ function CreateScene()
                                                         name = "mixamorig:LeftFoot",
                                                         uuid = "C4679F0E-6B5A-4CDA-A6B5-7B51C0B8B483",
                                                         position = Vector3(0.00, 40.82, -0.00),
-                                                        rotation = Quaternion.FromEulerAngles(-31.76, 14.35, -14.27),
+                                                        rotation = Quaternion.FromEulerAngles(-11.39, 32.83, -32.80),
                                                         children = {
                                                             {
                                                                 name = "mixamorig:LeftToeBase",
                                                                 uuid = "49416134-C362-480D-A843-27C2EF3AA04D",
                                                                 position = Vector3(0.00, 18.00, 0.00),
-                                                                rotation = Quaternion.FromEulerAngles(-56.98, 28.97, -29.01),
+                                                                rotation = Quaternion.FromEulerAngles(38.10, 52.70, -52.73),
                                                                 children = {
                                                                     {
                                                                         name = "mixamorig:LeftToe_End",
@@ -1337,13 +1361,13 @@ function CreateScene()
                                                         name = "mixamorig:RightFoot",
                                                         uuid = "7A80B74F-EA09-4537-917E-3D8868EA0136",
                                                         position = Vector3(0.00, 40.82, -0.00),
-                                                        rotation = Quaternion.FromEulerAngles(-31.76, -14.35, 14.27),
+                                                        rotation = Quaternion.FromEulerAngles(-11.39, -32.83, 32.80),
                                                         children = {
                                                             {
                                                                 name = "mixamorig:RightToeBase",
                                                                 uuid = "3434220A-3088-46D8-9B0F-C2BCA301CA63",
                                                                 position = Vector3(-0.00, 18.00, 0.00),
-                                                                rotation = Quaternion.FromEulerAngles(54.67, -34.32, 34.40),
+                                                                rotation = Quaternion.FromEulerAngles(61.46, -2.03, 3.21),
                                                                 children = {
                                                                     {
                                                                         name = "mixamorig:RightToe_End",

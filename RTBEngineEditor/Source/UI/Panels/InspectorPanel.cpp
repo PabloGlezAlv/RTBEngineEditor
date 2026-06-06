@@ -487,12 +487,6 @@ namespace RTBEditor {
                     RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
                 }
 
-                RTBEngine::Math::Vector2 size = uiElement->GetSizeDelta();
-                if (ImGui::DragFloat2("Size", (float*)&size, 1.0f)) {
-                    uiElement->SetSizeDelta(size);
-                    RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
-                }
-
                 RTBEngine::Math::Vector2 anchorMin = uiElement->GetAnchorMin();
                 if (ImGui::DragFloat2("Anchor Min", (float*)&anchorMin, 0.01f, 0.0f, 1.0f)) {
                     uiElement->SetAnchorMin(anchorMin);
@@ -503,6 +497,19 @@ namespace RTBEditor {
                 if (ImGui::DragFloat2("Anchor Max", (float*)&anchorMax, 0.01f, 0.0f, 1.0f)) {
                     uiElement->SetAnchorMax(anchorMax);
                     RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                }
+
+                const bool isStretched =
+                    anchorMin.x != anchorMax.x || anchorMin.y != anchorMax.y;
+
+                RTBEngine::Math::Vector2 size = uiElement->GetSizeDelta();
+                if (ImGui::DragFloat2(isStretched ? "Size Delta" : "Size", (float*)&size, 1.0f)) {
+                    uiElement->SetSizeDelta(size);
+                    RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                }
+
+                if (isStretched) {
+                    ImGui::TextDisabled("Stretch: el tamano final viene de anchors + size delta.");
                 }
 
                 RTBEngine::Math::Vector2 pivot = uiElement->GetPivot();
