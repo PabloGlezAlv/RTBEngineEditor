@@ -93,7 +93,7 @@ function CreateScene()
                             {
                                 type = "UIText",
                                 text = "Round 1",
-                                color = Color(1.00, 1.00, 1.00, 1.00),
+                                color = Color(0.96, 0.94, 0.88, 1.00),
                                 fontSize = 36.00,
                                 alignment = "Center",
                                 font = nil,
@@ -116,7 +116,7 @@ function CreateScene()
                             {
                                 type = "UIText",
                                 text = "Start in 5",
-                                color = Color(1.00, 0.95, 0.72, 1.00),
+                                color = Color(1.00, 0.82, 0.47, 1.00),
                                 fontSize = 24.00,
                                 alignment = "Center",
                                 font = nil,
@@ -211,10 +211,10 @@ function CreateScene()
                                 components = {
                                     {
                                         type = "UIPanel",
-                                        backgroundColor = Color(0.09, 0.10, 0.13, 0.94),
-                                        borderColor = Color(0.95, 0.82, 0.42, 1.00),
-                                        borderThickness = 2.00,
-                                        hasBorder = true,
+                                        backgroundColor = Color(0.00, 0.00, 0.00, 0.00),
+                                        borderColor = Color(0.00, 0.00, 0.00, 0.00),
+                                        borderThickness = 0.00,
+                                        hasBorder = false,
                                         isVisible = true,
                                         raycastTarget = true,
                                         anchorMin = Vector2(0.50, 0.50),
@@ -228,13 +228,34 @@ function CreateScene()
                                 },
                                 children = {
                                     {
+                                        name = "PanelFrame",
+                                        uuid = "A9B8C7D6-E5F4-4321-8765-543210FEDCBA",
+                                        components = {
+                                            {
+                                                type = "UIImage",
+                                                texture = "Assets/UI/GuildSlate/panel_large.png",
+                                                tintColor = Color(1.00, 1.00, 1.00, 1.00),
+                                                preserveAspect = false,
+                                                isVisible = true,
+                                                raycastTarget = false,
+                                                anchorMin = Vector2(0.00, 0.00),
+                                                anchorMax = Vector2(1.00, 1.00),
+                                                pivot = Vector2(0.50, 0.50),
+                                                anchoredPosition = Vector2(0.00, 0.00),
+                                                sizeDelta = Vector2(0.00, 0.00),
+                                                rotation = 0.00,
+                                                scale = Vector2(1.00, 1.00)
+                                            },
+                                        }
+                                    },
+                                    {
                                         name = "PauseTitle",
                                         uuid = "B7E6A2A0-D3E6-450C-A7E2-9F43E52D8B74",
                                         components = {
                                             {
                                                 type = "UIText",
                                                 text = "Paused",
-                                                color = Color(1.00, 0.92, 0.62, 1.00),
+                                                color = Color(1.00, 0.82, 0.47, 1.00),
                                                 fontSize = 42.00,
                                                 alignment = "Center",
                                                 font = nil,
@@ -243,7 +264,7 @@ function CreateScene()
                                                 anchorMin = Vector2(0.50, 1.00),
                                                 anchorMax = Vector2(0.50, 1.00),
                                                 pivot = Vector2(0.50, 1.00),
-                                                anchoredPosition = Vector2(0.00, -42.00),
+                                                anchoredPosition = Vector2(0.00, -75.00),
                                                 sizeDelta = Vector2(360.00, 60.00),
                                                 rotation = 0.00,
                                                 scale = Vector2(1.00, 1.00)
@@ -256,9 +277,9 @@ function CreateScene()
                                         components = {
                                             {
                                                 type = "UIPanel",
-                                                backgroundColor = Color(0.18, 0.25, 0.22, 1.00),
-                                                borderColor = Color(1.00, 1.00, 1.00, 1.00),
-                                                borderThickness = 1.00,
+                                                backgroundColor = Color(0.20, 0.20, 0.20, 0.00),
+                                                borderColor = Color(0.00, 0.00, 0.00, 0.00),
+                                                borderThickness = 0.00,
                                                 hasBorder = false,
                                                 isVisible = true,
                                                 raycastTarget = true,
@@ -272,26 +293,31 @@ function CreateScene()
                                             },
                                             {
                                                 type = "UIButton",
-                                                normalColor = Color(1.00, 1.00, 1.00, 0.23),
-                                                hoveredColor = Color(0.90, 0.90, 0.90, 0.44),
-                                                pressedColor = Color(0.70, 0.70, 0.70, 1.00),
-                                                disabledColor = Color(0.50, 0.50, 0.50, 0.50),
+                                                normalColor = Color(1.00, 1.00, 1.00, 0.00),
+                                                hoveredColor = Color(1.00, 1.00, 1.00, 0.00),
+                                                pressedColor = Color(1.00, 1.00, 1.00, 0.00),
+                                                disabledColor = Color(0.50, 0.50, 0.50, 0.00),
                                                 interactable = true,
                                                 enableDefaultHoverVisuals = false
                                             },
                                             {
                                                 type = "ButtonStyle",
-                                                backgroundPanel = "D51F4600-5E83-4B08-8402-D0F6189B936A/UIPanel",
+                                                backgroundImage = "F1A2B3C4-D5E6-4789-A012-3456789AB201/UIImage",
                                                 label = "5DE3585B-3426-421D-8F36-DBAF43123F50/UIText",
-                                                normalPanelColor = Color(0.18, 0.25, 0.22, 1.00),
-                                                normalTextColor = Color(1.00, 1.00, 1.00, 1.00),
-                                                hoverPanelColor = Color(0.25, 0.44, 0.35, 1.00),
-                                                hoverTextColor = Color(1.00, 0.96, 0.68, 1.00),
-                                                hoverScaleBoost = 1.06,
+                                                normalTexture = "Assets/UI/GuildSlate/btn_accent_normal.png",
+                                                hoverTexture = "Assets/UI/GuildSlate/btn_accent_hover.png",
+                                                pressedTexture = "Assets/UI/GuildSlate/btn_accent_pressed.png",
+                                                normalTextColor = Color(0.96, 0.94, 0.88, 1.00),
+                                                normalImageTint = Color(1.00, 1.00, 1.00, 1.00),
+                                                hoverTextColor = Color(1.00, 0.82, 0.47, 1.00),
+                                                hoverImageTint = Color(1.00, 1.00, 1.00, 1.00),
+                                                hoverScaleBoost = 1.05,
                                                 hoverRotationDeg = 0.00,
-                                                clickPanelColor = Color(0.12, 0.30, 0.23, 1.00),
-                                                clickTextColor = Color(0.86, 0.86, 0.92, 1.00),
-                                                clickScaleBoost = 0.96,
+                                                clickTextColor = Color(0.86, 0.84, 0.78, 1.00),
+                                                clickImageTint = Color(0.92, 0.92, 0.92, 1.00),
+                                                clickScaleBoost = 0.97,
+                                                disabledTextColor = Color(0.55, 0.54, 0.50, 1.00),
+                                                disabledImageTint = Color(0.45, 0.45, 0.45, 1.00),
                                                 hoverInTimeSec = 0.12,
                                                 hoverOutTimeSec = 0.18,
                                                 pressInTimeSec = 0.08,
@@ -304,13 +330,34 @@ function CreateScene()
                                         },
                                         children = {
                                             {
+                                                name = "Background",
+                                                uuid = "F1A2B3C4-D5E6-4789-A012-3456789AB201",
+                                                components = {
+                                                    {
+                                                        type = "UIImage",
+                                                        texture = "Assets/UI/GuildSlate/btn_accent_normal.png",
+                                                        tintColor = Color(1.00, 1.00, 1.00, 1.00),
+                                                        preserveAspect = false,
+                                                        isVisible = true,
+                                                        raycastTarget = false,
+                                                        anchorMin = Vector2(0.00, 0.00),
+                                                        anchorMax = Vector2(1.00, 1.00),
+                                                        pivot = Vector2(0.50, 0.50),
+                                                        anchoredPosition = Vector2(0.00, 0.00),
+                                                        sizeDelta = Vector2(0.00, 0.00),
+                                                        rotation = 0.00,
+                                                        scale = Vector2(1.00, 1.00)
+                                                    },
+                                                }
+                                            },
+                                            {
                                                 name = "Text",
                                                 uuid = "5DE3585B-3426-421D-8F36-DBAF43123F50",
                                                 components = {
                                                     {
                                                         type = "UIText",
                                                         text = "Continue",
-                                                        color = Color(1.00, 1.00, 1.00, 1.00),
+                                                        color = Color(0.96, 0.94, 0.88, 1.00),
                                                         fontSize = 20.00,
                                                         alignment = "Center",
                                                         font = nil,
@@ -334,9 +381,9 @@ function CreateScene()
                                         components = {
                                             {
                                                 type = "UIPanel",
-                                                backgroundColor = Color(0.22, 0.18, 0.18, 1.00),
-                                                borderColor = Color(1.00, 1.00, 1.00, 1.00),
-                                                borderThickness = 1.00,
+                                                backgroundColor = Color(0.20, 0.20, 0.20, 0.00),
+                                                borderColor = Color(0.00, 0.00, 0.00, 0.00),
+                                                borderThickness = 0.00,
                                                 hasBorder = false,
                                                 isVisible = true,
                                                 raycastTarget = true,
@@ -350,26 +397,31 @@ function CreateScene()
                                             },
                                             {
                                                 type = "UIButton",
-                                                normalColor = Color(1.00, 1.00, 1.00, 0.23),
-                                                hoveredColor = Color(0.90, 0.90, 0.90, 0.44),
-                                                pressedColor = Color(0.70, 0.70, 0.70, 1.00),
-                                                disabledColor = Color(0.50, 0.50, 0.50, 0.50),
+                                                normalColor = Color(1.00, 1.00, 1.00, 0.00),
+                                                hoveredColor = Color(1.00, 1.00, 1.00, 0.00),
+                                                pressedColor = Color(1.00, 1.00, 1.00, 0.00),
+                                                disabledColor = Color(0.50, 0.50, 0.50, 0.00),
                                                 interactable = true,
                                                 enableDefaultHoverVisuals = false
                                             },
                                             {
                                                 type = "ButtonStyle",
-                                                backgroundPanel = "9E2C0BE0-4742-4279-A2DD-0C7009566B7B/UIPanel",
+                                                backgroundImage = "F1A2B3C4-D5E6-4789-A012-3456789AB202/UIImage",
                                                 label = "2F7C83F3-A334-41DA-BF4C-A4FDDE59BA6C/UIText",
-                                                normalPanelColor = Color(0.22, 0.18, 0.18, 1.00),
-                                                normalTextColor = Color(1.00, 1.00, 1.00, 1.00),
-                                                hoverPanelColor = Color(0.45, 0.30, 0.25, 1.00),
-                                                hoverTextColor = Color(1.00, 0.96, 0.68, 1.00),
-                                                hoverScaleBoost = 1.06,
+                                                normalTexture = "Assets/UI/GuildSlate/btn_secondary_normal.png",
+                                                hoverTexture = "Assets/UI/GuildSlate/btn_secondary_hover.png",
+                                                pressedTexture = "Assets/UI/GuildSlate/btn_secondary_pressed.png",
+                                                normalTextColor = Color(0.96, 0.94, 0.88, 1.00),
+                                                normalImageTint = Color(1.00, 1.00, 1.00, 1.00),
+                                                hoverTextColor = Color(1.00, 0.82, 0.47, 1.00),
+                                                hoverImageTint = Color(1.00, 1.00, 1.00, 1.00),
+                                                hoverScaleBoost = 1.05,
                                                 hoverRotationDeg = 0.00,
-                                                clickPanelColor = Color(0.32, 0.18, 0.16, 1.00),
-                                                clickTextColor = Color(0.86, 0.86, 0.92, 1.00),
-                                                clickScaleBoost = 0.96,
+                                                clickTextColor = Color(0.86, 0.84, 0.78, 1.00),
+                                                clickImageTint = Color(0.92, 0.92, 0.92, 1.00),
+                                                clickScaleBoost = 0.97,
+                                                disabledTextColor = Color(0.55, 0.54, 0.50, 1.00),
+                                                disabledImageTint = Color(0.45, 0.45, 0.45, 1.00),
                                                 hoverInTimeSec = 0.12,
                                                 hoverOutTimeSec = 0.18,
                                                 pressInTimeSec = 0.08,
@@ -382,13 +434,34 @@ function CreateScene()
                                         },
                                         children = {
                                             {
+                                                name = "Background",
+                                                uuid = "F1A2B3C4-D5E6-4789-A012-3456789AB202",
+                                                components = {
+                                                    {
+                                                        type = "UIImage",
+                                                        texture = "Assets/UI/GuildSlate/btn_secondary_normal.png",
+                                                        tintColor = Color(1.00, 1.00, 1.00, 1.00),
+                                                        preserveAspect = false,
+                                                        isVisible = true,
+                                                        raycastTarget = false,
+                                                        anchorMin = Vector2(0.00, 0.00),
+                                                        anchorMax = Vector2(1.00, 1.00),
+                                                        pivot = Vector2(0.50, 0.50),
+                                                        anchoredPosition = Vector2(0.00, 0.00),
+                                                        sizeDelta = Vector2(0.00, 0.00),
+                                                        rotation = 0.00,
+                                                        scale = Vector2(1.00, 1.00)
+                                                    },
+                                                }
+                                            },
+                                            {
                                                 name = "Text",
                                                 uuid = "2F7C83F3-A334-41DA-BF4C-A4FDDE59BA6C",
                                                 components = {
                                                     {
                                                         type = "UIText",
                                                         text = "Back to Menu",
-                                                        color = Color(1.00, 1.00, 1.00, 1.00),
+                                                        color = Color(0.96, 0.94, 0.88, 1.00),
                                                         fontSize = 20.00,
                                                         alignment = "Center",
                                                         font = nil,
@@ -504,7 +577,7 @@ function CreateScene()
                             targetObject = "E8682E33-50ED-45D8-BC76-B31113639F9E",
                         },
                         { type = "EnemyAnimationDriver",
-                            animator = "F48597B7-5877-4183-8D6A-DA9EAFBB96E8/Animator",
+                            animator = "74947359-55B1-47D4-863D-78996DFCCE57/Animator",
                         },
                         { type = "EnemyMeleeAI",
                             health = "753770D2-B00E-4859-B7D3-5ABF1249B014/HealthComponent",
@@ -518,7 +591,7 @@ function CreateScene()
                 children = {
                     {
                         name = "EnemyAttackOrigin",
-                        uuid = "C1A8FF8C-7F5A-4653-8EA0-E735F6E6134B",
+                        uuid = "CE0BC29C-E301-4DD7-B8FF-B7D401C6A03D",
                         prefab = "EnemyAttackOrigin",
                         position = Vector3(0.00, 1.00, 0.85),
                         overrides = {
@@ -526,7 +599,7 @@ function CreateScene()
                     },
                     {
                         name = "Enemy Model",
-                        uuid = "F48597B7-5877-4183-8D6A-DA9EAFBB96E8",
+                        uuid = "74947359-55B1-47D4-863D-78996DFCCE57",
                         prefab = "Enemy Model",
                         scale = Vector3(0.01, 0.01, 0.01),
                         overrides = {
@@ -631,7 +704,7 @@ function CreateScene()
                                     {
                                         type = "Canvas",
                                         renderMode = "WorldSpace",
-                                        canvasSize = Vector2(200.00, 72.00),
+                                        canvasSize = Vector2(220.00, 48.00),
                                         pixelsPerUnit = 100.00,
                                         sortOrder = 25,
                                         faceCamera = true
@@ -649,8 +722,8 @@ function CreateScene()
                                         components = {
                                             {
                                                 type = "UIPanel",
-                                                backgroundColor = Color(0.05, 0.05, 0.08, 0.72),
-                                                borderColor = Color(1.00, 1.00, 1.00, 0.25),
+                                                backgroundColor = Color(0.06, 0.07, 0.10, 0.92),
+                                                borderColor = Color(0.91, 0.66, 0.29, 0.55),
                                                 borderThickness = 1.00,
                                                 hasBorder = true,
                                                 isVisible = true,
@@ -659,14 +732,9 @@ function CreateScene()
                                                 anchorMax = Vector2(0.50, 0.50),
                                                 pivot = Vector2(0.50, 0.50),
                                                 anchoredPosition = Vector2(0.00, 0.00),
-                                                sizeDelta = Vector2(184.00, 35.00),
+                                                sizeDelta = Vector2(195.00, 23.00),
                                                 rotation = 0.00,
                                                 scale = Vector2(1.00, 1.00)
-                                            },
-                                            {
-                                                type = "UIVerticalLayout",
-                                                padding = Vector2(6.00, 6.00),
-                                                spacing = 4.00
                                             },
                                         },
                                         children = {
@@ -677,17 +745,17 @@ function CreateScene()
                                                     {
                                                         type = "UIText",
                                                         text = "Player",
-                                                        color = Color(1.00, 1.00, 1.00, 1.00),
+                                                        color = Color(1.00, 0.82, 0.47, 1.00),
                                                         fontSize = 14.00,
                                                         alignment = "Center",
                                                         font = nil,
                                                         isVisible = true,
                                                         raycastTarget = false,
-                                                        anchorMin = Vector2(0.00, 1.00),
-                                                        anchorMax = Vector2(0.00, 1.00),
-                                                        pivot = Vector2(0.00, 1.00),
-                                                        anchoredPosition = Vector2(6.00, -6.00),
-                                                        sizeDelta = Vector2(168.00, 18.00),
+                                                        anchorMin = Vector2(0.06, 0.58),
+                                                        anchorMax = Vector2(0.94, 0.96),
+                                                        pivot = Vector2(0.50, 0.50),
+                                                        anchoredPosition = Vector2(0.00, 11.00),
+                                                        sizeDelta = Vector2(0.00, 0.00),
                                                         rotation = 0.00,
                                                         scale = Vector2(1.00, 1.00)
                                                     },
@@ -699,17 +767,17 @@ function CreateScene()
                                                 components = {
                                                     {
                                                         type = "UIPanel",
-                                                        backgroundColor = Color(0.28, 0.28, 0.28, 1.00),
-                                                        borderColor = Color(1.00, 1.00, 1.00, 1.00),
+                                                        backgroundColor = Color(0.04, 0.05, 0.07, 1.00),
+                                                        borderColor = Color(0.91, 0.66, 0.29, 0.45),
                                                         borderThickness = 1.00,
-                                                        hasBorder = false,
+                                                        hasBorder = true,
                                                         isVisible = true,
                                                         raycastTarget = false,
-                                                        anchorMin = Vector2(0.00, 1.00),
-                                                        anchorMax = Vector2(0.00, 1.00),
-                                                        pivot = Vector2(0.00, 1.00),
-                                                        anchoredPosition = Vector2(6.00, -28.00),
-                                                        sizeDelta = Vector2(168.00, 14.00),
+                                                        anchorMin = Vector2(0.50, 0.00),
+                                                        anchorMax = Vector2(0.50, 0.00),
+                                                        pivot = Vector2(0.50, 0.00),
+                                                        anchoredPosition = Vector2(0.00, 11.00),
+                                                        sizeDelta = Vector2(180.00, 10.00),
                                                         rotation = 0.00,
                                                         scale = Vector2(1.00, 1.00)
                                                     },
@@ -726,9 +794,9 @@ function CreateScene()
                                                         type = "HealthBarUI",
                                                         health = "E8682E33-50ED-45D8-BC76-B31113639F9E/HealthComponent",
                                                         fillPanel = "A1000001-0006-4000-8000-000000000006/UIPanel",
-                                                        highHealthColor = Color(0.12, 0.78, 0.24, 1.00),
-                                                        midHealthColor = Color(0.95, 0.74, 0.16, 1.00),
-                                                        lowHealthColor = Color(0.82, 0.18, 0.18, 1.00)
+                                                        highHealthColor = Color(0.24, 0.75, 0.63, 1.00),
+                                                        midHealthColor = Color(0.91, 0.66, 0.29, 1.00),
+                                                        lowHealthColor = Color(0.77, 0.29, 0.29, 1.00)
                                                     },
                                                 },
                                                 children = {
@@ -738,17 +806,17 @@ function CreateScene()
                                                         components = {
                                                             {
                                                                 type = "UIPanel",
-                                                                backgroundColor = Color(0.12, 0.78, 0.24, 1.00),
-                                                                borderColor = Color(1.00, 1.00, 1.00, 1.00),
-                                                                borderThickness = 1.00,
+                                                                backgroundColor = Color(0.24, 0.75, 0.63, 1.00),
+                                                                borderColor = Color(0.00, 0.00, 0.00, 0.00),
+                                                                borderThickness = 0.00,
                                                                 hasBorder = false,
                                                                 isVisible = true,
                                                                 raycastTarget = false,
-                                                                anchorMin = Vector2(0.00, 0.00),
-                                                                anchorMax = Vector2(0.00, 1.00),
+                                                                anchorMin = Vector2(0.00, 0.50),
+                                                                anchorMax = Vector2(0.00, 0.50),
                                                                 pivot = Vector2(0.00, 0.50),
                                                                 anchoredPosition = Vector2(0.00, 0.00),
-                                                                sizeDelta = Vector2(168.00, 0.00),
+                                                                sizeDelta = Vector2(180.00, 6.00),
                                                                 rotation = 0.00,
                                                                 scale = Vector2(1.00, 1.00)
                                                             },
@@ -760,17 +828,17 @@ function CreateScene()
                                                         components = {
                                                             {
                                                                 type = "UIPanel",
-                                                                backgroundColor = Color(0.92, 0.92, 0.92, 1.00),
-                                                                borderColor = Color(1.00, 1.00, 1.00, 1.00),
-                                                                borderThickness = 1.00,
+                                                                backgroundColor = Color(0.00, 0.00, 0.00, 0.00),
+                                                                borderColor = Color(0.00, 0.00, 0.00, 0.00),
+                                                                borderThickness = 0.00,
                                                                 hasBorder = false,
                                                                 isVisible = false,
                                                                 raycastTarget = false,
                                                                 anchorMin = Vector2(0.00, 0.50),
                                                                 anchorMax = Vector2(0.00, 0.50),
                                                                 pivot = Vector2(0.50, 0.50),
-                                                                anchoredPosition = Vector2(168.00, 0.00),
-                                                                sizeDelta = Vector2(8.00, 8.00),
+                                                                anchoredPosition = Vector2(180.00, 0.00),
+                                                                sizeDelta = Vector2(1.00, 1.00),
                                                                 rotation = 0.00,
                                                                 scale = Vector2(1.00, 1.00)
                                                             },
@@ -866,13 +934,13 @@ function CreateScene()
                                                                 name = "mixamorig:LeftShoulder",
                                                                 uuid = "8F079083-2A6E-4B60-9663-F23B483F1EBE",
                                                                 position = Vector3(6.34, 14.95, -4.64),
-                                                                rotation = Quaternion.FromEulerAngles(79.09, 89.74, 168.36),
+                                                                rotation = Quaternion.FromEulerAngles(-79.07, 89.74, -167.85),
                                                                 children = {
                                                                     {
                                                                         name = "mixamorig:LeftArm",
                                                                         uuid = "A0AA69EE-ECD3-475E-9131-68CD84714AD9",
                                                                         position = Vector3(0.00, 9.14, -0.00),
-                                                                        rotation = Quaternion.FromEulerAngles(10.62, -0.76, 0.87),
+                                                                        rotation = Quaternion.FromEulerAngles(10.64, -0.48, 0.64),
                                                                         children = {
                                                                             {
                                                                                 name = "mixamorig:LeftForeArm",
@@ -889,7 +957,7 @@ function CreateScene()
                                                                                                 name = "mixamorig:LeftHandThumb1",
                                                                                                 uuid = "9F00811D-BEB8-4B88-84D2-FE33F71E229A",
                                                                                                 position = Vector3(-2.01, 3.66, 1.52),
-                                                                                                rotation = Quaternion.FromEulerAngles(21.18, 16.54, 33.84),
+                                                                                                rotation = Quaternion.FromEulerAngles(-10.34, 24.69, 38.07),
                                                                                                 children = {
                                                                                                     {
                                                                                                         name = "mixamorig:LeftHandThumb2",
@@ -1039,13 +1107,13 @@ function CreateScene()
                                                                 name = "mixamorig:RightShoulder",
                                                                 uuid = "A3EC7C3A-EB28-4791-B5FA-CC662AFCA5AF",
                                                                 position = Vector3(-6.34, 14.95, -4.64),
-                                                                rotation = Quaternion.FromEulerAngles(79.09, -89.74, -168.36),
+                                                                rotation = Quaternion.FromEulerAngles(-79.07, -89.74, 167.85),
                                                                 children = {
                                                                     {
                                                                         name = "mixamorig:RightArm",
                                                                         uuid = "F7892167-C8F8-4CFE-9F5B-3641B6B9814E",
                                                                         position = Vector3(-0.00, 9.14, -0.00),
-                                                                        rotation = Quaternion.FromEulerAngles(10.62, 0.76, -0.87),
+                                                                        rotation = Quaternion.FromEulerAngles(10.64, 0.48, -0.64),
                                                                         children = {
                                                                             {
                                                                                 name = "mixamorig:RightForeArm",
@@ -1062,7 +1130,7 @@ function CreateScene()
                                                                                                 name = "mixamorig:RightHandThumb1",
                                                                                                 uuid = "B4613E40-45A0-4491-9522-28FEE313CA5F",
                                                                                                 position = Vector3(2.01, 3.66, 1.52),
-                                                                                                rotation = Quaternion.FromEulerAngles(20.86, -16.87, -34.01),
+                                                                                                rotation = Quaternion.FromEulerAngles(-10.79, -24.45, -37.95),
                                                                                                 children = {
                                                                                                     {
                                                                                                         name = "mixamorig:RightHandThumb2",
@@ -1232,13 +1300,13 @@ function CreateScene()
                                                         name = "mixamorig:LeftFoot",
                                                         uuid = "C4679F0E-6B5A-4CDA-A6B5-7B51C0B8B483",
                                                         position = Vector3(0.00, 40.82, -0.00),
-                                                        rotation = Quaternion.FromEulerAngles(-34.30, 4.32, -4.02),
+                                                        rotation = Quaternion.FromEulerAngles(-31.76, 14.35, -14.27),
                                                         children = {
                                                             {
                                                                 name = "mixamorig:LeftToeBase",
                                                                 uuid = "49416134-C362-480D-A843-27C2EF3AA04D",
                                                                 position = Vector3(0.00, 18.00, 0.00),
-                                                                rotation = Quaternion.FromEulerAngles(-61.51, 1.77, -2.41),
+                                                                rotation = Quaternion.FromEulerAngles(-56.98, 28.97, -29.01),
                                                                 children = {
                                                                     {
                                                                         name = "mixamorig:LeftToe_End",
@@ -1269,13 +1337,13 @@ function CreateScene()
                                                         name = "mixamorig:RightFoot",
                                                         uuid = "7A80B74F-EA09-4537-917E-3D8868EA0136",
                                                         position = Vector3(0.00, 40.82, -0.00),
-                                                        rotation = Quaternion.FromEulerAngles(-34.30, -4.32, 4.02),
+                                                        rotation = Quaternion.FromEulerAngles(-31.76, -14.35, 14.27),
                                                         children = {
                                                             {
                                                                 name = "mixamorig:RightToeBase",
                                                                 uuid = "3434220A-3088-46D8-9B0F-C2BCA301CA63",
                                                                 position = Vector3(-0.00, 18.00, 0.00),
-                                                                rotation = Quaternion.FromEulerAngles(-44.52, -47.95, 47.99),
+                                                                rotation = Quaternion.FromEulerAngles(54.67, -34.32, 34.40),
                                                                 children = {
                                                                     {
                                                                         name = "mixamorig:RightToe_End",
