@@ -14,6 +14,7 @@ namespace RTBEditor {
         std::uint16_t lanGamePort = 27015;
         std::uint16_t lanDiscoveryPort = 27016;
         std::string defaultHostAddress;
+        std::string relayMatchmakingUrl = "http://localhost:8080/api/v1";
         std::string loginDisplayName;
         std::string defaultStartScene = "Assets/Scenes/MainMenu.lua";
     };

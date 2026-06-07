@@ -37,6 +37,7 @@ namespace RTBEditor {
         int lanGamePort = 27015;
         int lanDiscoveryPort = 27016;
         char defaultHostAddress[128] = "";
+        char relayMatchmakingUrl[256] = "http://localhost:8080/api/v1";
         char loginDisplayName[64] = "";
         char defaultStartScene[260] = "Assets/Scenes/MainMenu.lua";
         char sessionDisplayName[64] = "EditorUser";

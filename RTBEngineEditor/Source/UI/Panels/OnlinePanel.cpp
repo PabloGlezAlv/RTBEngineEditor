@@ -97,6 +97,7 @@ namespace RTBEditor {
         lanDiscoveryPort = settings.lanDiscoveryPort;
         CopyToBuffer(defaultHostAddress, settings.defaultHostAddress);
         CopyToBuffer(joinHostAddress, settings.defaultHostAddress);
+        CopyToBuffer(relayMatchmakingUrl, settings.relayMatchmakingUrl);
         CopyToBuffer(loginDisplayName, settings.loginDisplayName);
         CopyToBuffer(sessionDisplayName, settings.loginDisplayName);
         CopyToBuffer(defaultStartScene, settings.defaultStartScene);
@@ -109,6 +110,7 @@ namespace RTBEditor {
         settings.lanGamePort = static_cast<std::uint16_t>(std::max(1, lanGamePort));
         settings.lanDiscoveryPort = static_cast<std::uint16_t>(std::max(1, lanDiscoveryPort));
         settings.defaultHostAddress = ReadBuffer(defaultHostAddress);
+        settings.relayMatchmakingUrl = ReadBuffer(relayMatchmakingUrl);
         settings.loginDisplayName = ReadBuffer(loginDisplayName);
         settings.defaultStartScene = ReadBuffer(defaultStartScene);
         if (settings.defaultStartScene.empty()) {
@@ -129,7 +131,8 @@ namespace RTBEditor {
         ImGui::InputText("Login Display Name", loginDisplayName, sizeof(loginDisplayName));
         ImGui::SetNextItemWidth(-1.0f);
         ImGui::InputText("Host remoto por defecto (IP o DNS)", defaultHostAddress, sizeof(defaultHostAddress));
-        ImGui::TextDisabled("Internet sin EOS: abrir/reenviar puertos UDP en el host.");
+        ImGui::SetNextItemWidth(-1.0f);
+        ImGui::InputText("Relay matchmaking URL", relayMatchmakingUrl, sizeof(relayMatchmakingUrl));
         ImGui::SetNextItemWidth(-1.0f);
         ImGui::InputText("Escena por defecto", defaultStartScene, sizeof(defaultStartScene));
         ImGui::TextDisabled("Usada por Multiplayer Test y como escena inicial al lanzar jugadores.");

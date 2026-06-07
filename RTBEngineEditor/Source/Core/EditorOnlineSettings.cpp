@@ -158,6 +158,10 @@ namespace RTBEditor {
         settings.lanGamePort = ParsePort(readValue("LanGamePort"), settings.lanGamePort);
         settings.lanDiscoveryPort = ParsePort(readValue("LanDiscoveryPort"), settings.lanDiscoveryPort);
         settings.defaultHostAddress = readValue("DefaultHostAddress");
+        settings.relayMatchmakingUrl = readValue("RelayMatchmakingUrl");
+        if (settings.relayMatchmakingUrl.empty()) {
+            settings.relayMatchmakingUrl = "http://localhost:8080/api/v1";
+        }
         settings.loginDisplayName = readValue("LoginDisplayName");
         settings.defaultStartScene = readValue("DefaultStartScene");
         if (settings.defaultStartScene.empty()) {
@@ -186,6 +190,7 @@ namespace RTBEditor {
         file << "LanGamePort=" << settings.lanGamePort << "\n";
         file << "LanDiscoveryPort=" << settings.lanDiscoveryPort << "\n";
         file << "DefaultHostAddress=" << settings.defaultHostAddress << "\n";
+        file << "RelayMatchmakingUrl=" << settings.relayMatchmakingUrl << "\n";
         file << "LoginDisplayName=" << settings.loginDisplayName << "\n";
         file << "DefaultStartScene=" << settings.defaultStartScene << "\n";
 
@@ -201,6 +206,7 @@ namespace RTBEditor {
         config.lanGamePort = settings.lanGamePort;
         config.lanDiscoveryPort = settings.lanDiscoveryPort;
         config.defaultHostAddress = settings.defaultHostAddress;
+        config.relayMatchmakingUrl = settings.relayMatchmakingUrl;
         config.loginType = RTBEngine::Online::OnlineLoginType::DeviceId;
         config.loginDisplayName = settings.loginDisplayName;
     }
