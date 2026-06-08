@@ -50,6 +50,8 @@ namespace RTBEditor {
         ImGui::Begin("Online");
         RTBEngine::Online::OnlineSystem& onlineSystem = RTBEngine::Online::OnlineSystem::GetInstance();
 
+        onlineSettingsSyncedOnOpen = true;
+
         DrawSettingsSection();
         ImGui::Separator();
         DrawSessionSection(onlineSystem);
@@ -63,7 +65,7 @@ namespace RTBEditor {
     {
         lastIdentityActionSucceeded = result.success;
         if (result.success) {
-            lastIdentityActionMessage = result.message.empty() ? "Operacion correcta." : result.message;
+            lastIdentityActionMessage = result.message.empty() ? "Operation succeeded." : result.message;
             return;
         }
 
@@ -78,7 +80,7 @@ namespace RTBEditor {
     {
         lastLobbyActionSucceeded = result.success;
         if (result.success) {
-            lastLobbyActionMessage = result.message.empty() ? "Operacion correcta." : result.message;
+            lastLobbyActionMessage = result.message.empty() ? "Operation succeeded." : result.message;
             return;
         }
 
@@ -93,6 +95,9 @@ namespace RTBEditor {
     {
         const EditorOnlineSettings settings = EditorOnlineSettingsStore::Load();
         onlineSettingsEnabled = settings.enabled;
+        defaultLobbyBackendIndex =
+            RTBEngine::Online::IsRelayBackend(settings.backendType) ? 1 : 0;
+        sessionLobbyBackendIndex = defaultLobbyBackendIndex;
         lanGamePort = settings.lanGamePort;
         lanDiscoveryPort = settings.lanDiscoveryPort;
         CopyToBuffer(defaultHostAddress, settings.defaultHostAddress);
@@ -107,6 +112,9 @@ namespace RTBEditor {
     {
         EditorOnlineSettings settings;
         settings.enabled = onlineSettingsEnabled;
+        settings.backendType = defaultLobbyBackendIndex == 1
+            ? RTBEngine::Online::OnlineBackendType::RelayOnline
+            : RTBEngine::Online::OnlineBackendType::Lan;
         settings.lanGamePort = static_cast<std::uint16_t>(std::max(1, lanGamePort));
         settings.lanDiscoveryPort = static_cast<std::uint16_t>(std::max(1, lanDiscoveryPort));
         settings.defaultHostAddress = ReadBuffer(defaultHostAddress);
@@ -119,10 +127,19 @@ namespace RTBEditor {
         return settings;
     }
 
+    bool OnlinePanel::ApplyOnlineSettings(const EditorOnlineSettings& settings)
+    {
+        return EditorOnlineSettingsStore::ApplyAndInitializeOnline(settings);
+    }
+
     void OnlinePanel::DrawSettingsSection()
     {
-        ImGui::TextUnformatted("Configuracion Online");
+        ImGui::TextUnformatted("Online Settings");
         ImGui::Checkbox("Online Enabled", &onlineSettingsEnabled);
+
+        const char* backendLabels[] = { "LAN", "Relay" };
+        ImGui::Combo("Default lobby backend", &defaultLobbyBackendIndex, backendLabels, 2);
+        ImGui::TextDisabled("LAN and Relay are both initialized when online is enabled.");
 
         ImGui::InputInt("LAN Game Port", &lanGamePort);
         ImGui::InputInt("LAN Discovery Port", &lanDiscoveryPort);
@@ -130,35 +147,30 @@ namespace RTBEditor {
         ImGui::SetNextItemWidth(230.0f);
         ImGui::InputText("Login Display Name", loginDisplayName, sizeof(loginDisplayName));
         ImGui::SetNextItemWidth(-1.0f);
-        ImGui::InputText("Host remoto por defecto (IP o DNS)", defaultHostAddress, sizeof(defaultHostAddress));
+        ImGui::InputText("Default remote host (IP or DNS)", defaultHostAddress, sizeof(defaultHostAddress));
         ImGui::SetNextItemWidth(-1.0f);
         ImGui::InputText("Relay matchmaking URL", relayMatchmakingUrl, sizeof(relayMatchmakingUrl));
         ImGui::SetNextItemWidth(-1.0f);
-        ImGui::InputText("Escena por defecto", defaultStartScene, sizeof(defaultStartScene));
-        ImGui::TextDisabled("Usada por Multiplayer Test y como escena inicial al lanzar jugadores.");
+        ImGui::InputText("Default scene", defaultStartScene, sizeof(defaultStartScene));
+        ImGui::TextDisabled("Used by Multiplayer Test and as the initial scene when launching players.");
 
         const EditorOnlineSettings currentSettings = BuildSettingsFromFields();
         if (ImGui::Button("Reload")) {
             LoadSettingsIntoFields();
             lastSettingsSucceeded = true;
-            lastSettingsMessage = "Configuracion recargada.";
+            lastSettingsMessage = "Settings reloaded.";
         }
         ImGui::SameLine();
         if (ImGui::Button("Save")) {
             lastSettingsSucceeded = EditorOnlineSettingsStore::Save(currentSettings);
-            lastSettingsMessage = lastSettingsSucceeded ? "Configuracion guardada." : "No se pudo guardar.";
+            lastSettingsMessage = lastSettingsSucceeded ? "Settings saved." : "Could not save settings.";
         }
         ImGui::SameLine();
         if (ImGui::Button("Save And Apply")) {
-            lastSettingsSucceeded = EditorOnlineSettingsStore::Save(currentSettings);
-            if (lastSettingsSucceeded) {
-                RTBEngine::Online::OnlineConfig config;
-                EditorOnlineSettingsStore::ApplyToOnlineConfig(currentSettings, config);
-                lastSettingsSucceeded = RTBEngine::Online::OnlineSystem::GetInstance().Initialize(config);
-            }
+            lastSettingsSucceeded = ApplyOnlineSettings(currentSettings);
             lastSettingsMessage = lastSettingsSucceeded
-                ? "Configuracion aplicada."
-                : "No se pudo aplicar configuracion online.";
+                ? "Settings applied."
+                : "Could not apply online settings.";
         }
 
         if (!lastSettingsMessage.empty()) {
@@ -171,25 +183,49 @@ namespace RTBEditor {
     void OnlinePanel::DrawSessionSection(RTBEngine::Online::OnlineSystem& onlineSystem)
     {
         RTBEngine::Online::IOnlineIdentity* identity = onlineSystem.GetIdentity();
-        RTBEngine::Online::IOnlineLobby* lobby = onlineSystem.GetLobby();
 
-        ImGui::Text("Estado: %s | Backend: %s",
+        const RTBEngine::Online::OnlineBackendType sessionBackend =
+            sessionLobbyBackendIndex == 1
+                ? RTBEngine::Online::OnlineBackendType::RelayOnline
+                : RTBEngine::Online::OnlineBackendType::Lan;
+
+        RTBEngine::Online::IOnlineLobby* lobby = onlineSystem.GetLobby(sessionBackend);
+
+        ImGui::Text("State: %s | Session: %s",
             RTBEngine::Online::ToString(onlineSystem.GetState()),
-            RTBEngine::Online::ToString(onlineSystem.GetBackendType()));
+            onlineSystem.IsInLobby()
+                ? RTBEngine::Online::ToString(onlineSystem.GetActiveLobbyBackend())
+                : "none");
+        ImGui::Text("LAN: %s | Relay: %s",
+            onlineSystem.IsLobbyBackendReady(RTBEngine::Online::OnlineBackendType::Lan) ? "ready" : "unavailable",
+            onlineSystem.IsLobbyBackendReady(RTBEngine::Online::OnlineBackendType::RelayOnline) ? "ready" : "not configured");
         if (!onlineSystem.GetLastError().empty()) {
             ImGui::TextColored(ImVec4(0.95f, 0.45f, 0.35f, 1.0f), "%s", onlineSystem.GetLastError().c_str());
         }
 
-        if (!identity || !lobby) {
-            ImGui::TextDisabled("Inicializa el sistema online para continuar.");
+        if (!identity) {
+            ImGui::TextDisabled("Initialize the online system to continue.");
+            return;
+        }
+
+        const char* sessionBackendLabels[] = { "LAN", "Relay" };
+        ImGui::Combo("Lobby backend", &sessionLobbyBackendIndex, sessionBackendLabels, 2);
+        if (!onlineSystem.IsLobbyBackendReady(sessionBackend)) {
+            ImGui::TextColored(ImVec4(0.95f, 0.65f, 0.25f, 1.0f),
+                "Selected lobby backend is not available. Configure it in Online Settings.");
+        }
+
+        if (!lobby) {
+            ImGui::TextDisabled("Lobby interface is not available for the selected backend.");
             return;
         }
 
         const bool loggedIn = identity->IsLoggedIn();
         const bool hasLobby = !lobby->GetCurrentLobby().lobbyId.empty();
+        const bool useRelayBackend = RTBEngine::Online::IsRelayBackend(sessionBackend);
 
         ImGui::SetNextItemWidth(220.0f);
-        ImGui::InputText("Nombre de sesion", sessionDisplayName, sizeof(sessionDisplayName));
+        ImGui::InputText("Session display name", sessionDisplayName, sizeof(sessionDisplayName));
         BeginDisabledIf(loggedIn);
         if (ImGui::Button("Login")) {
             RTBEngine::Online::OnlineLoginOptions options;
@@ -203,28 +239,30 @@ namespace RTBEditor {
         if (ImGui::Button("Logout")) {
             identity->Logout();
             lastIdentityActionSucceeded = true;
-            lastIdentityActionMessage = "Logout correcto.";
+            lastIdentityActionMessage = "Logged out successfully.";
         }
         EndDisabledIf(!loggedIn);
 
         ImGui::Text("UserId: %s", identity->GetLocalUserId().ToString().c_str());
-        ImGui::Text("Lobby actual: %s", hasLobby ? lobby->GetCurrentLobby().lobbyId.c_str() : "ninguno");
+        ImGui::Text("Current lobby: %s", hasLobby ? lobby->GetCurrentLobby().lobbyId.c_str() : "none");
 
         ImGui::Separator();
         ImGui::SetNextItemWidth(130.0f);
-        ImGui::InputInt("Max jugadores", &lobbyMaxMembers);
+        ImGui::InputInt("Max players", &lobbyMaxMembers);
         lobbyMaxMembers = std::clamp(lobbyMaxMembers, 2, 6);
         ImGui::SetNextItemWidth(220.0f);
-        ImGui::InputText("Codigo lobby", lobbyCode, sizeof(lobbyCode));
+        ImGui::InputText("Lobby code", lobbyCode, sizeof(lobbyCode));
+        BeginDisabledIf(useRelayBackend);
         ImGui::SetNextItemWidth(320.0f);
-        ImGui::InputText("Host remoto (IP/DNS, opcional)", joinHostAddress, sizeof(joinHostAddress));
+        ImGui::InputText("Remote host (IP/DNS, optional)", joinHostAddress, sizeof(joinHostAddress));
+        EndDisabledIf(useRelayBackend);
 
         const bool canCreate = loggedIn && !hasLobby;
         const bool canSearchJoin = loggedIn && !hasLobby && lobbyCode[0] != '\0';
         const bool canLeave = loggedIn && hasLobby;
 
         BeginDisabledIf(!canCreate);
-        if (ImGui::Button("Crear Lobby")) {
+        if (ImGui::Button("Create Lobby")) {
             RTBEngine::Online::OnlineCreateLobbyOptions options;
             options.maxMembers = static_cast<std::uint32_t>(lobbyMaxMembers);
             StoreLobbyActionResult(lobby->CreateLobby(options));
@@ -232,7 +270,7 @@ namespace RTBEditor {
         EndDisabledIf(!canCreate);
         ImGui::SameLine();
         BeginDisabledIf(!canSearchJoin);
-        if (ImGui::Button("Buscar")) {
+        if (ImGui::Button("Find")) {
             RTBEngine::Online::OnlineFindLobbiesOptions options;
             options.lobbyId = ReadBuffer(lobbyCode);
             options.hostAddress = ReadBuffer(joinHostAddress);
@@ -241,7 +279,7 @@ namespace RTBEditor {
         EndDisabledIf(!canSearchJoin);
         ImGui::SameLine();
         BeginDisabledIf(!canSearchJoin);
-        if (ImGui::Button("Unirse")) {
+        if (ImGui::Button("Join")) {
             RTBEngine::Online::OnlineJoinLobbyOptions options;
             options.lobbyId = ReadBuffer(lobbyCode);
             options.hostAddress = ReadBuffer(joinHostAddress);
@@ -250,7 +288,7 @@ namespace RTBEditor {
         EndDisabledIf(!canSearchJoin);
         ImGui::SameLine();
         BeginDisabledIf(!canLeave);
-        if (ImGui::Button("Salir Lobby")) {
+        if (ImGui::Button("Leave Lobby")) {
             StoreLobbyActionResult(lobby->LeaveLobby());
         }
         EndDisabledIf(!canLeave);
@@ -264,6 +302,28 @@ namespace RTBEditor {
             ImGui::TextColored(lastLobbyActionSucceeded ? ImVec4(0.35f, 0.85f, 0.45f, 1.0f)
                                                         : ImVec4(0.95f, 0.35f, 0.35f, 1.0f),
                 "%s", lastLobbyActionMessage.c_str());
+        }
+
+        if (hasLobby) {
+            const RTBEngine::Online::OnlineLobbyInfo& lobbyInfo = lobby->GetCurrentLobby();
+            ImGui::Separator();
+            ImGui::Text("Members (%u / %u)", lobbyInfo.currentMembers, lobbyInfo.maxMembers);
+            for (const RTBEngine::Online::OnlineUserId& member : lobbyInfo.memberUserIds) {
+                const std::string displayName = lobby->GetMemberDisplayName(member);
+                ImGui::BulletText("%s | %s",
+                    displayName.empty() ? "?" : displayName.c_str(),
+                    member.ToString().c_str());
+            }
+        } else if (!lobby->GetSearchResults().empty()) {
+            const RTBEngine::Online::OnlineLobbyInfo& foundLobby = lobby->GetSearchResults().front();
+            ImGui::Separator();
+            ImGui::Text("Search: %s (%u / %u)",
+                foundLobby.lobbyId.c_str(),
+                foundLobby.currentMembers,
+                foundLobby.maxMembers);
+            for (const RTBEngine::Online::OnlineUserId& member : foundLobby.memberUserIds) {
+                ImGui::BulletText("%s", member.ToString().c_str());
+            }
         }
     }
 

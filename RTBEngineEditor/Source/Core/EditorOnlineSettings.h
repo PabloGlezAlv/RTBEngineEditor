@@ -1,6 +1,7 @@
 #pragma once
 
 #include <RTBEngine/Online/OnlineConfig.h>
+#include <RTBEngine/Online/OnlineEditorBridge.h>
 
 #include <filesystem>
 #include <string>
@@ -11,6 +12,7 @@ namespace RTBEditor {
 #pragma warning(disable: 4251)
     struct EditorOnlineSettings {
         bool enabled = true;
+        RTBEngine::Online::OnlineBackendType backendType = RTBEngine::Online::OnlineBackendType::RelayOnline;
         std::uint16_t lanGamePort = 27015;
         std::uint16_t lanDiscoveryPort = 27016;
         std::string defaultHostAddress;
@@ -27,6 +29,9 @@ namespace RTBEditor {
         static bool Save(const EditorOnlineSettings& settings);
         static void ApplyToOnlineConfig(const EditorOnlineSettings& settings,
                                         RTBEngine::Online::OnlineConfig& config);
+        static RTBEngine::Online::OnlineEditorSettingsPayload BuildPayload(
+            const EditorOnlineSettings& settings);
+        static bool ApplyAndInitializeOnline(const EditorOnlineSettings& settings);
     };
 
 }

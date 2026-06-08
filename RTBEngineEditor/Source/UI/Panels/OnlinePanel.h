@@ -29,11 +29,14 @@ namespace RTBEditor {
 
         void LoadSettingsIntoFields();
         EditorOnlineSettings BuildSettingsFromFields() const;
+        bool ApplyOnlineSettings(const EditorOnlineSettings& settings);
         void DrawSettingsSection();
         void DrawSessionSection(RTBEngine::Online::OnlineSystem& onlineSystem);
         void DrawMultiplayerTestSection();
 
         bool onlineSettingsEnabled = true;
+        int defaultLobbyBackendIndex = 1;
+        int sessionLobbyBackendIndex = 1;
         int lanGamePort = 27015;
         int lanDiscoveryPort = 27016;
         char defaultHostAddress[128] = "";
@@ -50,6 +53,8 @@ namespace RTBEditor {
         bool lastIdentityActionSucceeded = true;
         std::string lastLobbyActionMessage;
         bool lastLobbyActionSucceeded = true;
+
+        bool onlineSettingsSyncedOnOpen = false;
 
         MultiplayerTestLauncher multiplayerLauncher;
         int multiplayerPlayerCount = 2;

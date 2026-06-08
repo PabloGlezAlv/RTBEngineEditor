@@ -3,6 +3,7 @@
 #include <RTBEngine/Core/Event.h>
 #include <RTBEngine/ECS/Component.h>
 #include <RTBEngine/Online/IOnlineLobby.h>
+#include <RTBEngine/Online/OnlineTypes.h>
 #include <RTBEngine/Reflection/PropertyMacros.h>
 
 #include <string>
@@ -37,6 +38,7 @@ public:
     std::string joinLobbyId;
     int maxMembers = 6;
     bool autoLoginOnStart = true;
+    bool useRelayLobby = true;
 
     RTB_COMPONENT(LobbyMenuController)
 
@@ -80,4 +82,7 @@ private:
     void FinishLobby();
     void StartGame();
     void SetStatus(const std::string& message);
+
+    RTBEngine::Online::OnlineBackendType GetSelectedLobbyBackend() const;
+    RTBEngine::Online::IOnlineLobby* GetSessionLobby() const;
 };

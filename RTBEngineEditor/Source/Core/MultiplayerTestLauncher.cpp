@@ -54,6 +54,17 @@ namespace {
         }
     }
 
+    std::string SerializeBackendType(RTBEngine::Online::OnlineBackendType backendType)
+    {
+        switch (backendType) {
+        case RTBEngine::Online::OnlineBackendType::RelayOnline:
+            return "Relay";
+        case RTBEngine::Online::OnlineBackendType::Lan:
+        default:
+            return "LAN";
+        }
+    }
+
     constexpr const char* kDefaultOnlineProductName = "RTBEngine";
     constexpr const char* kDefaultOnlineProductVersion = "0.1.0";
 
@@ -584,8 +595,10 @@ namespace RTBEditor {
         cfgFile << "IsServer=false\n";
         cfgFile << "CacheDirectory=" << cacheDirectory << "\n";
         cfgFile << "TickBudgetMilliseconds=0\n";
+        cfgFile << "BackendType=" << SerializeBackendType(editorOnlineSettings.backendType) << "\n";
         cfgFile << "LanGamePort=" << lanGamePort << "\n";
         cfgFile << "LanDiscoveryPort=" << lanDiscoveryPort << "\n";
+        cfgFile << "RelayMatchmakingUrl=" << editorOnlineSettings.relayMatchmakingUrl << "\n";
         cfgFile << "LoginType=" << SerializeLoginType(RTBEngine::Online::OnlineLoginType::DeviceId) << "\n";
         cfgFile << "LoginDisplayName=" << loginDisplayName << "\n";
 

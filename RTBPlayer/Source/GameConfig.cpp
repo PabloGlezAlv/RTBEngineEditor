@@ -1,5 +1,6 @@
 #include "GameConfig.h"
 #include <RTBEngine/Core/Logger.h>
+#include <RTBEngine/Online/OnlineTypes.h>
 #include <cstdint>
 #include <fstream>
 #include <sstream>
@@ -14,6 +15,15 @@ namespace {
     RTBEngine::Online::OnlineLoginType ParseLoginType(const std::string& value)
     {
         return RTBEngine::Online::OnlineLoginType::DeviceId;
+    }
+
+    RTBEngine::Online::OnlineBackendType ParseBackendType(const std::string& value)
+    {
+        if (value == "Relay") {
+            return RTBEngine::Online::OnlineBackendType::RelayOnline;
+        }
+
+        return RTBEngine::Online::OnlineBackendType::Lan;
     }
 
     std::uint32_t ParseUInt32(const std::string& value)
@@ -89,8 +99,10 @@ namespace RTBPlayer {
                     else if (key == "IsServer") onlineConfig.isServer = ParseBool(value);
                     else if (key == "CacheDirectory") onlineConfig.cacheDirectory = value;
                     else if (key == "TickBudgetMilliseconds") onlineConfig.tickBudgetMilliseconds = ParseUInt32(value);
+                    else if (key == "BackendType") onlineConfig.backendType = ParseBackendType(value);
                     else if (key == "LanGamePort") onlineConfig.lanGamePort = ParsePort(value, onlineConfig.lanGamePort);
                     else if (key == "LanDiscoveryPort") onlineConfig.lanDiscoveryPort = ParsePort(value, onlineConfig.lanDiscoveryPort);
+                    else if (key == "RelayMatchmakingUrl") onlineConfig.relayMatchmakingUrl = value;
                     else if (key == "LoginType") onlineConfig.loginType = ParseLoginType(value);
                     else if (key == "LoginDisplayName") onlineConfig.loginDisplayName = value;
                 }

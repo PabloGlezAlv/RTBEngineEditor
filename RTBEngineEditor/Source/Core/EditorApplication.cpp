@@ -1,4 +1,5 @@
 #include "EditorApplication.h"
+#include "EditorOnlineSettings.h"
 #include <imgui.h>
 #include <GL/glew.h>
 #include <filesystem>
@@ -88,6 +89,13 @@ namespace RTBEditor {
         
         if (!engineApp->Initialize()) {
             return false;
+        }
+
+        {
+            const EditorOnlineSettings onlineSettings = EditorOnlineSettingsStore::Load();
+            if (!EditorOnlineSettingsStore::ApplyAndInitializeOnline(onlineSettings)) {
+                RTB_WARN("EditorApplication: failed to apply online settings from disk.");
+            }
         }
 
         engineApp->SetIsRunning(true);

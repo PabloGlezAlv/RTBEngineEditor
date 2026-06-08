@@ -221,7 +221,25 @@ RTB_REGISTER_COMPONENT(LobbyMenuController)
     RTB_PROPERTY(joinLobbyId)
     RTB_PROPERTY_RANGE(maxMembers, 2, 6)
     RTB_PROPERTY(autoLoginOnStart)
+    RTB_PROPERTY(useRelayLobby)
 RTB_END_REGISTER(LobbyMenuController)
+
+RTBEngine::Online::OnlineBackendType LobbyMenuController::GetSelectedLobbyBackend() const
+{
+    RTBEngine::Online::OnlineSystem& online = RTBEngine::Online::OnlineSystem::GetInstance();
+    if (online.IsInLobby()) {
+        return online.GetActiveLobbyBackend();
+    }
+
+    return useRelayLobby
+        ? RTBEngine::Online::OnlineBackendType::RelayOnline
+        : RTBEngine::Online::OnlineBackendType::Lan;
+}
+
+RTBEngine::Online::IOnlineLobby* LobbyMenuController::GetSessionLobby() const
+{
+    return RTBEngine::Online::OnlineSystem::GetInstance().GetLobby(GetSelectedLobbyBackend());
+}
 
 void LobbyMenuController::OnStart()
 {
@@ -311,8 +329,7 @@ void LobbyMenuController::SubscribeLobbyEvents()
 {
     memberJoinedSubscription.Reset();
 
-    RTBEngine::Online::IOnlineLobby* lobby =
-        RTBEngine::Online::OnlineSystem::GetInstance().GetLobby();
+    RTBEngine::Online::IOnlineLobby* lobby = GetSessionLobby();
     if (!lobby) {
         return;
     }
@@ -381,8 +398,7 @@ std::string LobbyMenuController::GetLocalDisplayName() const
 
 void LobbyMenuController::DetectLobbyEvents()
 {
-    RTBEngine::Online::IOnlineLobby* lobby =
-        RTBEngine::Online::OnlineSystem::GetInstance().GetLobby();
+    RTBEngine::Online::IOnlineLobby* lobby = GetSessionLobby();
     if (!lobby) {
         previousLobbyState = RTBEngine::Online::OnlineLobbyState::NotInLobby;
         return;
@@ -394,6 +410,8 @@ void LobbyMenuController::DetectLobbyEvents()
 
     if (currentState == RTBEngine::Online::OnlineLobbyState::InLobby && hasLobby) {
         if (previousLobbyState != RTBEngine::Online::OnlineLobbyState::InLobby) {
+            SubscribeLobbyEvents();
+
             if (currentLobby.isOwner && !loggedCreateEvent) {
                 AppendEventLog(GetLocalDisplayName() + " has created the lobby");
                 loggedCreateEvent = true;
@@ -419,7 +437,7 @@ void LobbyMenuController::DetectLobbyEvents()
 void LobbyMenuController::RefreshView()
 {
     RTBEngine::Online::OnlineSystem& online = RTBEngine::Online::OnlineSystem::GetInstance();
-    RTBEngine::Online::IOnlineLobby* lobby = online.GetLobby();
+    RTBEngine::Online::IOnlineLobby* lobby = GetSessionLobby();
 
     DetectLobbyEvents();
 
@@ -470,9 +488,10 @@ void LobbyMenuController::RefreshButtonState()
 {
     RTBEngine::Online::OnlineSystem& online = RTBEngine::Online::OnlineSystem::GetInstance();
     RTBEngine::Online::IOnlineIdentity* identity = online.GetIdentity();
-    RTBEngine::Online::IOnlineLobby* lobby = online.GetLobby();
+    RTBEngine::Online::IOnlineLobby* lobby = GetSessionLobby();
 
-    const bool onlineReady = online.IsInitialized() && identity && lobby;
+    const bool onlineReady = online.IsInitialized() && identity && lobby &&
+        online.IsLobbyBackendReady(GetSelectedLobbyBackend());
     const bool loggedIn = identity && identity->IsLoggedIn();
     const bool loginInProgress = identity &&
         identity->GetLoginStatus() == RTBEngine::Online::OnlineLoginStatus::LoggingIn;
@@ -525,8 +544,20 @@ void LobbyMenuController::TryAutoLogin()
 bool LobbyMenuController::EnsureOnlineReady()
 {
     RTBEngine::Online::OnlineSystem& online = RTBEngine::Online::OnlineSystem::GetInstance();
-    if (!online.IsInitialized() || !online.GetIdentity() || !online.GetLobby()) {
+    if (!online.IsInitialized() || !online.GetIdentity()) {
         SetStatus("Online is not initialized. Enable Online in the editor settings first.");
+        return false;
+    }
+
+    if (!online.IsLobbyBackendReady(GetSelectedLobbyBackend())) {
+        SetStatus(useRelayLobby
+            ? "Relay lobby is not configured. Set the relay matchmaking URL in Online settings."
+            : "LAN lobby is not available.");
+        return false;
+    }
+
+    if (!GetSessionLobby()) {
+        SetStatus("Lobby interface is not available for the selected backend.");
         return false;
     }
 
@@ -588,8 +619,7 @@ void LobbyMenuController::ExecutePendingActionIfReady()
 
 void LobbyMenuController::CaptureJoinLobbyIdInput()
 {
-    RTBEngine::Online::IOnlineLobby* lobby =
-        RTBEngine::Online::OnlineSystem::GetInstance().GetLobby();
+    RTBEngine::Online::IOnlineLobby* lobby = GetSessionLobby();
     if (lobby && !lobby->GetCurrentLobby().lobbyId.empty()) {
         return;
     }
@@ -688,8 +718,7 @@ void LobbyMenuController::CreateLobby()
         return;
     }
 
-    RTBEngine::Online::IOnlineLobby* lobby =
-        RTBEngine::Online::OnlineSystem::GetInstance().GetLobby();
+    RTBEngine::Online::IOnlineLobby* lobby = GetSessionLobby();
     if (!lobby) {
         SetStatus("Lobby interface is not available.");
         return;
@@ -717,8 +746,7 @@ void LobbyMenuController::JoinLobby()
         return;
     }
 
-    RTBEngine::Online::IOnlineLobby* lobby =
-        RTBEngine::Online::OnlineSystem::GetInstance().GetLobby();
+    RTBEngine::Online::IOnlineLobby* lobby = GetSessionLobby();
     if (!lobby) {
         SetStatus("Lobby interface is not available.");
         return;
@@ -733,8 +761,7 @@ void LobbyMenuController::JoinLobby()
 
 void LobbyMenuController::CopyLobbyId()
 {
-    RTBEngine::Online::IOnlineLobby* lobby =
-        RTBEngine::Online::OnlineSystem::GetInstance().GetLobby();
+    RTBEngine::Online::IOnlineLobby* lobby = GetSessionLobby();
     if (!lobby || lobby->GetCurrentLobby().lobbyId.empty()) {
         SetStatus("There is no active Lobby ID to copy.");
         return;
@@ -755,8 +782,7 @@ void LobbyMenuController::FinishLobby()
         return;
     }
 
-    RTBEngine::Online::IOnlineLobby* lobby =
-        RTBEngine::Online::OnlineSystem::GetInstance().GetLobby();
+    RTBEngine::Online::IOnlineLobby* lobby = GetSessionLobby();
     if (!lobby || lobby->GetCurrentLobby().lobbyId.empty()) {
         SetStatus("There is no active lobby to finish.");
         return;
@@ -780,8 +806,7 @@ void LobbyMenuController::StartGame()
         return;
     }
 
-    RTBEngine::Online::IOnlineLobby* lobby =
-        RTBEngine::Online::OnlineSystem::GetInstance().GetLobby();
+    RTBEngine::Online::IOnlineLobby* lobby = GetSessionLobby();
     if (!lobby || lobby->GetCurrentLobby().lobbyId.empty()) {
         SetStatus("Create or join a lobby before starting the game.");
         return;
