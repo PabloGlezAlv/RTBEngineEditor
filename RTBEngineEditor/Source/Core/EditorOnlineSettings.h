@@ -12,12 +12,9 @@ namespace RTBEditor {
 #pragma warning(disable: 4251)
     struct EditorOnlineSettings {
         bool enabled = true;
-        RTBEngine::Online::OnlineBackendType backendType = RTBEngine::Online::OnlineBackendType::RelayOnline;
         std::uint16_t lanGamePort = 27015;
         std::uint16_t lanDiscoveryPort = 27016;
-        std::string defaultHostAddress;
         std::string relayMatchmakingUrl = "http://localhost:8080/api/v1";
-        std::string loginDisplayName;
         std::string defaultStartScene = "Assets/Scenes/MainMenu.lua";
     };
 #pragma warning(pop)

@@ -95,33 +95,6 @@ namespace {
         }
     }
 
-    RTBEngine::Online::OnlineBackendType ParseBackendType(
-        const std::string& value,
-        RTBEngine::Online::OnlineBackendType defaultValue)
-    {
-        const std::string normalized = ToUpper(Trim(value));
-        if (normalized == "RELAY") {
-            return RTBEngine::Online::OnlineBackendType::RelayOnline;
-        }
-
-        if (normalized == "LAN") {
-            return RTBEngine::Online::OnlineBackendType::Lan;
-        }
-
-        return defaultValue;
-    }
-
-    const char* SerializeBackendType(RTBEngine::Online::OnlineBackendType backendType)
-    {
-        switch (backendType) {
-        case RTBEngine::Online::OnlineBackendType::RelayOnline:
-            return "Relay";
-        case RTBEngine::Online::OnlineBackendType::Lan:
-        default:
-            return "LAN";
-        }
-    }
-
     std::uint16_t ParsePort(const std::string& value, std::uint16_t defaultValue)
     {
         if (value.empty()) {
@@ -186,15 +159,12 @@ namespace RTBEditor {
         };
 
         settings.enabled = ParseBool(readValue("Enabled"), settings.enabled);
-        settings.backendType = ParseBackendType(readValue("BackendType"), settings.backendType);
         settings.lanGamePort = ParsePort(readValue("LanGamePort"), settings.lanGamePort);
         settings.lanDiscoveryPort = ParsePort(readValue("LanDiscoveryPort"), settings.lanDiscoveryPort);
-        settings.defaultHostAddress = readValue("DefaultHostAddress");
         settings.relayMatchmakingUrl = readValue("RelayMatchmakingUrl");
         if (settings.relayMatchmakingUrl.empty()) {
             settings.relayMatchmakingUrl = "http://localhost:8080/api/v1";
         }
-        settings.loginDisplayName = readValue("LoginDisplayName");
         settings.defaultStartScene = readValue("DefaultStartScene");
         if (settings.defaultStartScene.empty()) {
             settings.defaultStartScene = "Assets/Scenes/MainMenu.lua";
@@ -219,12 +189,9 @@ namespace RTBEditor {
 
         file << "# RTBEngineEditor local online settings\n";
         file << "Enabled=" << (settings.enabled ? "true" : "false") << "\n";
-        file << "BackendType=" << SerializeBackendType(settings.backendType) << "\n";
         file << "LanGamePort=" << settings.lanGamePort << "\n";
         file << "LanDiscoveryPort=" << settings.lanDiscoveryPort << "\n";
-        file << "DefaultHostAddress=" << settings.defaultHostAddress << "\n";
         file << "RelayMatchmakingUrl=" << settings.relayMatchmakingUrl << "\n";
-        file << "LoginDisplayName=" << settings.loginDisplayName << "\n";
         file << "DefaultStartScene=" << settings.defaultStartScene << "\n";
 
         return file.good();
@@ -236,13 +203,13 @@ namespace RTBEditor {
         config.enabled = settings.enabled;
         config.failApplicationOnError = false;
         config.loadingInEditor = true;
-        config.backendType = settings.backendType;
+        config.backendType = RTBEngine::Online::OnlineBackendType::Lan;
         config.lanGamePort = settings.lanGamePort;
         config.lanDiscoveryPort = settings.lanDiscoveryPort;
-        config.defaultHostAddress = settings.defaultHostAddress;
+        config.defaultHostAddress.clear();
         config.relayMatchmakingUrl = settings.relayMatchmakingUrl;
         config.loginType = RTBEngine::Online::OnlineLoginType::DeviceId;
-        config.loginDisplayName = settings.loginDisplayName;
+        config.loginDisplayName.clear();
     }
 
     RTBEngine::Online::OnlineEditorSettingsPayload EditorOnlineSettingsStore::BuildPayload(
@@ -250,7 +217,7 @@ namespace RTBEditor {
     {
         RTBEngine::Online::OnlineEditorSettingsPayload payload{};
         payload.enabled = settings.enabled;
-        payload.backendType = RTBEngine::Online::IsRelayBackend(settings.backendType) ? 1 : 0;
+        payload.backendType = 0;
         payload.lanGamePort = settings.lanGamePort;
         payload.lanDiscoveryPort = settings.lanDiscoveryPort;
 
@@ -263,8 +230,8 @@ namespace RTBEditor {
         };
 
         copyToBuffer(payload.relayMatchmakingUrl, sizeof(payload.relayMatchmakingUrl), settings.relayMatchmakingUrl);
-        copyToBuffer(payload.defaultHostAddress, sizeof(payload.defaultHostAddress), settings.defaultHostAddress);
-        copyToBuffer(payload.loginDisplayName, sizeof(payload.loginDisplayName), settings.loginDisplayName);
+        payload.defaultHostAddress[0] = '\0';
+        payload.loginDisplayName[0] = '\0';
         return payload;
     }
 

@@ -19,7 +19,9 @@ public:
 
     RTBEngine::UI::UIInputField* playerNameInput = nullptr;
     RTBEngine::UI::UIButton* playButton = nullptr;
-    std::string lobbyScenePath = "Assets/Scenes/LobbyScene.lua";
+    RTBEngine::UI::UIButton* multiplayerButton = nullptr;
+    std::string gameScenePath = "Assets/Scenes/DefaultScene.lua";
+    std::string multiplayerMenuScenePath = "Assets/Scenes/MultiplayerMenu.lua";
 
     RTB_COMPONENT(MainMenuController)
 
@@ -30,5 +32,7 @@ private:
     bool callbacksBound = false;
 
     void BindButtons();
-    void GoToLobby();
+    void ApplyPlayerName();
+    void GoToGame();
+    void GoToMultiplayer();
 };

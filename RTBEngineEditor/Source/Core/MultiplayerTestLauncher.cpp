@@ -54,17 +54,6 @@ namespace {
         }
     }
 
-    std::string SerializeBackendType(RTBEngine::Online::OnlineBackendType backendType)
-    {
-        switch (backendType) {
-        case RTBEngine::Online::OnlineBackendType::RelayOnline:
-            return "Relay";
-        case RTBEngine::Online::OnlineBackendType::Lan:
-        default:
-            return "LAN";
-        }
-    }
-
     constexpr const char* kDefaultOnlineProductName = "RTBEngine";
     constexpr const char* kDefaultOnlineProductVersion = "0.1.0";
 
@@ -563,8 +552,7 @@ namespace RTBEditor {
             ? settings.onlineSettings
             : EditorOnlineSettingsStore::Load();
         const std::string cacheDirectory = (playerDirectory / "OnlineCache").string();
-        const std::string loginDisplayName =
-            ResolveIndexedPlayerValue(editorOnlineSettings.loginDisplayName, playerIndex, "Player");
+        const std::string loginDisplayName = "Player" + std::to_string(playerIndex);
         const std::uint16_t lanGamePort = static_cast<std::uint16_t>(27015 + playerIndex * 2);
         const std::uint16_t lanDiscoveryPort = editorOnlineSettings.lanDiscoveryPort;
         std::ofstream cfgFile(playerDirectory / "game.cfg", std::ios::trunc);
@@ -595,7 +583,7 @@ namespace RTBEditor {
         cfgFile << "IsServer=false\n";
         cfgFile << "CacheDirectory=" << cacheDirectory << "\n";
         cfgFile << "TickBudgetMilliseconds=0\n";
-        cfgFile << "BackendType=" << SerializeBackendType(editorOnlineSettings.backendType) << "\n";
+        cfgFile << "BackendType=LAN\n";
         cfgFile << "LanGamePort=" << lanGamePort << "\n";
         cfgFile << "LanDiscoveryPort=" << lanDiscoveryPort << "\n";
         cfgFile << "RelayMatchmakingUrl=" << editorOnlineSettings.relayMatchmakingUrl << "\n";

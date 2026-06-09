@@ -330,8 +330,9 @@ namespace RTBEditor {
             cfgFile << "TickBudgetMilliseconds=0\n";
             cfgFile << "LanGamePort=" << editorOnlineSettings.lanGamePort << "\n";
             cfgFile << "LanDiscoveryPort=" << editorOnlineSettings.lanDiscoveryPort << "\n";
+            cfgFile << "RelayMatchmakingUrl=" << editorOnlineSettings.relayMatchmakingUrl << "\n";
+            cfgFile << "BackendType=LAN\n";
             cfgFile << "LoginType=" << SerializeLoginType(RTBEngine::Online::OnlineLoginType::DeviceId) << "\n";
-            cfgFile << "LoginDisplayName=" << editorOnlineSettings.loginDisplayName << "\n";
 
             cfgFile.close();
             return true;

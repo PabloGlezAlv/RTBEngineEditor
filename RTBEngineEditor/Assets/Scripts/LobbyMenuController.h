@@ -21,6 +21,7 @@ public:
     LobbyMenuController() = default;
     ~LobbyMenuController() override = default;
 
+    RTBEngine::UI::UIText* titleText = nullptr;
     RTBEngine::UI::UIText* statusText = nullptr;
     RTBEngine::UI::UIText* lobbyIdText = nullptr;
     RTBEngine::UI::UIText* playerCountText = nullptr;
@@ -32,13 +33,14 @@ public:
     RTBEngine::UI::UIButton* copyLobbyIdButton = nullptr;
     RTBEngine::UI::UIButton* finishButton = nullptr;
     RTBEngine::UI::UIButton* startGameButton = nullptr;
+    RTBEngine::UI::UIButton* backButton = nullptr;
 
     std::string gameScenePath = "Assets/Scenes/DefaultScene.lua";
+    std::string multiplayerMenuScenePath = "Assets/Scenes/MultiplayerMenu.lua";
     std::string lobbyBucketId = "RTBEngine";
     std::string joinLobbyId;
     int maxMembers = 6;
     bool autoLoginOnStart = true;
-    bool useRelayLobby = true;
 
     RTB_COMPONENT(LobbyMenuController)
 
@@ -80,8 +82,11 @@ private:
     void JoinLobby();
     void CopyLobbyId();
     void FinishLobby();
+    void GoBack();
     void StartGame();
     void SetStatus(const std::string& message);
+    bool LeaveActiveLobby();
+    bool UsesRelayLobby() const;
 
     RTBEngine::Online::OnlineBackendType GetSelectedLobbyBackend() const;
     RTBEngine::Online::IOnlineLobby* GetSessionLobby() const;

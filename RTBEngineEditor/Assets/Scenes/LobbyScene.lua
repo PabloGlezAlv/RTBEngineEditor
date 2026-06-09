@@ -56,6 +56,7 @@ function CreateScene()
                     },
                     {
                         type = "LobbyMenuController",
+                        titleText = "F41A6476-1872-40AD-859F-5FB733994001/UIText",
                         statusText = "C2786523-71A6-4329-AC85-55D5A5CB4001/UIText",
                         lobbyIdText = "E6727C41-8D17-45C9-9A26-A1D133A94001/UIText",
                         playerCountText = "2D0F2F5B-8CF3-45C2-9918-B4D177294001/UIText",
@@ -66,7 +67,9 @@ function CreateScene()
                         copyLobbyIdButton = "D37CC43E-2B4F-42A1-A91F-E0830D7C4001/UIButton",
                         finishButton = "B46F861C-FEA4-47B8-A8D6-BAB71A784001/UIButton",
                         startGameButton = "B031EEDB-A10E-42A7-845B-C5B673134001/UIButton",
+                        backButton = "85E511F8-8200-4182-80CE-2457439E4001/UIButton",
                         gameScenePath = "Assets/Scenes/DefaultScene.lua",
+                        multiplayerMenuScenePath = "Assets/Scenes/MultiplayerMenu.lua",
                         lobbyBucketId = "RTBEngine",
                         joinLobbyId = "",
                         maxMembers = 6,
@@ -815,10 +818,6 @@ function CreateScene()
                                         hoverOutTimeSec = 0.18,
                                         pressInTimeSec = 0.08,
                                         pressOutTimeSec = 0.12
-                                    },
-                                    {
-                                        type = "SceneChangeButton",
-                                        scenePath = "Assets/Scenes/MainMenu.lua"
                                     },
                                 },
                                 children = {

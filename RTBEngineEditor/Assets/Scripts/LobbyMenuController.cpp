@@ -206,6 +206,7 @@ namespace {
 }
 
 RTB_REGISTER_COMPONENT(LobbyMenuController)
+    RTB_PROPERTY_COMPONENT(titleText, UIText)
     RTB_PROPERTY_COMPONENT(statusText, UIText)
     RTB_PROPERTY_COMPONENT(lobbyIdText, UIText)
     RTB_PROPERTY_COMPONENT(playerCountText, UIText)
@@ -216,24 +217,23 @@ RTB_REGISTER_COMPONENT(LobbyMenuController)
     RTB_PROPERTY_COMPONENT(copyLobbyIdButton, UIButton)
     RTB_PROPERTY_COMPONENT(finishButton, UIButton)
     RTB_PROPERTY_COMPONENT(startGameButton, UIButton)
+    RTB_PROPERTY_COMPONENT(backButton, UIButton)
     RTB_PROPERTY_ASSET_PATH(gameScenePath, "lua")
+    RTB_PROPERTY_ASSET_PATH(multiplayerMenuScenePath, "lua")
     RTB_PROPERTY(lobbyBucketId)
     RTB_PROPERTY(joinLobbyId)
     RTB_PROPERTY_RANGE(maxMembers, 2, 6)
     RTB_PROPERTY(autoLoginOnStart)
-    RTB_PROPERTY(useRelayLobby)
 RTB_END_REGISTER(LobbyMenuController)
+
+bool LobbyMenuController::UsesRelayLobby() const
+{
+    return GetSelectedLobbyBackend() == RTBEngine::Online::OnlineBackendType::RelayOnline;
+}
 
 RTBEngine::Online::OnlineBackendType LobbyMenuController::GetSelectedLobbyBackend() const
 {
-    RTBEngine::Online::OnlineSystem& online = RTBEngine::Online::OnlineSystem::GetInstance();
-    if (online.IsInLobby()) {
-        return online.GetActiveLobbyBackend();
-    }
-
-    return useRelayLobby
-        ? RTBEngine::Online::OnlineBackendType::RelayOnline
-        : RTBEngine::Online::OnlineBackendType::Lan;
+    return RTBEngine::Online::OnlineSystem::GetInstance().GetActiveLobbyBackend();
 }
 
 RTBEngine::Online::IOnlineLobby* LobbyMenuController::GetSessionLobby() const
@@ -283,6 +283,8 @@ void LobbyMenuController::OnDestroy()
     copyLobbyIdButton = nullptr;
     finishButton = nullptr;
     startGameButton = nullptr;
+    backButton = nullptr;
+    titleText = nullptr;
     statusText = nullptr;
     lobbyIdText = nullptr;
     playerCountText = nullptr;
@@ -320,6 +322,10 @@ void LobbyMenuController::BindButtons()
 
     if (startGameButton) {
         startGameButton->SetOnClick([this]() { StartGame(); });
+    }
+
+    if (backButton) {
+        backButton->SetOnClick([this]() { GoBack(); });
     }
 
     callbacksBound = true;
@@ -445,6 +451,10 @@ void LobbyMenuController::RefreshView()
         ? "Choose how to enter the lobby."
         : lastActionMessage;
 
+    if (titleText) {
+        titleText->SetText(UsesRelayLobby() ? "Online Lobby" : "LAN Lobby");
+    }
+
     if (statusText) {
         statusText->SetText(status);
     }
@@ -550,7 +560,7 @@ bool LobbyMenuController::EnsureOnlineReady()
     }
 
     if (!online.IsLobbyBackendReady(GetSelectedLobbyBackend())) {
-        SetStatus(useRelayLobby
+        SetStatus(UsesRelayLobby()
             ? "Relay lobby is not configured. Set the relay matchmaking URL in Online settings."
             : "LAN lobby is not available.");
         return false;
@@ -776,6 +786,21 @@ void LobbyMenuController::CopyLobbyId()
     SetStatus("Lobby ID copied to clipboard: " + lobbyId);
 }
 
+bool LobbyMenuController::LeaveActiveLobby()
+{
+    RTBEngine::Online::IOnlineLobby* lobby = GetSessionLobby();
+    if (!lobby || lobby->GetCurrentLobby().lobbyId.empty()) {
+        return true;
+    }
+
+    const RTBEngine::Online::OnlineResult result = lobby->GetCurrentLobby().isOwner
+        ? lobby->DestroyLobby()
+        : lobby->LeaveLobby();
+    GameNet::OnlineGameNetSubsystem::Shutdown();
+    lastActionMessage = FormatResult(result);
+    return result.success;
+}
+
 void LobbyMenuController::FinishLobby()
 {
     if (!EnsureOnlineReady()) {
@@ -788,11 +813,31 @@ void LobbyMenuController::FinishLobby()
         return;
     }
 
-    const RTBEngine::Online::OnlineResult result = lobby->GetCurrentLobby().isOwner
-        ? lobby->DestroyLobby()
-        : lobby->LeaveLobby();
-    GameNet::OnlineGameNetSubsystem::Shutdown();
-    SetStatus(FormatResult(result));
+    if (!LeaveActiveLobby()) {
+        SetStatus(lastActionMessage.empty() ? "Failed to leave the lobby." : lastActionMessage);
+        return;
+    }
+
+    SetStatus(lastActionMessage);
+}
+
+void LobbyMenuController::GoBack()
+{
+    if (backButton && !backButton->IsInteractable()) {
+        return;
+    }
+
+    if (RTBEngine::Online::OnlineSystem::GetInstance().IsInitialized()) {
+        LeaveActiveLobby();
+    }
+
+    if (multiplayerMenuScenePath.empty()) {
+        RTB_WARN("LobbyMenuController: multiplayerMenuScenePath is empty.");
+        return;
+    }
+
+    RTBEngine::Core::Time::SetPaused(false);
+    RTBEngine::ECS::SceneManager::GetInstance().RequestSceneLoad(multiplayerMenuScenePath.c_str());
 }
 
 void LobbyMenuController::StartGame()
