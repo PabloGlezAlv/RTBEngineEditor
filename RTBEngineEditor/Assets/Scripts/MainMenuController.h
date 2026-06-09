@@ -9,6 +9,7 @@ namespace RTBEngine {
     namespace UI {
         class UIButton;
         class UIInputField;
+        class UIText;
     }
 }
 
@@ -20,6 +21,7 @@ public:
     RTBEngine::UI::UIInputField* playerNameInput = nullptr;
     RTBEngine::UI::UIButton* playButton = nullptr;
     RTBEngine::UI::UIButton* multiplayerButton = nullptr;
+    RTBEngine::UI::UIText* statusMessageText = nullptr;
     std::string gameScenePath = "Assets/Scenes/DefaultScene.lua";
     std::string multiplayerMenuScenePath = "Assets/Scenes/MultiplayerMenu.lua";
 
@@ -32,6 +34,7 @@ private:
     bool callbacksBound = false;
 
     void BindButtons();
+    void ApplyPendingStatusMessage();
     void ApplyPlayerName();
     void GoToGame();
     void GoToMultiplayer();

@@ -112,6 +112,15 @@ namespace GameNet {
 
         static bool BroadcastEnemyAttack(const EnemyAttackSnapshot& snapshot);
         static void ApplyEnemyAttack(std::uint32_t networkId, std::uint32_t attackSequence);
+
+        static void ApplyPlayerDespawnForSlot(int playerSlot);
+        static void HostNotifyPlayerDisconnected(int playerSlot, const std::string& displayName);
+        static void DetectAndDespawnDisconnectedPlayers();
+
+        static void RequestExitMatch(const char* mainMenuScenePath);
+        static bool TryConsumePendingMainMenuMessage(std::string& outMessage);
+        static void TickMatchNotifications(float deltaTime);
+        static bool TryGetActiveMatchNotification(std::string& outMessage, float& outSecondsRemaining);
     };
 
 }

@@ -22,6 +22,8 @@
 #include <RTBEngine/Math/Vectors/Vector3.h>
 #include <RTBEngine/Physics/RigidBody.h>
 
+#include <algorithm>
+
 using ThisClass = OnlinePlayerManager;
 
 namespace {
@@ -136,6 +138,7 @@ void OnlinePlayerManager::OnUpdate(float deltaTime)
 
     ProcessPlayerNetworkBinds();
     ProcessNetworkRoundEvents();
+    GameNet::OnlineGameNetSubsystem::DetectAndDespawnDisconnectedPlayers();
 
     if (!RTBEngine::Online::OnlineGameplayNet::IsLobbyHost() ||
         (authoritativePlayerBinds.empty() && authoritativePlayerSessionProfiles.empty())) {
@@ -347,4 +350,31 @@ RTBEngine::ECS::GameObject* OnlinePlayerManager::SpawnRemotePawn(
     spawnedPawn->SetName(playerSlot == 0 ? "Remote Host Player" : "Remote Client Player");
     ConfigurePawn(spawnedPawn, ownerUserId, playerSlot);
     return spawnedPawn;
+}
+
+void OnlinePlayerManager::RemovePawnFromTracking(RTBEngine::ECS::GameObject* pawn, int playerSlot)
+{
+    if (pawn) {
+        spawnedRemotePawns.erase(
+            std::remove(spawnedRemotePawns.begin(), spawnedRemotePawns.end(), pawn),
+            spawnedRemotePawns.end());
+    }
+
+    authoritativePlayerBinds.erase(
+        std::remove_if(
+            authoritativePlayerBinds.begin(),
+            authoritativePlayerBinds.end(),
+            [playerSlot](const GameNet::PlayerNetworkBindSnapshot& bind) {
+                return bind.playerSlot == playerSlot;
+            }),
+        authoritativePlayerBinds.end());
+
+    authoritativePlayerSessionProfiles.erase(
+        std::remove_if(
+            authoritativePlayerSessionProfiles.begin(),
+            authoritativePlayerSessionProfiles.end(),
+            [playerSlot](const GameNet::PlayerSessionSnapshot& profile) {
+                return profile.playerSlot == playerSlot;
+            }),
+        authoritativePlayerSessionProfiles.end());
 }

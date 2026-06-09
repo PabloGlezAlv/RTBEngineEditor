@@ -27,6 +27,8 @@ public:
     void OnDestroy() override;
     void OnFixedUpdate(float fixedDeltaTime) override;
 
+    void RemovePawnFromTracking(RTBEngine::ECS::GameObject* pawn, int playerSlot);
+
 private:
     std::unique_ptr<RTBEngine::ECS::Prefab> playerPrefab;
     std::vector<RTBEngine::ECS::GameObject*> spawnedRemotePawns;

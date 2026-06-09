@@ -137,7 +137,10 @@ namespace RTBEditor {
             const float displayHeight = static_cast<float>(viewportHeight);
             const bool mouseInViewport = mousePos.x >= displayOrigin.x && mousePos.x <= displayOrigin.x + displayWidth
                                       && mousePos.y >= displayOrigin.y && mousePos.y <= displayOrigin.y + displayHeight;
-            if (mouseInViewport && context.state == EditorState::Play && !IsGameOwningMouse(context)) {
+            const bool mouseReleasedForUi =
+                context.window != nullptr && !context.window->IsMouseCaptured();
+            const bool routeUiInput = !IsGameOwningMouse(context) || mouseReleasedForUi;
+            if (mouseInViewport && context.state == EditorState::Play && routeUiInput) {
                 RTBEngine::Math::Vector2 localMouse(
                     (mousePos.x - displayOrigin.x) / displayScale,
                     (mousePos.y - displayOrigin.y) / displayScale

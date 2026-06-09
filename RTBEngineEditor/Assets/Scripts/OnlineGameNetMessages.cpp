@@ -3,12 +3,15 @@
 #include "EnemyMeleeAI.h"
 #include "HealthComponent.h"
 #include "OnlineDisplayNameHelper.h"
+#include "OnlinePlayerManager.h"
 #include "ThirdPersonCharacterController.h"
 
 #include <RTBEngine/ECS/NetworkIdentity.h>
 #include <RTBEngine/ECS/NetworkTransform.h>
 #include <RTBEngine/ECS/Scene.h>
 #include <RTBEngine/ECS/SceneManager.h>
+#include <RTBEngine/Core/Time.h>
+#include <RTBEngine/Online/IOnlineLobby.h>
 #include <RTBEngine/Online/OnlineGameplayNet.h>
 #include <RTBEngine/Online/OnlineMessageBus.h>
 #include <RTBEngine/Online/OnlineMessageCodec.h>
@@ -19,6 +22,7 @@
 #include <cmath>
 #include <deque>
 #include <unordered_map>
+#include <unordered_set>
 
 namespace GameNet {
 
@@ -31,6 +35,188 @@ namespace GameNet {
         std::deque<RoundStartSnapshot> pendingRoundStarts;
         std::deque<PlayerNetworkBindSnapshot> pendingPlayerNetworkBinds;
         std::unordered_map<int, float> lastBroadcastPlayerHealth;
+        std::string pendingMainMenuMessage;
+        std::string activeMatchNotification;
+        float matchNotificationSecondsRemaining = 0.0f;
+
+        constexpr float kMatchNotificationDuration = 5.0f;
+        constexpr char kMainMenuSceneFallback[] = "Assets/Scenes/MainMenu.lua";
+
+        void QueueMatchNotification(const std::string& message)
+        {
+            activeMatchNotification = message;
+            matchNotificationSecondsRemaining = kMatchNotificationDuration;
+        }
+
+        void SetPendingMainMenuMessage(const std::string& message)
+        {
+            pendingMainMenuMessage = message;
+        }
+
+        void LeaveActiveOnlineLobby()
+        {
+            RTBEngine::Online::OnlineSystem& online = RTBEngine::Online::OnlineSystem::GetInstance();
+            RTBEngine::Online::IOnlineLobby* lobby = online.GetLobby();
+            if (!lobby || lobby->GetCurrentLobby().lobbyId.empty()) {
+                return;
+            }
+
+            if (lobby->GetCurrentLobby().isOwner) {
+                lobby->DestroyLobby();
+            } else {
+                lobby->LeaveLobby();
+            }
+        }
+
+        void LoadMainMenuScene(const char* scenePath)
+        {
+            const char* targetScene = scenePath && scenePath[0] != '\0'
+                ? scenePath
+                : kMainMenuSceneFallback;
+            RTBEngine::Core::Time::SetPaused(false);
+            RTBEngine::ECS::SceneManager& sceneManager =
+                RTBEngine::ECS::SceneManager::GetInstance();
+            if (!sceneManager.RequestSceneLoad(targetScene)) {
+                sceneManager.LoadScene(targetScene);
+            }
+        }
+
+        OnlinePlayerManager* FindOnlinePlayerManager()
+        {
+            RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
+            if (!scene) {
+                return nullptr;
+            }
+
+            for (const auto& gameObject : scene->GetGameObjects()) {
+                if (!gameObject) {
+                    continue;
+                }
+
+                if (OnlinePlayerManager* manager = gameObject->GetComponent<OnlinePlayerManager>()) {
+                    return manager;
+                }
+            }
+
+            return nullptr;
+        }
+
+        int ResolvePlayerSlotForUser(const RTBEngine::Online::OnlineUserId& userId)
+        {
+            if (!userId.IsValid()) {
+                return -1;
+            }
+
+            RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
+            if (scene) {
+                const std::string userKey = userId.ToString();
+                for (const auto& gameObject : scene->GetGameObjects()) {
+                    if (!gameObject) {
+                        continue;
+                    }
+
+                    RTBEngine::ECS::NetworkIdentity* identity =
+                        gameObject->GetComponent<RTBEngine::ECS::NetworkIdentity>();
+                    if (!identity || identity->networkPlayerSlot < 0) {
+                        continue;
+                    }
+
+                    if (identity->networkOwnerUserId == userKey) {
+                        return identity->networkPlayerSlot;
+                    }
+                }
+            }
+
+            const std::vector<RTBEngine::Online::OnlineUserId> members =
+                RTBEngine::Online::OnlineGameplayNet::GetOrderedLobbyMembers();
+            for (std::size_t index = 0; index < members.size(); ++index) {
+                if (members[index] == userId) {
+                    return static_cast<int>(index);
+                }
+            }
+
+            return -1;
+        }
+
+        std::vector<std::uint8_t> BuildMatchPlayerLeftPayload(int playerSlot, const std::string& displayName)
+        {
+            std::vector<std::uint8_t> payload;
+            RTBEngine::Online::OnlineMessageCodec::AppendValue(payload, playerSlot);
+            RTBEngine::Online::OnlineMessageCodec::AppendString(payload, displayName);
+            return payload;
+        }
+
+        bool TryParseMatchPlayerLeftPayload(
+            const RTBEngine::Online::OnlineMessageContext& context,
+            int& outPlayerSlot,
+            std::string& outDisplayName)
+        {
+            std::size_t offset = 0;
+            if (!RTBEngine::Online::OnlineMessageCodec::ReadValue(
+                    context.payload,
+                    context.payloadSize,
+                    offset,
+                    outPlayerSlot)) {
+                return false;
+            }
+
+            if (!RTBEngine::Online::OnlineMessageCodec::ReadString(
+                    context.payload,
+                    context.payloadSize,
+                    offset,
+                    outDisplayName) ||
+                outDisplayName.empty()) {
+                outDisplayName = "Player";
+            }
+
+            return outPlayerSlot >= 0;
+        }
+
+        void HandlePlayerLeaveNotice(const RTBEngine::Online::OnlineMessageContext& context)
+        {
+            if (!RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
+                return;
+            }
+
+            std::size_t offset = 0;
+            std::string playerName;
+            if (!RTBEngine::Online::OnlineMessageCodec::ReadString(
+                    context.payload, context.payloadSize, offset, playerName) ||
+                playerName.empty()) {
+                playerName = "Player";
+            }
+
+            const int playerSlot = ResolvePlayerSlotForUser(context.senderUserId);
+            OnlineGameNetSubsystem::HostNotifyPlayerDisconnected(playerSlot, playerName);
+        }
+
+        void HandlePlayerLeft(const RTBEngine::Online::OnlineMessageContext& context)
+        {
+            if (RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
+                return;
+            }
+
+            int playerSlot = -1;
+            std::string playerName;
+            if (!TryParseMatchPlayerLeftPayload(context, playerSlot, playerName)) {
+                return;
+            }
+
+            OnlineGameNetSubsystem::ApplyPlayerDespawnForSlot(playerSlot);
+            QueueMatchNotification(playerName + " has left the game.");
+        }
+
+        void HandleHostAbandoned(const RTBEngine::Online::OnlineMessageContext& /*context*/)
+        {
+            if (RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
+                return;
+            }
+
+            SetPendingMainMenuMessage("The host abandoned the match.");
+            OnlineGameNetSubsystem::Shutdown();
+            LeaveActiveOnlineLobby();
+            LoadMainMenuScene(kMainMenuSceneFallback);
+        }
 
         std::vector<std::uint8_t> BuildEnemySpawnPayload(const EnemySpawnSnapshot& snapshot)
         {
@@ -468,6 +654,9 @@ namespace GameNet {
         RTBEngine::Online::OnlineMessageBus::RegisterHandler(kEnemyAttack, &HandleEnemyAttack);
         RTBEngine::Online::OnlineMessageBus::RegisterHandler(kPlayerHealthState, &HandlePlayerHealthState);
         RTBEngine::Online::OnlineMessageBus::RegisterHandler(kPlayerSessionSnapshot, &HandlePlayerSessionSnapshot);
+        RTBEngine::Online::OnlineMessageBus::RegisterHandler(kMatchPlayerLeaveNotice, &HandlePlayerLeaveNotice);
+        RTBEngine::Online::OnlineMessageBus::RegisterHandler(kMatchPlayerLeft, &HandlePlayerLeft);
+        RTBEngine::Online::OnlineMessageBus::RegisterHandler(kMatchHostAbandoned, &HandleHostAbandoned);
         subsystemInitialized = true;
     }
 
@@ -489,6 +678,12 @@ namespace GameNet {
         RTBEngine::Online::OnlineMessageBus::UnregisterHandler(kEnemyAttack);
         RTBEngine::Online::OnlineMessageBus::UnregisterHandler(kPlayerHealthState);
         RTBEngine::Online::OnlineMessageBus::UnregisterHandler(kPlayerSessionSnapshot);
+        RTBEngine::Online::OnlineMessageBus::UnregisterHandler(kMatchPlayerLeaveNotice);
+        RTBEngine::Online::OnlineMessageBus::UnregisterHandler(kMatchPlayerLeft);
+        RTBEngine::Online::OnlineMessageBus::UnregisterHandler(kMatchHostAbandoned);
+        pendingMainMenuMessage.clear();
+        activeMatchNotification.clear();
+        matchNotificationSecondsRemaining = 0.0f;
         latestCombatInputs.clear();
         pendingProjectileSpawns.clear();
         pendingEnemySpawns.clear();
@@ -909,6 +1104,194 @@ namespace GameNet {
         }
 
         meleeAI->PlayReplicatedAttack(attackSequence);
+    }
+
+    void OnlineGameNetSubsystem::ApplyPlayerDespawnForSlot(int playerSlot)
+    {
+        if (playerSlot < 0) {
+            return;
+        }
+
+        RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
+        if (!scene) {
+            return;
+        }
+
+        RTBEngine::ECS::GameObject* pawn = FindPawnByPlayerSlot(playerSlot);
+        if (!pawn) {
+            return;
+        }
+
+        RTBEngine::ECS::NetworkIdentity* identity = pawn->GetComponent<RTBEngine::ECS::NetworkIdentity>();
+        if (identity && identity->IsLocallyControlled()) {
+            return;
+        }
+
+        if (identity && !identity->networkOwnerUserId.empty()) {
+            latestCombatInputs.erase(identity->networkOwnerUserId);
+        }
+
+        lastBroadcastPlayerHealth.erase(playerSlot);
+
+        RTBEngine::Online::OnlineSystem::GetInstance().RemovePlayerSessionProfile(playerSlot);
+
+        if (OnlinePlayerManager* playerManager = FindOnlinePlayerManager()) {
+            playerManager->RemovePawnFromTracking(pawn, playerSlot);
+        }
+
+        scene->RemoveGameObject(pawn);
+    }
+
+    void OnlineGameNetSubsystem::HostNotifyPlayerDisconnected(
+        int playerSlot,
+        const std::string& displayName)
+    {
+        if (!RTBEngine::Online::OnlineGameplayNet::IsLobbyHost() || playerSlot < 0) {
+            return;
+        }
+
+        Init();
+
+        const std::string resolvedName = !displayName.empty()
+            ? displayName
+            : RTBEngine::Online::OnlineSystem::GetInstance().GetPlayerDisplayName(playerSlot);
+        const std::string notificationName = resolvedName.empty() ? "Player" : resolvedName;
+
+        ApplyPlayerDespawnForSlot(playerSlot);
+
+        const std::vector<std::uint8_t> broadcastPayload =
+            BuildMatchPlayerLeftPayload(playerSlot, notificationName);
+        RTBEngine::Online::OnlineMessageBus::BroadcastToClients(
+            kMatchPlayerLeft,
+            broadcastPayload,
+            kMatchExitChannel,
+            RTBEngine::Online::OnlinePacketReliability::Reliable);
+
+        QueueMatchNotification(notificationName + " has left the game.");
+    }
+
+    void OnlineGameNetSubsystem::DetectAndDespawnDisconnectedPlayers()
+    {
+        if (!RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby() ||
+            !RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
+            return;
+        }
+
+        RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
+        if (!scene) {
+            return;
+        }
+
+        std::unordered_set<std::string> activeMemberKeys;
+        for (const RTBEngine::Online::OnlineUserId& member :
+                RTBEngine::Online::OnlineGameplayNet::GetOrderedLobbyMembers()) {
+            if (member.IsValid()) {
+                activeMemberKeys.insert(member.ToString());
+            }
+        }
+
+        std::vector<int> disconnectedSlots;
+        for (const auto& gameObject : scene->GetGameObjects()) {
+            if (!gameObject) {
+                continue;
+            }
+
+            RTBEngine::ECS::NetworkIdentity* identity =
+                gameObject->GetComponent<RTBEngine::ECS::NetworkIdentity>();
+            if (!identity || identity->networkPlayerSlot < 0 || identity->IsLocallyControlled()) {
+                continue;
+            }
+
+            if (identity->networkOwnerUserId.empty()) {
+                continue;
+            }
+
+            if (activeMemberKeys.find(identity->networkOwnerUserId) == activeMemberKeys.end()) {
+                disconnectedSlots.push_back(identity->networkPlayerSlot);
+            }
+        }
+
+        for (int playerSlot : disconnectedSlots) {
+            const std::string displayName =
+                RTBEngine::Online::OnlineSystem::GetInstance().GetPlayerDisplayName(playerSlot);
+            HostNotifyPlayerDisconnected(
+                playerSlot,
+                displayName.empty() ? "Player" : displayName);
+        }
+    }
+
+    void OnlineGameNetSubsystem::RequestExitMatch(const char* mainMenuScenePath)
+    {
+        Init();
+
+        if (!RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby()) {
+            Shutdown();
+            LoadMainMenuScene(mainMenuScenePath);
+            return;
+        }
+
+        const std::string displayName = ResolveLocalDisplayName();
+
+        if (RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
+            RTBEngine::Online::OnlineMessageBus::BroadcastToClients(
+                kMatchHostAbandoned,
+                {},
+                kMatchExitChannel,
+                RTBEngine::Online::OnlinePacketReliability::Reliable);
+            Shutdown();
+            LeaveActiveOnlineLobby();
+            LoadMainMenuScene(mainMenuScenePath);
+            return;
+        }
+
+        std::vector<std::uint8_t> payload;
+        RTBEngine::Online::OnlineMessageCodec::AppendString(payload, displayName);
+        RTBEngine::Online::OnlineMessageBus::SendToHost(
+            kMatchPlayerLeaveNotice,
+            payload,
+            kMatchExitChannel,
+            RTBEngine::Online::OnlinePacketReliability::Reliable);
+
+        Shutdown();
+        LeaveActiveOnlineLobby();
+        LoadMainMenuScene(mainMenuScenePath);
+    }
+
+    bool OnlineGameNetSubsystem::TryConsumePendingMainMenuMessage(std::string& outMessage)
+    {
+        if (pendingMainMenuMessage.empty()) {
+            return false;
+        }
+
+        outMessage = pendingMainMenuMessage;
+        pendingMainMenuMessage.clear();
+        return true;
+    }
+
+    void OnlineGameNetSubsystem::TickMatchNotifications(float deltaTime)
+    {
+        if (matchNotificationSecondsRemaining <= 0.0f) {
+            return;
+        }
+
+        matchNotificationSecondsRemaining -= deltaTime;
+        if (matchNotificationSecondsRemaining <= 0.0f) {
+            matchNotificationSecondsRemaining = 0.0f;
+            activeMatchNotification.clear();
+        }
+    }
+
+    bool OnlineGameNetSubsystem::TryGetActiveMatchNotification(
+        std::string& outMessage,
+        float& outSecondsRemaining)
+    {
+        if (activeMatchNotification.empty() || matchNotificationSecondsRemaining <= 0.0f) {
+            return false;
+        }
+
+        outMessage = activeMatchNotification;
+        outSecondsRemaining = matchNotificationSecondsRemaining;
+        return true;
     }
 
 }

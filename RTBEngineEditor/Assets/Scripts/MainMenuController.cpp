@@ -1,5 +1,7 @@
 #include "MainMenuController.h"
 
+#include "OnlineGameNetMessages.h"
+
 #include <RTBEngine/Core/Logger.h>
 #include <RTBEngine/Core/Time.h>
 #include <RTBEngine/ECS/SceneManager.h>
@@ -7,6 +9,7 @@
 #include <RTBEngine/Online/OnlineSystem.h>
 #include <RTBEngine/UI/Elements/UIButton.h>
 #include <RTBEngine/UI/Elements/UIInputField.h>
+#include <RTBEngine/UI/Elements/UIText.h>
 
 using ThisClass = MainMenuController;
 
@@ -14,6 +17,7 @@ RTB_REGISTER_COMPONENT(MainMenuController)
     RTB_PROPERTY_COMPONENT(playerNameInput, UIInputField)
     RTB_PROPERTY_COMPONENT(playButton, UIButton)
     RTB_PROPERTY_COMPONENT(multiplayerButton, UIButton)
+    RTB_PROPERTY_COMPONENT(statusMessageText, UIText)
     RTB_PROPERTY_ASSET_PATH(gameScenePath, "lua")
     RTB_PROPERTY_ASSET_PATH(multiplayerMenuScenePath, "lua")
 RTB_END_REGISTER(MainMenuController)
@@ -21,6 +25,7 @@ RTB_END_REGISTER(MainMenuController)
 void MainMenuController::OnStart()
 {
     BindButtons();
+    ApplyPendingStatusMessage();
 }
 
 void MainMenuController::OnDestroy()
@@ -29,6 +34,23 @@ void MainMenuController::OnDestroy()
     playButton = nullptr;
     multiplayerButton = nullptr;
     playerNameInput = nullptr;
+    statusMessageText = nullptr;
+}
+
+void MainMenuController::ApplyPendingStatusMessage()
+{
+    std::string message;
+    if (!GameNet::OnlineGameNetSubsystem::TryConsumePendingMainMenuMessage(message)) {
+        if (statusMessageText) {
+            statusMessageText->SetVisible(false);
+        }
+        return;
+    }
+
+    if (statusMessageText) {
+        statusMessageText->SetText(message);
+        statusMessageText->SetVisible(true);
+    }
 }
 
 void MainMenuController::BindButtons()
