@@ -31,7 +31,7 @@ function CreateScene()
             {
                 name = "Directional Light",
                 uuid = "48103FD7-E1F1-4AAB-8127-C0C2ED5B4111",
-                rotation = Quaternion.FromEulerAngles(44.17, -31.37, 9.65),
+                rotation = Quaternion.FromEulerAngles(42.36, -34.02, -16.87),
                 components = {
                     {
                         type = "LightComponent",
@@ -55,7 +55,8 @@ function CreateScene()
                         renderMode = "ScreenSpaceOverlay",
                         canvasSize = Vector2(1920.00, 1080.00),
                         pixelsPerUnit = 100.00,
-                        sortOrder = 0
+                        sortOrder = 0,
+                        faceCamera = false
                     },
                     {
                         type = "CursorUnlocker"
@@ -64,9 +65,7 @@ function CreateScene()
                         type = "MainMenuController",
                         playerNameInput = "8A6DDA41-9A67-4B95-A2B6-E2159C420101/UIInputField",
                         playButton = "2E0ED540-A92F-40A9-B2E7-4906659B3E6E/UIButton",
-                        multiplayerButton = "A1B2C3D4-E5F6-4789-A012-3456789ABCDE/UIButton",
-                        gameScenePath = "Assets/Scenes/DefaultScene.lua",
-                        multiplayerMenuScenePath = "Assets/Scenes/MultiplayerMenu.lua"
+                        lobbyScenePath = "Assets/Scenes/LobbyScene.lua"
                     },
                 },
                 children = {
@@ -107,7 +106,7 @@ function CreateScene()
                                 anchorMin = Vector2(0.50, 0.50),
                                 anchorMax = Vector2(0.50, 0.50),
                                 pivot = Vector2(0.50, 0.50),
-                                anchoredPosition = Vector2(0.00, 124.00),
+                                anchoredPosition = Vector2(0.00, 166.00),
                                 sizeDelta = Vector2(260.00, 28.00),
                                 rotation = 0.00,
                                 scale = Vector2(1.00, 1.00)
@@ -129,7 +128,7 @@ function CreateScene()
                                 anchorMin = Vector2(0.50, 0.50),
                                 anchorMax = Vector2(0.50, 0.50),
                                 pivot = Vector2(0.50, 0.50),
-                                anchoredPosition = Vector2(0.00, 82.00),
+                                anchoredPosition = Vector2(0.00, 118.00),
                                 sizeDelta = Vector2(260.00, 42.00),
                                 rotation = 0.00,
                                 scale = Vector2(1.00, 1.00)
@@ -220,6 +219,8 @@ function CreateScene()
                                 clickTextColor = Color(0.86, 0.84, 0.78, 1.00),
                                 clickImageTint = Color(0.92, 0.92, 0.92, 1.00),
                                 clickScaleBoost = 0.97,
+                                disabledTextColor = Color(0.55, 0.54, 0.50, 1.00),
+                                disabledImageTint = Color(0.45, 0.45, 0.45, 1.00),
                                 hoverInTimeSec = 0.12,
                                 hoverOutTimeSec = 0.18,
                                 pressInTimeSec = 0.08,
@@ -318,6 +319,8 @@ function CreateScene()
                                 clickTextColor = Color(0.86, 0.84, 0.78, 1.00),
                                 clickImageTint = Color(0.92, 0.92, 0.92, 1.00),
                                 clickScaleBoost = 0.97,
+                                disabledTextColor = Color(0.55, 0.54, 0.50, 1.00),
+                                disabledImageTint = Color(0.45, 0.45, 0.45, 1.00),
                                 hoverInTimeSec = 0.12,
                                 hoverOutTimeSec = 0.18,
                                 pressInTimeSec = 0.08,
@@ -416,6 +419,8 @@ function CreateScene()
                                 clickTextColor = Color(0.86, 0.84, 0.78, 1.00),
                                 clickImageTint = Color(0.92, 0.92, 0.92, 1.00),
                                 clickScaleBoost = 0.97,
+                                disabledTextColor = Color(0.55, 0.54, 0.50, 1.00),
+                                disabledImageTint = Color(0.45, 0.45, 0.45, 1.00),
                                 hoverInTimeSec = 0.12,
                                 hoverOutTimeSec = 0.18,
                                 pressInTimeSec = 0.08,
