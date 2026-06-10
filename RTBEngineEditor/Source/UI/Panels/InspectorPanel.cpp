@@ -6,6 +6,7 @@
 #include <RTBEngine/Core/Logger.h>
 #include <RTBEngine/ECS/GameObject.h>
 #include <RTBEngine/Animation/Animator.h>
+#include <RTBEngine/ECS/ParticleSystem.h>
 #include <RTBEngine/Math/Vectors/Vector2.h>
 #include <RTBEngine/Math/Vectors/Vector3.h>
 #include <RTBEngine/Math/Vectors/Vector4.h>
@@ -626,6 +627,8 @@ namespace RTBEditor {
             if (open) {
                 if (std::string(typeName) == "Animator") {
                     DrawAnimatorComponent(static_cast<RTBEngine::Animation::Animator*>(component.get()));
+                } else if (std::string(typeName) == "ParticleSystem") {
+                    DrawParticleSystemComponent(static_cast<RTBEngine::ECS::ParticleSystem*>(component.get()));
                 } else if (typeInfo) {
                     auto properties = typeInfo->GetInspectorProperties();
                     for (const auto* prop : properties) {
@@ -1456,6 +1459,62 @@ namespace RTBEditor {
             ImGui::EndChild();
         }
         if (changed) {
+            RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+        }
+    }
+
+    void InspectorPanel::DrawParticleSystemComponent(RTBEngine::ECS::ParticleSystem* particleSystem) {
+        if (!particleSystem) {
+            return;
+        }
+
+        bool changed = false;
+
+        if (ImGui::Button("Play")) {
+            particleSystem->Play();
+            changed = true;
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Pause")) {
+            particleSystem->Pause();
+            changed = true;
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Stop")) {
+            particleSystem->Stop();
+            changed = true;
+        }
+
+        ImGui::Spacing();
+        if (ImGui::Button("Burst")) {
+            particleSystem->Emit(particleSystem->burstCount);
+            changed = true;
+        }
+        ImGui::SameLine();
+        ImGui::Text("Count: %d", particleSystem->burstCount);
+
+        ImGui::Spacing();
+        ImGui::Text("Active particles: %d / %d",
+            particleSystem->GetActiveParticleCount(),
+            particleSystem->maxParticles);
+        ImGui::Text("State: %s%s",
+            particleSystem->IsPlaying() ? "Playing" : "Stopped",
+            particleSystem->IsPaused() ? " (Paused)" : "");
+
+        ImGui::Spacing();
+        ImGui::Separator();
+        ImGui::Spacing();
+
+        const RTBEngine::Reflection::TypeInfo* typeInfo = particleSystem->GetTypeInfo();
+        if (typeInfo) {
+            auto properties = typeInfo->GetInspectorProperties();
+            for (const auto* prop : properties) {
+                DrawProperty(particleSystem, *prop);
+            }
+        }
+
+        if (changed) {
+            particleSystem->OnValidate();
             RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
         }
     }

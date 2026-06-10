@@ -233,6 +233,11 @@ namespace RTBEditor {
         // Keep editor-side online tools alive while the game simulation is not running.
         if (state == EditorState::Edit) {
             RTBEngine::Online::OnlineSystem::GetInstance().Tick(deltaTime);
+
+            RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
+            if (scene) {
+                RTBEngine::ECS::ParticleSystem::TickScenePreview(scene, deltaTime);
+            }
         }
 
         // Consume scene open request from Content Browser double-click

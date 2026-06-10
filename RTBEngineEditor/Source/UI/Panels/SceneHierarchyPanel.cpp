@@ -3,6 +3,7 @@
 #include <RTBEngine/ECS/SceneManager.h>
 #include <RTBEngine/ECS/Scene.h>
 #include <RTBEngine/ECS/MeshRenderer.h>
+#include <RTBEngine/ECS/ParticleSystem.h>
 #include <RTBEngine/ECS/Prefab.h>
 #include <RTBEngine/ECS/PrefabRegistry.h>
 #include <RTBEngine/Core/ResourceManager.h>
@@ -198,6 +199,12 @@ namespace RTBEditor {
                     }
                     if (ImGui::MenuItem("Plane")) {
                         CreatePlane(activeScene, context, creationParent);
+                    }
+                    ImGui::EndMenu();
+                }
+                if (ImGui::BeginMenu("Effects")) {
+                    if (ImGui::MenuItem("Particle System")) {
+                        CreateParticleSystem(activeScene, context, creationParent);
                     }
                     ImGui::EndMenu();
                 }
@@ -438,6 +445,33 @@ namespace RTBEditor {
         renderer->SetMesh(resources.GetDefaultPlane());
         renderer->SetShader(resources.GetShader("basic"));
         go->AddComponent(renderer);
+
+        scene->AddGameObject(go);
+        context.selectedGameObject = go;
+        RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+    }
+
+    void SceneHierarchyPanel::CreateParticleSystem(RTBEngine::ECS::Scene* scene, EditorContext& context, RTBEngine::ECS::GameObject* parent) {
+        auto* go = new RTBEngine::ECS::GameObject("Particle System");
+        if (parent) {
+            go->SetParent(parent);
+        }
+
+        auto* particleSystem = new RTBEngine::ECS::ParticleSystem();
+        particleSystem->maxParticles = 256;
+        particleSystem->emissionRate = 40.0f;
+        particleSystem->emitterShape = RTBEngine::Rendering::ParticleEmitterShape::Cone;
+        particleSystem->startLifetime = 1.5f;
+        particleSystem->startSpeed = 2.0f;
+        particleSystem->startSize = 0.3f;
+        particleSystem->endSize = 0.05f;
+        particleSystem->startColor = RTBEngine::Math::Color(0.75f, 0.75f, 0.75f, 0.85f);
+        particleSystem->endColor = RTBEngine::Math::Color(0.5f, 0.5f, 0.5f, 0.0f);
+        particleSystem->gravity = RTBEngine::Math::Vector3(0.0f, -2.0f, 0.0f);
+        particleSystem->playOnAwake = true;
+        particleSystem->loop = true;
+        particleSystem->simulateInEditMode = true;
+        go->AddComponent(particleSystem);
 
         scene->AddGameObject(go);
         context.selectedGameObject = go;

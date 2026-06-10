@@ -11,6 +11,7 @@ namespace RTBEngine {
     namespace ECS {
         class GameObject;
         class Component;
+        class ParticleSystem;
     }
     namespace Reflection {
         struct PropertyInfo;
@@ -42,6 +43,7 @@ namespace RTBEditor {
         std::string FormatTypeName(const char* typeName);
 
         void DrawAnimatorComponent(RTBEngine::Animation::Animator* animator);
+        void DrawParticleSystemComponent(RTBEngine::ECS::ParticleSystem* particleSystem);
         void DrawCubemapAssetInspector(const std::filesystem::path& cubemapPath);
         void SaveCubemapAsset(const std::filesystem::path& cubemapPath);
         void DrawScriptPreview(const std::filesystem::path& scriptPath);
