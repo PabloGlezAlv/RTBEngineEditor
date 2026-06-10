@@ -30,6 +30,7 @@ A visual game editor for **RTBEngine**, built in **C++17** using **ImGui** for t
 22. [Project System](#22-project-system)
 23. [Keyboard Shortcuts](#23-keyboard-shortcuts)
 24. [Workflow Guides](#24-workflow-guides)
+25. [Online and Multiplayer](#25-online-and-multiplayer)
 
 ---
 
@@ -613,6 +614,9 @@ Right-clicking empty space in the Hierarchy opens a context menu with:
 - **Create Cube** — `CreateCube(scene)`: same pattern with cube mesh
 - **Create Plane** — `CreatePlane(scene)`: plane mesh, no RigidBody by default
 
+**Effects:**
+- **Create Particle System** — `CreateParticleSystem(scene)`: `AddGameObject("Particle System")` + `ParticleSystem` with cone emitter defaults, `playOnAwake = true`, and `simulateInEditMode = true` for Scene View preview
+
 **UI Elements:**
 - **Create Canvas** — `CreateCanvas(scene)`: `AddGameObject("Canvas")` + `Canvas` component (ScreenSpaceOverlay mode)
 - **Create UIButton** — `CreateUIButton(scene)`: child of an existing Canvas (or creates one), `UIButton` with default label
@@ -736,6 +740,18 @@ Computes the property address through `prop.GetMutableData(component)` and dispa
 | `ComponentRef` | Drag-drop target (PAYLOAD_GAMEOBJECT) | Resolves on UUID |
 
 After any change: calls `component->OnValidate()` and marks scene dirty.
+
+### Custom Component Drawers
+
+Some engine components bypass the generic property loop and render dedicated controls first:
+
+| Component | Controls |
+|-----------|----------|
+| `ParticleSystem` | **Play**, **Pause**, **Stop**, **Burst** (`burstCount`), live stats (active count, playback state), then all reflected properties |
+
+`DrawParticleSystemComponent` calls `Play()`, `Pause()`, `Stop()`, or `Emit(burstCount)` from the toolbar buttons, then draws the reflected fields (`maxParticles`, `emissionRate`, emitter shape, colors, `textureRef`, `simulateInEditMode`, etc.). Any button change triggers `OnValidate()` and marks the scene dirty.
+
+While the editor is in Edit mode, `EditorApplication::Update()` calls `ParticleSystem::TickScenePreview` so systems with `simulateInEditMode` and an active playback state animate in Scene View without pressing Play.
 
 For typed script asset slots, the Inspector now uses the reflected `assetType` metadata instead of guessing from the property name. For example, a property registered with `RTB_PROPERTY_FBX(idleAnimationFbx)` renders as a dedicated FBX slot that accepts `.fbx` drag-and-drop from the Content Browser, opens the asset browser already filtered to FBX files, and stores the selected logical `Assets/...` path.
 
@@ -2101,11 +2117,15 @@ startScene=Assets/Scenes/Main.lua
 - The editor switches to that scene on the next frame (only in Edit mode).
 - If the currently open scene has unsaved changes, they are **discarded** — save first.
 
-### Main Menu Scene Buttons
+### Main Menu and Multiplayer Flow
 
-- The `Play` button in `Assets/Scenes/MainMenu.lua` uses `SceneChangeButton` to request `Assets/Scenes/DefaultScene.lua`.
-- Scene-switching buttons should call into the engine through the scene request API instead of loading scenes directly from script logic.
-- Do not put scene loading behavior in `ButtonStyle`; keep it for presentation only.
+1. Open `Assets/Scenes/MainMenu.lua` and press **Play**.
+2. **Play** — solo game (`DefaultScene.lua`, no lobby).
+3. **Multiplayer** — `MultiplayerMenu.lua` → choose **LAN Lobby** or **Online Lobby** → `LobbyScene.lua`.
+4. In the lobby: create or join with a code; host presses **Start Game** when at least one remote player is connected.
+5. In `DefaultScene.lua`: **Tab** opens the pause menu (game keeps running). **Resume** closes it; **Exit** returns to main menu (online exit notifies other players).
+
+See [§25 Online and Multiplayer](#25-online-and-multiplayer) for scripts, scenes, and testing.
 
 ### Debugging Physics
 
@@ -2125,3 +2145,125 @@ startScene=Assets/Scenes/Main.lua
 3. In Play mode, with the cursor visible, click inside the Game View to interact with the buttons.
 4. The Game View draws red rectangles around `raycastTarget` elements for the selected UI object — useful for verifying hit-test regions.
 5. Check Console for any `[WARN]` related to missing fonts or null Canvas references.
+
+---
+
+## 25. Online and Multiplayer
+
+Game multiplayer uses the engine stack via `RTBEngine_SDK` (see engine README [§18](../../RTBEngine/RTBEngine/README.md#18-online-subsystem)). Logic lives in **`Assets/Scripts/`** → `GameScripts.dll`. The editor **Online** panel sets ports and relay URL only; **LAN vs Online** is chosen in-game from `MultiplayerMenu.lua`.
+
+### 25.1 Menu Navigation
+
+```
+MainMenu.lua
+├── Play          → DefaultScene.lua (solo)
+├── Multiplayer   → MultiplayerMenu.lua
+└── Exit          → quit
+
+MultiplayerMenu.lua
+├── LAN Lobby     → LobbyScene.lua  (SetSessionLobbyBackend: Lan)
+├── Online Lobby  → LobbyScene.lua  (SetSessionLobbyBackend: Relay)
+└── Back          → MainMenu.lua
+
+LobbyScene.lua
+├── Create / Join lobby
+├── Start Game    → DefaultScene.lua (host only, ≥1 remote member)
+└── Back          → MultiplayerMenu.lua (leaves lobby)
+
+DefaultScene.lua
+├── Tab           → pause menu (gameplay continues)
+├── Resume        → close menu
+└── Exit          → MainMenu (online: notify peers, despawn pawn)
+```
+
+### 25.2 Key Script Components
+
+| Component | File | Purpose |
+|-----------|------|---------|
+| `MainMenuController` | `MainMenuController.cpp` | Play / Multiplayer / status messages |
+| `MultiplayerMenuController` | `MultiplayerMenuController.cpp` | LAN vs Online backend preference |
+| `LobbyMenuController` | `LobbyMenuController.cpp` | Create, join, start match |
+| `OnlinePlayerManager` | `OnlinePlayerManager.cpp` | Spawn remote pawns, session profiles, despawn detect |
+| `OnlineGameNetSubsystem` | `OnlineGameNetMessages.cpp` | Game RTBN messages (64+), match exit |
+| `PauseMenuController` | `PauseMenuController.cpp` | Tab pause menu, exit match |
+| `ResumeGameButton` | `ResumeGameButton.cpp` | UI click → resume |
+| `ExitToMenuButton` | `ExitToMenuButton.cpp` | UI click → exit to main menu |
+
+Message IDs: `Assets/Scripts/GameNetMessageIds.h`.
+
+### 25.3 Scenes
+
+| Scene | Controllers / notes |
+|-------|---------------------|
+| `MainMenu.lua` | `MainMenuController`, player name input |
+| `MultiplayerMenu.lua` | `MultiplayerMenuController` |
+| `LobbyScene.lua` | `LobbyMenuController` |
+| `DefaultScene.lua` | `OnlinePlayerManager`, `PauseMenuController`, `Player GO` with `NetworkIdentity` + `NetworkTransform` |
+
+**Scene order:** `OnlinePlayers` (manager) must be listed **before** `Player GO` in `DefaultScene.lua` so `OnStart` configures network identity before the first player tick.
+
+### 25.4 Editor Online Panel
+
+`Window → Online` (`OnlinePanel.cpp`):
+
+| Setting | Purpose |
+|---------|---------|
+| Enabled | Initializes `OnlineSystem` on editor startup |
+| LAN game port | UDP gameplay bind (use unique ports per local test instance) |
+| LAN discovery port | UDP lobby discovery |
+| Relay matchmaking URL | e.g. `http://localhost:8080/api/v1` |
+| Default start scene | Scene for multiplayer test launcher |
+| Multiplayer Test | Launches second instance with offset ports |
+
+The panel does **not** replace in-game LAN/Online selection — that is handled by `MultiplayerMenuController`.
+
+**Persistence:** `EditorOnlineSettings.json` via `EditorOnlineSettingsStore`.
+
+### 25.5 Match Exit and Player Despawn
+
+| Action | Behavior |
+|--------|----------|
+| Client **Exit** (pause menu) | Sends leave notice to host; leaves lobby; loads main menu |
+| Host receives leave | Despawns client pawn locally; broadcasts `kMatchPlayerLeft` with `playerSlot` |
+| Other clients | Despawn pawn for that slot; show `"Name has left the game"` |
+| Host **Exit** | Broadcasts `kMatchHostAbandoned`; clients show message on main menu |
+| Abrupt disconnect | Host `DetectAndDespawnDisconnectedPlayers()` when lobby member list drops (relay updates faster than LAN) |
+
+### 25.6 Building and Testing
+
+**Compile scripts after any `Assets/Scripts` change:**
+
+```bat
+RTBEngineEditor\RTBEngineEditor\GameScripts\build.bat
+```
+
+Or use toolbar **Compile Scripts** in the editor (close Play mode if DLL is locked).
+
+**After engine online API changes:** run `RTBEngine/BuildSDK.bat`, then rebuild GameScripts.
+
+**LAN — two instances on one PC:**
+
+| Instance | Game port | Discovery port |
+|----------|-----------|----------------|
+| Editor / Player 1 | 27015 | 27016 |
+| Player 2 / Multiplayer Test | 27017 | 27018 |
+
+**Internet — relay:**
+
+1. Start `RTBOnlineRelay` (see `RTBOnlineRelay/README.md`).
+2. Set relay URL in Online panel.
+3. In game: Multiplayer → Online Lobby → create/join → start.
+
+**Game View:** click inside the Game View for pause menu buttons when the cursor is visible (not in mouse capture).
+
+### 25.7 Test Checklist
+
+- [ ] Solo **Play** from main menu — no lobby, normal movement.
+- [ ] LAN lobby create/join and start with two instances.
+- [ ] Online lobby via local relay (`docker compose up`).
+- [ ] Each player sees their own camera on their pawn.
+- [ ] Remote player movement visible on both screens.
+- [ ] Tab pause: Resume closes menu; Exit returns to main menu.
+- [ ] Client exit removes remote pawn on host and remaining clients.
+- [ ] Host exit shows "The host abandoned the match" on clients.
+- [ ] Console free of `[ERR]` from missing `GameScripts` registration (recompile DLL).
