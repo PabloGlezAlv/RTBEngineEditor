@@ -1,4 +1,4 @@
 Name=RTBEngine Demo
 StartScene=Assets/Scenes/MainMenu.lua
-LastOpenScene=Assets/Scenes/ParticleTest.lua
+LastOpenScene=Assets/Scenes/DefaultScene.lua
 AssetDirectory=Assets
