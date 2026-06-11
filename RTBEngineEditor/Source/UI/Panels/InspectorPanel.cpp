@@ -15,6 +15,7 @@
 #include <RTBEngine/ECS/Scene.h>
 #include <RTBEngine/Physics/PhysicsLayerSettings.h>
 #include <RTBEngine/ECS/MissingComponent.h>
+#include <RTBEngine/ECS/MeshRenderer.h>
 #include <RTBEngine/Reflection/TypeInfo.h>
 #include <RTBEngine/Core/ResourceManager.h>
 #include <RTBEngine/UI/UIElement.h>
@@ -876,6 +877,14 @@ namespace RTBEditor {
             }
             case RTBEngine::Reflection::PropertyType::TextureRef: {
                 void** texPtr = (void**)data;
+                const bool useModelTexture = dynamic_cast<RTBEngine::ECS::MeshRenderer*>(component) != nullptr;
+                auto loadTextureForInspector = [&](const std::string& path) -> RTBEngine::Rendering::Texture* {
+                    auto& rm = RTBEngine::Core::ResourceManager::GetInstance();
+                    if (path.size() > 8 && path.substr(path.size() - 8) == ".texture") {
+                        return rm.LoadTextureAsset(path);
+                    }
+                    return useModelTexture ? rm.LoadModelTexture(path) : rm.LoadTexture(path);
+                };
                 ImGui::Text("%s:", prop.displayName.c_str());
                 ImGui::SameLine();
 
@@ -909,11 +918,7 @@ namespace RTBEditor {
                     if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(PAYLOAD_TEXTURE)) {
                         const TexturePayload* payloadData = (const TexturePayload*)payload->Data;
                         std::string fullPath = std::string("Assets/") + payloadData->path;
-                        // .texture assets carry flip metadata; raw images use default flip
-                        auto& rm = RTBEngine::Core::ResourceManager::GetInstance();
-                        auto* texture = (fullPath.size() > 8 && fullPath.substr(fullPath.size() - 8) == ".texture")
-                            ? rm.LoadTextureAsset(fullPath)
-                            : rm.LoadTexture(fullPath);
+                        auto* texture = loadTextureForInspector(fullPath);
                         if (texture) {
                             *texPtr = texture;
                             changed = true;
@@ -933,19 +938,13 @@ namespace RTBEditor {
                 if (ImGui::SmallButton("...##SelectTexture")) {
                     assetBrowserModal->Open(
                         AssetType::Texture,
-                        [texPtr](const std::string& path) {
-                            auto& rm = RTBEngine::Core::ResourceManager::GetInstance();
+                        [texPtr, loadTextureForInspector](const std::string& path) {
                             std::string fullPath = "Assets/" + path;
-                            auto* tex = (fullPath.size() > 8 && fullPath.substr(fullPath.size() - 8) == ".texture")
-                                ? rm.LoadTextureAsset(fullPath)
-                                : rm.LoadTexture(fullPath);
+                            auto* tex = loadTextureForInspector(fullPath);
                             if (tex) { *texPtr = tex; RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty(); }
                         },
-                        [texPtr](const std::string& path) {
-                            auto& rm = RTBEngine::Core::ResourceManager::GetInstance();
-                            auto* tex = (path.size() > 8 && path.substr(path.size() - 8) == ".texture")
-                                ? rm.LoadTextureAsset(path)
-                                : rm.LoadTexture(path);
+                        [texPtr, loadTextureForInspector](const std::string& path) {
+                            auto* tex = loadTextureForInspector(path);
                             if (tex) { *texPtr = tex; RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty(); }
                         }
                     );

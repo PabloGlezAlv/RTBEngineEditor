@@ -244,6 +244,19 @@ function CreateScene()
                                                                                                 uuid = "DF555AFD-00AF-4D03-B8A5-0C4332B5B3F7",
                                                                                                 position = Vector3(0.00, 0.10, -0.06),
                                                                                                 rotation = Quaternion.FromEulerAngles(0.00, -0.00, -90.00),
+                                                                                                children = {
+                                                                                                    {
+                                                                                                        name = "Knight_Shield",
+                                                                                                        components = {
+                                                                                                            {
+                                                                                                                type = "MeshRenderer",
+                                                                                                                model = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/fbx(unity)/shield_square.fbx",
+                                                                                                                textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/knight_texture.png",
+                                                                                                                shader = "basic"
+                                                                                                            },
+                                                                                                        }
+                                                                                                    },
+                                                                                                }
                                                                                             },
                                                                                         }
                                                                                     },
@@ -284,6 +297,19 @@ function CreateScene()
                                                                                                 uuid = "248FFEC0-15B2-4A1F-BE8A-BA66B738A18A",
                                                                                                 position = Vector3(-0.00, 0.10, -0.06),
                                                                                                 rotation = Quaternion.FromEulerAngles(0.00, 0.00, 90.00),
+                                                                                                children = {
+                                                                                                    {
+                                                                                                        name = "Knight_Sword",
+                                                                                                        components = {
+                                                                                                            {
+                                                                                                                type = "MeshRenderer",
+                                                                                                                model = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/fbx(unity)/sword_1handed.fbx",
+                                                                                                                textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/knight_texture.png",
+                                                                                                                shader = "basic"
+                                                                                                            },
+                                                                                                        }
+                                                                                                    },
+                                                                                                }
                                                                                             },
                                                                                         }
                                                                                     },
@@ -544,6 +570,19 @@ function CreateScene()
                                                                                                 uuid = "1A219649-0447-43F7-AC03-0970417D8EAB",
                                                                                                 position = Vector3(0.00, 0.10, -0.06),
                                                                                                 rotation = Quaternion.FromEulerAngles(0.00, -0.00, -90.00),
+                                                                                                children = {
+                                                                                                    {
+                                                                                                        name = "Barbarian_Shield",
+                                                                                                        components = {
+                                                                                                            {
+                                                                                                                type = "MeshRenderer",
+                                                                                                                model = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/shield_round_barbarian.obj",
+                                                                                                                textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/barbarian_texture.png",
+                                                                                                                shader = "basic"
+                                                                                                            },
+                                                                                                        }
+                                                                                                    },
+                                                                                                }
                                                                                             },
                                                                                         }
                                                                                     },
@@ -584,6 +623,19 @@ function CreateScene()
                                                                                                 uuid = "7A312BED-A8F8-425F-89E9-FE9AC26E12F0",
                                                                                                 position = Vector3(-0.00, 0.10, -0.06),
                                                                                                 rotation = Quaternion.FromEulerAngles(0.00, 0.00, 90.00),
+                                                                                                children = {
+                                                                                                    {
+                                                                                                        name = "Barbarian_Axe",
+                                                                                                        components = {
+                                                                                                            {
+                                                                                                                type = "MeshRenderer",
+                                                                                                                model = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/axe_2handed.obj",
+                                                                                                                textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/barbarian_texture.png",
+                                                                                                                shader = "basic"
+                                                                                                            },
+                                                                                                        }
+                                                                                                    },
+                                                                                                }
                                                                                             },
                                                                                         }
                                                                                     },
@@ -858,6 +910,19 @@ function CreateScene()
                                                                                                 uuid = "D4D03F2F-C0E5-4A73-BA78-7F2EFBDD295D",
                                                                                                 position = Vector3(0.00, 0.10, -0.06),
                                                                                                 rotation = Quaternion.FromEulerAngles(0.00, -0.00, -90.00),
+                                                                                                children = {
+                                                                                                    {
+                                                                                                        name = "Mage_Spellbook",
+                                                                                                        components = {
+                                                                                                            {
+                                                                                                                type = "MeshRenderer",
+                                                                                                                model = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/fbx(unity)/spellbook_open.fbx",
+                                                                                                                textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/mage_texture.png",
+                                                                                                                shader = "basic"
+                                                                                                            },
+                                                                                                        }
+                                                                                                    },
+                                                                                                }
                                                                                             },
                                                                                         }
                                                                                     },
@@ -898,6 +963,19 @@ function CreateScene()
                                                                                                 uuid = "916A9099-94D8-45A2-BA15-A2D292CDB206",
                                                                                                 position = Vector3(-0.00, 0.10, -0.06),
                                                                                                 rotation = Quaternion.FromEulerAngles(0.00, 0.00, 90.00),
+                                                                                                children = {
+                                                                                                    {
+                                                                                                        name = "Mage_Staff",
+                                                                                                        components = {
+                                                                                                            {
+                                                                                                                type = "MeshRenderer",
+                                                                                                                model = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/fbx(unity)/staff.fbx",
+                                                                                                                textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/mage_texture.png",
+                                                                                                                shader = "basic"
+                                                                                                            },
+                                                                                                        }
+                                                                                                    },
+                                                                                                }
                                                                                             },
                                                                                         }
                                                                                     },
@@ -1158,6 +1236,19 @@ function CreateScene()
                                                                                                 uuid = "34E9ACD7-F5C8-459A-88F2-7D373320BA2C",
                                                                                                 position = Vector3(0.00, 0.10, -0.06),
                                                                                                 rotation = Quaternion.FromEulerAngles(0.00, -0.00, -90.00),
+                                                                                                children = {
+                                                                                                    {
+                                                                                                        name = "Ranger_Bow",
+                                                                                                        components = {
+                                                                                                            {
+                                                                                                                type = "MeshRenderer",
+                                                                                                                model = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/bow_withString.obj",
+                                                                                                                textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/ranger_texture.png",
+                                                                                                                shader = "basic"
+                                                                                                            },
+                                                                                                        }
+                                                                                                    },
+                                                                                                }
                                                                                             },
                                                                                         }
                                                                                     },
@@ -1198,6 +1289,19 @@ function CreateScene()
                                                                                                 uuid = "7F16E38E-717E-48EA-B05C-295124D51255",
                                                                                                 position = Vector3(-0.00, 0.10, -0.06),
                                                                                                 rotation = Quaternion.FromEulerAngles(0.00, 0.00, 90.00),
+                                                                                                children = {
+                                                                                                    {
+                                                                                                        name = "Ranger_Arrow",
+                                                                                                        components = {
+                                                                                                            {
+                                                                                                                type = "MeshRenderer",
+                                                                                                                model = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/arrow_bow.obj",
+                                                                                                                textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/ranger_texture.png",
+                                                                                                                shader = "basic"
+                                                                                                            },
+                                                                                                        }
+                                                                                                    },
+                                                                                                }
                                                                                             },
                                                                                         }
                                                                                     },
@@ -1358,6 +1462,19 @@ function CreateScene()
                                                         position = Vector3(-0.00, 0.37, 0.00),
                                                         children = {
                                                             {
+                                                                name = "Rogue_Crossbow",
+                                                                position = Vector3(0.00, 0.10, -0.18),
+                                                                rotation = Quaternion.FromEulerAngles(-70.00, 0.00, 0.00),
+                                                                components = {
+                                                                    {
+                                                                        type = "MeshRenderer",
+                                                                        model = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/fbx(unity)/crossbow_2handed.fbx",
+                                                                        textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/rogue_texture.png",
+                                                                        shader = "basic"
+                                                                    },
+                                                                }
+                                                            },
+                                                            {
                                                                 name = "upperarm.l",
                                                                 uuid = "DCB7813D-CC4D-452F-B095-5C21FE0D6220",
                                                                 position = Vector3(0.21, 0.13, 0.00),
@@ -1388,6 +1505,19 @@ function CreateScene()
                                                                                                 uuid = "E0C3877C-7262-4D38-A107-5A385EBAB621",
                                                                                                 position = Vector3(0.00, 0.10, -0.06),
                                                                                                 rotation = Quaternion.FromEulerAngles(0.00, -0.00, -90.00),
+                                                                                                children = {
+                                                                                                    {
+                                                                                                        name = "Rogue_Smokebomb",
+                                                                                                        components = {
+                                                                                                            {
+                                                                                                                type = "MeshRenderer",
+                                                                                                                model = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/fbx(unity)/smokebomb.fbx",
+                                                                                                                textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/rogue_texture.png",
+                                                                                                                shader = "basic"
+                                                                                                            },
+                                                                                                        }
+                                                                                                    },
+                                                                                                }
                                                                                             },
                                                                                         }
                                                                                     },
@@ -1428,6 +1558,19 @@ function CreateScene()
                                                                                                 uuid = "032CE981-3E1B-4825-8D05-E06FFC35A4FB",
                                                                                                 position = Vector3(-0.00, 0.10, -0.06),
                                                                                                 rotation = Quaternion.FromEulerAngles(0.00, 0.00, 90.00),
+                                                                                                children = {
+                                                                                                    {
+                                                                                                        name = "Rogue_Dagger",
+                                                                                                        components = {
+                                                                                                            {
+                                                                                                                type = "MeshRenderer",
+                                                                                                                model = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/fbx(unity)/dagger.fbx",
+                                                                                                                textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/rogue_texture.png",
+                                                                                                                shader = "basic"
+                                                                                                            },
+                                                                                                        }
+                                                                                                    },
+                                                                                                }
                                                                                             },
                                                                                         }
                                                                                     },
