@@ -4,6 +4,8 @@
 #include "ProjectileComponent.h"
 
 #include <RTBEngine/Core/ResourceManager.h>
+#include <RTBEngine/Rendering/FbxBinding.h>
+#include <RTBEngine/Rendering/ModelLoader.h>
 #include <RTBEngine/ECS/NetworkIdentity.h>
 #include <RTBEngine/ECS/Scene.h>
 #include <RTBEngine/ECS/SceneManager.h>
@@ -52,6 +54,9 @@ namespace {
 
 RTB_REGISTER_COMPONENT(ProjectileAttackAbility)
     RTB_PROPERTY(attackOriginOffset)
+    RTB_PROPERTY(projectileModel)
+    RTB_PROPERTY(projectileTexture)
+    RTB_PROPERTY(projectileVisualScale)
     RTB_PROPERTY_RANGE(cooldown, 0.0f, 10.0f)
     RTB_PROPERTY_RANGE(damage, 0.0f, 1000.0f)
     RTB_PROPERTY_RANGE(hitDelay, 0.0f, 10.0f)
@@ -145,20 +150,68 @@ bool ProjectileAttackAbility::SpawnProjectile(RTBEngine::ECS::GameObject* instig
         : GetLaunchOrigin(instigator, planarDirection);
     const float projectileDiameter = projectileRadius * 2.0f;
     const float projectileYaw = -std::atan2(planarDirection.x, planarDirection.z) * kRadToDeg;
-    const RTBEngine::Math::Quaternion projectileRotation =
+    RTBEngine::Math::Quaternion projectileRotation =
         RTBEngine::Math::Quaternion::FromEulerAngles(0.0f, projectileYaw * kDegToRad, 0.0f);
+    if (!projectileModel.empty()) {
+        projectileRotation = projectileRotation *
+            RTBEngine::Math::Quaternion::FromEulerAngles(90.0f * kDegToRad, 0.0f, 0.0f);
+    }
 
     projectileObject->GetTransform().SetPosition(spawnPosition);
     projectileObject->GetTransform().SetRotation(projectileRotation);
-    projectileObject->GetTransform().SetScale(
-        RTBEngine::Math::Vector3(projectileDiameter, projectileDiameter, projectileDiameter));
 
     auto* renderer = new RTBEngine::ECS::MeshRenderer();
     projectileObject->AddComponent(renderer);
 
     RTBEngine::Core::ResourceManager& resources = RTBEngine::Core::ResourceManager::GetInstance();
-    renderer->SetMesh(resources.GetDefaultSphere());
-    renderer->SetShader(resources.GetShader("basic"));
+    RTBEngine::Rendering::Shader* basicShader = resources.GetShader("basic");
+    if (basicShader) {
+        renderer->SetShader(basicShader);
+    }
+
+    if (!projectileModel.empty()) {
+        RTBEngine::Rendering::ModelData modelData =
+            RTBEngine::Rendering::ModelLoader::LoadModelWithAnimations(projectileModel);
+        if (!modelData.meshes.empty()) {
+            resources.RegisterMeshes(projectileModel, modelData.meshes);
+
+            RTBEngine::Rendering::FbxBindingContext ctx{ resources, projectileModel, modelData };
+            RTBEngine::Rendering::FbxBindingResult binding =
+                RTBEngine::Rendering::BuildMeshesAndMaterials(ctx);
+
+            renderer->SetMesh(modelData.meshes[0]);
+            if (!binding.meshMaterials.empty() && binding.meshMaterials[0]) {
+                if (basicShader) {
+                    binding.meshMaterials[0]->SetShader(basicShader);
+                }
+                renderer->SetMaterial(binding.meshMaterials[0]);
+            }
+
+            if (!projectileTexture.empty()) {
+                RTBEngine::Rendering::Texture* tex = resources.LoadModelTexture(projectileTexture);
+                if (tex) {
+                    renderer->SetTexture(tex);
+                }
+            }
+
+            const RTBEngine::Math::Vector3 visualScale = projectileVisualScale;
+            projectileObject->GetTransform().SetScale(
+                RTBEngine::Math::Vector3(
+                    std::max(0.01f, visualScale.x),
+                    std::max(0.01f, visualScale.y),
+                    std::max(0.01f, visualScale.z)));
+        }
+        else {
+            projectileObject->GetTransform().SetScale(
+                RTBEngine::Math::Vector3(projectileDiameter, projectileDiameter, projectileDiameter));
+            renderer->SetMesh(resources.GetDefaultSphere());
+        }
+    }
+    else {
+        projectileObject->GetTransform().SetScale(
+            RTBEngine::Math::Vector3(projectileDiameter, projectileDiameter, projectileDiameter));
+        renderer->SetMesh(resources.GetDefaultSphere());
+    }
 
     auto* sphereCollider = new RTBEngine::ECS::SphereColliderComponent();
     sphereCollider->SetRadius(projectileRadius);
