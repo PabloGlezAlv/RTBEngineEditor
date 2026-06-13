@@ -312,28 +312,21 @@ namespace RTBEditor {
         );
 
         // If the gizmo was manipulated, convert world result back to local space
-        if (manipulated && ImGuizmo::IsUsing()) {
+        if (manipulated) {
             RTBEngine::ECS::GameObject* parentGO = context.selectedGameObject->GetParent();
             RTBEngine::Math::Matrix4 localMatrix = worldMatrix;
 
             if (parentGO) {
-                // localMatrix = parentWorld^-1 * newWorldMatrix
                 localMatrix = parentGO->GetWorldMatrix().Inverse() * worldMatrix;
             }
 
-            float position[3], rotation[3], scale[3];
-            ImGuizmo::DecomposeMatrixToComponents(localMatrix.GetData(), position, rotation, scale);
+            RTBEngine::Math::Vector3 localPos, localScale;
+            RTBEngine::Math::Quaternion localRot;
+            localMatrix.Decompose(localPos, localRot, localScale);
 
-            // ImGuizmo returns degrees; Transform::SetRotation expects radians
-            constexpr float kDeg2Rad = 3.14159265f / 180.0f;
-
-            transform.SetPosition(RTBEngine::Math::Vector3(position[0], position[1], position[2]));
-            transform.SetRotation(RTBEngine::Math::Vector3(
-                rotation[0] * kDeg2Rad,
-                rotation[1] * kDeg2Rad,
-                rotation[2] * kDeg2Rad
-            ));
-            transform.SetScale(RTBEngine::Math::Vector3(scale[0], scale[1], scale[2]));
+            transform.SetPosition(localPos);
+            transform.SetRotation(localRot);
+            transform.SetScale(localScale);
 
             for (auto& comp : context.selectedGameObject->GetComponents()) {
                 if (comp) comp->OnValidate();
