@@ -626,14 +626,13 @@ void ThirdPersonCharacterController::UpdateAttackAimTrail()
         return;
     }
 
-    const RTBEngine::Math::Vector3 start = GetProjectileLaunchOrigin(attackDirection);
+    const RTBEngine::Math::Vector3 start = GetAimTrailOrigin();
     const RTBEngine::Math::Vector3 end = start + attackDirection * GetProjectileTravelDistance();
     const RTBEngine::Math::Vector3 points[] = {
         start,
         end
     };
 
-    attackAimTrail->width = GetConfiguredProjectileRadius() * 2.0f;
     attackAimTrail->SetPoints(points, 2);
     attackAimTrail->SetVisible(true);
 }
@@ -1021,14 +1020,27 @@ RTBEngine::Math::Vector3 ThirdPersonCharacterController::GetDesiredMoveDirection
     return desiredMove;
 }
 
-RTBEngine::Math::Vector3 ThirdPersonCharacterController::GetProjectileLaunchOrigin(
-    const RTBEngine::Math::Vector3& attackDirection) const
+RTBEngine::Math::Vector3 ThirdPersonCharacterController::GetAimTrailOrigin() const
 {
-    if (projectileAttack) {
-        return projectileAttack->GetLaunchOrigin(owner, attackDirection);
+    if (!owner) {
+        return RTBEngine::Math::Vector3::Zero();
     }
 
-    return RTBEngine::Math::Vector3::Zero();
+    if (!attackAimTrail || !attackAimTrail->GetOwner()) {
+        return owner->GetWorldPosition();
+    }
+
+    RTBEngine::ECS::GameObject* trailObject = attackAimTrail->GetOwner();
+    const RTBEngine::Math::Vector3 localTrailPosition = trailObject->GetTransform().GetPosition();
+    const RTBEngine::Math::Vector3 planarOffset =
+        owner->GetWorldRotation() *
+        RTBEngine::Math::Vector3(localTrailPosition.x, 0.0f, localTrailPosition.z);
+
+    const RTBEngine::Math::Vector3 ownerPosition = owner->GetWorldPosition();
+    return RTBEngine::Math::Vector3(
+        ownerPosition.x + planarOffset.x,
+        ownerPosition.y + localTrailPosition.y,
+        ownerPosition.z + planarOffset.z);
 }
 
 float ThirdPersonCharacterController::GetProjectileTravelDistance() const
@@ -1038,11 +1050,6 @@ float ThirdPersonCharacterController::GetProjectileTravelDistance() const
     }
 
     return 0.0f;
-}
-
-float ThirdPersonCharacterController::GetConfiguredProjectileRadius() const
-{
-    return projectileAttack ? projectileAttack->GetProjectileRadius() : 0.0f;
 }
 
 RTBEngine::Math::Vector3 ThirdPersonCharacterController::GetAttackDirectionFromJoystick(

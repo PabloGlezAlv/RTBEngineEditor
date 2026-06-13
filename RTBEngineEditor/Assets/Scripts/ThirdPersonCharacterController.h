@@ -64,8 +64,8 @@ public:
     std::string idleAnimationFbx;
     std::string walkAnimationFbx;
     std::string runAnimationFbx;
-    std::string attackAnimationFbx = "Assets/Models/AnimationsPlayer/great sword basic atack.fbx";
-    std::string deathAnimationFbx = "Assets/Models/AnimationsPlayer/two handed sword death.fbx";
+    std::string attackAnimationFbx = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_CombatRanged.fbx|Ranged_Bow_Release";
+    std::string deathAnimationFbx = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_General.fbx|Death_A";
 
     RTB_COMPONENT(ThirdPersonCharacterController)
 
@@ -130,9 +130,8 @@ private:
     void FaceAttackDirection(const RTBEngine::Math::Vector3& attackDirection);
     void StopPlanarMotion() const;
     RTBEngine::Math::Vector3 GetDesiredMoveDirection(bool& outIsRunning) const;
-    RTBEngine::Math::Vector3 GetProjectileLaunchOrigin(const RTBEngine::Math::Vector3& attackDirection) const;
+    RTBEngine::Math::Vector3 GetAimTrailOrigin() const;
     float GetProjectileTravelDistance() const;
-    float GetConfiguredProjectileRadius() const;
     RTBEngine::Math::Vector3 GetAttackDirectionFromJoystick(const RTBEngine::Math::Vector2& joystickValue) const;
     RTBEngine::Math::Vector3 GetActiveAttackDirection() const;
     void SendNetworkInput();

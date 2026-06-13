@@ -28,9 +28,10 @@ public:
     void OnValidate() override;
 
     RTBEngine::Math::Vector3 attackOriginOffset = RTBEngine::Math::Vector3(0.0f, 0.55f, 0.0f);
+    RTBEngine::ECS::GameObject* launchOriginObject = nullptr;
+    float launchForwardOffset = 0.35f;
     std::string projectileModel;
     std::string projectileTexture;
-    RTBEngine::Math::Vector3 projectileVisualScale = RTBEngine::Math::Vector3(1.0f, 1.0f, 1.0f);
     float cooldown = 0.8f;
     float damage = 25.0f;
     float hitDelay = 0.35f;

@@ -22,9 +22,9 @@ return {
         {
             type = "EnemyAnimationDriver",
             animator = "E1F5A9B7-1030-4F9B-9A18-77AD11B06E20/Animator",
-            walkAnimationFbx = "Assets/3D/KayKit_Adventurers_2.0_FREE/Animations/fbx/Rig_Medium/Rig_Medium_MovementBasic.fbx|Walking_A",
-            attackAnimationFbx = "Assets/3D/KayKit_Adventurers_2.0_FREE/Animations/fbx/Rig_Medium/Rig_Medium_General.fbx|Hit_A",
-            deathAnimationFbx = "Assets/3D/KayKit_Adventurers_2.0_FREE/Animations/fbx/Rig_Medium/Rig_Medium_General.fbx|Death_A"
+            walkAnimationFbx = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_MovementBasic.fbx|Walking_A",
+            attackAnimationFbx = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_CombatMelee.fbx|Melee_2H_Attack_Chop",
+            deathAnimationFbx = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_General.fbx|Death_A"
         },
         {
             type = "EnemyLocomotionController",
@@ -97,8 +97,9 @@ return {
                     playing = true,
                     looping = true,
                     additionalModels = {
-                        "Assets/3D/KayKit_Adventurers_2.0_FREE/Animations/fbx/Rig_Medium/Rig_Medium_MovementBasic.fbx",
-                        "Assets/3D/KayKit_Adventurers_2.0_FREE/Animations/fbx/Rig_Medium/Rig_Medium_General.fbx",
+                        "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_MovementBasic.fbx",
+                        "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_General.fbx",
+                        "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_CombatMelee.fbx",
                     }
                 },
             },

@@ -21,9 +21,9 @@ public:
     void OnValidate() override;
 
     RTBEngine::Animation::Animator* animator = nullptr;
-    std::string walkAnimationFbx = "Assets/Models/walking.fbx";
-    std::string attackAnimationFbx = "Assets/Models/attack.fbx";
-    std::string deathAnimationFbx = "Assets/Models/dying.fbx";
+    std::string walkAnimationFbx = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_MovementBasic.fbx|Walking_A";
+    std::string attackAnimationFbx = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_CombatMelee.fbx|Melee_2H_Attack_Chop";
+    std::string deathAnimationFbx = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_General.fbx|Death_A";
 
     RTB_COMPONENT(EnemyAnimationDriver)
 

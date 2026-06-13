@@ -54,9 +54,10 @@ namespace {
 
 RTB_REGISTER_COMPONENT(ProjectileAttackAbility)
     RTB_PROPERTY(attackOriginOffset)
+    RTB_PROPERTY_GAMEOBJECT(launchOriginObject)
+    RTB_PROPERTY_RANGE(launchForwardOffset, -2.0f, 2.0f)
     RTB_PROPERTY(projectileModel)
     RTB_PROPERTY(projectileTexture)
-    RTB_PROPERTY(projectileVisualScale)
     RTB_PROPERTY_RANGE(cooldown, 0.0f, 10.0f)
     RTB_PROPERTY_RANGE(damage, 0.0f, 1000.0f)
     RTB_PROPERTY_RANGE(hitDelay, 0.0f, 10.0f)
@@ -150,12 +151,8 @@ bool ProjectileAttackAbility::SpawnProjectile(RTBEngine::ECS::GameObject* instig
         : GetLaunchOrigin(instigator, planarDirection);
     const float projectileDiameter = projectileRadius * 2.0f;
     const float projectileYaw = -std::atan2(planarDirection.x, planarDirection.z) * kRadToDeg;
-    RTBEngine::Math::Quaternion projectileRotation =
+    const RTBEngine::Math::Quaternion projectileRotation =
         RTBEngine::Math::Quaternion::FromEulerAngles(0.0f, projectileYaw * kDegToRad, 0.0f);
-    if (!projectileModel.empty()) {
-        projectileRotation = projectileRotation *
-            RTBEngine::Math::Quaternion::FromEulerAngles(90.0f * kDegToRad, 0.0f, 0.0f);
-    }
 
     projectileObject->GetTransform().SetPosition(spawnPosition);
     projectileObject->GetTransform().SetRotation(projectileRotation);
@@ -194,12 +191,7 @@ bool ProjectileAttackAbility::SpawnProjectile(RTBEngine::ECS::GameObject* instig
                 }
             }
 
-            const RTBEngine::Math::Vector3 visualScale = projectileVisualScale;
-            projectileObject->GetTransform().SetScale(
-                RTBEngine::Math::Vector3(
-                    std::max(0.01f, visualScale.x),
-                    std::max(0.01f, visualScale.y),
-                    std::max(0.01f, visualScale.z)));
+            projectileObject->GetTransform().SetScale(RTBEngine::Math::Vector3::One());
         }
         else {
             projectileObject->GetTransform().SetScale(
@@ -295,6 +287,17 @@ RTBEngine::Math::Vector3 ProjectileAttackAbility::GetLaunchOrigin(
         return RTBEngine::Math::Vector3::Zero();
     }
 
+    const float minimumCenterHeight = instigator->GetWorldPosition().y + projectileRadius;
+
+    if (launchOriginObject) {
+        const RTBEngine::Math::Vector3 launchForward =
+            launchOriginObject->GetWorldRotation() * RTBEngine::Math::Vector3::Forward();
+        RTBEngine::Math::Vector3 origin =
+            launchOriginObject->GetWorldPosition() + launchForward * launchForwardOffset;
+        origin.y = std::max(origin.y, minimumCenterHeight);
+        return origin;
+    }
+
     RTBEngine::Math::Vector3 planarDirection = attackDirection;
     planarDirection.y = 0.0f;
     if (!HasPlanarDirection(planarDirection)) {
@@ -309,7 +312,6 @@ RTBEngine::Math::Vector3 ProjectileAttackAbility::GetLaunchOrigin(
 
     RTBEngine::Math::Vector3 origin =
         instigator->GetWorldPosition() + (instigator->GetWorldRotation() * attackOriginOffset);
-    const float minimumCenterHeight = instigator->GetWorldPosition().y + projectileRadius;
     origin.y = std::max(origin.y, minimumCenterHeight);
     return origin + planarDirection * GetLaunchClearance(instigator);
 }
@@ -372,6 +374,7 @@ void ProjectileAttackAbility::ClampSettings()
     projectileLifetime = std::max(0.01f, projectileLifetime);
     projectileRadius = std::max(0.05f, projectileRadius);
     maxHits = std::max(0, maxHits);
+    launchForwardOffset = std::clamp(launchForwardOffset, -2.0f, 2.0f);
 }
 
 RTBEngine::Physics::PhysicsWorld* ProjectileAttackAbility::ResolvePhysicsWorld(
