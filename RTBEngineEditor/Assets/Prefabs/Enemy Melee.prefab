@@ -94,7 +94,7 @@ return {
                     currentClipName = "Idle_A",
                     defaultClip = "Idle_A",
                     speed = 1.00,
-                    playing = true,
+                    playing = false,
                     looping = true,
                     additionalModels = {
                         "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_MovementBasic.fbx",

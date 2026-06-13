@@ -2,6 +2,7 @@
 
 #include "EditorPanel.h"
 #include <RTBEngine/Math/Vectors/Vector3.h>
+#include <RTBEngine/Math/Quaternions/Quaternion.h>
 #include <memory>
 #include <string>
 #include <array>
@@ -57,6 +58,7 @@ namespace RTBEditor {
         // Cached euler angles in degrees to avoid quaternion round-trip every frame
         RTBEngine::ECS::GameObject* cachedRotationTarget = nullptr;
         RTBEngine::Math::Vector3 cachedRotationDeg;
+        RTBEngine::Math::Quaternion cachedRotationSource = RTBEngine::Math::Quaternion::Identity();
 
         // Cached state for the cubemap asset editor
         std::filesystem::path cubemapEditorPath;

@@ -1185,7 +1185,7 @@ function CreateScene()
                                 currentClipName = "ThirdPerson.Idle",
                                 defaultClip = "Idle_A",
                                 speed = 1.00,
-                                playing = true,
+                                playing = false,
                                 looping = true,
                                 additionalModels = {
                                     "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_MovementBasic.fbx",
@@ -1374,7 +1374,7 @@ function CreateScene()
                                                                                                         name = "Ranger_Bow",
                                                                                                         uuid = "109DAEF5-4736-4BB3-B63F-DD6B5B44855E",
                                                                                                         position = Vector3(-0.25, 0.62, -0.14),
-                                                                                                        rotation = Quaternion.FromEulerAngles(-27.50, 21.72, 94.68),
+                                                                                                        rotation = Quaternion.FromEulerAngles(-27.50, 201.72, 94.68),
                                                                                                         scale = Vector3(1.00, 1.00, 1.00),
                                                                                                         components = {
                                                                                                             {

@@ -27,7 +27,7 @@
 #include <sstream>
 #include <filesystem>
 #include <algorithm>
-#include <cctype>
+#include <cmath>
 
 namespace RTBEditor {
 
@@ -50,6 +50,45 @@ namespace RTBEditor {
             std::transform(value.begin(), value.end(), value.begin(),
                 [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
             return value;
+        }
+
+        constexpr float kRotationRad2Deg = 180.0f / 3.14159265f;
+        constexpr float kRotationDeg2Rad = 3.14159265f / 180.0f;
+
+        float WrapDegrees(float degrees)
+        {
+            float wrapped = std::fmod(degrees + 180.0f, 360.0f);
+            if (wrapped < 0.0f) {
+                wrapped += 360.0f;
+            }
+            return wrapped - 180.0f;
+        }
+
+        RTBEngine::Math::Vector3 RotationDegreesFromQuaternion(const RTBEngine::Math::Quaternion& rotation)
+        {
+            const RTBEngine::Math::Vector3 radians = rotation.ToEulerAngles();
+            return RTBEngine::Math::Vector3(
+                WrapDegrees(radians.x * kRotationRad2Deg),
+                WrapDegrees(radians.y * kRotationRad2Deg),
+                WrapDegrees(radians.z * kRotationRad2Deg));
+        }
+
+        bool QuaternionsRepresentSameRotation(
+            const RTBEngine::Math::Quaternion& a,
+            const RTBEngine::Math::Quaternion& b)
+        {
+            return std::abs(a.Dot(b)) > 0.9999f;
+        }
+
+        void ApplyInspectorRotationDegrees(
+            RTBEngine::ECS::Transform& transform,
+            const RTBEngine::Math::Vector3& degrees)
+        {
+            const RTBEngine::Math::Vector3 radians(
+                WrapDegrees(degrees.x) * kRotationDeg2Rad,
+                WrapDegrees(degrees.y) * kRotationDeg2Rad,
+                WrapDegrees(degrees.z) * kRotationDeg2Rad);
+            transform.SetRotation(RTBEngine::Math::Quaternion::FromEulerAngles(radians));
         }
 
         bool HasFbxExtension(const std::filesystem::path& path) {
@@ -557,23 +596,25 @@ namespace RTBEditor {
                     RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
                 }
 
-                // Local rotation — angles relative to parent axes
-                constexpr float kRad2Deg = 180.0f / 3.14159265f;
-                constexpr float kDeg2Rad = 3.14159265f / 180.0f;
-                RTBEngine::Math::Quaternion localRot = transform.GetRotation();
+                // Local rotation — cached euler degrees; only resync when selection or gizmo changes it.
                 if (cachedRotationTarget != gameObject) {
                     cachedRotationTarget = gameObject;
-                    RTBEngine::Math::Vector3 r = localRot.ToEulerAngles();
-                    cachedRotationDeg = RTBEngine::Math::Vector3(r.x * kRad2Deg, r.y * kRad2Deg, r.z * kRad2Deg);
+                    cachedRotationDeg = RotationDegreesFromQuaternion(transform.GetRotation());
+                    cachedRotationSource = transform.GetRotation().Normalized();
                 }
-                if (ImGui::DragFloat3("Rotation", (float*)&cachedRotationDeg, 0.5f, 0.0f, 0.0f, "%.1f°")) {
-                    RTBEngine::Math::Vector3 newLocalRad(cachedRotationDeg.x * kDeg2Rad, cachedRotationDeg.y * kDeg2Rad, cachedRotationDeg.z * kDeg2Rad);
-                    transform.SetRotation(RTBEngine::Math::Quaternion::FromEulerAngles(newLocalRad));
+
+                if (ImGui::InputFloat3("Rotation", &cachedRotationDeg.x, "%.2f")) {
+                    ApplyInspectorRotationDegrees(transform, cachedRotationDeg);
+                    cachedRotationDeg = RotationDegreesFromQuaternion(transform.GetRotation());
+                    cachedRotationSource = transform.GetRotation().Normalized();
                     RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
                 }
-                if (!ImGui::IsItemActive()) {
-                    RTBEngine::Math::Vector3 r = transform.GetRotation().ToEulerAngles();
-                    cachedRotationDeg = RTBEngine::Math::Vector3(r.x * kRad2Deg, r.y * kRad2Deg, r.z * kRad2Deg);
+
+                const bool rotationFieldActive = ImGui::IsItemActive() || ImGui::IsItemFocused();
+                if (!rotationFieldActive &&
+                    !QuaternionsRepresentSameRotation(transform.GetRotation(), cachedRotationSource)) {
+                    cachedRotationDeg = RotationDegreesFromQuaternion(transform.GetRotation());
+                    cachedRotationSource = transform.GetRotation().Normalized();
                 }
 
                 // Local scale — real world scale = localScale * parent.worldScale (handled by engine)

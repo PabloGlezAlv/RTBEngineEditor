@@ -51,7 +51,7 @@ function CreateScene()
                         currentClipName = "Idle_A",
                         defaultClip = "Idle_A",
                         speed = 1.00,
-                        playing = true,
+                        playing = false,
                         looping = true,
                         additionalModels = {
                             "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_MovementBasic.fbx",
@@ -407,7 +407,7 @@ function CreateScene()
                         currentClipName = "Idle_A",
                         defaultClip = "Idle_A",
                         speed = 1.00,
-                        playing = true,
+                        playing = false,
                         looping = true,
                         additionalModels = {
                             "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_MovementBasic.fbx",
@@ -564,7 +564,7 @@ function CreateScene()
                         currentClipName = "Idle_A",
                         defaultClip = "Spawn_Ground",
                         speed = 1.00,
-                        playing = true,
+                        playing = false,
                         looping = true,
                         additionalModels = {
                             "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_MovementBasic.fbx",
@@ -905,7 +905,7 @@ function CreateScene()
                         currentClipName = "Idle_A",
                         defaultClip = "Jump_Idle",
                         speed = 1.00,
-                        playing = true,
+                        playing = false,
                         looping = true,
                         additionalModels = {
                             "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_MovementBasic.fbx",
@@ -1020,7 +1020,7 @@ function CreateScene()
                             {
                                 name = "Ranger_Bow",
                                 position = Vector3(0.00, 0.10, -0.06),
-                                rotation = Quaternion.FromEulerAngles(0.00, 0.00, -90.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, -90.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
@@ -1078,7 +1078,7 @@ function CreateScene()
                         currentClipName = "Idle_A",
                         defaultClip = "Walking_C",
                         speed = 1.00,
-                        playing = true,
+                        playing = false,
                         looping = true,
                         additionalModels = {
                             "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_MovementBasic.fbx",
