@@ -85,6 +85,7 @@ return {
         },
         {
             name = "Enemy Model",
+            uuid = "E1F5A9B7-1030-4F9B-9A18-77AD11B06E20",
             scale = Vector3(0.85, 0.85, 0.85),
             components = {
                 {
@@ -196,13 +197,20 @@ return {
                     }
                 },
                 {
-                    name = "Barbarian_Axe",
-                    components = {
+                    name = "handslot.r",
+                    children = {
                         {
-                            type = "MeshRenderer",
-                            model = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/axe_2handed.obj",
-                            textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/barbarian_texture.png",
-                            shader = "basic"
+                            name = "Barbarian_Axe",
+                            position = Vector3(0.00, 0.10, -0.06),
+                            rotation = Quaternion.FromEulerAngles(0.00, 0.00, 90.00),
+                            components = {
+                                {
+                                    type = "MeshRenderer",
+                                    model = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/axe_2handed.obj",
+                                    textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/barbarian_texture.png",
+                                    shader = "basic"
+                                },
+                            }
                         },
                     }
                 },

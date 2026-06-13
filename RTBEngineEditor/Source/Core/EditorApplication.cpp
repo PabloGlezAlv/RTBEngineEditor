@@ -18,6 +18,8 @@
 #include <RTBEngine/ECS/CameraComponent.h>
 #include <RTBEngine/Audio/AudioSystem.h>
 #include <RTBEngine/Physics/PhysicsWorld.h>
+#include <RTBEngine/ECS/ParticleSystem.h>
+#include <RTBEngine/Animation/Animator.h>
 #include "../UI/Panels/SceneViewPanel.h"
 #include "../Build/BuildSystem.h"
 
@@ -73,6 +75,27 @@ namespace {
         }
 
         return fs::absolute(projectFileName).lexically_normal();
+    }
+
+    void TickAnimatorPreview(RTBEngine::ECS::Scene* scene, float deltaTime)
+    {
+        if (!scene) {
+            return;
+        }
+
+        for (const auto& goPtr : scene->GetGameObjects()) {
+            RTBEngine::ECS::GameObject* go = goPtr.get();
+            if (!go || !go->IsActiveInHierarchy()) {
+                continue;
+            }
+
+            auto* animator = go->GetComponent<RTBEngine::Animation::Animator>();
+            if (!animator || !animator->IsPlaying()) {
+                continue;
+            }
+
+            animator->OnUpdate(deltaTime);
+        }
     }
 }
 
@@ -237,6 +260,7 @@ namespace RTBEditor {
             RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
             if (scene) {
                 RTBEngine::ECS::ParticleSystem::TickScenePreview(scene, deltaTime);
+                TickAnimatorPreview(scene, deltaTime);
             }
         }
 
