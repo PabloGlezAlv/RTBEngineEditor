@@ -28,6 +28,7 @@
 #include <filesystem>
 #include <algorithm>
 #include <cmath>
+#include <vector>
 
 namespace RTBEditor {
 
@@ -48,8 +49,16 @@ namespace RTBEditor {
 
         std::string ToLowerCopy(std::string value) {
             std::transform(value.begin(), value.end(), value.begin(),
-                [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
+                [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
             return value;
+        }
+
+        bool MatchesComponentSearch(const std::string& typeName, const char* filter) {
+            if (!filter || filter[0] == '\0') {
+                return true;
+            }
+
+            return ToLowerCopy(typeName).find(ToLowerCopy(filter)) != std::string::npos;
         }
 
         constexpr float kRotationRad2Deg = 180.0f / 3.14159265f;
@@ -494,18 +503,64 @@ namespace RTBEditor {
                 ImGui::OpenPopup("AddComponentPopup");
             }
 
-            if (ImGui::BeginPopup("AddComponentPopup")) {
-                auto types = RTBEngine::Reflection::TypeRegistry::GetInstance().GetRegisteredTypes();
-                for (const auto& type : types) {
-                    if (ImGui::MenuItem(type.c_str())) {
-                        auto* newComp = RTBEngine::Reflection::TypeRegistry::GetInstance().CreateComponent(type);
-                        if (newComp) {
-                            context.selectedGameObject->AddComponent(newComp);
-                            RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
-                        }
+            const bool addComponentPopupOpen = ImGui::IsPopupOpen("AddComponentPopup");
+            if (addComponentPopupWasOpen && !addComponentPopupOpen) {
+                addComponentSearchBuffer[0] = '\0';
+            }
+            addComponentPopupWasOpen = addComponentPopupOpen;
 
+            if (ImGui::BeginPopup("AddComponentPopup")) {
+                ImGui::SetNextItemWidth(280.0f);
+                if (ImGui::IsWindowAppearing()) {
+                    ImGui::SetKeyboardFocusHere();
+                }
+
+                ImGui::InputTextWithHint(
+                    "##ComponentSearch",
+                    "Search components...",
+                    addComponentSearchBuffer,
+                    sizeof(addComponentSearchBuffer));
+
+                auto types = RTBEngine::Reflection::TypeRegistry::GetInstance().GetRegisteredTypes();
+                std::vector<std::string> sortedTypes(types.begin(), types.end());
+                std::sort(sortedTypes.begin(), sortedTypes.end());
+
+                int visibleCount = 0;
+                for (const std::string& type : sortedTypes) {
+                    if (MatchesComponentSearch(type, addComponentSearchBuffer)) {
+                        ++visibleCount;
                     }
                 }
+
+                ImGui::TextDisabled("%d component%s", visibleCount, visibleCount == 1 ? "" : "s");
+                ImGui::Separator();
+
+                const float preferredHeight = visibleCount * 22.0f + 8.0f;
+                const float listHeight = (std::min)(320.0f, (std::max)(120.0f, preferredHeight));
+                if (ImGui::BeginChild("AddComponentList", ImVec2(280.0f, listHeight), true)) {
+                    if (visibleCount == 0) {
+                        ImGui::TextDisabled("No components match your search.");
+                    } else {
+                        for (const std::string& type : sortedTypes) {
+                            if (!MatchesComponentSearch(type, addComponentSearchBuffer)) {
+                                continue;
+                            }
+
+                            if (ImGui::Selectable(type.c_str())) {
+                                auto* newComp =
+                                    RTBEngine::Reflection::TypeRegistry::GetInstance().CreateComponent(type);
+                                if (newComp) {
+                                    context.selectedGameObject->AddComponent(newComp);
+                                    RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                                }
+                                addComponentSearchBuffer[0] = '\0';
+                                ImGui::CloseCurrentPopup();
+                            }
+                        }
+                    }
+                }
+                ImGui::EndChild();
+
                 ImGui::EndPopup();
             }
 

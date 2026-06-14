@@ -78,6 +78,9 @@ namespace RTBEditor {
         RTBEngine::Animation::Animator* animatorScanTarget = nullptr;
         std::string animatorScanStatus;
 
+        char addComponentSearchBuffer[128] = {};
+        bool addComponentPopupWasOpen = false;
+
     };
 
 }
