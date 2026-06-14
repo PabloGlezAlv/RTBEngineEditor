@@ -17,7 +17,6 @@ public:
     ~EnemyAnimationDriver() override = default;
 
     void OnStart() override;
-    void OnUpdate(float deltaTime) override;
     void OnValidate() override;
 
     RTBEngine::Animation::Animator* animator = nullptr;

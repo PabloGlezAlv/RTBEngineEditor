@@ -21,12 +21,6 @@ void EnemyAnimationDriver::OnStart()
     RegisterAnimationSlots();
 }
 
-void EnemyAnimationDriver::OnUpdate(float /*deltaTime*/)
-{
-    ResolveAnimator();
-    RegisterAnimationSlots();
-}
-
 void EnemyAnimationDriver::OnValidate()
 {
     ResolveAnimator();
@@ -37,7 +31,8 @@ void EnemyAnimationDriver::OnValidate()
 
 void EnemyAnimationDriver::ResolveAnimator()
 {
-    if (animator || !owner) {
+    if (!owner) {
+        animator = nullptr;
         return;
     }
 

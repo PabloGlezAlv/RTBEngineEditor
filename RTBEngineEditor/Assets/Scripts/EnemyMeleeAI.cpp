@@ -63,7 +63,6 @@ void EnemyMeleeAI::OnUpdate(float deltaTime)
     }
 
     ClampSettings();
-    ResolveDependencies();
     RebindHealthSubscriptions();
 
     if (!HasSimulationAuthority()) {
@@ -106,7 +105,6 @@ void EnemyMeleeAI::OnFixedUpdate(float fixedDeltaTime)
         return;
     }
 
-    ResolveDependencies();
     if (!locomotion) {
         return;
     }

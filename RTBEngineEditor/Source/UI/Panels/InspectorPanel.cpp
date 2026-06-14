@@ -91,6 +91,20 @@ namespace RTBEditor {
             transform.SetRotation(RTBEngine::Math::Quaternion::FromEulerAngles(radians));
         }
 
+        void NotifyAnimatorAttachmentTransformChanged(RTBEngine::ECS::GameObject* gameObject)
+        {
+            if (!gameObject) {
+                return;
+            }
+
+            for (RTBEngine::ECS::GameObject* current = gameObject; current; current = current->GetParent()) {
+                if (auto* animator = current->GetComponent<RTBEngine::Animation::Animator>()) {
+                    animator->RefreshBoneAttachmentTransform(gameObject);
+                    return;
+                }
+            }
+        }
+
         bool HasFbxExtension(const std::filesystem::path& path) {
             return ToLowerCopy(path.extension().string()) == ".fbx";
         }
@@ -593,6 +607,7 @@ namespace RTBEditor {
                 RTBEngine::Math::Vector3 localPos = transform.GetPosition();
                 if (ImGui::DragFloat3("Position", (float*)&localPos, 0.1f)) {
                     transform.SetPosition(localPos);
+                    NotifyAnimatorAttachmentTransformChanged(gameObject);
                     RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
                 }
 
@@ -607,6 +622,7 @@ namespace RTBEditor {
                     ApplyInspectorRotationDegrees(transform, cachedRotationDeg);
                     cachedRotationDeg = RotationDegreesFromQuaternion(transform.GetRotation());
                     cachedRotationSource = transform.GetRotation().Normalized();
+                    NotifyAnimatorAttachmentTransformChanged(gameObject);
                     RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
                 }
 
@@ -621,6 +637,7 @@ namespace RTBEditor {
                 RTBEngine::Math::Vector3 localScale = transform.GetScale();
                 if (ImGui::DragFloat3("Scale", (float*)&localScale, 0.01f)) {
                     transform.SetScale(localScale);
+                    NotifyAnimatorAttachmentTransformChanged(gameObject);
                     RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
                 }
             }

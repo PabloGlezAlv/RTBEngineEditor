@@ -142,6 +142,8 @@ void ThirdPersonCharacterController::OnStart()
     }
     RTBEngine::Input::InputManager::GetInstance().SetMouseRelativeMode(false);
 
+    SetAimArrowVisible(false);
+
     if (health && health->IsDead()) {
         HandleDeath(health->GetLastDeathEvent());
     }
@@ -159,14 +161,6 @@ void ThirdPersonCharacterController::OnUpdate(float deltaTime)
     }
 
     ClampSettings();
-    ResolveHealth();
-    ResolveAnimator();
-    ResolveProjectileAttack();
-    ResolveAttackAimTrail();
-    RegisterAnimationSlots();
-    ResolveCameraObject();
-    DisableCompetingCameraController();
-    RebindHealthSubscription();
 
     if (state == State::Dead) {
         HideAttackAimTrail();
@@ -187,9 +181,6 @@ void ThirdPersonCharacterController::OnFixedUpdate(float fixedDeltaTime)
     if (!owner) {
         return;
     }
-
-    ResolveAnimator();
-    RegisterAnimationSlots();
 
     // Client local pawn: send input to host and drive animator locally (transform comes from network).
     if (state == State::Dead) {
@@ -216,10 +207,6 @@ void ThirdPersonCharacterController::OnFixedUpdate(float fixedDeltaTime)
     }
 
     ClampSettings();
-    ResolveHealth();
-    ResolveCameraObject();
-    ResolveProjectileAttack();
-    ConfigurePhysicsBody();
 
     if (state == State::Dead) {
         HideAttackAimTrail();
@@ -276,7 +263,6 @@ void ThirdPersonCharacterController::OnLateUpdate(float deltaTime)
         return;
     }
 
-    ResolveCameraObject();
     DisableCompetingCameraController();
 
     if (state == State::Dead && deathCameraFrozen) {
@@ -358,7 +344,7 @@ void ThirdPersonCharacterController::OnValidate()
 void ThirdPersonCharacterController::OnDestroy()
 {
     HideAttackAimTrail();
-    SetAimArrowVisible(false);
+    aimArrowVisual = nullptr;
     UnsubscribeFromAttackJoystick();
     UnsubscribeFromHealth();
     RTBEngine::Input::InputManager::GetInstance().SetMouseRelativeMode(false);
@@ -679,6 +665,7 @@ void ThirdPersonCharacterController::TryBeginAiming()
 
     state = State::Aiming;
     aimPhase = AimPhase::Draw;
+    SetAimArrowVisible(true);
 
     if (aimDrawSlotState.ready && animator->GetClip(kAimDrawAlias)) {
         animator->Play(kAimDrawAlias, false);
@@ -708,12 +695,7 @@ void ThirdPersonCharacterController::UpdateAimingState(float /*deltaTime*/)
     }
 
     UpdateAttackAimTrail();
-
-    if (attackJoystick) {
-        const RTBEngine::Math::Vector3 aimDirection =
-            GetAttackDirectionFromJoystick(attackJoystick->GetValue());
-        SetAimArrowVisible(HasMovementInput(aimDirection));
-    }
+    SetAimArrowVisible(true);
 }
 
 void ThirdPersonCharacterController::FinishAiming()
@@ -811,8 +793,19 @@ void ThirdPersonCharacterController::UpdateAimingMovement(float deltaTime)
 
 void ThirdPersonCharacterController::SetAimArrowVisible(bool visible)
 {
-    if (aimArrowVisual) {
-        aimArrowVisual->SetActive(visible);
+    if (!aimArrowVisual || !owner) {
+        return;
+    }
+
+    if (owner->IsBeingDestroyed() || aimArrowVisual->IsBeingDestroyed()) {
+        return;
+    }
+
+    for (RTBEngine::ECS::GameObject* current = aimArrowVisual; current; current = current->GetParent()) {
+        if (current == owner) {
+            aimArrowVisual->SetActive(visible);
+            return;
+        }
     }
 }
 
