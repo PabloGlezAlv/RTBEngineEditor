@@ -92,8 +92,15 @@ namespace RTBEditor {
                 ImVec2(1, 0)   // UV bottom-right (flipped)
             );
 
-            HandleObjectPicking(context);
+            ImGuizmo::BeginFrame();
+            ImGuizmo::SetDrawlist();
+            {
+                ImVec2 windowPos = ImGui::GetItemRectMin();
+                ImGuizmo::SetRect(windowPos.x, windowPos.y, (float)viewportWidth, (float)viewportHeight);
+            }
+
             HandleGizmo(context);
+            HandleObjectPicking(context);
 
             // Draw view cube overlay
             DrawViewCube();
@@ -172,6 +179,21 @@ namespace RTBEditor {
             return;
         }
 
+        // Only block picking when clicking a gizmo handle (axis/ring), not the mesh.
+        if (context.selectedGameObject) {
+            ImGuizmo::OPERATION activeOp = ImGuizmo::TRANSLATE;
+            switch (gizmoOperation) {
+            case GizmoOperation::Translate: activeOp = ImGuizmo::TRANSLATE; break;
+            case GizmoOperation::Rotate: activeOp = ImGuizmo::ROTATE; break;
+            case GizmoOperation::Scale: activeOp = ImGuizmo::SCALE; break;
+            default: break;
+            }
+
+            if (ImGuizmo::IsOver(activeOp) || ImGuizmo::IsUsing()) {
+                return;
+            }
+        }
+
         ImVec2 mousePos = ImGui::GetMousePos();
         ImVec2 windowPos = ImGui::GetItemRectMin();
 
@@ -216,13 +238,11 @@ namespace RTBEditor {
             }
             if (meshesToTest.empty()) continue;
 
-            // Calculate world-space AABB as union of all meshes
+            RTBEngine::Math::Vector3 worldPos = obj->GetWorldPosition();
+            RTBEngine::Math::Vector3 worldScale = obj->GetWorldScale();
+
             RTBEngine::Math::Vector3 worldMin(std::numeric_limits<float>::max());
             RTBEngine::Math::Vector3 worldMax(std::numeric_limits<float>::lowest());
-
-            RTBEngine::ECS::Transform& transform = obj->GetTransform();
-            RTBEngine::Math::Vector3 position = transform.GetPosition();
-            RTBEngine::Math::Vector3 scale = transform.GetScale();
 
             for (RTBEngine::Rendering::Mesh* mesh : meshesToTest) {
                 if (!mesh) continue;
@@ -230,8 +250,8 @@ namespace RTBEditor {
                 RTBEngine::Math::Vector3 meshMin = mesh->GetAABBMin();
                 RTBEngine::Math::Vector3 meshMax = mesh->GetAABBMax();
 
-                RTBEngine::Math::Vector3 transformedMin = position + meshMin * scale;
-                RTBEngine::Math::Vector3 transformedMax = position + meshMax * scale;
+                RTBEngine::Math::Vector3 transformedMin = worldPos + meshMin * worldScale;
+                RTBEngine::Math::Vector3 transformedMax = worldPos + meshMax * worldScale;
 
                 worldMin.x = std::min(worldMin.x, transformedMin.x);
                 worldMin.y = std::min(worldMin.y, transformedMin.y);
@@ -242,13 +262,14 @@ namespace RTBEditor {
                 worldMax.z = std::max(worldMax.z, transformedMax.z);
             }
 
-            // Test ray intersection
-            float distance;
-            if (ray.IntersectsAABB(worldMin, worldMax, distance)) {
-                if (distance < closestDistance) {
-                    closestDistance = distance;
-                    closestObject = obj;
-                }
+            float distance = 0.0f;
+            if (!ray.IntersectsAABB(worldMin, worldMax, distance)) {
+                continue;
+            }
+
+            if (distance < closestDistance) {
+                closestDistance = distance;
+                closestObject = obj;
             }
         }
 
@@ -273,14 +294,6 @@ namespace RTBEditor {
         if (ImGui::IsMouseDown(ImGuiMouseButton_Right)) {
             return;
         }
-
-        // Setup ImGuizmo
-        ImGuizmo::BeginFrame();
-        ImGuizmo::SetDrawlist();
-
-        // Set the rect for the viewport
-        ImVec2 windowPos = ImGui::GetItemRectMin();
-        ImGuizmo::SetRect(windowPos.x, windowPos.y, (float)viewportWidth, (float)viewportHeight);
 
         // Get view and projection matrices
         RTBEngine::Math::Matrix4 viewMatrix = editorCamera.GetViewMatrix();

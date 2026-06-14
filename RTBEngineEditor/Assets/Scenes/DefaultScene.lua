@@ -536,7 +536,7 @@ function CreateScene()
             {
                 name = "Floor",
                 uuid = "737688CD-BE46-4776-B38D-CA30B01FB6D1",
-                position = Vector3(-0.46, -0.05, 0.00),
+                position = Vector3(-0.02, -0.09, 0.00),
                 scale = Vector3(30.00, 0.10, 30.00),
                 components = {
                     {
@@ -618,11 +618,6 @@ function CreateScene()
                 },
                 children = {
                     {
-                        name = "EnemyAttackOrigin",
-                        uuid = "45674572-2177-4029-BF13-CB3593465430",
-                        position = Vector3(0.00, 0.85, 0.75),
-                    },
-                    {
                         name = "Enemy Model",
                         uuid = "E1F5A9B7-1030-4F9B-9A18-77AD11B06E20",
                         scale = Vector3(0.85, 0.85, 0.85),
@@ -630,215 +625,20 @@ function CreateScene()
                             {
                                 type = "Animator",
                                 modelRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Barbarian.fbx",
-                                currentClipName = "EnemyMelee.Walk",
-                                defaultClip = "EnemyMelee.Walk",
+                                currentClipName = "Idle_A",
+                                defaultClip = "Idle_A",
                                 speed = 1.00,
-                                playing = true,
-                                looping = true
+                                playing = false,
+                                looping = true,
+                                additionalModels = {
+                                    "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_MovementBasic.fbx",
+                                    "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_General.fbx",
+                                    "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_CombatMelee.fbx",
+                                }
                             },
                         },
                         children = {
-                            {
-                                name = "Barbarian_Body",
-                                uuid = "2441A619-E72C-44D0-AD2C-C2B4281B292C",
-                                components = {
-                                    {
-                                        type = "MeshRenderer",
-                                        meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Barbarian.fbx",
-                                        textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/barbarian_texture.png",
-                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        meshIndex = 0,
-                                        multiMesh = false
-                                    },
-                                }
-                            },
-                            {
-                                name = "Barbarian_Head",
-                                uuid = "D3D6EC4A-423A-4243-9C41-CAD1D726AF0E",
-                                position = Vector3(0.00, 1.22, 0.00),
-                                components = {
-                                    {
-                                        type = "MeshRenderer",
-                                        meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Barbarian.fbx",
-                                        textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/barbarian_texture.png",
-                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        meshIndex = 1,
-                                        multiMesh = false
-                                    },
-                                }
-                            },
-                            {
-                                name = "Barbarian_BearHat",
-                                uuid = "122F6981-F1A3-4556-A29A-A5CBAF1FD0B4",
-                                position = Vector3(0.00, 1.22, 0.00),
-                                components = {
-                                    {
-                                        type = "MeshRenderer",
-                                        meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Barbarian.fbx",
-                                        textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/barbarian_texture.png",
-                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        meshIndex = 2,
-                                        multiMesh = false
-                                    },
-                                }
-                            },
-                            {
-                                name = "Barbarian_LegLeft",
-                                uuid = "73BA530A-41C0-4C8C-84B8-50A3E753AC32",
-                                components = {
-                                    {
-                                        type = "MeshRenderer",
-                                        meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Barbarian.fbx",
-                                        textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/barbarian_texture.png",
-                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        meshIndex = 3,
-                                        multiMesh = false
-                                    },
-                                }
-                            },
-                            {
-                                name = "Barbarian_LegRight",
-                                uuid = "4291A6B3-C51F-44CB-881C-92E355B88259",
-                                components = {
-                                    {
-                                        type = "MeshRenderer",
-                                        meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Barbarian.fbx",
-                                        textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/barbarian_texture.png",
-                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        meshIndex = 4,
-                                        multiMesh = false
-                                    },
-                                }
-                            },
-                            {
-                                name = "Barbarian_ArmRight",
-                                uuid = "F14EC434-AC34-41A8-8252-418A581F3F7A",
-                                components = {
-                                    {
-                                        type = "MeshRenderer",
-                                        meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Barbarian.fbx",
-                                        textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/barbarian_texture.png",
-                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        meshIndex = 5,
-                                        multiMesh = false
-                                    },
-                                }
-                            },
-                            {
-                                name = "Barbarian_ArmLeft",
-                                uuid = "81203BCF-07BF-4C38-AB9F-73659F302767",
-                                components = {
-                                    {
-                                        type = "MeshRenderer",
-                                        meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Barbarian.fbx",
-                                        textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/barbarian_texture.png",
-                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        meshIndex = 6,
-                                        multiMesh = false
-                                    },
-                                }
-                            },
-                            {
-                                name = "Barbarian_Body",
-                                uuid = "232F7F49-0302-4BAE-9720-A2DE2E34E6C6",
-                                components = {
-                                    {
-                                        type = "MeshRenderer",
-                                        meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Barbarian.fbx",
-                                        textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/barbarian_texture.png",
-                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        meshIndex = 0,
-                                        multiMesh = false
-                                    },
-                                }
-                            },
-                            {
-                                name = "Barbarian_Head",
-                                uuid = "93F2CA51-BEF3-4F66-9D49-356D7BC9BF7D",
-                                position = Vector3(0.00, 1.22, 0.00),
-                                components = {
-                                    {
-                                        type = "MeshRenderer",
-                                        meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Barbarian.fbx",
-                                        textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/barbarian_texture.png",
-                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        meshIndex = 1,
-                                        multiMesh = false
-                                    },
-                                }
-                            },
-                            {
-                                name = "Barbarian_BearHat",
-                                uuid = "5D86AD71-144B-4AB3-B110-361C5C53AF12",
-                                position = Vector3(0.00, 1.22, 0.00),
-                                components = {
-                                    {
-                                        type = "MeshRenderer",
-                                        meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Barbarian.fbx",
-                                        textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/barbarian_texture.png",
-                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        meshIndex = 2,
-                                        multiMesh = false
-                                    },
-                                }
-                            },
-                            {
-                                name = "Barbarian_LegLeft",
-                                uuid = "F0230142-C2A2-4B9E-893F-8BCB52E4EDD3",
-                                components = {
-                                    {
-                                        type = "MeshRenderer",
-                                        meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Barbarian.fbx",
-                                        textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/barbarian_texture.png",
-                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        meshIndex = 3,
-                                        multiMesh = false
-                                    },
-                                }
-                            },
-                            {
-                                name = "Barbarian_LegRight",
-                                uuid = "5D8C17C8-2E30-4DBE-9259-0FBB225D4A11",
-                                components = {
-                                    {
-                                        type = "MeshRenderer",
-                                        meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Barbarian.fbx",
-                                        textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/barbarian_texture.png",
-                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        meshIndex = 4,
-                                        multiMesh = false
-                                    },
-                                }
-                            },
-                            {
-                                name = "Barbarian_ArmRight",
-                                uuid = "51E7FB61-93B0-44BF-B551-3778CF8E1A16",
-                                components = {
-                                    {
-                                        type = "MeshRenderer",
-                                        meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Barbarian.fbx",
-                                        textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/barbarian_texture.png",
-                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        meshIndex = 5,
-                                        multiMesh = false
-                                    },
-                                }
-                            },
-                            {
-                                name = "Barbarian_ArmLeft",
-                                uuid = "39BE552A-963C-41EA-8732-38A076126CB6",
-                                components = {
-                                    {
-                                        type = "MeshRenderer",
-                                        meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Barbarian.fbx",
-                                        textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/barbarian_texture.png",
-                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        meshIndex = 6,
-                                        multiMesh = false
-                                    },
-                                }
-                            },
-                            {
+{
                                 name = "root",
                                 uuid = "A913A790-4692-4110-A796-722BD0230BA6",
                                 children = {
@@ -984,11 +784,6 @@ function CreateScene()
                                 }
                             },
                         }
-                    },
-                    {
-                        name = "EnemyAttackOrigin",
-                        uuid = "AC48CFD4-4A41-4910-9F90-799ECC997F70",
-                        position = Vector3(0.00, 0.85, 0.75),
                     },
                 }
             },
@@ -1454,7 +1249,7 @@ function CreateScene()
                                                                                                     {
                                                                                                         name = "Ranger_Bow",
                                                                                                         uuid = "109DAEF5-4736-4BB3-B63F-DD6B5B44855E",
-                                                                                                        rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
+                                                                                                        rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
                                                                                                         components = {
                                                                                                             {
                                                                                                                 type = "MeshRenderer",

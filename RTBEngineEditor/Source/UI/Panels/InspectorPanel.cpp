@@ -651,30 +651,21 @@ namespace RTBEditor {
                     RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
                 }
 
-                // Local rotation in degrees: X=pitch, Y=yaw, Z=roll (engine YXZ convention).
+                // Local rotation — cached euler degrees; resync when selection or gizmo changes it.
                 if (cachedRotationTarget != gameObject) {
                     cachedRotationTarget = gameObject;
                     cachedRotationDeg = RotationDegreesFromQuaternion(transform.GetRotation());
                     cachedRotationSource = transform.GetRotation().Normalized();
                 }
 
-                ImGui::TextUnformatted("Rotation");
-                ImGui::PushID("RotationEuler");
-                bool rotationChanged = false;
-                rotationChanged |= ImGui::DragFloat("X##RotX", &cachedRotationDeg.x, 0.5f, -180.0f, 180.0f, "X: %.2f");
-                rotationChanged |= ImGui::DragFloat("Y##RotY", &cachedRotationDeg.y, 0.5f, -180.0f, 180.0f, "Y: %.2f");
-                rotationChanged |= ImGui::DragFloat("Z##RotZ", &cachedRotationDeg.z, 0.5f, -180.0f, 180.0f, "Z: %.2f");
-                ImGui::PopID();
-
-                const bool rotationFieldActive = ImGui::IsAnyItemActive() || ImGui::IsAnyItemFocused();
-
-                if (rotationChanged) {
+                if (ImGui::DragFloat3("Rotation", (float*)&cachedRotationDeg, 0.5f)) {
                     ApplyInspectorRotationDegrees(transform, cachedRotationDeg);
                     cachedRotationDeg = RotationDegreesFromQuaternion(transform.GetRotation());
                     cachedRotationSource = transform.GetRotation().Normalized();
                     RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
                 }
 
+                const bool rotationFieldActive = ImGui::IsItemActive() || ImGui::IsItemFocused();
                 if (!rotationFieldActive &&
                     !QuaternionsRepresentSameRotation(transform.GetRotation(), cachedRotationSource)) {
                     cachedRotationDeg = RotationDegreesFromQuaternion(transform.GetRotation());
