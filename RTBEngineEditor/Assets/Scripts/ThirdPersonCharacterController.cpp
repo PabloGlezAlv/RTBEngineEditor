@@ -42,6 +42,8 @@ namespace {
     constexpr const char* kIdleAlias = "ThirdPerson.Idle";
     constexpr const char* kWalkAlias = "ThirdPerson.Walk";
     constexpr const char* kRunAlias = "ThirdPerson.Run";
+    constexpr const char* kAimDrawAlias = "ThirdPerson.AimDraw";
+    constexpr const char* kAimLoopAlias = "ThirdPerson.AimLoop";
     constexpr const char* kAttackAlias = "ThirdPerson.Attack";
     constexpr const char* kDeathAlias = "ThirdPerson.Death";
 
@@ -110,9 +112,12 @@ RTB_REGISTER_COMPONENT(ThirdPersonCharacterController)
     RTB_PROPERTY_COMPONENT(projectileAttack, ProjectileAttackAbility)
     RTB_PROPERTY_COMPONENT(attackJoystick, UIJoystick)
     RTB_PROPERTY_COMPONENT(attackAimTrail, TrailRenderer)
+    RTB_PROPERTY_GAMEOBJECT(aimArrowVisual)
     RTB_PROPERTY_FBX(idleAnimationFbx)
     RTB_PROPERTY_FBX(walkAnimationFbx)
     RTB_PROPERTY_FBX(runAnimationFbx)
+    RTB_PROPERTY_FBX(aimDrawAnimationFbx)
+    RTB_PROPERTY_FBX(aimLoopAnimationFbx)
     RTB_PROPERTY_FBX(attackAnimationFbx)
     RTB_PROPERTY_FBX(deathAnimationFbx)
 RTB_END_REGISTER(ThirdPersonCharacterController)
@@ -165,11 +170,13 @@ void ThirdPersonCharacterController::OnUpdate(float deltaTime)
 
     if (state == State::Dead) {
         HideAttackAimTrail();
+        SetAimArrowVisible(false);
         return;
     }
 
     if (state == State::Attacking) {
         HideAttackAimTrail();
+        SetAimArrowVisible(false);
         UpdatePredictedAttackVisual(deltaTime);
         return;
     }
@@ -187,6 +194,7 @@ void ThirdPersonCharacterController::OnFixedUpdate(float fixedDeltaTime)
     // Client local pawn: send input to host and drive animator locally (transform comes from network).
     if (state == State::Dead) {
         HideAttackAimTrail();
+        SetAimArrowVisible(false);
         StopPlanarMotion();
         return;
     }
@@ -194,6 +202,9 @@ void ThirdPersonCharacterController::OnFixedUpdate(float fixedDeltaTime)
     if (RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby() &&
         !RTBEngine::Online::OnlineGameplayNet::IsLobbyHost() &&
         IsLocallyControlled()) {
+        if (state == State::Aiming) {
+            UpdateAimingMovement(fixedDeltaTime);
+        }
         SendNetworkInput();
         UpdateAnimatorFromLocalInput();
         return;
@@ -212,20 +223,31 @@ void ThirdPersonCharacterController::OnFixedUpdate(float fixedDeltaTime)
 
     if (state == State::Dead) {
         HideAttackAimTrail();
+        SetAimArrowVisible(false);
         StopPlanarMotion();
         return;
     }
 
     if (PauseMenuController::IsAnyMenuOpen()) {
         HideAttackAimTrail();
+        SetAimArrowVisible(false);
         StopPlanarMotion();
+        if (state == State::Aiming) {
+            FinishAiming();
+        }
         UpdateAnimatorLocomotion(false, false);
         return;
     }
 
     if (state == State::Attacking) {
         HideAttackAimTrail();
+        SetAimArrowVisible(false);
         UpdateAttackFacingLock(fixedDeltaTime);
+        return;
+    }
+
+    if (state == State::Aiming) {
+        UpdateAimingMovement(fixedDeltaTime);
         return;
     }
 
@@ -267,8 +289,25 @@ void ThirdPersonCharacterController::OnLateUpdate(float deltaTime)
 
     ApplyCameraFollowTransform();
 
+    const bool dragging = attackJoystick && attackJoystick->IsDragging();
+
+    if (state == State::Locomotion && dragging && !wasDraggingJoystick && CanStartAiming()) {
+        TryBeginAiming();
+    }
+
+    if (state == State::Aiming) {
+        UpdateAimingState(deltaTime);
+        wasDraggingJoystick = dragging;
+        if (state == State::Attacking) {
+            // Release during this frame transitioned to attack; finish attack polling below.
+        } else {
+            return;
+        }
+    }
+
+    wasDraggingJoystick = dragging;
+
     if (state == State::Locomotion) {
-        UpdateAttackAimTrail();
         return;
     }
 
@@ -309,6 +348,7 @@ void ThirdPersonCharacterController::OnValidate()
     DisableCompetingCameraController();
     RebindAttackJoystickSubscription();
     HideAttackAimTrail();
+    SetAimArrowVisible(false);
     UpdateAnimatorLocomotion(false, false);
     if (IsLocallyControlled()) {
         ApplyCameraFollowTransform();
@@ -318,6 +358,7 @@ void ThirdPersonCharacterController::OnValidate()
 void ThirdPersonCharacterController::OnDestroy()
 {
     HideAttackAimTrail();
+    SetAimArrowVisible(false);
     UnsubscribeFromAttackJoystick();
     UnsubscribeFromHealth();
     RTBEngine::Input::InputManager::GetInstance().SetMouseRelativeMode(false);
@@ -437,8 +478,11 @@ void ThirdPersonCharacterController::ReviveFromDeath()
 
     state = State::Locomotion;
     deathCameraFrozen = false;
+    aimPhase = AimPhase::Draw;
+    wasDraggingJoystick = false;
     activeAttackDirection = RTBEngine::Math::Vector3::Zero();
     HideAttackAimTrail();
+    SetAimArrowVisible(false);
 
     ResolveAnimator();
     RegisterAnimationSlots();
@@ -490,6 +534,8 @@ void ThirdPersonCharacterController::RegisterAnimationSlots()
         idleSlotState = {};
         walkSlotState = {};
         runSlotState = {};
+        aimDrawSlotState = {};
+        aimLoopSlotState = {};
         attackSlotState = {};
         deathSlotState = {};
     }
@@ -497,6 +543,7 @@ void ThirdPersonCharacterController::RegisterAnimationSlots()
     if (!animator) {
         if (!missingAnimatorWarningShown &&
             (!idleAnimationFbx.empty() || !walkAnimationFbx.empty() || !runAnimationFbx.empty() ||
+             !aimDrawAnimationFbx.empty() || !aimLoopAnimationFbx.empty() ||
              !attackAnimationFbx.empty() || !deathAnimationFbx.empty())) {
             RTB_WARN("[ThirdPersonCharacterController] Assign an Animator component to use FBX animation slots.");
             missingAnimatorWarningShown = true;
@@ -509,6 +556,8 @@ void ThirdPersonCharacterController::RegisterAnimationSlots()
     RegisterAnimationSlot("Idle", idleAnimationFbx, kIdleAlias, idleSlotState);
     RegisterAnimationSlot("Walk", walkAnimationFbx, kWalkAlias, walkSlotState);
     RegisterAnimationSlot("Run", runAnimationFbx, kRunAlias, runSlotState);
+    RegisterAnimationSlot("AimDraw", aimDrawAnimationFbx, kAimDrawAlias, aimDrawSlotState);
+    RegisterAnimationSlot("AimLoop", aimLoopAnimationFbx, kAimLoopAlias, aimLoopSlotState);
     RegisterAnimationSlot("Attack", attackAnimationFbx, kAttackAlias, attackSlotState);
     RegisterAnimationSlot("Death", deathAnimationFbx, kDeathAlias, deathSlotState);
 }
@@ -575,7 +624,9 @@ void ThirdPersonCharacterController::UnsubscribeFromAttackJoystick()
 
 void ThirdPersonCharacterController::HandleJoystickAttackReleased(const RTBEngine::Math::Vector2& joystickValue)
 {
+    const bool wasAiming = (state == State::Aiming);
     HideAttackAimTrail();
+    SetAimArrowVisible(false);
 
     if (!IsLocallyControlled()) {
         return;
@@ -585,10 +636,20 @@ void ThirdPersonCharacterController::HandleJoystickAttackReleased(const RTBEngin
         projectileAttack->GetDamageAmount() <= 0.0f ||
         projectileAttack->IsCoolingDown() ||
         PauseMenuController::IsAnyMenuOpen()) {
+        if (wasAiming) {
+            FinishAiming();
+        }
         return;
     }
 
     const RTBEngine::Math::Vector3 attackDirection = GetAttackDirectionFromJoystick(joystickValue);
+    if (!HasMovementInput(attackDirection)) {
+        if (wasAiming) {
+            FinishAiming();
+        }
+        return;
+    }
+
     if (RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby() &&
         !RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
         ++networkAttackSequence;
@@ -598,6 +659,161 @@ void ThirdPersonCharacterController::HandleJoystickAttackReleased(const RTBEngin
     }
 
     StartAttack(attackDirection);
+}
+
+bool ThirdPersonCharacterController::CanStartAiming() const
+{
+    return attackJoystick &&
+        projectileAttack &&
+        projectileAttack->GetDamageAmount() > 0.0f &&
+        !projectileAttack->IsCoolingDown() &&
+        !PauseMenuController::IsAnyMenuOpen() &&
+        state == State::Locomotion;
+}
+
+void ThirdPersonCharacterController::TryBeginAiming()
+{
+    if (!CanStartAiming() || !animator) {
+        return;
+    }
+
+    state = State::Aiming;
+    aimPhase = AimPhase::Draw;
+
+    if (aimDrawSlotState.ready && animator->GetClip(kAimDrawAlias)) {
+        animator->Play(kAimDrawAlias, false);
+        return;
+    }
+
+    if (aimLoopSlotState.ready && animator->GetClip(kAimLoopAlias)) {
+        aimPhase = AimPhase::Hold;
+        animator->Play(kAimLoopAlias, true);
+    }
+}
+
+void ThirdPersonCharacterController::UpdateAimingState(float /*deltaTime*/)
+{
+    if (!attackJoystick || !attackJoystick->IsDragging()) {
+        FinishAiming();
+        return;
+    }
+
+    if (aimPhase == AimPhase::Draw && animator && aimDrawSlotState.ready) {
+        const bool drawFinished =
+            animator->GetCurrentClipName() == kAimDrawAlias && !animator->IsPlaying();
+        if (drawFinished && aimLoopSlotState.ready && animator->GetClip(kAimLoopAlias)) {
+            aimPhase = AimPhase::Hold;
+            animator->Play(kAimLoopAlias, true);
+        }
+    }
+
+    UpdateAttackAimTrail();
+
+    if (attackJoystick) {
+        const RTBEngine::Math::Vector3 aimDirection =
+            GetAttackDirectionFromJoystick(attackJoystick->GetValue());
+        SetAimArrowVisible(HasMovementInput(aimDirection));
+    }
+}
+
+void ThirdPersonCharacterController::FinishAiming()
+{
+    if (state != State::Aiming) {
+        return;
+    }
+
+    state = State::Locomotion;
+    aimPhase = AimPhase::Draw;
+    SetAimArrowVisible(false);
+    HideAttackAimTrail();
+    UpdateAnimatorLocomotion(false, false);
+}
+
+void ThirdPersonCharacterController::UpdateAimFacing(float deltaTime)
+{
+    if (!owner || !attackJoystick) {
+        return;
+    }
+
+    const RTBEngine::Math::Vector3 aimDirection =
+        GetAttackDirectionFromJoystick(attackJoystick->GetValue());
+    if (!HasMovementInput(aimDirection)) {
+        return;
+    }
+
+    RTBEngine::Math::Vector3 planarDirection = aimDirection;
+    planarDirection.y = 0.0f;
+    planarDirection.Normalize();
+
+    const float targetYaw = -std::atan2(planarDirection.x, planarDirection.z) * kRadToDeg;
+    RTBEngine::Math::Vector3 currentEuler = owner->GetTransform().GetRotation().ToEulerAngles();
+    const float currentYaw = currentEuler.y * kRadToDeg;
+    const float nextYaw = MoveTowardsAngleDegrees(currentYaw, targetYaw, turnSpeed * deltaTime);
+    const RTBEngine::Math::Quaternion nextRotation =
+        RTBEngine::Math::Quaternion::FromEulerAngles(0.0f, nextYaw * kDegToRad, 0.0f);
+
+    owner->GetTransform().SetRotation(nextRotation);
+
+    auto* rbComp = owner->GetComponent<RTBEngine::ECS::RigidBodyComponent>();
+    RTBEngine::Physics::RigidBody* rigidBody =
+        (rbComp && rbComp->HasRigidBody()) ? rbComp->GetRigidBody() : nullptr;
+    if (rigidBody && rigidBody->GetType() == RTBEngine::Physics::RigidBodyType::Dynamic) {
+        RTBEngine::Math::Vector3 centerOffset = RTBEngine::Math::Vector3::Zero();
+        if (auto* capsule = owner->GetComponent<RTBEngine::ECS::CapsuleColliderComponent>()) {
+            centerOffset = capsule->GetCenterOffset();
+        } else if (auto* sphere = owner->GetComponent<RTBEngine::ECS::SphereColliderComponent>()) {
+            centerOffset = sphere->GetCenterOffset();
+        }
+        rigidBody->SetWorldTransform(owner->GetWorldPosition() + (nextRotation * centerOffset), nextRotation);
+        rigidBody->SetAngularVelocity(btVector3(0.0f, 0.0f, 0.0f));
+    }
+}
+
+void ThirdPersonCharacterController::UpdateAimingMovement(float deltaTime)
+{
+    UpdateAimFacing(deltaTime);
+
+    if (!owner) {
+        return;
+    }
+
+    bool isRunning = false;
+    const RTBEngine::Math::Vector3 desiredMove = GetDesiredMoveDirection(isRunning);
+    const bool hasMovementInput = HasMovementInput(desiredMove);
+
+    auto* rbComp = owner->GetComponent<RTBEngine::ECS::RigidBodyComponent>();
+    RTBEngine::Physics::RigidBody* rigidBody =
+        (rbComp && rbComp->HasRigidBody()) ? rbComp->GetRigidBody() : nullptr;
+    const bool useDynamicRigidBody =
+        rigidBody && rigidBody->GetType() == RTBEngine::Physics::RigidBodyType::Dynamic;
+
+    const float speed = hasMovementInput
+        ? moveSpeed * (isRunning ? sprintMultiplier : 1.0f)
+        : 0.0f;
+
+    if (useDynamicRigidBody) {
+        RTBEngine::Physics::PhysicsUtils::ApplyPlanarDynamicBodyMotion(
+            rigidBody,
+            desiredMove,
+            RTBEngine::Math::Vector3::Zero(),
+            speed,
+            0.0f,
+            deltaTime,
+            owner->GetTransform().GetRotation());
+        return;
+    }
+
+    if (hasMovementInput) {
+        owner->GetTransform().SetPosition(
+            owner->GetTransform().GetPosition() + desiredMove * speed * deltaTime);
+    }
+}
+
+void ThirdPersonCharacterController::SetAimArrowVisible(bool visible)
+{
+    if (aimArrowVisual) {
+        aimArrowVisual->SetActive(visible);
+    }
 }
 
 void ThirdPersonCharacterController::UpdateAttackAimTrail()
@@ -613,7 +829,7 @@ void ThirdPersonCharacterController::UpdateAttackAimTrail()
         !projectileAttack ||
         projectileAttack->GetDamageAmount() <= 0.0f ||
         projectileAttack->IsCoolingDown() ||
-        state != State::Locomotion ||
+        state != State::Aiming ||
         PauseMenuController::IsAnyMenuOpen()) {
         HideAttackAimTrail();
         return;
@@ -751,7 +967,7 @@ bool ThirdPersonCharacterController::UsesReplicatedAnimator() const
 
 void ThirdPersonCharacterController::UpdateAnimatorFromLocalInput()
 {
-    if (state == State::Dead) {
+    if (state == State::Dead || state == State::Aiming || state == State::Attacking) {
         return;
     }
 
@@ -824,8 +1040,9 @@ void ThirdPersonCharacterController::UpdateAnimatorLocomotion(bool hasMovementIn
 void ThirdPersonCharacterController::StartAttack(const RTBEngine::Math::Vector3& attackDirection)
 {
     HideAttackAimTrail();
+    SetAimArrowVisible(false);
 
-    if (state != State::Locomotion || !projectileAttack) {
+    if ((state != State::Locomotion && state != State::Aiming) || !projectileAttack) {
         return;
     }
 
@@ -858,7 +1075,10 @@ void ThirdPersonCharacterController::FinishAttack()
 
     activeAttackDirection = RTBEngine::Math::Vector3::Zero();
     state = State::Locomotion;
+    aimPhase = AimPhase::Draw;
+    wasDraggingJoystick = false;
     HideAttackAimTrail();
+    SetAimArrowVisible(false);
 }
 
 void ThirdPersonCharacterController::HandleDeath(const HealthComponent::DeathEvent& /*eventData*/)
@@ -868,11 +1088,14 @@ void ThirdPersonCharacterController::HandleDeath(const HealthComponent::DeathEve
     }
 
     state = State::Dead;
+    aimPhase = AimPhase::Draw;
+    wasDraggingJoystick = false;
     activeAttackDirection = RTBEngine::Math::Vector3::Zero();
     if (projectileAttack) {
         projectileAttack->CancelAbility();
     }
     HideAttackAimTrail();
+    SetAimArrowVisible(false);
     StopPlanarMotion();
 
     ResolveCameraObject();
@@ -1149,8 +1372,9 @@ void ThirdPersonCharacterController::TryProcessRemoteAttackInput()
 void ThirdPersonCharacterController::PlayPredictedAttackVisual(const RTBEngine::Math::Vector3& attackDirection)
 {
     HideAttackAimTrail();
+    SetAimArrowVisible(false);
 
-    if (state != State::Locomotion || !projectileAttack) {
+    if ((state != State::Locomotion && state != State::Aiming) || !projectileAttack) {
         return;
     }
 

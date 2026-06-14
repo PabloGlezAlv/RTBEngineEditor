@@ -1460,7 +1460,15 @@ namespace RTBEditor {
         }
 
         //Playing and looping checkboxes
-        if (ImGui::Checkbox("Playing", &animator->playing)) changed = true;
+        {
+            const bool wasPlaying = animator->playing;
+            if (ImGui::Checkbox("Playing", &animator->playing)) {
+                if (wasPlaying && !animator->playing) {
+                    animator->Stop();
+                }
+                changed = true;
+            }
+        }
         ImGui::SameLine();
         if (ImGui::Checkbox("Looping", &animator->looping)) changed = true;
 

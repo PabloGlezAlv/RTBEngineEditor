@@ -61,9 +61,12 @@ public:
     ProjectileAttackAbility* projectileAttack = nullptr;
     RTBEngine::UI::UIJoystick* attackJoystick = nullptr;
     RTBEngine::ECS::TrailRenderer* attackAimTrail = nullptr;
+    RTBEngine::ECS::GameObject* aimArrowVisual = nullptr;
     std::string idleAnimationFbx;
     std::string walkAnimationFbx;
     std::string runAnimationFbx;
+    std::string aimDrawAnimationFbx = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_CombatRanged.fbx|Ranged_Bow_Draw";
+    std::string aimLoopAnimationFbx = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_CombatRanged.fbx|Ranged_Bow_Aiming_Idle";
     std::string attackAnimationFbx = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_CombatRanged.fbx|Ranged_Bow_Release";
     std::string deathAnimationFbx = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_General.fbx|Death_A";
 
@@ -77,16 +80,26 @@ private:
 
     enum class State {
         Locomotion,
+        Aiming,
         Attacking,
         Dead
     };
 
+    enum class AimPhase {
+        Draw,
+        Hold
+    };
+
     State state = State::Locomotion;
+    AimPhase aimPhase = AimPhase::Draw;
+    bool wasDraggingJoystick = false;
     RTBEngine::Animation::Animator* registeredAnimator = nullptr;
     bool missingAnimatorWarningShown = false;
     AnimationSlotState idleSlotState;
     AnimationSlotState walkSlotState;
     AnimationSlotState runSlotState;
+    AnimationSlotState aimDrawSlotState;
+    AnimationSlotState aimLoopSlotState;
     AnimationSlotState attackSlotState;
     AnimationSlotState deathSlotState;
     RTBEngine::UI::UIJoystick* subscribedAttackJoystick = nullptr;
@@ -112,6 +125,13 @@ private:
     void RebindAttackJoystickSubscription();
     void UnsubscribeFromAttackJoystick();
     void HandleJoystickAttackReleased(const RTBEngine::Math::Vector2& joystickValue);
+    bool CanStartAiming() const;
+    void TryBeginAiming();
+    void UpdateAimingState(float deltaTime);
+    void FinishAiming();
+    void UpdateAimFacing(float deltaTime);
+    void UpdateAimingMovement(float deltaTime);
+    void SetAimArrowVisible(bool visible);
     void UpdateAttackAimTrail();
     void HideAttackAimTrail();
     void UpdateAttackFacingLock(float deltaTime);

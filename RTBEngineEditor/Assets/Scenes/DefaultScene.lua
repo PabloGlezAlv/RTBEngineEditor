@@ -537,6 +537,7 @@ function CreateScene()
                 name = "Floor",
                 uuid = "737688CD-BE46-4776-B38D-CA30B01FB6D1",
                 position = Vector3(-0.46, -0.05, 0.00),
+                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
                 scale = Vector3(31.87, 0.10, 28.33),
                 components = {
                     {
@@ -576,7 +577,7 @@ function CreateScene()
                 name = "EnemySpawnPointRight",
                 uuid = "74B6BC8E-5892-4C38-A4B6-8AAAF7B1F002",
                 position = Vector3(11.90, 0.00, 9.60),
-                rotation = Quaternion.FromEulerAngles(0.00, -135.00, -0.00),
+                rotation = Quaternion.FromEulerAngles(0.00, -135.00, 0.00),
                 components = {
                     {
                         type = "EnemySpawnPoint"
@@ -619,7 +620,7 @@ function CreateScene()
                 children = {
                     {
                         name = "EnemyAttackOrigin",
-                        uuid = "F0EBE91D-F7C2-4EE0-A217-AA701E972DA6",
+                        uuid = "189E3F37-41B7-4DE9-A35D-206162B433E8",
                         prefab = "EnemyAttackOrigin",
                         position = Vector3(0.00, 0.85, 0.75),
                         overrides = {
@@ -635,14 +636,14 @@ function CreateScene()
                         children = {
                             {
                                 name = "Barbarian_Body",
-                                uuid = "FA97CBB7-0DCA-4CC5-9293-03F1B4665DF3",
+                                uuid = "B8E5803A-E8BB-4776-9BD9-C6190F95702E",
                                 prefab = "Barbarian_Body",
                                 overrides = {
                                 },
                             },
                             {
                                 name = "Barbarian_Head",
-                                uuid = "93706F67-1D79-4EC9-B7CC-854A0A0ACEE3",
+                                uuid = "2982F2FE-F453-45A3-9148-3AD13E458FFA",
                                 prefab = "Barbarian_Head",
                                 position = Vector3(0.00, 1.22, 0.00),
                                 overrides = {
@@ -650,7 +651,7 @@ function CreateScene()
                             },
                             {
                                 name = "Barbarian_BearHat",
-                                uuid = "A60E2EFC-176E-4126-81AA-9DDD22502BD2",
+                                uuid = "C7ACF81B-53DB-4CC3-988F-9AC652210592",
                                 prefab = "Barbarian_BearHat",
                                 position = Vector3(0.00, 1.22, 0.00),
                                 overrides = {
@@ -658,87 +659,85 @@ function CreateScene()
                             },
                             {
                                 name = "Barbarian_LegLeft",
-                                uuid = "EB5D73BB-7A7D-46C4-A6D8-1A8D93234838",
+                                uuid = "E1BD6A74-F41F-4182-9BC0-4E9D6F84B8D1",
                                 prefab = "Barbarian_LegLeft",
                                 overrides = {
                                 },
                             },
                             {
                                 name = "Barbarian_LegRight",
-                                uuid = "5423FF9A-11BB-4E9A-9C34-C22601225C5F",
+                                uuid = "921612F1-49BF-4AE2-A7F4-37E3F478D7C5",
                                 prefab = "Barbarian_LegRight",
                                 overrides = {
                                 },
                             },
                             {
                                 name = "Barbarian_ArmRight",
-                                uuid = "9D0DD5BB-6BAE-451D-A79A-223BEAEF20D9",
+                                uuid = "2B624E10-DAB9-46BE-94B3-23F07785827F",
                                 prefab = "Barbarian_ArmRight",
                                 overrides = {
                                 },
                             },
                             {
                                 name = "Barbarian_ArmLeft",
-                                uuid = "07DCFBEE-4479-4A0D-AFBA-5F357880BB7F",
+                                uuid = "5DD634B6-F3BA-4C16-8023-EA55C5DF953A",
                                 prefab = "Barbarian_ArmLeft",
                                 overrides = {
                                 },
                             },
                             {
                                 name = "root",
-                                uuid = "99FAD197-787A-46E5-A169-73787EF9EE89",
+                                uuid = "46CA0DC1-50F6-4561-A6F7-DACE89D0EF09",
                                 rotation = Quaternion.FromEulerAngles(0.00, -0.00, 0.00),
                                 children = {
                                     {
                                         name = "hips",
-                                        uuid = "A2E4E572-5342-44EF-99CA-0604151370BA",
+                                        uuid = "3BCB9B6D-D246-4AF2-9A6E-CD82D65367CB",
                                         position = Vector3(0.00, 0.41, -0.00),
-                                        rotation = Quaternion.FromEulerAngles(-0.00, 0.00, -0.00),
+                                        rotation = Quaternion.FromEulerAngles(0.00, 0.00, 0.00),
                                         children = {
                                             {
                                                 name = "spine",
-                                                uuid = "E58F7AEE-169E-4CA5-AD36-BB36F5DAB7DF",
+                                                uuid = "F42CCCDB-8B82-4879-AA72-97B1FC470F97",
                                                 position = Vector3(-0.00, 0.19, -0.00),
-                                                rotation = Quaternion.FromEulerAngles(0.00, -0.00, 0.00),
                                                 children = {
                                                     {
                                                         name = "chest",
-                                                        uuid = "0B0105A4-40AD-4008-B3CA-C3AA02600752",
+                                                        uuid = "F9DF6F7D-5134-4FAA-AC83-990AC00FE938",
                                                         position = Vector3(-0.00, 0.37, 0.00),
                                                         scale = Vector3(1.00, 1.00, 1.00),
                                                         children = {
                                                             {
                                                                 name = "upperarm.l",
-                                                                uuid = "378E4AF1-AC49-4EFB-8D46-69DDB99A57B5",
+                                                                uuid = "024E2FCE-8B23-40A3-88E0-8E05E13B4C23",
                                                                 position = Vector3(0.21, 0.13, 0.00),
                                                                 rotation = Quaternion.FromEulerAngles(-3.28, 90.00, -90.00),
                                                                 scale = Vector3(1.00, 1.00, 1.00),
                                                                 children = {
                                                                     {
                                                                         name = "lowerarm.l",
-                                                                        uuid = "C91A3818-3322-4CCF-B208-776C97BB7B45",
+                                                                        uuid = "FAFF56EB-E618-4FBD-B00B-4610234DF400",
                                                                         position = Vector3(0.00, 0.24, 0.00),
                                                                         rotation = Quaternion.FromEulerAngles(0.00, 0.00, -6.34),
                                                                         scale = Vector3(1.00, 1.00, 1.00),
                                                                         children = {
                                                                             {
                                                                                 name = "wrist.l",
-                                                                                uuid = "AF9DADCB-A1B4-432D-817C-A8035A0F1D78",
+                                                                                uuid = "BC3C8B41-4189-4CA9-A00B-99CB0939F792",
                                                                                 position = Vector3(-0.00, 0.26, -0.00),
                                                                                 rotation = Quaternion.FromEulerAngles(0.00, 0.00, 3.06),
                                                                                 scale = Vector3(1.00, 1.00, 1.00),
                                                                                 children = {
                                                                                     {
                                                                                         name = "hand.l",
-                                                                                        uuid = "80675892-7A2C-41CC-8DBE-F0AC7E905AF5",
+                                                                                        uuid = "951CA939-C4C1-4CFE-95DA-DB66333D0411",
                                                                                         position = Vector3(-0.00, 0.07, -0.00),
-                                                                                        rotation = Quaternion.FromEulerAngles(0.00, -0.00, 0.00),
                                                                                         children = {
                                                                                             {
                                                                                                 name = "handslot.l",
-                                                                                                uuid = "C3B556A2-8640-4744-8463-B4D1C510B369",
+                                                                                                uuid = "B4031D73-35A2-4C11-BB5E-9E4CF71E489C",
                                                                                                 position = Vector3(0.00, 0.10, -0.06),
-                                                                                                rotation = Quaternion.FromEulerAngles(-0.00, -0.00, -90.00),
+                                                                                                rotation = Quaternion.FromEulerAngles(0.00, 0.00, -90.00),
                                                                                             },
                                                                                         }
                                                                                     },
@@ -750,34 +749,33 @@ function CreateScene()
                                                             },
                                                             {
                                                                 name = "upperarm.r",
-                                                                uuid = "D22B00B4-890C-4E5E-BC88-307C21543BB0",
+                                                                uuid = "F929D2A6-5C78-484F-8411-EC0F1D68B7A6",
                                                                 position = Vector3(-0.21, 0.13, 0.00),
                                                                 rotation = Quaternion.FromEulerAngles(-3.28, -90.00, 90.00),
                                                                 scale = Vector3(1.00, 1.00, 1.00),
                                                                 children = {
                                                                     {
                                                                         name = "lowerarm.r",
-                                                                        uuid = "209C85B9-AB1F-480B-BA04-C2148DFA27F5",
+                                                                        uuid = "4C27EA79-551A-4B5D-8861-24E0E8B4F5BB",
                                                                         position = Vector3(-0.00, 0.24, 0.00),
                                                                         rotation = Quaternion.FromEulerAngles(0.00, -0.00, 6.34),
                                                                         scale = Vector3(1.00, 1.00, 1.00),
                                                                         children = {
                                                                             {
                                                                                 name = "wrist.r",
-                                                                                uuid = "25243A21-63A5-45BC-9510-6088FBAF0EA9",
+                                                                                uuid = "CEFEEC76-C168-4AC6-BF13-87C6B5138338",
                                                                                 position = Vector3(0.00, 0.26, -0.00),
-                                                                                rotation = Quaternion.FromEulerAngles(0.00, -0.00, -3.06),
+                                                                                rotation = Quaternion.FromEulerAngles(0.00, 0.00, -3.06),
                                                                                 scale = Vector3(1.00, 1.00, 1.00),
                                                                                 children = {
                                                                                     {
                                                                                         name = "hand.r",
-                                                                                        uuid = "C022E5F1-BE0D-420F-BA96-A082623D891D",
+                                                                                        uuid = "F78265C4-34A8-428F-B038-11382CBFB6F9",
                                                                                         position = Vector3(0.00, 0.07, -0.00),
-                                                                                        rotation = Quaternion.FromEulerAngles(0.00, 0.00, -0.00),
                                                                                         children = {
                                                                                             {
                                                                                                 name = "handslot.r",
-                                                                                                uuid = "738330E4-80E1-41F2-B03C-6E099EC3A16B",
+                                                                                                uuid = "6FCF1FB3-1C5E-421E-B2CD-A8D0E4F92833",
                                                                                                 prefab = "handslot.r",
                                                                                                 position = Vector3(0.00, -0.79, -1.11),
                                                                                                 rotation = Quaternion.FromEulerAngles(90.00, 53.13, 0.00),
@@ -787,7 +785,7 @@ function CreateScene()
                                                                                                 children = {
                                                                                                     {
                                                                                                         name = "Barbarian_Axe",
-                                                                                                        uuid = "FC6A6F9E-21CC-405F-97DC-6CEBFE80B7AD",
+                                                                                                        uuid = "13B7C927-2535-4223-B5AE-181A5DD88B7D",
                                                                                                         prefab = "Barbarian_Axe",
                                                                                                         position = Vector3(0.00, 0.10, -0.06),
                                                                                                         rotation = Quaternion.FromEulerAngles(0.00, 0.00, 90.00),
@@ -806,9 +804,8 @@ function CreateScene()
                                                             },
                                                             {
                                                                 name = "head",
-                                                                uuid = "3E651434-5E7C-4693-98A5-F0AB2846EDD5",
+                                                                uuid = "AE9734A1-472B-4FAE-9323-3E718E4C3E67",
                                                                 position = Vector3(-0.00, 0.27, 0.00),
-                                                                rotation = Quaternion.FromEulerAngles(-0.00, 0.00, -0.00),
                                                             },
                                                         }
                                                     },
@@ -816,28 +813,28 @@ function CreateScene()
                                             },
                                             {
                                                 name = "upperleg.l",
-                                                uuid = "1A434E89-743C-4BA4-A003-D59CBD64D180",
+                                                uuid = "CFBD0A0D-9C4A-4157-B7E1-4A8A203D4751",
                                                 position = Vector3(0.17, 0.11, 0.00),
                                                 rotation = Quaternion.FromEulerAngles(1.99, -180.00, 180.00),
                                                 scale = Vector3(1.00, 1.00, 1.00),
                                                 children = {
                                                     {
                                                         name = "lowerleg.l",
-                                                        uuid = "9AAB1FE2-8F9B-413E-87DB-6C083461B3F5",
+                                                        uuid = "752ACA49-7342-4078-877A-F46596A1D73D",
                                                         position = Vector3(0.00, 0.23, -0.00),
                                                         rotation = Quaternion.FromEulerAngles(12.20, -0.00, -0.00),
                                                         scale = Vector3(1.00, 1.00, 1.00),
                                                         children = {
                                                             {
                                                                 name = "foot.l",
-                                                                uuid = "B0159574-BDE0-4BC8-8EC8-3DE4B4911A78",
+                                                                uuid = "CB012F73-4215-4C33-B03B-EB518F8EBA23",
                                                                 position = Vector3(-0.00, 0.15, -0.00),
-                                                                rotation = Quaternion.FromEulerAngles(-54.16, -0.00, 0.00),
+                                                                rotation = Quaternion.FromEulerAngles(-54.16, 0.00, 0.00),
                                                                 scale = Vector3(1.00, 1.00, 1.00),
                                                                 children = {
                                                                     {
                                                                         name = "toes.l",
-                                                                        uuid = "1CB2A5FB-3205-4CF0-88EE-F1AA7181F85B",
+                                                                        uuid = "B0122851-EA55-42C0-AD4D-13E0B228EAA5",
                                                                         position = Vector3(0.00, 0.17, 0.00),
                                                                         rotation = Quaternion.FromEulerAngles(-46.04, -180.00, 0.00),
                                                                         scale = Vector3(1.00, 1.00, 1.00),
@@ -850,30 +847,30 @@ function CreateScene()
                                             },
                                             {
                                                 name = "upperleg.r",
-                                                uuid = "0F3CDE14-E236-4715-A388-49783E254BD8",
+                                                uuid = "91A21399-677D-45C0-9EB1-10683F5FEC8A",
                                                 position = Vector3(-0.17, 0.11, 0.00),
                                                 rotation = Quaternion.FromEulerAngles(1.99, 180.00, -180.00),
                                                 scale = Vector3(1.00, 1.00, 1.00),
                                                 children = {
                                                     {
                                                         name = "lowerleg.r",
-                                                        uuid = "C1D841F9-6ADC-4569-8DBE-531FEE04E5BD",
+                                                        uuid = "60C817F6-6C8D-4574-9ED6-B52B6B6CAEDC",
                                                         position = Vector3(-0.00, 0.23, -0.00),
                                                         rotation = Quaternion.FromEulerAngles(12.20, 0.00, 0.00),
                                                         scale = Vector3(1.00, 1.00, 1.00),
                                                         children = {
                                                             {
                                                                 name = "foot.r",
-                                                                uuid = "51C50474-3458-40C9-A4B2-11931208B3D1",
+                                                                uuid = "EDEBD2D3-E280-4FFD-BAA3-449CABCF4A64",
                                                                 position = Vector3(0.00, 0.15, -0.00),
-                                                                rotation = Quaternion.FromEulerAngles(-54.16, 0.00, -0.00),
+                                                                rotation = Quaternion.FromEulerAngles(-54.16, 0.00, 0.00),
                                                                 scale = Vector3(1.00, 1.00, 1.00),
                                                                 children = {
                                                                     {
                                                                         name = "toes.r",
-                                                                        uuid = "325A8FFB-9513-4E11-9AC4-E47757BF6557",
+                                                                        uuid = "3A08E12A-9E94-489F-892F-456FBB07F6F0",
                                                                         position = Vector3(-0.00, 0.17, 0.00),
-                                                                        rotation = Quaternion.FromEulerAngles(-46.04, 180.00, -0.00),
+                                                                        rotation = Quaternion.FromEulerAngles(-46.04, 180.00, 0.00),
                                                                         scale = Vector3(1.00, 1.00, 1.00),
                                                                     },
                                                                 }
@@ -932,9 +929,12 @@ function CreateScene()
                         projectileAttack = "E8682E33-50ED-45D8-BC76-B31113639F9E/ProjectileAttackAbility",
                         attackJoystick = "B4C7E92D-5F22-43A9-8E3B-2A6D7D1A8C10/UIJoystick",
                         attackAimTrail = "7C57C988-6629-4FE8-AFF1-8D4D39C84D1B/TrailRenderer",
+                        aimArrowVisual = "R4NG3R00-ARRO-4000-8000-000000000001",
                         idleAnimationFbx = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_General.fbx|Idle_A",
                         walkAnimationFbx = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_MovementBasic.fbx|Walking_A",
                         runAnimationFbx = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_MovementBasic.fbx|Running_A",
+                        aimDrawAnimationFbx = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_CombatRanged.fbx|Ranged_Bow_Draw",
+                        aimLoopAnimationFbx = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_CombatRanged.fbx|Ranged_Bow_Aiming_Idle",
                         attackAnimationFbx = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_CombatRanged.fbx|Ranged_Bow_Release",
                         deathAnimationFbx = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_General.fbx|Death_A"
                     },
@@ -1182,7 +1182,7 @@ function CreateScene()
                             {
                                 type = "Animator",
                                 modelRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Ranger.fbx",
-                                currentClipName = "ThirdPerson.Idle",
+                                currentClipName = "Idle_A",
                                 defaultClip = "Idle_A",
                                 speed = 1.00,
                                 playing = false,
@@ -1313,40 +1313,41 @@ function CreateScene()
                             {
                                 name = "root",
                                 uuid = "C5AD6486-1C69-44C8-8FA5-1631DCC3890A",
-                                rotation = Quaternion.FromEulerAngles(0.00, -0.00, -0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -0.00, 0.00),
                                 children = {
                                     {
                                         name = "hips",
                                         uuid = "69657A7D-CE8E-42BB-AE35-5AC07910643C",
                                         position = Vector3(-0.00, 0.39, 0.00),
-                                        rotation = Quaternion.FromEulerAngles(0.13, -4.95, 0.00),
+                                        rotation = Quaternion.FromEulerAngles(0.01, -4.95, 0.00),
                                         scale = Vector3(1.00, 1.00, 1.00),
                                         children = {
                                             {
                                                 name = "spine",
                                                 uuid = "5C4C8BA9-6DC6-4D34-B001-841D4E3DCA8B",
                                                 position = Vector3(0.00, 0.19, 0.00),
-                                                rotation = Quaternion.FromEulerAngles(0.35, 0.00, 0.03),
+                                                rotation = Quaternion.FromEulerAngles(0.04, 0.00, 0.00),
+                                                scale = Vector3(1.00, 1.00, 1.00),
                                                 children = {
                                                     {
                                                         name = "chest",
                                                         uuid = "C02222AD-8A4A-44A9-9568-713639DFE8FE",
                                                         position = Vector3(0.00, 0.37, -0.00),
-                                                        rotation = Quaternion.FromEulerAngles(0.20, 0.00, 0.02),
+                                                        rotation = Quaternion.FromEulerAngles(0.54, 0.00, 0.05),
                                                         scale = Vector3(1.00, 1.00, 1.00),
                                                         children = {
                                                             {
                                                                 name = "upperarm.l",
                                                                 uuid = "EC6C2857-949D-4DA2-BDF4-ED2450B6C5E5",
                                                                 position = Vector3(0.21, 0.13, 0.00),
-                                                                rotation = Quaternion.FromEulerAngles(-10.28, 65.88, -140.31),
+                                                                rotation = Quaternion.FromEulerAngles(-9.77, 65.84, -140.57),
                                                                 scale = Vector3(1.00, 1.00, 1.00),
                                                                 children = {
                                                                     {
                                                                         name = "lowerarm.l",
                                                                         uuid = "4DB13D0A-4290-419D-A32D-54B0C4E831A5",
                                                                         position = Vector3(0.00, 0.24, -0.00),
-                                                                        rotation = Quaternion.FromEulerAngles(-0.00, 0.00, -42.65),
+                                                                        rotation = Quaternion.FromEulerAngles(0.00, 0.00, -42.10),
                                                                         scale = Vector3(1.00, 1.00, 1.00),
                                                                         children = {
                                                                             {
@@ -1360,21 +1361,21 @@ function CreateScene()
                                                                                         name = "hand.l",
                                                                                         uuid = "B2E987EF-3736-4B47-93F3-D0C2A9364C95",
                                                                                         position = Vector3(-0.00, 0.07, 0.00),
-                                                                                        rotation = Quaternion.FromEulerAngles(-31.48, 38.89, 11.78),
+                                                                                        rotation = Quaternion.FromEulerAngles(-31.59, 38.95, 11.91),
                                                                                         scale = Vector3(1.00, 1.00, 1.00),
                                                                                         children = {
                                                                                             {
                                                                                                 name = "handslot.l",
                                                                                                 uuid = "08964EA4-D7F7-4A0C-BF39-2A6FE9D938B9",
-                                                                                                position = Vector3(-0.00, 0.10, -0.06),
-                                                                                                rotation = Quaternion.FromEulerAngles(0.00, -0.10, -89.63),
+                                                                                                position = Vector3(0.00, 0.10, -0.06),
+                                                                                                rotation = Quaternion.FromEulerAngles(0.00, 0.00, -90.00),
                                                                                                 scale = Vector3(1.00, 1.00, 1.00),
                                                                                                 children = {
                                                                                                     {
                                                                                                         name = "Ranger_Bow",
                                                                                                         uuid = "109DAEF5-4736-4BB3-B63F-DD6B5B44855E",
-                                                                                                        position = Vector3(-0.25, 0.62, -0.14),
-                                                                                                        rotation = Quaternion.FromEulerAngles(-27.50, 201.72, 94.68),
+                                                                                                        position = Vector3(0.00, 0.00, 0.00),
+                                                                                                        rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
                                                                                                         scale = Vector3(1.00, 1.00, 1.00),
                                                                                                         components = {
                                                                                                             {
@@ -1401,36 +1402,56 @@ function CreateScene()
                                                                 name = "upperarm.r",
                                                                 uuid = "0E0C67B4-D021-47E3-8F72-A485BFC87DC6",
                                                                 position = Vector3(-0.21, 0.13, 0.00),
-                                                                rotation = Quaternion.FromEulerAngles(-21.15, -66.99, 139.67),
+                                                                rotation = Quaternion.FromEulerAngles(-20.64, -66.91, 139.67),
                                                                 scale = Vector3(1.00, 1.00, 1.00),
                                                                 children = {
                                                                     {
                                                                         name = "lowerarm.r",
                                                                         uuid = "E5B6B75F-147D-4477-8084-1D15986F517E",
                                                                         position = Vector3(-0.00, 0.24, -0.00),
-                                                                        rotation = Quaternion.FromEulerAngles(0.00, 0.00, 44.68),
+                                                                        rotation = Quaternion.FromEulerAngles(0.00, 0.00, 44.26),
                                                                         scale = Vector3(1.00, 1.00, 1.00),
                                                                         children = {
                                                                             {
                                                                                 name = "wrist.r",
                                                                                 uuid = "3AC8ADA2-B039-4438-92D1-4FA79F1F2F0F",
                                                                                 position = Vector3(-0.00, 0.26, -0.00),
-                                                                                rotation = Quaternion.FromEulerAngles(0.00, -0.00, -3.06),
+                                                                                rotation = Quaternion.FromEulerAngles(0.00, 0.00, -3.06),
                                                                                 scale = Vector3(1.00, 1.00, 1.00),
                                                                                 children = {
                                                                                     {
                                                                                         name = "hand.r",
                                                                                         uuid = "0BFBA09A-04BA-4516-AA49-8F07C2032614",
                                                                                         position = Vector3(-0.00, 0.07, -0.00),
-                                                                                        rotation = Quaternion.FromEulerAngles(-28.82, -45.21, -5.42),
+                                                                                        rotation = Quaternion.FromEulerAngles(-28.98, -45.33, -5.62),
                                                                                         scale = Vector3(1.00, 1.00, 1.00),
                                                                                         children = {
                                                                                             {
                                                                                                 name = "handslot.r",
                                                                                                 uuid = "5F01E38D-E9AC-46EF-81CB-2F439BD1306F",
                                                                                                 position = Vector3(0.00, 0.10, -0.06),
-                                                                                                rotation = Quaternion.FromEulerAngles(0.00, 0.10, 89.63),
+                                                                                                rotation = Quaternion.FromEulerAngles(0.00, 0.01, 89.91),
                                                                                                 scale = Vector3(1.00, 1.00, 1.00),
+                                                                                                children = {
+                                                                                                    {
+                                                                                                        name = "Ranger_Arrow",
+                                                                                                        uuid = "R4NG3R00-ARRO-4000-8000-000000000001",
+                                                                                                        active = false,
+                                                                                                        position = Vector3(0.63, 0.79, -1.16),
+                                                                                                        rotation = Quaternion.FromEulerAngles(-52.14, -150.14, 95.92),
+                                                                                                        scale = Vector3(1.00, 1.00, 1.00),
+                                                                                                        components = {
+                                                                                                            {
+                                                                                                                type = "MeshRenderer",
+                                                                                                                meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/arrow_bow.obj",
+                                                                                                                textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/ranger_texture.png",
+                                                                                                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                                                                                                meshIndex = 0,
+                                                                                                                multiMesh = false
+                                                                                                            },
+                                                                                                        }
+                                                                                                    },
+                                                                                                }
                                                                                             },
                                                                                         }
                                                                                     },
@@ -1444,7 +1465,7 @@ function CreateScene()
                                                                 name = "head",
                                                                 uuid = "C733BE2F-9D91-40B5-B63D-6EF9A02D5257",
                                                                 position = Vector3(0.00, 0.27, -0.00),
-                                                                rotation = Quaternion.FromEulerAngles(-1.15, 3.59, -0.10),
+                                                                rotation = Quaternion.FromEulerAngles(-0.50, 3.59, -0.04),
                                                                 scale = Vector3(1.00, 1.00, 1.00),
                                                             },
                                                         }
@@ -1455,21 +1476,21 @@ function CreateScene()
                                                 name = "upperleg.l",
                                                 uuid = "99A671E3-FA32-4222-BEEC-7C9757774FF2",
                                                 position = Vector3(0.17, 0.11, 0.00),
-                                                rotation = Quaternion.FromEulerAngles(10.88, 172.41, -174.03),
+                                                rotation = Quaternion.FromEulerAngles(10.10, 172.41, -173.97),
                                                 scale = Vector3(1.00, 1.00, 1.00),
                                                 children = {
                                                     {
                                                         name = "lowerleg.l",
                                                         uuid = "922E0DA8-D636-4982-A610-6C56CC401DB5",
                                                         position = Vector3(0.00, 0.23, -0.00),
-                                                        rotation = Quaternion.FromEulerAngles(32.66, -0.00, -0.00),
+                                                        rotation = Quaternion.FromEulerAngles(30.64, -0.00, -0.00),
                                                         scale = Vector3(1.00, 1.00, 1.00),
                                                         children = {
                                                             {
                                                                 name = "foot.l",
                                                                 uuid = "110886C1-A83F-40FE-8B68-FC24F2E8C303",
                                                                 position = Vector3(0.00, 0.15, 0.00),
-                                                                rotation = Quaternion.FromEulerAngles(-65.44, 20.06, -6.98),
+                                                                rotation = Quaternion.FromEulerAngles(-64.16, 19.75, -6.73),
                                                                 scale = Vector3(1.00, 1.00, 1.00),
                                                                 children = {
                                                                     {
@@ -1489,21 +1510,21 @@ function CreateScene()
                                                 name = "upperleg.r",
                                                 uuid = "0E2ECE82-9C85-4ABF-8BB7-B404F5285237",
                                                 position = Vector3(-0.17, 0.11, 0.00),
-                                                rotation = Quaternion.FromEulerAngles(7.55, 176.15, 176.31),
+                                                rotation = Quaternion.FromEulerAngles(6.80, 176.17, 176.38),
                                                 scale = Vector3(1.00, 1.00, 1.00),
                                                 children = {
                                                     {
                                                         name = "lowerleg.r",
                                                         uuid = "FD5B45FE-6637-4772-8CE9-8B3F54F5EA60",
                                                         position = Vector3(0.00, 0.23, -0.00),
-                                                        rotation = Quaternion.FromEulerAngles(33.96, 0.00, 0.00),
+                                                        rotation = Quaternion.FromEulerAngles(31.96, 0.00, 0.00),
                                                         scale = Vector3(1.00, 1.00, 1.00),
                                                         children = {
                                                             {
                                                                 name = "foot.r",
                                                                 uuid = "CF8BCD2B-2AE5-4426-A71C-25377ECCEECC",
                                                                 position = Vector3(0.00, 0.15, -0.00),
-                                                                rotation = Quaternion.FromEulerAngles(-68.26, -28.15, 17.86),
+                                                                rotation = Quaternion.FromEulerAngles(-67.03, -27.17, 16.96),
                                                                 scale = Vector3(1.00, 1.00, 1.00),
                                                                 children = {
                                                                     {
@@ -1529,7 +1550,7 @@ function CreateScene()
                         name = "MainCamera",
                         uuid = "0E7CE370-7C0E-45A8-89CA-AD7A3E70C216",
                         position = Vector3(0.00, 8.48, -7.07),
-                        rotation = Quaternion.FromEulerAngles(50.00, 0.00, -0.00),
+                        rotation = Quaternion.FromEulerAngles(50.00, 0.00, 0.00),
                         components = {
                             {
                                 type = "CameraComponent",
