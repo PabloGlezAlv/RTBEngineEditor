@@ -118,21 +118,22 @@ namespace RTBEditor {
             }
 
             if (!isFiltering && hierarchyWasFiltering && context.selectedGameObject) {
-                hierarchyRevealTarget = context.selectedGameObject;
+                hierarchyPendingReveal = context.selectedGameObject;
             }
             hierarchyWasFiltering = isFiltering;
 
             if (!context.selectedGameObject) {
-                hierarchyRevealTarget = nullptr;
+                hierarchyPendingReveal = nullptr;
             }
 
             hierarchyForceOpenNodes.clear();
-            if (!isFiltering && hierarchyRevealTarget) {
-                for (RTBEngine::ECS::GameObject* node = hierarchyRevealTarget;
+            if (!isFiltering && hierarchyPendingReveal) {
+                for (RTBEngine::ECS::GameObject* node = hierarchyPendingReveal;
                     node;
                     node = node->GetParent()) {
                     hierarchyForceOpenNodes.insert(node);
                 }
+                hierarchyPendingReveal = nullptr;
             }
 
             ImGui::Spacing();
@@ -386,7 +387,7 @@ namespace RTBEditor {
 
     void SceneHierarchyPanel::UpdateHierarchyRevealTarget(RTBEngine::ECS::GameObject* gameObject)
     {
-        hierarchyRevealTarget = gameObject;
+        hierarchyPendingReveal = gameObject;
     }
 
     void SceneHierarchyPanel::DrawHierarchySearchResults(
@@ -476,7 +477,7 @@ namespace RTBEditor {
         flags |= ImGuiTreeNodeFlags_SpanAvailWidth;
 
         if (hierarchyForceOpenNodes.find(gameObject) != hierarchyForceOpenNodes.end()) {
-            ImGui::SetNextItemOpen(true, ImGuiCond_Always);
+            ImGui::SetNextItemOpen(true, ImGuiCond_Once);
         }
         
         const auto& children = gameObject->GetChildren();

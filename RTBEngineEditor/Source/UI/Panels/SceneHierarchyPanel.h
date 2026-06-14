@@ -24,7 +24,7 @@ namespace RTBEditor {
 
         char hierarchySearchBuffer[128] = {};
         bool hierarchyWasFiltering = false;
-        RTBEngine::ECS::GameObject* hierarchyRevealTarget = nullptr;
+        RTBEngine::ECS::GameObject* hierarchyPendingReveal = nullptr;
         std::unordered_set<RTBEngine::ECS::GameObject*> hierarchyForceOpenNodes;
 
         //GameObject creation
