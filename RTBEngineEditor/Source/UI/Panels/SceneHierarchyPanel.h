@@ -3,6 +3,7 @@
 #include "EditorPanel.h"
 #include <RTBEngine/ECS/GameObject.h>
 #include <RTBEngine/ECS/Scene.h>
+#include <unordered_set>
 #include <vector>
 
 namespace RTBEditor {
@@ -16,6 +17,15 @@ namespace RTBEditor {
 
     private:
         void DrawGameObjectNode(RTBEngine::ECS::GameObject* gameObject, EditorContext& context);
+        void DrawHierarchySearchResults(RTBEngine::ECS::Scene* scene,
+                                        EditorContext& context,
+                                        const char* filter);
+        void UpdateHierarchyRevealTarget(RTBEngine::ECS::GameObject* gameObject);
+
+        char hierarchySearchBuffer[128] = {};
+        bool hierarchyWasFiltering = false;
+        RTBEngine::ECS::GameObject* hierarchyRevealTarget = nullptr;
+        std::unordered_set<RTBEngine::ECS::GameObject*> hierarchyForceOpenNodes;
 
         //GameObject creation
         void CreateSphere(RTBEngine::ECS::Scene* scene, EditorContext& context, RTBEngine::ECS::GameObject* parent = nullptr);

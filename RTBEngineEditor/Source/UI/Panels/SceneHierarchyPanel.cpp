@@ -22,6 +22,8 @@
 #include "../../Project/Project.h"
 #include <filesystem>
 #include <vector>
+#include <algorithm>
+#include <cctype>
 
 namespace RTBEditor {
 
@@ -37,6 +39,47 @@ namespace RTBEditor {
                 return project->GetAssetReferencePath(relativePath);
             }
             return (std::filesystem::path("Assets") / relativePath).lexically_normal().generic_string();
+        }
+
+        std::string ToLowerCopy(std::string value) {
+            std::transform(value.begin(), value.end(), value.begin(),
+                [](unsigned char character) {
+                    return static_cast<char>(std::tolower(character));
+                });
+            return value;
+        }
+
+        bool MatchesHierarchySearch(const RTBEngine::ECS::GameObject* gameObject, const char* filter) {
+            if (!gameObject) {
+                return false;
+            }
+
+            if (!filter || filter[0] == '\0') {
+                return true;
+            }
+
+            const std::string needle = ToLowerCopy(filter);
+            if (ToLowerCopy(gameObject->GetName()).find(needle) != std::string::npos) {
+                return true;
+            }
+
+            const std::string& uuid = gameObject->GetUUID();
+            return !uuid.empty() && ToLowerCopy(uuid).find(needle) != std::string::npos;
+        }
+
+        int CountHierarchyMatches(RTBEngine::ECS::Scene* scene, const char* filter) {
+            if (!scene || !filter || filter[0] == '\0') {
+                return 0;
+            }
+
+            int matchCount = 0;
+            for (const auto& gameObject : scene->GetGameObjects()) {
+                if (gameObject && MatchesHierarchySearch(gameObject.get(), filter)) {
+                    ++matchCount;
+                }
+            }
+
+            return matchCount;
         }
     }
 
@@ -58,6 +101,41 @@ namespace RTBEditor {
             ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.8f, 0.8f, 1.0f, 1.0f));
             ImGui::Text("Scene: %s", sceneName.c_str());
             ImGui::PopStyleColor();
+            ImGui::Separator();
+
+            ImGui::SetNextItemWidth(-FLT_MIN);
+            ImGui::InputTextWithHint(
+                "##HierarchySearch",
+                "Search objects...",
+                hierarchySearchBuffer,
+                sizeof(hierarchySearchBuffer));
+
+            const bool isFiltering = hierarchySearchBuffer[0] != '\0';
+            int hierarchyMatchCount = 0;
+            if (isFiltering) {
+                hierarchyMatchCount = CountHierarchyMatches(activeScene, hierarchySearchBuffer);
+                ImGui::TextDisabled("%d match%s", hierarchyMatchCount, hierarchyMatchCount == 1 ? "" : "es");
+            }
+
+            if (!isFiltering && hierarchyWasFiltering && context.selectedGameObject) {
+                hierarchyRevealTarget = context.selectedGameObject;
+            }
+            hierarchyWasFiltering = isFiltering;
+
+            if (!context.selectedGameObject) {
+                hierarchyRevealTarget = nullptr;
+            }
+
+            hierarchyForceOpenNodes.clear();
+            if (!isFiltering && hierarchyRevealTarget) {
+                for (RTBEngine::ECS::GameObject* node = hierarchyRevealTarget;
+                    node;
+                    node = node->GetParent()) {
+                    hierarchyForceOpenNodes.insert(node);
+                }
+            }
+
+            ImGui::Spacing();
             ImGui::Separator();
             ImGui::Spacing();
 
@@ -126,11 +204,18 @@ namespace RTBEditor {
                 ImGui::Spacing();
             }
 
-            for (const auto& gameObject : activeScene->GetGameObjects()) {
-                // Only start drawing from root objects (those without a parent)
-                if (gameObject->GetParent() == nullptr) {
-                    DrawGameObjectNode(gameObject.get(), context);
+            if (isFiltering) {
+                DrawHierarchySearchResults(activeScene, context, hierarchySearchBuffer);
+            } else {
+                for (const auto& gameObject : activeScene->GetGameObjects()) {
+                    if (gameObject->GetParent() == nullptr) {
+                        DrawGameObjectNode(gameObject.get(), context);
+                    }
                 }
+            }
+
+            if (isFiltering && hierarchyMatchCount == 0) {
+                ImGui::TextDisabled("No objects match your search.");
             }
 
             if (ImGui::IsMouseDown(0) && ImGui::IsWindowHovered() && !ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
@@ -299,7 +384,87 @@ namespace RTBEditor {
         ImGui::End();
     }
 
-    void SceneHierarchyPanel::DrawGameObjectNode(RTBEngine::ECS::GameObject* gameObject, EditorContext& context) {
+    void SceneHierarchyPanel::UpdateHierarchyRevealTarget(RTBEngine::ECS::GameObject* gameObject)
+    {
+        hierarchyRevealTarget = gameObject;
+    }
+
+    void SceneHierarchyPanel::DrawHierarchySearchResults(
+        RTBEngine::ECS::Scene* scene,
+        EditorContext& context,
+        const char* filter)
+    {
+        if (!scene || !filter || filter[0] == '\0') {
+            return;
+        }
+
+        std::vector<RTBEngine::ECS::GameObject*> matches;
+        matches.reserve(static_cast<size_t>(scene->GetGameObjects().size()));
+
+        for (const auto& gameObject : scene->GetGameObjects()) {
+            if (gameObject && MatchesHierarchySearch(gameObject.get(), filter)) {
+                matches.push_back(gameObject.get());
+            }
+        }
+
+        std::sort(matches.begin(), matches.end(),
+            [](const RTBEngine::ECS::GameObject* left, const RTBEngine::ECS::GameObject* right) {
+                const int nameCompare = left->GetName().compare(right->GetName());
+                if (nameCompare != 0) {
+                    return nameCompare < 0;
+                }
+
+                return left < right;
+            });
+
+        const float preferredHeight = matches.size() * 22.0f + 8.0f;
+        const float listHeight = (std::min)(320.0f, (std::max)(120.0f, preferredHeight));
+
+        if (ImGui::BeginChild("HierarchySearchResults", ImVec2(-FLT_MIN, listHeight), true)) {
+            for (RTBEngine::ECS::GameObject* gameObject : matches) {
+                const bool isSelected = std::find(
+                    context.selectedGameObjects.begin(),
+                    context.selectedGameObjects.end(),
+                    gameObject) != context.selectedGameObjects.end();
+
+                const std::string& label = gameObject->GetName();
+                ImGui::PushID(gameObject);
+
+                int styleColorCount = 0;
+                if (!gameObject->IsActiveInHierarchy()) {
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.45f, 0.45f, 0.45f, 0.65f));
+                    ++styleColorCount;
+                } else if (gameObject->IsTransient()) {
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 0.6f, 0.6f, 0.7f));
+                    ++styleColorCount;
+                } else if (gameObject->IsPrefabInstance()) {
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4f, 0.6f, 1.0f, 1.0f));
+                    ++styleColorCount;
+                }
+
+                if (ImGui::Selectable(label.c_str(), isSelected)) {
+                    if (ImGui::GetIO().KeyCtrl) {
+                        ToggleSelection(context, gameObject);
+                    } else {
+                        SetSingleSelection(context, gameObject);
+                    }
+                    UpdateHierarchyRevealTarget(gameObject);
+                }
+
+                if (styleColorCount > 0) {
+                    ImGui::PopStyleColor(styleColorCount);
+                }
+
+                ImGui::PopID();
+            }
+        }
+        ImGui::EndChild();
+    }
+
+    void SceneHierarchyPanel::DrawGameObjectNode(
+        RTBEngine::ECS::GameObject* gameObject,
+        EditorContext& context)
+    {
         auto& name = gameObject->GetName();
 
         bool isSelected = std::find(
@@ -309,6 +474,10 @@ namespace RTBEditor {
 
         ImGuiTreeNodeFlags flags = (isSelected ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
         flags |= ImGuiTreeNodeFlags_SpanAvailWidth;
+
+        if (hierarchyForceOpenNodes.find(gameObject) != hierarchyForceOpenNodes.end()) {
+            ImGui::SetNextItemOpen(true, ImGuiCond_Always);
+        }
         
         const auto& children = gameObject->GetChildren();
         if (children.empty()) {
@@ -341,6 +510,7 @@ namespace RTBEditor {
                 ToggleSelection(context, gameObject);
             } else {
                 SetSingleSelection(context, gameObject);
+                UpdateHierarchyRevealTarget(gameObject);
             }
         }
 
