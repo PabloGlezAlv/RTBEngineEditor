@@ -1,4 +1,4 @@
-function CreateScene()
+﻿function CreateScene()
     return {
         name = "KayKit Showcase",
         skyboxEnabled = true,
@@ -7,8 +7,8 @@ function CreateScene()
             {
                 name = "Main Camera",
                 uuid = "B1000001-0000-4000-8000-000000000001",
-                position = Vector3(0.00, 2.50, -10.00),
-                rotation = Quaternion.FromEulerAngles(10.00, 0.00, 0.00),
+                position = Vector3(0.00, 4.00, -14.00),
+                rotation = Quaternion.FromEulerAngles(15.00, 0.00, 0.00),
                 components = {
                     {
                         type = "CameraComponent",
@@ -40,6 +40,1218 @@ function CreateScene()
                     },
                 }
             },
+            {
+                name = "Dungeon Environment",
+                uuid = "B1000020-0000-4000-8000-000000000020",
+                children = {
+                    {
+                        name = "floor_0_0",
+                        position = Vector3(-12.00, 0.00, -12.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "floor_0_1",
+                        position = Vector3(-12.00, 0.00, -8.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "floor_0_2",
+                        position = Vector3(-12.00, 0.00, -4.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "floor_0_3",
+                        position = Vector3(-12.00, 0.00, 0.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "floor_0_4",
+                        position = Vector3(-12.00, 0.00, 4.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "floor_0_5",
+                        position = Vector3(-12.00, 0.00, 8.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "floor_0_6",
+                        position = Vector3(-12.00, 0.00, 12.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "floor_1_0",
+                        position = Vector3(-8.00, 0.00, -12.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "floor_1_1",
+                        position = Vector3(-8.00, 0.00, -8.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "floor_1_2",
+                        position = Vector3(-8.00, 0.00, -4.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "floor_1_3",
+                        position = Vector3(-8.00, 0.00, 0.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "floor_1_4",
+                        position = Vector3(-8.00, 0.00, 4.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "floor_1_5",
+                        position = Vector3(-8.00, 0.00, 8.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "floor_1_6",
+                        position = Vector3(-8.00, 0.00, 12.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "floor_2_0",
+                        position = Vector3(-4.00, 0.00, -12.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "floor_2_1",
+                        position = Vector3(-4.00, 0.00, -8.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "floor_2_2",
+                        position = Vector3(-4.00, 0.00, -4.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "floor_2_3",
+                        position = Vector3(-4.00, 0.00, 0.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "floor_2_4",
+                        position = Vector3(-4.00, 0.00, 4.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "floor_2_5",
+                        position = Vector3(-4.00, 0.00, 8.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "floor_2_6",
+                        position = Vector3(-4.00, 0.00, 12.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "floor_3_0",
+                        position = Vector3(0.00, 0.00, -12.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "floor_3_1",
+                        position = Vector3(0.00, 0.00, -8.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "floor_3_2",
+                        position = Vector3(0.00, 0.00, -4.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "floor_3_3",
+                        position = Vector3(0.00, 0.00, 0.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "floor_3_4",
+                        position = Vector3(0.00, 0.00, 4.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "floor_3_5",
+                        position = Vector3(0.00, 0.00, 8.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "floor_3_6",
+                        position = Vector3(0.00, 0.00, 12.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "floor_4_0",
+                        position = Vector3(4.00, 0.00, -12.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "floor_4_1",
+                        position = Vector3(4.00, 0.00, -8.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "floor_4_2",
+                        position = Vector3(4.00, 0.00, -4.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "floor_4_3",
+                        position = Vector3(4.00, 0.00, 0.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "floor_4_4",
+                        position = Vector3(4.00, 0.00, 4.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "floor_4_5",
+                        position = Vector3(4.00, 0.00, 8.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "floor_4_6",
+                        position = Vector3(4.00, 0.00, 12.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "floor_5_0",
+                        position = Vector3(8.00, 0.00, -12.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "floor_5_1",
+                        position = Vector3(8.00, 0.00, -8.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "floor_5_2",
+                        position = Vector3(8.00, 0.00, -4.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "floor_5_3",
+                        position = Vector3(8.00, 0.00, 0.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "floor_5_4",
+                        position = Vector3(8.00, 0.00, 4.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "floor_5_5",
+                        position = Vector3(8.00, 0.00, 8.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "floor_5_6",
+                        position = Vector3(8.00, 0.00, 12.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "floor_6_0",
+                        position = Vector3(12.00, 0.00, -12.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "floor_6_1",
+                        position = Vector3(12.00, 0.00, -8.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "floor_6_2",
+                        position = Vector3(12.00, 0.00, -4.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "floor_6_3",
+                        position = Vector3(12.00, 0.00, 0.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "floor_6_4",
+                        position = Vector3(12.00, 0.00, 4.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "floor_6_5",
+                        position = Vector3(12.00, 0.00, 8.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "floor_6_6",
+                        position = Vector3(12.00, 0.00, 12.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "wall_corner_sw",
+                        position = Vector3(-14.00, 0.00, -14.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall_corner.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "wall_corner_se",
+                        position = Vector3(14.00, 0.00, -14.00),
+                        rotation = Quaternion.FromEulerAngles(0.00, -90.00, 0.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall_corner.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "wall_corner_nw",
+                        position = Vector3(-14.00, 0.00, 14.00),
+                        rotation = Quaternion.FromEulerAngles(0.00, 90.00, 0.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall_corner.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "wall_corner_ne",
+                        position = Vector3(14.00, 0.00, 14.00),
+                        rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall_corner.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "wall_s_-12",
+                        position = Vector3(-12.00, 0.00, -14.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "wall_s_-8",
+                        position = Vector3(-8.00, 0.00, -14.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "wall_s_-4",
+                        position = Vector3(-4.00, 0.00, -14.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "wall_doorway_s",
+                        position = Vector3(0.00, 0.00, -14.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall_doorway.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "wall_s_4",
+                        position = Vector3(4.00, 0.00, -14.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "wall_s_8",
+                        position = Vector3(8.00, 0.00, -14.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "wall_s_12",
+                        position = Vector3(12.00, 0.00, -14.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "wall_n_-12",
+                        position = Vector3(-12.00, 0.00, 14.00),
+                        rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "wall_n_-8",
+                        position = Vector3(-8.00, 0.00, 14.00),
+                        rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "wall_n_-4",
+                        position = Vector3(-4.00, 0.00, 14.00),
+                        rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "wall_n_0",
+                        position = Vector3(0.00, 0.00, 14.00),
+                        rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "wall_n_4",
+                        position = Vector3(4.00, 0.00, 14.00),
+                        rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "wall_n_8",
+                        position = Vector3(8.00, 0.00, 14.00),
+                        rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "wall_n_12",
+                        position = Vector3(12.00, 0.00, 14.00),
+                        rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "wall_w_-12",
+                        position = Vector3(-14.00, 0.00, -12.00),
+                        rotation = Quaternion.FromEulerAngles(0.00, 90.00, 0.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "wall_w_-8",
+                        position = Vector3(-14.00, 0.00, -8.00),
+                        rotation = Quaternion.FromEulerAngles(0.00, 90.00, 0.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "wall_w_-4",
+                        position = Vector3(-14.00, 0.00, -4.00),
+                        rotation = Quaternion.FromEulerAngles(0.00, 90.00, 0.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "wall_w_4",
+                        position = Vector3(-14.00, 0.00, 4.00),
+                        rotation = Quaternion.FromEulerAngles(0.00, 90.00, 0.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "wall_w_8",
+                        position = Vector3(-14.00, 0.00, 8.00),
+                        rotation = Quaternion.FromEulerAngles(0.00, 90.00, 0.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "wall_w_12",
+                        position = Vector3(-14.00, 0.00, 12.00),
+                        rotation = Quaternion.FromEulerAngles(0.00, 90.00, 0.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "wall_e_-12",
+                        position = Vector3(14.00, 0.00, -12.00),
+                        rotation = Quaternion.FromEulerAngles(0.00, -90.00, 0.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "wall_e_-8",
+                        position = Vector3(14.00, 0.00, -8.00),
+                        rotation = Quaternion.FromEulerAngles(0.00, -90.00, 0.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "wall_e_-4",
+                        position = Vector3(14.00, 0.00, -4.00),
+                        rotation = Quaternion.FromEulerAngles(0.00, -90.00, 0.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "wall_e_4",
+                        position = Vector3(14.00, 0.00, 4.00),
+                        rotation = Quaternion.FromEulerAngles(0.00, -90.00, 0.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "wall_e_8",
+                        position = Vector3(14.00, 0.00, 8.00),
+                        rotation = Quaternion.FromEulerAngles(0.00, -90.00, 0.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "wall_e_12",
+                        position = Vector3(14.00, 0.00, 12.00),
+                        rotation = Quaternion.FromEulerAngles(0.00, -90.00, 0.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "wall_cross_x_-8",
+                        position = Vector3(-8.00, 0.00, 0.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "wall_cross_x_-4",
+                        position = Vector3(-4.00, 0.00, 0.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "wall_cross_x_4",
+                        position = Vector3(4.00, 0.00, 0.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "wall_cross_x_8",
+                        position = Vector3(8.00, 0.00, 0.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "wall_cross_z_-8",
+                        position = Vector3(0.00, 0.00, -8.00),
+                        rotation = Quaternion.FromEulerAngles(0.00, 90.00, 0.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "wall_cross_z_-4",
+                        position = Vector3(0.00, 0.00, -4.00),
+                        rotation = Quaternion.FromEulerAngles(0.00, 90.00, 0.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "wall_cross_z_4",
+                        position = Vector3(0.00, 0.00, 4.00),
+                        rotation = Quaternion.FromEulerAngles(0.00, 90.00, 0.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "wall_cross_z_8",
+                        position = Vector3(0.00, 0.00, 8.00),
+                        rotation = Quaternion.FromEulerAngles(0.00, 90.00, 0.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "pillar_ne",
+                        position = Vector3(8.00, 0.00, 8.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/pillar_decorated.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "pillar_nw",
+                        position = Vector3(-8.00, 0.00, 8.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/pillar_decorated.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "pillar_se",
+                        position = Vector3(8.00, 0.00, -8.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/pillar_decorated.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "pillar_sw",
+                        position = Vector3(-8.00, 0.00, -8.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/pillar_decorated.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "torch_s_1",
+                        position = Vector3(-6.00, 0.00, -13.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/torch_lit.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "torch_s_2",
+                        position = Vector3(6.00, 0.00, -13.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/torch_lit.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "torch_n",
+                        position = Vector3(0.00, 0.00, 13.00),
+                        rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/torch_lit.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "barrel_1",
+                        position = Vector3(-10.00, 0.00, -10.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/barrel_large.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "barrel_2",
+                        position = Vector3(10.00, 0.00, -10.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/barrel_large.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "chest_1",
+                        position = Vector3(-10.00, 0.00, 10.00),
+                        rotation = Quaternion.FromEulerAngles(0.00, 90.00, 0.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/chest.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                    {
+                        name = "banner_1",
+                        position = Vector3(0.00, 0.00, 13.50),
+                        rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/banner_red.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                            },
+                        }
+                    },
+                }
+            },
+
             {
                 name = "Knight",
                 uuid = "B1000010-0000-4000-8000-000000000010",

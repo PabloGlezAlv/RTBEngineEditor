@@ -400,4 +400,9 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 RTBEngineEditor/imgui.ini
-RTBEngineEditor/RTBEngine_SDK/ 
+RTBEngineEditor/RTBEngine_SDK/
+
+# 3D asset meshes under Assets (not MSVC build artifacts)
+!RTBEngineEditor/Assets/**/obj/
+!RTBEngineEditor/Assets/**/obj/**
+!RTBEngineEditor/Assets/**/*.obj
