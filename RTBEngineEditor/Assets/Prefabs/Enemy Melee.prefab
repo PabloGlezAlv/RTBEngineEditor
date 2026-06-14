@@ -197,24 +197,6 @@ return {
                         },
                     }
                 },
-                {
-                    name = "handslot.r",
-                    children = {
-                        {
-                            name = "Barbarian_Axe",
-                            position = Vector3(0.00, 0.10, -0.06),
-                            rotation = Quaternion.FromEulerAngles(0.00, 0.00, 90.00),
-                            components = {
-                                {
-                                    type = "MeshRenderer",
-                                    model = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/axe_2handed.obj",
-                                    textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/barbarian_texture.png",
-                                    shader = "basic"
-                                },
-                            }
-                        },
-                    }
-                },
             },
         },
     },

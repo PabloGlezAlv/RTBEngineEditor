@@ -537,8 +537,7 @@ function CreateScene()
                 name = "Floor",
                 uuid = "737688CD-BE46-4776-B38D-CA30B01FB6D1",
                 position = Vector3(-0.46, -0.05, 0.00),
-                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
-                scale = Vector3(31.87, 0.10, 28.33),
+                scale = Vector3(30.00, 0.10, 30.00),
                 components = {
                     {
                         type = "MeshRenderer",
@@ -620,106 +619,260 @@ function CreateScene()
                 children = {
                     {
                         name = "EnemyAttackOrigin",
-                        uuid = "7315A021-4584-4250-94D8-0058FDA26354",
-                        prefab = "EnemyAttackOrigin",
+                        uuid = "45674572-2177-4029-BF13-CB3593465430",
                         position = Vector3(0.00, 0.85, 0.75),
-                        overrides = {
-                        },
                     },
                     {
                         name = "Enemy Model",
                         uuid = "E1F5A9B7-1030-4F9B-9A18-77AD11B06E20",
-                        prefab = "Enemy Model",
                         scale = Vector3(0.85, 0.85, 0.85),
-                        overrides = {
+                        components = {
+                            {
+                                type = "Animator",
+                                modelRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Barbarian.fbx",
+                                currentClipName = "EnemyMelee.Walk",
+                                defaultClip = "EnemyMelee.Walk",
+                                speed = 1.00,
+                                playing = true,
+                                looping = true
+                            },
                         },
                         children = {
                             {
                                 name = "Barbarian_Body",
-                                uuid = "E0C96FD8-42E1-433F-A27D-715C1E3AA994",
-                                prefab = "Barbarian_Body",
-                                overrides = {
-                                },
+                                uuid = "2441A619-E72C-44D0-AD2C-C2B4281B292C",
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Barbarian.fbx",
+                                        textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/barbarian_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                }
                             },
                             {
                                 name = "Barbarian_Head",
-                                uuid = "0F143146-9E13-4CF2-A877-DEC68A722509",
-                                prefab = "Barbarian_Head",
+                                uuid = "D3D6EC4A-423A-4243-9C41-CAD1D726AF0E",
                                 position = Vector3(0.00, 1.22, 0.00),
-                                overrides = {
-                                },
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Barbarian.fbx",
+                                        textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/barbarian_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 1,
+                                        multiMesh = false
+                                    },
+                                }
                             },
                             {
                                 name = "Barbarian_BearHat",
-                                uuid = "8E6EFD5F-8331-4E81-B73B-DA1337E8BD45",
-                                prefab = "Barbarian_BearHat",
+                                uuid = "122F6981-F1A3-4556-A29A-A5CBAF1FD0B4",
                                 position = Vector3(0.00, 1.22, 0.00),
-                                overrides = {
-                                },
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Barbarian.fbx",
+                                        textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/barbarian_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 2,
+                                        multiMesh = false
+                                    },
+                                }
                             },
                             {
                                 name = "Barbarian_LegLeft",
-                                uuid = "0F00127A-9C85-4DA0-AC48-9E353B048B7D",
-                                prefab = "Barbarian_LegLeft",
-                                overrides = {
-                                },
+                                uuid = "73BA530A-41C0-4C8C-84B8-50A3E753AC32",
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Barbarian.fbx",
+                                        textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/barbarian_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 3,
+                                        multiMesh = false
+                                    },
+                                }
                             },
                             {
                                 name = "Barbarian_LegRight",
-                                uuid = "F138083D-52C2-48DB-9C72-8D749E31783B",
-                                prefab = "Barbarian_LegRight",
-                                overrides = {
-                                },
+                                uuid = "4291A6B3-C51F-44CB-881C-92E355B88259",
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Barbarian.fbx",
+                                        textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/barbarian_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 4,
+                                        multiMesh = false
+                                    },
+                                }
                             },
                             {
                                 name = "Barbarian_ArmRight",
-                                uuid = "AE345420-133E-437F-B8FE-15EAA95303E5",
-                                prefab = "Barbarian_ArmRight",
-                                overrides = {
-                                },
+                                uuid = "F14EC434-AC34-41A8-8252-418A581F3F7A",
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Barbarian.fbx",
+                                        textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/barbarian_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 5,
+                                        multiMesh = false
+                                    },
+                                }
                             },
                             {
                                 name = "Barbarian_ArmLeft",
-                                uuid = "AF41FC58-FF38-4977-8E94-668A08D91BBF",
-                                prefab = "Barbarian_ArmLeft",
-                                overrides = {
-                                },
+                                uuid = "81203BCF-07BF-4C38-AB9F-73659F302767",
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Barbarian.fbx",
+                                        textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/barbarian_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 6,
+                                        multiMesh = false
+                                    },
+                                }
+                            },
+                            {
+                                name = "Barbarian_Body",
+                                uuid = "232F7F49-0302-4BAE-9720-A2DE2E34E6C6",
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Barbarian.fbx",
+                                        textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/barbarian_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                }
+                            },
+                            {
+                                name = "Barbarian_Head",
+                                uuid = "93F2CA51-BEF3-4F66-9D49-356D7BC9BF7D",
+                                position = Vector3(0.00, 1.22, 0.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Barbarian.fbx",
+                                        textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/barbarian_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 1,
+                                        multiMesh = false
+                                    },
+                                }
+                            },
+                            {
+                                name = "Barbarian_BearHat",
+                                uuid = "5D86AD71-144B-4AB3-B110-361C5C53AF12",
+                                position = Vector3(0.00, 1.22, 0.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Barbarian.fbx",
+                                        textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/barbarian_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 2,
+                                        multiMesh = false
+                                    },
+                                }
+                            },
+                            {
+                                name = "Barbarian_LegLeft",
+                                uuid = "F0230142-C2A2-4B9E-893F-8BCB52E4EDD3",
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Barbarian.fbx",
+                                        textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/barbarian_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 3,
+                                        multiMesh = false
+                                    },
+                                }
+                            },
+                            {
+                                name = "Barbarian_LegRight",
+                                uuid = "5D8C17C8-2E30-4DBE-9259-0FBB225D4A11",
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Barbarian.fbx",
+                                        textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/barbarian_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 4,
+                                        multiMesh = false
+                                    },
+                                }
+                            },
+                            {
+                                name = "Barbarian_ArmRight",
+                                uuid = "51E7FB61-93B0-44BF-B551-3778CF8E1A16",
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Barbarian.fbx",
+                                        textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/barbarian_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 5,
+                                        multiMesh = false
+                                    },
+                                }
+                            },
+                            {
+                                name = "Barbarian_ArmLeft",
+                                uuid = "39BE552A-963C-41EA-8732-38A076126CB6",
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Barbarian.fbx",
+                                        textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/barbarian_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 6,
+                                        multiMesh = false
+                                    },
+                                }
                             },
                             {
                                 name = "root",
-                                uuid = "5CCB9B82-A2E5-4306-8469-C9D7E0E3F3E2",
+                                uuid = "A913A790-4692-4110-A796-722BD0230BA6",
                                 children = {
                                     {
                                         name = "hips",
-                                        uuid = "B1F343FA-AE56-400D-8367-FF5CB2162346",
+                                        uuid = "75E2BE78-0EE1-42BE-AA7A-D3A8C29E1FB8",
                                         children = {
                                             {
                                                 name = "spine",
-                                                uuid = "32D5D41A-AEB7-4893-B45A-CB8191FB748E",
+                                                uuid = "DD98E0C1-34F9-4278-97A7-A9D387C9B7D6",
                                                 children = {
                                                     {
                                                         name = "chest",
-                                                        uuid = "0867E307-33C3-4607-9CA5-AB6B49EAF91A",
+                                                        uuid = "43575E6B-BFCC-4D3C-B8CA-F2013655F36D",
                                                         children = {
                                                             {
                                                                 name = "upperarm.l",
-                                                                uuid = "7050CEBF-D89B-4E7B-AA4A-681A6445521E",
+                                                                uuid = "1FCC041D-0715-42CF-91FA-2F66AC3580A2",
                                                                 children = {
                                                                     {
                                                                         name = "lowerarm.l",
-                                                                        uuid = "3312D7B2-428F-4986-8555-2BE2BE7DE911",
+                                                                        uuid = "1C97F497-3C41-4D85-928F-C0A2541C8C96",
                                                                         children = {
                                                                             {
                                                                                 name = "wrist.l",
-                                                                                uuid = "915E9A5E-8F73-45CC-89B3-2D30347447EF",
+                                                                                uuid = "208F9A02-2C1B-4824-8AFA-5BEDF19AAA4F",
                                                                                 children = {
                                                                                     {
                                                                                         name = "hand.l",
-                                                                                        uuid = "43C6AE0E-5269-4315-89DF-05C52F526A33",
+                                                                                        uuid = "2443ACB2-27D0-4F54-9FDE-92E6851FC96E",
                                                                                         children = {
                                                                                             {
                                                                                                 name = "handslot.l",
-                                                                                                uuid = "830CA8E1-8D45-4E5D-8AAB-5A0E3F239766",
+                                                                                                uuid = "885764D7-E9A8-42CE-A12F-D36FBB8544F2",
                                                                                             },
                                                                                         }
                                                                                     },
@@ -731,35 +884,38 @@ function CreateScene()
                                                             },
                                                             {
                                                                 name = "upperarm.r",
-                                                                uuid = "1372BE77-AB32-474D-BCB0-B76E85E2DC90",
+                                                                uuid = "0E1BCC73-ACD6-437C-BF99-45FD955A92CD",
                                                                 children = {
                                                                     {
                                                                         name = "lowerarm.r",
-                                                                        uuid = "43104C46-306B-4C96-A42C-6373C15B13A6",
+                                                                        uuid = "A8F06D92-C01A-4029-9F09-0BFBB47622C4",
                                                                         children = {
                                                                             {
                                                                                 name = "wrist.r",
-                                                                                uuid = "683EA225-A5D2-4053-9E3E-B03A962B1E23",
+                                                                                uuid = "BB8FD2BC-B586-4DE6-AFC5-96CACC0874C1",
                                                                                 children = {
                                                                                     {
                                                                                         name = "hand.r",
-                                                                                        uuid = "6BA1C573-F0EC-4D4B-BC76-7EE70955D49F",
+                                                                                        uuid = "EFC307FE-69E8-4CAB-8988-C013159E3EBF",
                                                                                         children = {
                                                                                             {
                                                                                                 name = "handslot.r",
-                                                                                                uuid = "BC25C4CC-E6A3-40AE-9589-D04E175E65A1",
-                                                                                                prefab = "handslot.r",
-                                                                                                overrides = {
-                                                                                                },
+                                                                                                uuid = "F332D7B2-D5C8-404A-997D-33F1147A41E4",
                                                                                                 children = {
                                                                                                     {
                                                                                                         name = "Barbarian_Axe",
-                                                                                                        uuid = "B7021F5F-C53B-47D4-B0D9-6EF937DEE67A",
-                                                                                                        prefab = "Barbarian_Axe",
+                                                                                                        uuid = "C50212F0-226D-456B-A058-A747589E732E",
                                                                                                         position = Vector3(0.00, 0.10, -0.06),
-                                                                                                        rotation = Quaternion.FromEulerAngles(0.00, 0.00, 90.00),
-                                                                                                        overrides = {
-                                                                                                        },
+                                                                                                        components = {
+                                                                                                            {
+                                                                                                                type = "MeshRenderer",
+                                                                                                                meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/axe_2handed.obj",
+                                                                                                                textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/barbarian_texture.png",
+                                                                                                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                                                                                                meshIndex = 0,
+                                                                                                                multiMesh = false
+                                                                                                            },
+                                                                                                        }
                                                                                                     },
                                                                                                 }
                                                                                             },
@@ -773,7 +929,7 @@ function CreateScene()
                                                             },
                                                             {
                                                                 name = "head",
-                                                                uuid = "70BC3CB9-6E3B-4C45-A525-755F429D3188",
+                                                                uuid = "CB92EDB4-E54D-4FCD-951D-98144EF7717D",
                                                             },
                                                         }
                                                     },
@@ -781,19 +937,19 @@ function CreateScene()
                                             },
                                             {
                                                 name = "upperleg.l",
-                                                uuid = "4B0BF088-A643-447D-A5D5-E70C67390B0F",
+                                                uuid = "E103DC17-6004-40E2-8F41-E7CDC03BEE48",
                                                 children = {
                                                     {
                                                         name = "lowerleg.l",
-                                                        uuid = "F04E7660-0AA5-457F-A55B-2392B005F168",
+                                                        uuid = "E20ED9C6-C758-46A0-A0F9-1F434C7C14C2",
                                                         children = {
                                                             {
                                                                 name = "foot.l",
-                                                                uuid = "B50250CC-8832-47EB-B1EB-D433A5BC8532",
+                                                                uuid = "13ED9E96-764C-4787-A961-BC3C38BA154C",
                                                                 children = {
                                                                     {
                                                                         name = "toes.l",
-                                                                        uuid = "DB0BC3DC-6CFF-4A09-BB65-FCC254F369EF",
+                                                                        uuid = "5CC4532D-1FAC-4D94-B799-DA63988E17AC",
                                                                     },
                                                                 }
                                                             },
@@ -803,19 +959,19 @@ function CreateScene()
                                             },
                                             {
                                                 name = "upperleg.r",
-                                                uuid = "614B3529-D565-471F-B90E-F032A32109F7",
+                                                uuid = "4F32A35D-7711-4952-91A4-61D10C419E4B",
                                                 children = {
                                                     {
                                                         name = "lowerleg.r",
-                                                        uuid = "34C2FF65-1BFD-48B5-8DEB-D6D3B49141EE",
+                                                        uuid = "285046BA-A1FA-4131-A7CE-79EA2A854686",
                                                         children = {
                                                             {
                                                                 name = "foot.r",
-                                                                uuid = "B0A2D7C2-87EB-4494-9DAA-B641A0D1F871",
+                                                                uuid = "758AE098-C0C2-459F-B813-7EFBC4FD2D5E",
                                                                 children = {
                                                                     {
                                                                         name = "toes.r",
-                                                                        uuid = "3A0FDFCE-7DEF-4FEE-A797-A115DA180833",
+                                                                        uuid = "EE957398-A104-4E17-A52C-73E31C519A6B",
                                                                     },
                                                                 }
                                                             },
@@ -828,6 +984,11 @@ function CreateScene()
                                 }
                             },
                         }
+                    },
+                    {
+                        name = "EnemyAttackOrigin",
+                        uuid = "AC48CFD4-4A41-4910-9F90-799ECC997F70",
+                        position = Vector3(0.00, 0.85, 0.75),
                     },
                 }
             },
@@ -1126,10 +1287,10 @@ function CreateScene()
                             {
                                 type = "Animator",
                                 modelRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Ranger.fbx",
-                                currentClipName = "",
+                                currentClipName = "ThirdPerson.Idle",
                                 defaultClip = "Ranged_Bow_Aiming_Idle",
                                 speed = 1.00,
-                                playing = false,
+                                playing = true,
                                 looping = true,
                                 additionalModels = {
                                     "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_MovementBasic.fbx",
@@ -1338,6 +1499,7 @@ function CreateScene()
                                                                                                     {
                                                                                                         name = "Ranger_Arrow",
                                                                                                         uuid = "R4NG3R00-ARRO-4000-8000-000000000001",
+                                                                                                        active = false,
                                                                                                         rotation = Quaternion.FromEulerAngles(-90.00, 0.00, 0.00),
                                                                                                         components = {
                                                                                                             {

@@ -100,20 +100,6 @@ namespace RTBEditor {
             transform.SetRotation(RTBEngine::Math::Quaternion::FromEulerAngles(radians));
         }
 
-        void NotifyAnimatorAttachmentTransformChanged(RTBEngine::ECS::GameObject* gameObject)
-        {
-            if (!gameObject) {
-                return;
-            }
-
-            for (RTBEngine::ECS::GameObject* current = gameObject; current; current = current->GetParent()) {
-                if (auto* animator = current->GetComponent<RTBEngine::Animation::Animator>()) {
-                    animator->RefreshBoneAttachmentTransform(gameObject);
-                    return;
-                }
-            }
-        }
-
         bool HasFbxExtension(const std::filesystem::path& path) {
             return ToLowerCopy(path.extension().string()) == ".fbx";
         }
@@ -662,26 +648,33 @@ namespace RTBEditor {
                 RTBEngine::Math::Vector3 localPos = transform.GetPosition();
                 if (ImGui::DragFloat3("Position", (float*)&localPos, 0.1f)) {
                     transform.SetPosition(localPos);
-                    NotifyAnimatorAttachmentTransformChanged(gameObject);
                     RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
                 }
 
-                // Local rotation — cached euler degrees; only resync when selection or gizmo changes it.
+                // Local rotation in degrees: X=pitch, Y=yaw, Z=roll (engine YXZ convention).
                 if (cachedRotationTarget != gameObject) {
                     cachedRotationTarget = gameObject;
                     cachedRotationDeg = RotationDegreesFromQuaternion(transform.GetRotation());
                     cachedRotationSource = transform.GetRotation().Normalized();
                 }
 
-                if (ImGui::InputFloat3("Rotation", &cachedRotationDeg.x, "%.2f")) {
+                ImGui::TextUnformatted("Rotation");
+                ImGui::PushID("RotationEuler");
+                bool rotationChanged = false;
+                rotationChanged |= ImGui::DragFloat("X##RotX", &cachedRotationDeg.x, 0.5f, -180.0f, 180.0f, "X: %.2f");
+                rotationChanged |= ImGui::DragFloat("Y##RotY", &cachedRotationDeg.y, 0.5f, -180.0f, 180.0f, "Y: %.2f");
+                rotationChanged |= ImGui::DragFloat("Z##RotZ", &cachedRotationDeg.z, 0.5f, -180.0f, 180.0f, "Z: %.2f");
+                ImGui::PopID();
+
+                const bool rotationFieldActive = ImGui::IsAnyItemActive() || ImGui::IsAnyItemFocused();
+
+                if (rotationChanged) {
                     ApplyInspectorRotationDegrees(transform, cachedRotationDeg);
                     cachedRotationDeg = RotationDegreesFromQuaternion(transform.GetRotation());
                     cachedRotationSource = transform.GetRotation().Normalized();
-                    NotifyAnimatorAttachmentTransformChanged(gameObject);
                     RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
                 }
 
-                const bool rotationFieldActive = ImGui::IsItemActive() || ImGui::IsItemFocused();
                 if (!rotationFieldActive &&
                     !QuaternionsRepresentSameRotation(transform.GetRotation(), cachedRotationSource)) {
                     cachedRotationDeg = RotationDegreesFromQuaternion(transform.GetRotation());
@@ -692,7 +685,6 @@ namespace RTBEditor {
                 RTBEngine::Math::Vector3 localScale = transform.GetScale();
                 if (ImGui::DragFloat3("Scale", (float*)&localScale, 0.01f)) {
                     transform.SetScale(localScale);
-                    NotifyAnimatorAttachmentTransformChanged(gameObject);
                     RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
                 }
             }
