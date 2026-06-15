@@ -48,6 +48,30 @@ namespace {
 
         return static_cast<int>(CharacterTeam::Neutral);
     }
+
+    bool IsOtherPlayer(RTBEngine::ECS::GameObject* hitObject,
+                       const RTBEngine::ECS::GameObject* instigator)
+    {
+        if (!hitObject || !instigator) {
+            return false;
+        }
+
+        if (IsSameOrDescendant(hitObject, instigator)) {
+            return false;
+        }
+
+        for (RTBEngine::ECS::GameObject* current = hitObject; current; current = current->GetParent()) {
+            if (current == instigator) {
+                return false;
+            }
+
+            if (auto* character = current->GetComponent<CharacterBase>()) {
+                return character->GetTeam() == static_cast<int>(CharacterTeam::Player);
+            }
+        }
+
+        return false;
+    }
 }
 
 RTB_REGISTER_COMPONENT(ProjectileComponent)
@@ -288,30 +312,30 @@ bool ProjectileComponent::HandleSweepHit(const RTBEngine::Math::Vector3& previou
     outResolvedPosition = previousPosition + (nextPosition - previousPosition) * hitFraction;
     outResolvedPosition.y = fixedHeight;
 
-    if (!applyDamage) {
-        return destroyOnHit;
-    }
-
-    HealthComponent* targetHealth = ResolveHitHealth(hit.gameObject);
-    if (!targetHealth || HasAlreadyHit(targetHealth)) {
+    if (IsOtherPlayer(hit.gameObject, instigator)) {
         return false;
     }
 
-    HealthComponent::DamageContext damageContext;
-    damageContext.amount = damage;
-    damageContext.instigator = instigator;
-    damageContext.hitPoint = hit.point;
-    damageContext.hitDirection = direction;
-    targetHealth->TakeDamage(damage, damageContext);
+    if (applyDamage) {
+        HealthComponent* targetHealth = ResolveHitHealth(hit.gameObject);
+        if (targetHealth && !HasAlreadyHit(targetHealth)) {
+            HealthComponent::DamageContext damageContext;
+            damageContext.amount = damage;
+            damageContext.instigator = instigator;
+            damageContext.hitPoint = hit.point;
+            damageContext.hitDirection = direction;
+            targetHealth->TakeDamage(damage, damageContext);
 
-    hitTargets.push_back(targetHealth);
-    ++appliedHitCount;
+            hitTargets.push_back(targetHealth);
+            ++appliedHitCount;
 
-    if (destroyOnHit) {
-        return true;
+            if (!destroyOnHit) {
+                return maxHits > 0 && appliedHitCount >= maxHits;
+            }
+        }
     }
 
-    return maxHits > 0 && appliedHitCount >= maxHits;
+    return destroyOnHit;
 }
 
 void ProjectileComponent::DestroyProjectile()
