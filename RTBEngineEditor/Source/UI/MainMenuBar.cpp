@@ -8,8 +8,9 @@ namespace RTBEditor {
     MainMenuBar::~MainMenuBar() {}
 
     void MainMenuBar::OnUIRender() {
-        // Global Keyboard Shortcuts
-        if (ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_S, false)) {
+        ImGuiIO& io = ImGui::GetIO();
+
+        if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_S, false)) {
             if (sceneDirty && saveSceneCallback) {
                 saveSceneCallback();
             }
@@ -38,6 +39,25 @@ namespace RTBEditor {
                 if (ImGui::MenuItem("Exit", "Alt+F4")) {
                     if (exitCallback) exitCallback();
                 }
+                ImGui::EndMenu();
+            }
+
+            if (ImGui::BeginMenu("Edit")) {
+                const bool canCopy = !canCopyProvider || canCopyProvider();
+                const bool canPaste = !canPasteProvider || canPasteProvider();
+
+                if (ImGui::MenuItem("Copy", "Ctrl+C", false, canCopy)) {
+                    if (copyCallback) copyCallback();
+                }
+
+                if (ImGui::MenuItem("Paste", "Ctrl+V", false, canPaste)) {
+                    if (pasteCallback) pasteCallback();
+                }
+
+                if (ImGui::MenuItem("Duplicate", "Ctrl+D", false, canCopy)) {
+                    if (duplicateCallback) duplicateCallback();
+                }
+
                 ImGui::EndMenu();
             }
 

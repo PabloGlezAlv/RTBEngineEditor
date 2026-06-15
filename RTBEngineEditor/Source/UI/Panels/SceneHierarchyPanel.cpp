@@ -269,6 +269,29 @@ namespace RTBEditor {
 
             // Context menu for the window
             if (ImGui::BeginPopupContextWindow()) {
+                const bool canCopy = !context.canCopySelection || context.canCopySelection();
+                const bool canPaste = !context.hasClipboardContent || context.hasClipboardContent();
+
+                if (ImGui::MenuItem("Copy", "Ctrl+C", false, canCopy)) {
+                    if (context.onCopySelection) {
+                        context.onCopySelection();
+                    }
+                }
+
+                if (ImGui::MenuItem("Paste", "Ctrl+V", false, canPaste)) {
+                    if (context.onPasteSelection) {
+                        context.onPasteSelection();
+                    }
+                }
+
+                if (ImGui::MenuItem("Duplicate", "Ctrl+D", false, canCopy)) {
+                    if (context.onDuplicateSelection) {
+                        context.onDuplicateSelection();
+                    }
+                }
+
+                ImGui::Separator();
+
                 if (ImGui::BeginMenu("GameObject")) {
                     if (ImGui::MenuItem("Empty Object")) {
                         auto* go = new RTBEngine::ECS::GameObject("GameObject");
@@ -352,10 +375,13 @@ namespace RTBEditor {
                     std::vector<RTBEngine::ECS::GameObject*> childGOs;
                     RTBEngine::ECS::GameObject* go = prefab->Instantiate(nullptr, childGOs);
                     if (go) {
-                        activeScene->AddGameObject(go);
+                        activeScene->AddGameObject(go, false);
                         for (auto* child : childGOs) {
-                            if (child) activeScene->AddGameObject(child);
+                            if (child) {
+                                activeScene->AddGameObject(child, false);
+                            }
                         }
+                        activeScene->BringGameObjectToLife(go);
                         context.selectedGameObject = go;
                         RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
                     }
@@ -515,6 +541,46 @@ namespace RTBEditor {
             }
         }
 
+        if (ImGui::BeginPopupContextItem()) {
+            if (!isSelected) {
+                SetSingleSelection(context, gameObject);
+                UpdateHierarchyRevealTarget(gameObject);
+            }
+
+            const bool canCopy = !context.canCopySelection || context.canCopySelection();
+            const bool canPaste = !context.hasClipboardContent || context.hasClipboardContent();
+
+            if (ImGui::MenuItem("Copy", "Ctrl+C", false, canCopy)) {
+                if (context.onCopySelection) {
+                    context.onCopySelection();
+                }
+            }
+
+            if (ImGui::MenuItem("Paste", "Ctrl+V", false, canPaste)) {
+                if (context.onPasteSelection) {
+                    context.onPasteSelection();
+                }
+            }
+
+            if (ImGui::MenuItem("Duplicate", "Ctrl+D", false, canCopy)) {
+                if (context.onDuplicateSelection) {
+                    context.onDuplicateSelection();
+                }
+            }
+
+            ImGui::Separator();
+
+            if (ImGui::MenuItem("Delete", "Del")) {
+                auto* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
+                if (scene) {
+                    DeleteGameObject(scene, gameObject, context);
+                    ClearSelection(context);
+                }
+            }
+
+            ImGui::EndPopup();
+        }
+
         // Drag-and-drop source for GameObject
         if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None)) {
             GameObjectPayload payload;
@@ -556,10 +622,13 @@ namespace RTBEditor {
                     std::vector<RTBEngine::ECS::GameObject*> childGOs;
                     RTBEngine::ECS::GameObject* go = prefab->Instantiate(gameObject, childGOs);
                     if (go) {
-                        scene->AddGameObject(go);
+                        scene->AddGameObject(go, false);
                         for (auto* child : childGOs) {
-                            if (child) scene->AddGameObject(child);
+                            if (child) {
+                                scene->AddGameObject(child, false);
+                            }
                         }
+                        scene->BringGameObjectToLife(go);
                         context.selectedGameObject = go;
                         RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
                     }

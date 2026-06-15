@@ -402,7 +402,18 @@ FodyWeavers.xsd
 RTBEngineEditor/imgui.ini
 RTBEngineEditor/RTBEngine_SDK/
 
-# 3D asset meshes under Assets (not MSVC build artifacts)
+# -----------------------------------------------------------------------------
+# Editor Assets/ — always versioned in git.
+# Overrides Visual Studio [Oo]bj/, [Bb]in/, *.obj and similar rules above.
+# -----------------------------------------------------------------------------
+!RTBEngineEditor/Assets/
+!RTBEngineEditor/Assets/**
 !RTBEngineEditor/Assets/**/obj/
 !RTBEngineEditor/Assets/**/obj/**
+!RTBEngineEditor/Assets/**/bin/
+!RTBEngineEditor/Assets/**/bin/**
 !RTBEngineEditor/Assets/**/*.obj
+!RTBEngineEditor/Assets/**/*.meta
+
+# Editor asset temp/backup files (never commit)
+RTBEngineEditor/Assets/**/*.tmp

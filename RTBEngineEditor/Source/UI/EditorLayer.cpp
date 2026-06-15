@@ -16,6 +16,7 @@
 #include <backends/imgui_impl_sdl2.h>
 #include <backends/imgui_impl_opengl3.h>
 #include <RTBEngine/ECS/SceneManager.h>
+#include <RTBEngine/ECS/Scene.h>
 #include <RTBEngine/Core/Logger.h>
 
 namespace RTBEditor {
@@ -40,6 +41,22 @@ namespace RTBEditor {
         AddPanel(std::make_unique<OnlinePanel>());
         AddPanel(std::make_unique<PhysicsLayersPanel>());
         AddPanel(std::make_unique<StatsOverlayPanel>());
+
+        context.onCopySelection = [this]() { CopySelectionToClipboard(); };
+        context.onPasteSelection = [this]() { PasteClipboardIntoScene(); };
+        context.onDuplicateSelection = [this]() { DuplicateSelection(); };
+        context.canCopySelection = [this]() {
+            return context.selectedGameObject != nullptr || !context.selectedGameObjects.empty();
+        };
+        context.hasClipboardContent = [this]() { return HasClipboardContent(); };
+
+        menuBar->SetCopyCallback([this]() { CopySelectionToClipboard(); });
+        menuBar->SetPasteCallback([this]() { PasteClipboardIntoScene(); });
+        menuBar->SetDuplicateCallback([this]() { DuplicateSelection(); });
+        menuBar->SetCanCopyProvider([this]() {
+            return context.selectedGameObject != nullptr || !context.selectedGameObjects.empty();
+        });
+        menuBar->SetCanPasteProvider([this]() { return HasClipboardContent(); });
     }
 
     EditorLayer::~EditorLayer() {}
@@ -189,10 +206,6 @@ namespace RTBEditor {
 
     void EditorLayer::HandleGlobalShortcuts() {
         ImGuiIO& io = ImGui::GetIO();
-        if (!io.WantCaptureKeyboard) {
-            return;
-        }
-
         if (io.WantTextInput) {
             return;
         }
@@ -205,6 +218,10 @@ namespace RTBEditor {
 
         if (ctrlDown && ImGui::IsKeyPressed(ImGuiKey_V, false)) {
             PasteClipboardIntoScene();
+        }
+
+        if (ctrlDown && ImGui::IsKeyPressed(ImGuiKey_D, false)) {
+            DuplicateSelection();
         }
     }
 
@@ -219,26 +236,29 @@ namespace RTBEditor {
             }
         }
 
+        const std::string& activeScenePath =
+            RTBEngine::ECS::SceneManager::GetInstance().GetActiveScenePath();
+
         for (auto* go : context.selectedGameObjects) {
             if (!go) continue;
 
             ClipboardEntry entry;
-            entry.source = go;
             entry.baseName = go->GetName();
             entry.pasteCount = 0;
+            entry.sourceScenePath = activeScenePath;
 
             auto& t = go->GetTransform();
             entry.position = t.GetPosition();
             entry.rotation = t.GetRotation();
             entry.scale = t.GetScale();
 
-            // Always snapshot at copy time to avoid dangling source pointers
             auto prefab = RTBEngine::ECS::Prefab::CreateFromGameObject(go);
-            if (prefab) {
-                entry.prefab = std::move(prefab);
-                entry.isPrefabInstanceSource = go->IsPrefabInstance();
+            if (!prefab) {
+                continue;
             }
 
+            entry.prefab = std::move(prefab);
+            entry.isPrefabInstanceSource = go->IsPrefabInstance();
             clipboardPrefabs.push_back(std::move(entry));
         }
     }
@@ -253,6 +273,15 @@ namespace RTBEditor {
             return;
         }
 
+        RTBEngine::ECS::GameObject* pasteParent = nullptr;
+        if (context.selectedGameObject &&
+            RTBEditor::IsGameObjectInScene(scene, context.selectedGameObject)) {
+            pasteParent = context.selectedGameObject;
+        }
+
+        const std::string& activeScenePath =
+            RTBEngine::ECS::SceneManager::GetInstance().GetActiveScenePath();
+
         RTBEditor::ClearSelection(context);
 
         const float positionOffset = 0.5f;
@@ -263,59 +292,65 @@ namespace RTBEditor {
             std::vector<RTBEngine::ECS::GameObject*> childGOs;
 
             if (entry.prefab) {
-                go = entry.prefab->Instantiate(nullptr, childGOs);
+                go = entry.prefab->Instantiate(pasteParent, childGOs, true);
 
                 if (go && !entry.isPrefabInstanceSource) {
-                    // No debe tratarse como instancia de prefab real
                     go->SetPrefabName("");
-                }
-            } else if (entry.source) {
-                auto tempPrefab = RTBEngine::ECS::Prefab::CreateFromGameObject(entry.source);
-                if (tempPrefab) {
-                    go = tempPrefab->Instantiate(nullptr, childGOs);
-                    if (go) {
-                        // Mantener el nombre visible del objeto original
-                        go->SetName(entry.source->GetName());
-                        // No es instancia de prefab
-                        go->SetPrefabName("");
-                    }
                 }
             }
 
-            // Clear prefab name on all child GOs when not a real prefab instance
             if (!entry.isPrefabInstanceSource) {
                 for (auto* child : childGOs) {
-                    if (child)
+                    if (child) {
                         child->SetPrefabName("");
+                    }
                 }
             }
 
             if (!go) continue;
 
             entry.pasteCount++;
-            go->SetName(entry.baseName + " (" + std::to_string(entry.pasteCount) + ")");
+            if (entry.pasteCount == 1) {
+                go->SetName(entry.baseName);
+            } else {
+                go->SetName(entry.baseName + " (" + std::to_string(entry.pasteCount - 1) + ")");
+            }
 
             auto& transform = go->GetTransform();
             transform.SetPosition(entry.position);
             transform.SetRotation(entry.rotation);
             transform.SetScale(entry.scale);
 
-            auto posOffset = transform.GetPosition();
-            posOffset.x += positionOffset * index;
-            posOffset.z += positionOffset * index;
-            transform.SetPosition(posOffset);
-
-            scene->AddGameObject(go);
-
-            // Add child GOs to scene so Scene::Render can iterate them
-            for (auto* child : childGOs) {
-                if (child) scene->AddGameObject(child);
+            if (entry.sourceScenePath == activeScenePath) {
+                auto posOffset = transform.GetPosition();
+                posOffset.x += positionOffset * index;
+                posOffset.z += positionOffset * index;
+                transform.SetPosition(posOffset);
             }
 
+            scene->AddGameObject(go, false);
+            for (auto* child : childGOs) {
+                if (child) {
+                    scene->AddGameObject(child, false);
+                }
+            }
+
+            scene->BringGameObjectToLife(go);
+
             ToggleSelection(context, go);
+            ++index;
         }
 
         RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+    }
+
+    void EditorLayer::DuplicateSelection() {
+        if (!context.selectedGameObject && context.selectedGameObjects.empty()) {
+            return;
+        }
+
+        CopySelectionToClipboard();
+        PasteClipboardIntoScene();
     }
 
 }

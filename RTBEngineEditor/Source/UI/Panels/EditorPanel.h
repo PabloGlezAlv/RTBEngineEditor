@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <vector>
 #include <algorithm>
+#include <functional>
 
 namespace RTBEngine {
     namespace Core {
@@ -39,6 +40,12 @@ namespace RTBEditor {
         StatsData stats;
         bool showStatsOverlay = false;
         RTBEngineCore::Window* window = nullptr;
+
+        std::function<void()> onCopySelection;
+        std::function<void()> onPasteSelection;
+        std::function<void()> onDuplicateSelection;
+        std::function<bool()> canCopySelection;
+        std::function<bool()> hasClipboardContent;
     };
 
     inline void ClearSelection(EditorContext& context) {

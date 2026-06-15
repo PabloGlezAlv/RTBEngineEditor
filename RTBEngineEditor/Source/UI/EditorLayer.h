@@ -23,13 +23,13 @@
 namespace RTBEditor {
 
     struct ClipboardEntry {
-        std::unique_ptr<RTBEngine::ECS::Prefab> prefab; // null si es copia directa
-        RTBEngine::ECS::GameObject* source = nullptr;    // solo válido mientras exista el GO original
+        std::unique_ptr<RTBEngine::ECS::Prefab> prefab;
         bool isPrefabInstanceSource = false;
         RTBEngine::Math::Vector3 position;
         RTBEngine::Math::Quaternion rotation;
         RTBEngine::Math::Vector3 scale;
         std::string baseName;
+        std::string sourceScenePath;
         int pasteCount = 0;
     };
 
@@ -58,6 +58,10 @@ namespace RTBEditor {
         RTBEngine::ECS::GameObject* GetSelectedGameObject() const { return context.selectedGameObject; }
         void SetSelectedGameObject(RTBEngine::ECS::GameObject* go) { SetSingleSelection(context, go); }
         void ClearSelection();
+        void CopySelectionToClipboard();
+        void PasteClipboardIntoScene();
+        void DuplicateSelection();
+        bool HasClipboardContent() const { return !clipboardPrefabs.empty(); }
         EditorContext& GetContext() { return context; }
         void OpenBuildDialog();
 
@@ -79,8 +83,6 @@ namespace RTBEditor {
         std::function<void()> renderPopupCallback;
 
         void HandleGlobalShortcuts();
-        void CopySelectionToClipboard();
-        void PasteClipboardIntoScene();
     };
 
 }

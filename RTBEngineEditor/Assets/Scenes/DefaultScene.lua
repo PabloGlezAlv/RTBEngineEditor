@@ -534,34 +534,6 @@ function CreateScene()
                 }
             },
             {
-                name = "Floor",
-                uuid = "737688CD-BE46-4776-B38D-CA30B01FB6D1",
-                position = Vector3(-0.02, -0.09, 0.00),
-                scale = Vector3(30.00, 0.10, 30.00),
-                components = {
-                    {
-                        type = "MeshRenderer",
-                        meshRef = "Default/Models/cube.obj",
-                        textureRef = nil,
-                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                        meshIndex = 0,
-                        multiMesh = false
-                    },
-                    {
-                        type = "BoxColliderComponent",
-                        size = Vector3(1.00, 1.00, 1.00),
-                        isTrigger = false
-                    },
-                    {
-                        type = "RigidBodyComponent",
-                        mass = 1.00,
-                        friction = 0.50,
-                        restitution = 0.00,
-                        bodyType = "Static"
-                    },
-                }
-            },
-            {
                 name = "EnemySpawnPointLeft",
                 uuid = "74B6BC8E-5892-4C38-A4B6-8AAAF7B1F001",
                 position = Vector3(-11.80, 0.00, 8.60),
@@ -638,7 +610,7 @@ function CreateScene()
                             },
                         },
                         children = {
-{
+                            {
                                 name = "root",
                                 uuid = "A913A790-4692-4110-A796-722BD0230BA6",
                                 children = {
@@ -1390,6 +1362,2628 @@ function CreateScene()
                                 orthographicSize = 3.50,
                                 syncWithTransform = true,
                                 isMainCamera = true
+                            },
+                        }
+                    },
+                }
+            },
+            {
+                name = "Dungeon Environment",
+                uuid = "E0F367FE-C84E-4D38-922E-C3056F32D517",
+                children = {
+                    {
+                        name = "Floor",
+                        uuid = "89068B52-7B3B-41ED-A1BA-6CB77C18253F",
+                        children = {
+                            {
+                                name = "floor_0_0",
+                                uuid = "BAEA53F1-EE9B-426F-BF3A-2B8E46DEA75F",
+                                position = Vector3(-12.00, 0.00, -12.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "floor_0_1",
+                                uuid = "373F6DAA-77A0-4DBE-8AAE-106E5F637054",
+                                position = Vector3(-12.00, 0.00, -8.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "floor_0_2",
+                                uuid = "0C8C1E97-3C29-4596-AD51-0B49675E5918",
+                                position = Vector3(-12.00, 0.00, -4.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "floor_0_3",
+                                uuid = "9013FCC1-1CAA-42E7-B972-F0EA6B70D08C",
+                                position = Vector3(-12.00, 0.00, 0.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "floor_0_4",
+                                uuid = "BAC4304E-5BCC-45A2-86A1-056B650B8D59",
+                                position = Vector3(-12.00, 0.00, 4.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "floor_0_5",
+                                uuid = "81C5D6B2-E45A-45EE-B407-EBDCAA27F3FA",
+                                position = Vector3(-12.00, 0.00, 8.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "floor_0_6",
+                                uuid = "E8F93FCC-B04E-48E5-BBFF-4318114042C1",
+                                position = Vector3(-12.00, 0.00, 12.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "floor_1_0",
+                                uuid = "4440970E-BF57-4C27-8C34-675DB7DA3A8D",
+                                position = Vector3(-8.00, 0.00, -12.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "floor_1_1",
+                                uuid = "38D8EE45-74AD-465F-954D-9ACEB8757879",
+                                position = Vector3(-8.00, 0.00, -8.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "floor_1_2",
+                                uuid = "7776A29A-1F51-47F2-B4DE-3DB9C6D306E7",
+                                position = Vector3(-8.00, 0.00, -4.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "floor_1_3",
+                                uuid = "C247868E-ACCF-436C-A635-1D4256F6F88A",
+                                position = Vector3(-8.00, 0.00, 0.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "floor_1_4",
+                                uuid = "B3C73C07-4FDE-4F57-B4C1-848CAE823208",
+                                position = Vector3(-8.00, 0.00, 4.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "floor_1_5",
+                                uuid = "41BD2009-7E07-466A-8AF3-EFCD7CEDF420",
+                                position = Vector3(-8.00, 0.00, 8.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "floor_1_6",
+                                uuid = "8C13092C-317F-4CE0-91D4-A648C806BCC3",
+                                position = Vector3(-8.00, 0.00, 12.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "floor_2_0",
+                                uuid = "EE4411B6-346F-44E8-AFEB-B095E172524B",
+                                position = Vector3(-4.00, 0.00, -12.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "floor_2_1",
+                                uuid = "044D17FC-5E26-4EFE-9E7D-CA59A7757B4E",
+                                position = Vector3(-4.00, 0.00, -8.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "floor_2_2",
+                                uuid = "0CA1FC12-AB95-427D-895D-7003F630B802",
+                                position = Vector3(-4.00, 0.00, -4.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "floor_2_3",
+                                uuid = "5245392A-F659-4FAF-86AD-37A7E97D23B9",
+                                position = Vector3(-4.00, 0.00, 0.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "floor_2_4",
+                                uuid = "5F5C7685-9DB9-4C29-9090-3EFC3792E227",
+                                position = Vector3(-4.00, 0.00, 4.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "floor_2_5",
+                                uuid = "122924A8-C5F7-4ABD-BCF9-F4B01E8447B3",
+                                position = Vector3(-4.00, 0.00, 8.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "floor_2_6",
+                                uuid = "37038BF3-A260-4484-8237-C5E631E6572B",
+                                position = Vector3(-4.00, 0.00, 12.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "floor_3_0",
+                                uuid = "130EB721-F2AC-4B5A-BC47-DA1E6E27FC64",
+                                position = Vector3(0.00, 0.00, -12.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "floor_3_1",
+                                uuid = "6477674A-88D6-42D9-B024-7D258E664EE6",
+                                position = Vector3(0.00, 0.00, -8.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "floor_3_2",
+                                uuid = "7A025432-BC9C-4320-ACA0-1C6E067A89E6",
+                                position = Vector3(0.00, 0.00, -4.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "floor_3_3",
+                                uuid = "27F6173C-B853-4E18-9778-8B8D3C969627",
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "floor_3_4",
+                                uuid = "CE0473C3-8186-45DE-B66E-652F4DBD42AF",
+                                position = Vector3(0.00, 0.00, 4.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "floor_3_5",
+                                uuid = "7162474A-D06C-4B1E-86E0-E4528CD383A4",
+                                position = Vector3(0.00, 0.00, 8.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "floor_3_6",
+                                uuid = "0568C99E-CC97-4E21-81BE-6C9D44EBC630",
+                                position = Vector3(0.00, 0.00, 12.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "floor_4_0",
+                                uuid = "5AAD091C-8678-42FA-824F-DADA482E8DDB",
+                                position = Vector3(4.00, 0.00, -12.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "floor_4_1",
+                                uuid = "1DEEEE2C-9DC5-4E92-B65C-6CC54772F93E",
+                                position = Vector3(4.00, 0.00, -8.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "floor_4_2",
+                                uuid = "C9F06DA0-4B25-4B68-A8D2-012A4831C0B5",
+                                position = Vector3(4.00, 0.00, -4.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "floor_4_3",
+                                uuid = "06E4B05E-8F5D-4692-BD0F-EB46E667201C",
+                                position = Vector3(4.00, 0.00, 0.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "floor_4_4",
+                                uuid = "819F8EB7-0F7E-410B-9E8C-55C384DD6625",
+                                position = Vector3(4.00, 0.00, 4.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "floor_4_5",
+                                uuid = "DFE0B4EB-93BC-48D9-9EBF-99041802F517",
+                                position = Vector3(4.00, 0.00, 8.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "floor_4_6",
+                                uuid = "D2DB5265-9439-4FCF-B1A0-BD47AF8678AC",
+                                position = Vector3(4.00, 0.00, 12.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "floor_5_0",
+                                uuid = "269B51EF-2CB3-4C75-B1A3-7E5E0B8F9DCE",
+                                position = Vector3(8.00, 0.00, -12.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "floor_5_1",
+                                uuid = "5EE94DF0-8626-4E6F-90F9-8D5BB179268F",
+                                position = Vector3(8.00, 0.00, -8.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "floor_5_2",
+                                uuid = "703B6EF6-3ED1-4FDA-AB03-F67921A3C2A2",
+                                position = Vector3(8.00, 0.00, -4.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "floor_5_3",
+                                uuid = "36EFED1C-D206-4AAB-9F6A-F08CC3BFBDFB",
+                                position = Vector3(8.00, 0.00, 0.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "floor_5_4",
+                                uuid = "112C5D07-AA5A-4CF1-A7DF-8C7128DD42E8",
+                                position = Vector3(8.00, 0.00, 4.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "floor_5_5",
+                                uuid = "F71F7937-0F1C-45F9-B1F8-46EE9C1F4758",
+                                position = Vector3(8.00, 0.00, 8.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "floor_5_6",
+                                uuid = "5C4E2379-BDFF-4D74-B31F-DA947AA52AD6",
+                                position = Vector3(8.00, 0.00, 12.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "floor_6_0",
+                                uuid = "7D0185BA-22D3-4D66-8B80-49D2B2E1D478",
+                                position = Vector3(12.00, 0.00, -12.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "floor_6_1",
+                                uuid = "CE2B4EB7-1EA1-48AB-8F4F-B1AEF01DE90A",
+                                position = Vector3(12.00, 0.00, -8.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "floor_6_2",
+                                uuid = "ED70A603-6AA2-422D-A143-DA8BFBB921B8",
+                                position = Vector3(12.00, 0.00, -4.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "floor_6_3",
+                                uuid = "7ACD5A2D-C54C-4CE6-B643-BA08EBC45D42",
+                                position = Vector3(12.00, 0.00, 0.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "floor_6_4",
+                                uuid = "27458B34-3C2A-4FBD-8427-6943AE40E77F",
+                                position = Vector3(12.00, 0.00, 4.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "floor_6_5",
+                                uuid = "5A4E9546-C36B-49F2-AFFD-5BE272C004E8",
+                                position = Vector3(12.00, 0.00, 8.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "floor_6_6",
+                                uuid = "D6D922B1-A313-4A1A-9DA7-6C705F7BAE31",
+                                position = Vector3(12.00, 0.00, 12.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                        }
+                    },
+                    {
+                        name = "Walls",
+                        uuid = "EA5242DA-466B-40E8-B0BA-B73784275D6B",
+                        children = {
+                            {
+                                name = "wall_corner_sw",
+                                uuid = "51456D84-CFC9-4403-ADFD-991F162D8A55",
+                                position = Vector3(-14.00, 0.00, -14.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall_corner.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "wall_corner_se",
+                                uuid = "6A25C275-5AF3-47F1-BE30-F5C9AC12FF51",
+                                position = Vector3(14.00, 0.00, -14.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -90.00, 0.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall_corner.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "wall_corner_nw",
+                                uuid = "AC312C13-90E5-4EB6-B8AA-F84BDA8EAAA4",
+                                position = Vector3(-14.00, 0.00, 14.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 90.00, 0.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall_corner.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "wall_corner_ne",
+                                uuid = "2511373C-D1A9-4183-AE10-3CC6C9A44409",
+                                position = Vector3(14.00, 0.00, 14.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall_corner.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "wall_s_-12",
+                                uuid = "EAC67787-ED33-4A94-BBD6-7A4E4D17B751",
+                                position = Vector3(-12.00, 0.00, -14.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "wall_s_-8",
+                                uuid = "B148B637-C7CE-4600-B272-CAE4B69B2828",
+                                position = Vector3(-8.00, 0.00, -14.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "wall_s_-4",
+                                uuid = "50B285E6-7731-41E7-A827-EB6EBD93B360",
+                                position = Vector3(-4.00, 0.00, -14.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "wall_s_0",
+                                uuid = "1B342F65-A7DB-48CC-A901-737C6F707183",
+                                position = Vector3(0.00, 0.00, -14.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "wall_s_4",
+                                uuid = "380A506B-66C1-4111-9597-F7F1DF53C36D",
+                                position = Vector3(4.00, 0.00, -14.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "wall_s_8",
+                                uuid = "5A358223-286C-494D-96BE-C920CE050101",
+                                position = Vector3(8.00, 0.00, -14.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "wall_s_12",
+                                uuid = "4948EF58-E846-46DB-8D6B-FFAA717C7A7D",
+                                position = Vector3(12.00, 0.00, -14.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "wall_n_-12",
+                                uuid = "56BF061A-D1D6-441B-B6E6-26165AEED521",
+                                position = Vector3(-12.00, 0.00, 14.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "wall_n_-8",
+                                uuid = "0475162D-E451-45F6-90B0-551038025002",
+                                position = Vector3(-8.00, 0.00, 14.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "wall_n_-4",
+                                uuid = "8987FEDF-75C9-4809-90E3-782CB9278901",
+                                position = Vector3(-4.00, 0.00, 14.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "wall_n_0",
+                                uuid = "013C2A45-B1B5-4645-A8AC-EE5824F94914",
+                                position = Vector3(0.00, 0.00, 14.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "wall_n_4",
+                                uuid = "06B97D68-350C-4301-8DE6-C714191DBF3D",
+                                position = Vector3(4.00, 0.00, 14.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "wall_n_8",
+                                uuid = "03EA9125-FCEF-4F65-A817-7C2697593C83",
+                                position = Vector3(8.00, 0.00, 14.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "wall_n_12",
+                                uuid = "677F63A1-66E1-4D54-9A76-C7F8BC485349",
+                                position = Vector3(12.00, 0.00, 14.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "wall_w_-12",
+                                uuid = "FFCE8380-314F-4B7A-8F0A-F7CA4A0EB764",
+                                position = Vector3(-14.00, 0.00, -12.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 90.00, 0.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "wall_w_-8",
+                                uuid = "FDC05E6A-B37C-4CC2-AD95-2C62A02D0208",
+                                position = Vector3(-14.00, 0.00, -8.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 90.00, 0.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "wall_w_-4",
+                                uuid = "30F31E32-8336-4C8E-9FDC-138556427F9F",
+                                position = Vector3(-14.00, 0.00, -4.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 90.00, 0.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "wall_w_0",
+                                uuid = "F6D118EA-AA4D-4EF0-84DA-8E2D4D0CE02C",
+                                position = Vector3(-14.00, 0.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 90.00, 0.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "wall_w_4",
+                                uuid = "9C3DA1C3-ED09-4D0A-8859-91D07A4A6800",
+                                position = Vector3(-14.00, 0.00, 4.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 90.00, 0.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "wall_w_8",
+                                uuid = "A1DE8989-C92C-454B-A00E-D266863ED1A1",
+                                position = Vector3(-14.00, 0.00, 8.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 90.00, 0.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "wall_w_12",
+                                uuid = "EA8854E2-8B7E-4E90-B254-AAA1637964D1",
+                                position = Vector3(-14.00, 0.00, 12.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 90.00, 0.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "wall_e_-12",
+                                uuid = "98203F54-7FCD-4F50-825E-EBD3622B54AB",
+                                position = Vector3(14.00, 0.00, -12.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -90.00, 0.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "wall_e_-8",
+                                uuid = "9414038E-CB0E-4697-A2DE-634F713DA637",
+                                position = Vector3(14.00, 0.00, -8.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -90.00, 0.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "wall_e_-4",
+                                uuid = "EF5A0C26-0C42-4DD6-9DB8-8652C739023B",
+                                position = Vector3(14.00, 0.00, -4.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -90.00, 0.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "wall_e_0",
+                                uuid = "0F8E522C-6505-4685-994B-EEB538713BA4",
+                                position = Vector3(14.00, 0.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -90.00, 0.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "wall_e_4",
+                                uuid = "BCDF12BF-1C14-408A-993C-8DDCFAA0C40D",
+                                position = Vector3(14.00, 0.00, 4.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -90.00, 0.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "wall_e_8",
+                                uuid = "43353BFE-E38D-4B94-86E0-80CFA2E3B2BF",
+                                position = Vector3(14.00, 0.00, 8.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -90.00, 0.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "wall_e_12",
+                                uuid = "6295F5FE-B512-45C5-BF73-26AA384D99CF",
+                                position = Vector3(14.00, 0.00, 12.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -90.00, 0.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "wall_cross_x_-8",
+                                uuid = "4CA2B8F1-6241-4078-8808-79AC0EE84EFF",
+                                position = Vector3(-8.00, 0.00, 0.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "wall_cross_x_-4",
+                                uuid = "AAB39B68-4D11-4A1E-BBF3-6100489EB069",
+                                position = Vector3(-4.00, 0.00, 0.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "wall_cross_x_4",
+                                uuid = "A179C4AD-B4DC-4494-AA77-56A1C08079D2",
+                                position = Vector3(4.00, 0.00, 0.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "wall_cross_x_8",
+                                uuid = "8B6B521C-B5D9-4CF5-BC95-07ED649B1A5B",
+                                position = Vector3(8.00, 0.00, 0.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "wall_cross_z_-8",
+                                uuid = "1AA5EE48-DF80-4B63-BB29-01125831EC20",
+                                position = Vector3(0.00, 0.00, -8.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 90.00, 0.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "wall_cross_z_-4",
+                                uuid = "08793F79-4C23-4591-B729-9DF49D54A677",
+                                position = Vector3(0.00, 0.00, -4.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 90.00, 0.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "wall_cross_z_4",
+                                uuid = "A19F059D-BFBF-499E-B1E1-884D871B7589",
+                                position = Vector3(0.00, 0.00, 4.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 90.00, 0.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                            {
+                                name = "wall_cross_z_8",
+                                uuid = "A8196364-765A-4E93-BD0F-DFDA9F0C9045",
+                                position = Vector3(0.00, 0.00, 8.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 90.00, 0.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.00, 1.00, 1.00),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
+                                }
+                            },
+                        }
+                    },
+                    {
+                        name = "Props",
+                        uuid = "ABECE040-0377-4657-8D7F-1CC25F71DA0B",
+                        children = {
+                            {
+                                name = "pillar_ne",
+                                uuid = "35955A5B-69B9-47D1-A206-6E5939707A70",
+                                position = Vector3(8.00, 0.00, 8.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/pillar_decorated.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                }
+                            },
+                            {
+                                name = "pillar_nw",
+                                uuid = "D9A58998-3BE6-4521-9F0D-1B5C12B560C0",
+                                position = Vector3(-8.00, 0.00, 8.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/pillar_decorated.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                }
+                            },
+                            {
+                                name = "pillar_se",
+                                uuid = "85321929-ECE5-42CF-A91D-A8FECEA692DD",
+                                position = Vector3(8.00, 0.00, -8.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/pillar_decorated.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                }
+                            },
+                            {
+                                name = "pillar_sw",
+                                uuid = "8B3D94E4-C295-46FF-B9C2-19FD7C1594C5",
+                                position = Vector3(-8.00, 0.00, -8.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/pillar_decorated.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                }
+                            },
+                            {
+                                name = "torch_s_1",
+                                uuid = "4B55DAB7-3451-4E41-A5A0-853CF9DFDD42",
+                                position = Vector3(-6.00, 0.00, -13.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/torch_lit.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                }
+                            },
+                            {
+                                name = "torch_s_2",
+                                uuid = "9330E264-DC54-4AFD-9E3B-ED71228B208B",
+                                position = Vector3(6.00, 0.00, -13.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/torch_lit.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                }
+                            },
+                            {
+                                name = "torch_n",
+                                uuid = "31C7F376-69C7-4C51-B45C-57D2EBB9EA73",
+                                position = Vector3(0.00, 0.00, 13.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/torch_lit.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                }
+                            },
+                            {
+                                name = "barrel_1",
+                                uuid = "126BA0D2-E28A-4EB0-81FB-9A7CADBDB81A",
+                                position = Vector3(-10.00, 0.00, -10.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/barrel_large.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                }
+                            },
+                            {
+                                name = "barrel_2",
+                                uuid = "F63FA6C8-45F0-42A3-BFBB-1E0418A04769",
+                                position = Vector3(10.00, 0.00, -10.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/barrel_large.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                }
+                            },
+                            {
+                                name = "chest_1",
+                                uuid = "21C6C00A-58A6-408B-A6B8-E53E9BE04BEC",
+                                position = Vector3(-10.00, 0.00, 10.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 90.00, 0.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/chest.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                }
+                            },
+                            {
+                                name = "banner_1",
+                                uuid = "60FDC273-65AE-491F-A7EC-4B6E0DB54C3F",
+                                position = Vector3(0.00, 0.00, 13.50),
+                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/banner_red.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                }
                             },
                         }
                     },
