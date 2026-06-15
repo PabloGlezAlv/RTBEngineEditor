@@ -209,12 +209,16 @@ namespace RTBEditor {
             selectedObject->GetComponent<RTBEngine::ECS::BoxColliderComponent>();
         if (boxCollider) {
             RTBEngine::Math::Vector3 halfExtents = boxCollider->size * 0.5f;
+            const RTBEngine::Math::Vector3 center = boxCollider->GetCenterOffset();
             RTBEngine::Math::Matrix4 model = selectedObject->GetTransform().GetModelMatrix();
             RTBEngine::Math::Vector4 color(0.1f, 1.0f, 0.1f, 1.0f);
 
             float hx = halfExtents.x;
             float hy = halfExtents.y;
             float hz = halfExtents.z;
+            float cx = center.x;
+            float cy = center.y;
+            float cz = center.z;
 
             RTBEngine::Math::Vector3 corners[8];
             auto transformCorner = [&](float x, float y, float z) -> RTBEngine::Math::Vector3 {
@@ -222,14 +226,14 @@ namespace RTBEditor {
                 return RTBEngine::Math::Vector3(v.x, v.y, v.z);
             };
 
-            corners[0] = transformCorner(-hx, -hy, -hz);
-            corners[1] = transformCorner( hx, -hy, -hz);
-            corners[2] = transformCorner( hx,  hy, -hz);
-            corners[3] = transformCorner(-hx,  hy, -hz);
-            corners[4] = transformCorner(-hx, -hy,  hz);
-            corners[5] = transformCorner( hx, -hy,  hz);
-            corners[6] = transformCorner( hx,  hy,  hz);
-            corners[7] = transformCorner(-hx,  hy,  hz);
+            corners[0] = transformCorner(cx - hx, cy - hy, cz - hz);
+            corners[1] = transformCorner(cx + hx, cy - hy, cz - hz);
+            corners[2] = transformCorner(cx + hx, cy + hy, cz - hz);
+            corners[3] = transformCorner(cx - hx, cy + hy, cz - hz);
+            corners[4] = transformCorner(cx - hx, cy - hy, cz + hz);
+            corners[5] = transformCorner(cx + hx, cy - hy, cz + hz);
+            corners[6] = transformCorner(cx + hx, cy + hy, cz + hz);
+            corners[7] = transformCorner(cx - hx, cy + hy, cz + hz);
 
             int edges[12][2] = {
                 {0, 1}, {1, 2}, {2, 3}, {3, 0},

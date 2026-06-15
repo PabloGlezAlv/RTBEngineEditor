@@ -1389,16 +1389,16 @@ function CreateScene()
                                         multiMesh = false
                                     },
                                     {
-                                        type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
-                                        isTrigger = false
-                                    },
-                                    {
                                         type = "RigidBodyComponent",
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
                                         bodyType = "Static"
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(4.00, 0.15, 4.00),
+                                        isTrigger = false
                                     },
                                 }
                             },
@@ -1417,7 +1417,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 0.15, 4.00),
                                         isTrigger = false
                                     },
                                     {
@@ -1444,7 +1444,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 0.15, 4.00),
                                         isTrigger = false
                                     },
                                     {
@@ -1471,7 +1471,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 0.15, 4.00),
                                         isTrigger = false
                                     },
                                     {
@@ -1498,7 +1498,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 0.15, 4.00),
                                         isTrigger = false
                                     },
                                     {
@@ -1525,7 +1525,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 0.15, 4.00),
                                         isTrigger = false
                                     },
                                     {
@@ -1552,7 +1552,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 0.15, 4.00),
                                         isTrigger = false
                                     },
                                     {
@@ -1579,7 +1579,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 0.15, 4.00),
                                         isTrigger = false
                                     },
                                     {
@@ -1606,7 +1606,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 0.15, 4.00),
                                         isTrigger = false
                                     },
                                     {
@@ -1633,7 +1633,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 0.15, 4.00),
                                         isTrigger = false
                                     },
                                     {
@@ -1660,7 +1660,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 0.15, 4.00),
                                         isTrigger = false
                                     },
                                     {
@@ -1687,7 +1687,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 0.15, 4.00),
                                         isTrigger = false
                                     },
                                     {
@@ -1714,7 +1714,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 0.15, 4.00),
                                         isTrigger = false
                                     },
                                     {
@@ -1741,7 +1741,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 0.15, 4.00),
                                         isTrigger = false
                                     },
                                     {
@@ -1768,7 +1768,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 0.15, 4.00),
                                         isTrigger = false
                                     },
                                     {
@@ -1795,7 +1795,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 0.15, 4.00),
                                         isTrigger = false
                                     },
                                     {
@@ -1822,7 +1822,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 0.15, 4.00),
                                         isTrigger = false
                                     },
                                     {
@@ -1849,7 +1849,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 0.15, 4.00),
                                         isTrigger = false
                                     },
                                     {
@@ -1876,7 +1876,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 0.15, 4.00),
                                         isTrigger = false
                                     },
                                     {
@@ -1903,7 +1903,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 0.15, 4.00),
                                         isTrigger = false
                                     },
                                     {
@@ -1930,7 +1930,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 0.15, 4.00),
                                         isTrigger = false
                                     },
                                     {
@@ -1957,7 +1957,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 0.15, 4.00),
                                         isTrigger = false
                                     },
                                     {
@@ -1984,7 +1984,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 0.15, 4.00),
                                         isTrigger = false
                                     },
                                     {
@@ -2011,7 +2011,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 0.15, 4.00),
                                         isTrigger = false
                                     },
                                     {
@@ -2037,7 +2037,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 0.15, 4.00),
                                         isTrigger = false
                                     },
                                     {
@@ -2064,7 +2064,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 0.15, 4.00),
                                         isTrigger = false
                                     },
                                     {
@@ -2091,7 +2091,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 0.15, 4.00),
                                         isTrigger = false
                                     },
                                     {
@@ -2118,7 +2118,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 0.15, 4.00),
                                         isTrigger = false
                                     },
                                     {
@@ -2145,7 +2145,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 0.15, 4.00),
                                         isTrigger = false
                                     },
                                     {
@@ -2172,7 +2172,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 0.15, 4.00),
                                         isTrigger = false
                                     },
                                     {
@@ -2199,7 +2199,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 0.15, 4.00),
                                         isTrigger = false
                                     },
                                     {
@@ -2226,7 +2226,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 0.15, 4.00),
                                         isTrigger = false
                                     },
                                     {
@@ -2253,7 +2253,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 0.15, 4.00),
                                         isTrigger = false
                                     },
                                     {
@@ -2280,7 +2280,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 0.15, 4.00),
                                         isTrigger = false
                                     },
                                     {
@@ -2307,7 +2307,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 0.15, 4.00),
                                         isTrigger = false
                                     },
                                     {
@@ -2334,7 +2334,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 0.15, 4.00),
                                         isTrigger = false
                                     },
                                     {
@@ -2361,7 +2361,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 0.15, 4.00),
                                         isTrigger = false
                                     },
                                     {
@@ -2388,7 +2388,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 0.15, 4.00),
                                         isTrigger = false
                                     },
                                     {
@@ -2415,7 +2415,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 0.15, 4.00),
                                         isTrigger = false
                                     },
                                     {
@@ -2442,7 +2442,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 0.15, 4.00),
                                         isTrigger = false
                                     },
                                     {
@@ -2469,7 +2469,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 0.15, 4.00),
                                         isTrigger = false
                                     },
                                     {
@@ -2496,7 +2496,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 0.15, 4.00),
                                         isTrigger = false
                                     },
                                     {
@@ -2523,7 +2523,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 0.15, 4.00),
                                         isTrigger = false
                                     },
                                     {
@@ -2550,7 +2550,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 0.15, 4.00),
                                         isTrigger = false
                                     },
                                     {
@@ -2577,7 +2577,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 0.15, 4.00),
                                         isTrigger = false
                                     },
                                     {
@@ -2604,7 +2604,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 0.15, 4.00),
                                         isTrigger = false
                                     },
                                     {
@@ -2631,7 +2631,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 0.15, 4.00),
                                         isTrigger = false
                                     },
                                     {
@@ -2658,7 +2658,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 0.15, 4.00),
                                         isTrigger = false
                                     },
                                     {
@@ -2685,7 +2685,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 0.15, 4.00),
                                         isTrigger = false
                                     },
                                     {
@@ -2718,7 +2718,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 4.00, 1.00),
                                         isTrigger = false
                                     },
                                     {
@@ -2746,7 +2746,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 4.00, 1.00),
                                         isTrigger = false
                                     },
                                     {
@@ -2774,7 +2774,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 4.00, 1.00),
                                         isTrigger = false
                                     },
                                     {
@@ -2802,7 +2802,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 4.00, 1.00),
                                         isTrigger = false
                                     },
                                     {
@@ -2829,7 +2829,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 4.00, 1.00),
                                         isTrigger = false
                                     },
                                     {
@@ -2856,7 +2856,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 4.00, 1.00),
                                         isTrigger = false
                                     },
                                     {
@@ -2883,7 +2883,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 4.00, 1.00),
                                         isTrigger = false
                                     },
                                     {
@@ -2910,7 +2910,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 4.00, 1.00),
                                         isTrigger = false
                                     },
                                     {
@@ -2937,7 +2937,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 4.00, 1.00),
                                         isTrigger = false
                                     },
                                     {
@@ -2964,7 +2964,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 4.00, 1.00),
                                         isTrigger = false
                                     },
                                     {
@@ -2991,7 +2991,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 4.00, 1.00),
                                         isTrigger = false
                                     },
                                     {
@@ -3019,7 +3019,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 4.00, 1.00),
                                         isTrigger = false
                                     },
                                     {
@@ -3047,7 +3047,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 4.00, 1.00),
                                         isTrigger = false
                                     },
                                     {
@@ -3075,7 +3075,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 4.00, 1.00),
                                         isTrigger = false
                                     },
                                     {
@@ -3103,7 +3103,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 4.00, 1.00),
                                         isTrigger = false
                                     },
                                     {
@@ -3131,7 +3131,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 4.00, 1.00),
                                         isTrigger = false
                                     },
                                     {
@@ -3159,7 +3159,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 4.00, 1.00),
                                         isTrigger = false
                                     },
                                     {
@@ -3187,7 +3187,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 4.00, 1.00),
                                         isTrigger = false
                                     },
                                     {
@@ -3215,7 +3215,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 4.00, 1.00),
                                         isTrigger = false
                                     },
                                     {
@@ -3242,16 +3242,16 @@ function CreateScene()
                                         multiMesh = false
                                     },
                                     {
-                                        type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
-                                        isTrigger = false
-                                    },
-                                    {
                                         type = "RigidBodyComponent",
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
                                         bodyType = "Static"
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(4.00, 4.00, 1.00),
+                                        isTrigger = false
                                     },
                                 }
                             },
@@ -3271,7 +3271,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 4.00, 1.00),
                                         isTrigger = false
                                     },
                                     {
@@ -3299,7 +3299,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 4.00, 1.00),
                                         isTrigger = false
                                     },
                                     {
@@ -3327,7 +3327,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 4.00, 1.00),
                                         isTrigger = false
                                     },
                                     {
@@ -3355,7 +3355,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 4.00, 1.00),
                                         isTrigger = false
                                     },
                                     {
@@ -3383,7 +3383,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 4.00, 1.00),
                                         isTrigger = false
                                     },
                                     {
@@ -3411,7 +3411,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 4.00, 1.00),
                                         isTrigger = false
                                     },
                                     {
@@ -3439,7 +3439,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 4.00, 1.00),
                                         isTrigger = false
                                     },
                                     {
@@ -3467,7 +3467,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 4.00, 1.00),
                                         isTrigger = false
                                     },
                                     {
@@ -3495,7 +3495,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 4.00, 1.00),
                                         isTrigger = false
                                     },
                                     {
@@ -3523,7 +3523,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 4.00, 1.00),
                                         isTrigger = false
                                     },
                                     {
@@ -3551,7 +3551,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 4.00, 1.00),
                                         isTrigger = false
                                     },
                                     {
@@ -3579,7 +3579,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 4.00, 1.00),
                                         isTrigger = false
                                     },
                                     {
@@ -3606,7 +3606,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 4.00, 1.00),
                                         isTrigger = false
                                     },
                                     {
@@ -3633,7 +3633,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 4.00, 1.00),
                                         isTrigger = false
                                     },
                                     {
@@ -3660,7 +3660,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 4.00, 1.00),
                                         isTrigger = false
                                     },
                                     {
@@ -3687,7 +3687,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 4.00, 1.00),
                                         isTrigger = false
                                     },
                                     {
@@ -3715,7 +3715,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 4.00, 1.00),
                                         isTrigger = false
                                     },
                                     {
@@ -3743,7 +3743,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 4.00, 1.00),
                                         isTrigger = false
                                     },
                                     {
@@ -3771,7 +3771,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 4.00, 1.00),
                                         isTrigger = false
                                     },
                                     {
@@ -3799,7 +3799,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(1.00, 1.00, 1.00),
+                                        size = Vector3(4.00, 4.00, 1.00),
                                         isTrigger = false
                                     },
                                     {
@@ -3830,6 +3830,18 @@ function CreateScene()
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.70, 4.00, 1.70),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
                                 }
                             },
                             {
@@ -3844,6 +3856,18 @@ function CreateScene()
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
                                         meshIndex = 0,
                                         multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.70, 4.00, 1.70),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
                                     },
                                 }
                             },
@@ -3860,6 +3884,18 @@ function CreateScene()
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.70, 4.00, 1.70),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
+                                    },
                                 }
                             },
                             {
@@ -3874,6 +3910,18 @@ function CreateScene()
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
                                         meshIndex = 0,
                                         multiMesh = false
+                                    },
+                                    {
+                                        type = "BoxColliderComponent",
+                                        size = Vector3(1.70, 4.00, 1.70),
+                                        isTrigger = false
+                                    },
+                                    {
+                                        type = "RigidBodyComponent",
+                                        mass = 1.00,
+                                        friction = 0.50,
+                                        restitution = 0.00,
+                                        bodyType = "Static"
                                     },
                                 }
                             },

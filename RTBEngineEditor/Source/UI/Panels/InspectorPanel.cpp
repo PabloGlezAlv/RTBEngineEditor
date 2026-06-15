@@ -16,6 +16,7 @@
 #include <RTBEngine/Physics/PhysicsLayerSettings.h>
 #include <RTBEngine/ECS/MissingComponent.h>
 #include <RTBEngine/ECS/MeshRenderer.h>
+#include <RTBEngine/ECS/BoxColliderComponent.h>
 #include <RTBEngine/Reflection/TypeInfo.h>
 #include <RTBEngine/Core/ResourceManager.h>
 #include <RTBEngine/UI/UIElement.h>
@@ -537,6 +538,12 @@ namespace RTBEditor {
                                     RTBEngine::Reflection::TypeRegistry::GetInstance().CreateComponent(type);
                                 if (newComp) {
                                     context.selectedGameObject->AddComponent(newComp);
+
+                                    if (auto* boxCollider =
+                                            dynamic_cast<RTBEngine::ECS::BoxColliderComponent*>(newComp)) {
+                                        boxCollider->FitToOwnerMesh();
+                                    }
+
                                     RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
                                 }
                                 addComponentSearchBuffer[0] = '\0';
