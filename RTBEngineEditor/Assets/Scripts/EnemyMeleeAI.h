@@ -76,6 +76,8 @@ private:
     bool hasReplicatedPosition = false;
     std::uint32_t networkAttackSequence = 0;
     std::uint32_t lastProcessedReplicatedAttackSequence = 0;
+    bool hasRepositionDestination = false;
+    RTBEngine::Math::Vector3 repositionDestination = RTBEngine::Math::Vector3::Zero(); // Set once in EnterRepositioning
     HealthComponent* subscribedHealth = nullptr;
     RTBEngine::Core::EventSubscription damageTakenSubscription;
     RTBEngine::Core::EventSubscription deathSubscription;

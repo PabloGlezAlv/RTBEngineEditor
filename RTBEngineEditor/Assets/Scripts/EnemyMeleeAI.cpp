@@ -149,23 +149,13 @@ void EnemyMeleeAI::OnFixedUpdate(float fixedDeltaTime)
         }
         break;
     case State::Repositioning:
-        if (navAgent && targetTracker && targetTracker->targetObject && owner) {
-            const RTBEngine::Math::Vector3 awayDirection =
-                targetTracker->GetPlanarDirectionTo(owner) * -1.0f;
-            if (EnemyMeleeAIDetail::HasPlanarDirection(awayDirection)) {
-                constexpr float kRepositionDistance = 2.0f;
-                const RTBEngine::Math::Vector3 retreatDestination =
-                    owner->GetWorldPosition() + awayDirection * kRepositionDistance;
-                navAgent->SetDestination(retreatDestination);
-                navAgent->EnsurePathReady();
-                if (navAgent->HasActivePath()) {
-                    const RTBEngine::Math::Vector3 moveDirection =
-                        navAgent->GetPlanarMoveDirection(owner->GetWorldPosition());
-                    if (EnemyMeleeAIDetail::HasPlanarDirection(moveDirection)) {
-                        locomotion->MoveTowards(moveDirection, fixedDeltaTime);
-                    } else {
-                        locomotion->StopPlanarMotion();
-                    }
+        if (navAgent && hasRepositionDestination && owner) {
+            navAgent->EnsurePathReady();
+            if (navAgent->HasActivePath()) {
+                const RTBEngine::Math::Vector3 moveDirection =
+                    navAgent->GetPlanarMoveDirection(owner->GetWorldPosition());
+                if (EnemyMeleeAIDetail::HasPlanarDirection(moveDirection)) {
+                    locomotion->MoveTowards(moveDirection, fixedDeltaTime);
                 } else {
                     locomotion->StopPlanarMotion();
                 }
@@ -509,6 +499,21 @@ void EnemyMeleeAI::EnterChasing()
 void EnemyMeleeAI::EnterRepositioning()
 {
     state = State::Repositioning;
+    hasRepositionDestination = false;
+
+    // Retreat destination is chosen here once; FixedUpdate only follows the existing path.
+    if (navAgent && targetTracker && targetTracker->targetObject && owner) {
+        const RTBEngine::Math::Vector3 awayDirection =
+            targetTracker->GetPlanarDirectionTo(owner) * -1.0f;
+        if (EnemyMeleeAIDetail::HasPlanarDirection(awayDirection)) {
+            constexpr float kRepositionDistance = 2.0f;
+            repositionDestination = owner->GetWorldPosition() + awayDirection * kRepositionDistance;
+            navAgent->SetDestination(repositionDestination);
+            navAgent->EnsurePathReady();
+            hasRepositionDestination = true;
+        }
+    }
+
     if (animationDriver) {
         animationDriver->PlayWalkLoop();
     }

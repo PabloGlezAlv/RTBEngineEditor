@@ -483,6 +483,10 @@ void RoundManager::SpawnRoundEnemies(int count, bool allowClientSpawn)
             GameNet::OnlineGameNetSubsystem::BroadcastEnemySpawn(snapshot);
         }
     }
+
+    if (RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene()) {
+        RTBEngine::ECS::NavGridComponent::ActivateAllBakedInScene(scene);
+    }
 }
 
 RTBEngine::ECS::GameObject* RoundManager::SpawnEnemyAt(RTBEngine::ECS::GameObject* spawnPoint)
@@ -581,10 +585,6 @@ void RoundManager::RebindSpawnedEnemy(RTBEngine::ECS::GameObject* spawnedEnemy)
             navAgent->SetDestination(targetTracker->targetObject->GetWorldPosition());
             navAgent->EnsurePathReady();
         }
-    }
-
-    if (RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene()) {
-        RTBEngine::ECS::NavGridComponent::ActivateAllBakedInScene(scene);
     }
 }
 
