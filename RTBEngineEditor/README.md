@@ -31,6 +31,7 @@ A visual game editor for **RTBEngine**, built in **C++17** using **ImGui** for t
 23. [Keyboard Shortcuts](#23-keyboard-shortcuts)
 24. [Workflow Guides](#24-workflow-guides)
 25. [Online and Multiplayer](#25-online-and-multiplayer)
+26. [Optional Windows and Navigation Debug](#26-optional-windows-and-navigation-debug)
 
 ---
 
@@ -49,17 +50,22 @@ RTBEngineEditor/
     │   │
     │   ├── UI/
     │   │   ├── EditorLayer.h / .cpp          ImGui docking host, panel container
-    │   │   ├── MainMenuBar.h / .cpp          File / Window menu bar
+    │   │   ├── MainMenuBar.h / .cpp          File / Edit / Window menu bar
+    │   │   ├── EditorWindowPrefs.h / .cpp    Optional panel + nav debug persistence
+    │   │   ├── EditorDockingUtils.h / .cpp   Dock optional windows into existing bars
     │   │   ├── DragDropPayloads.h            Payload type constants and structs
     │   │   │
     │   │   ├── Panels/
-    │   │   │   ├── EditorPanel.h             Base class for all panels
+    │   │   │   ├── EditorPanel.h             Base class, EditorContext, nav debug settings
     │   │   │   ├── SceneHierarchyPanel.h / .cpp
     │   │   │   ├── InspectorPanel.h / .cpp
     │   │   │   ├── SceneViewPanel.h / .cpp
     │   │   │   ├── GameViewPanel.h / .cpp
     │   │   │   ├── ContentBrowserPanel.h / .cpp
     │   │   │   ├── ConsolePanel.h / .cpp
+    │   │   │   ├── OnlinePanel.h / .cpp
+    │   │   │   ├── PhysicsLayersPanel.h / .cpp
+    │   │   │   ├── NavigationDebugPanel.h / .cpp
     │   │   │   └── ToolbarPanel.h / .cpp
     │   │   │
     │   │   └── Modals/
@@ -71,7 +77,8 @@ RTBEngineEditor/
     │   │
     │   ├── Rendering/
     │   │   ├── EditorGridRenderer.h / .cpp
-    │   │   └── ColliderRenderer.h / .cpp
+    │   │   ├── ColliderRenderer.h / .cpp
+    │   │   └── NavGridDebugRenderer.h / .cpp
     │   │
     │   ├── Utils/
     │   │   └── RaycastUtils.h / .cpp
@@ -108,7 +115,10 @@ The editor is structured as two layers stacked on top of the engine:
 │       ├── SceneViewPanel           (editor camera + framebuffer)    │
 │       ├── GameViewPanel            (game camera + framebuffer)      │
 │       ├── ContentBrowserPanel                                       │
-│       └── ConsolePanel                                              │
+│       ├── ConsolePanel                                              │
+│       ├── OnlinePanel              (optional — Window menu)         │
+│       ├── PhysicsLayersPanel       (optional — Window menu)         │
+│       └── NavigationDebugPanel     (optional — Window menu)         │
 └────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -140,6 +150,7 @@ EditorApplication::Update()
           Application::RenderGeometryPass(editorCamera)
           EditorGridRenderer::Render()
           ColliderRenderer::RenderSelection()
+          NavGridDebugRenderer::Render()   ← Scene View only, if debug enabled
           FrameBuffer::Unbind()
        b. if (state == Play || state == Pause):
           GameViewPanel::GetFramebuffer().Bind()
@@ -205,11 +216,29 @@ void EditorApplication::OnStop() {
 `Source/UI/Panels/EditorPanel.h` — Shared state struct passed by reference to every panel's `OnUIRender()` call. Panels read from and write to this struct to communicate with each other.
 
 ```cpp
+struct NavDebugSettings {
+    bool  enabled = false;
+    bool  showBounds = true;
+    bool  showWalkableCells = true;
+    bool  showBlockedCells = true;
+    bool  showAgentPaths = true;
+    int   gridCellStep = 0;      // 0 = auto (1 or 2 based on grid width)
+    float yOffset = 0.15f;
+};
+
+struct OptionalWindowState {
+    bool online = false;
+    bool physicsLayers = false;
+    bool navigationDebug = false;
+};
+
 struct EditorContext {
     RTBEngine::ECS::GameObject* selectedGameObject = nullptr;
     EditorState                 state              = EditorState::Edit;
     std::filesystem::path       selectedAssetPath;
     std::filesystem::path       pendingSceneLoad;
+    NavDebugSettings            navDebug;
+    OptionalWindowState         optionalWindows;
 };
 ```
 
@@ -219,6 +248,8 @@ struct EditorContext {
 | `state` | Current edit/play/pause state, used by panels to conditionally enable controls |
 | `selectedAssetPath` | Path of the file selected in the Content Browser, shown in asset-ref fields |
 | `pendingSceneLoad` | Set by Content Browser on double-click of a `.lua` file; consumed by `EditorApplication::Update()` |
+| `navDebug` | Navigation overlay toggles — consumed by `NavGridDebugRenderer` (Scene View only) |
+| `optionalWindows` | Open/closed state for Online, Physics Layers, and Navigation Debug panels |
 
 ### Panel Base Class
 
@@ -307,7 +338,7 @@ When Play or Pause is stopped, the editor restores the original scene that was o
 void RenderSceneToFramebuffer();
 ```
 
-Renders the scene twice per frame (when applicable): once to the Scene View framebuffer using the editor camera, and once to the Game View framebuffer using the in-game `CameraComponent`'s camera. The editor camera is retrieved from `SceneViewPanel::GetEditorCamera()`.
+Renders the scene twice per frame (when applicable): once to the Scene View framebuffer using the editor camera (including editor-only overlays: grid, collider wireframe, navigation debug), and once to the Game View framebuffer using the in-game `CameraComponent`'s camera **without** navigation debug. The editor camera is retrieved from `SceneViewPanel::GetEditorCamera()`.
 
 ---
 
@@ -331,8 +362,13 @@ void Shutdown();
 4. `InspectorPanel`
 5. `ContentBrowserPanel`
 6. `ConsolePanel`
+7. `OnlinePanel` (optional — closed by default)
+8. `PhysicsLayersPanel` (optional — closed by default)
+9. `NavigationDebugPanel` (optional — closed by default)
 
 The toolbar is handled separately (not a standard `EditorPanel`).
+
+On construction, `EditorWindowPrefs::LoadInto(context)` restores optional window visibility and nav debug settings from `%LOCALAPPDATA%\RTBEngineEditor\EditorWindowPrefs.json`.
 
 ### Dockspace Setup
 
@@ -396,6 +432,8 @@ ImGui::DockBuilderDockWindow("Game View",       dockCenter);     // Tab with Sce
 ImGui::DockBuilderDockWindow("Inspector",       dockRight);
 ImGui::DockBuilderDockWindow("Content Browser", dockBottomLeft);
 ImGui::DockBuilderDockWindow("Console",         dockBottomRight);
+// Online, Physics Layers, Navigation Debug are NOT in the default layout.
+// Open them from Window menu; docking position is restored via imgui.ini + EditorWindowPrefs.
 ```
 
 ### Panel Management
@@ -446,7 +484,13 @@ Used by `EditorApplication::Update()` to check and consume `pendingSceneLoad`.
 - **Exit** (`Alt+F4`) — triggers `onExit` callback
 
 **Window**:
-- Reserved for future panel toggles.
+- **Online** — toggle `OnlinePanel` (closed by default)
+- **Physics Layers** — toggle `PhysicsLayersPanel` (closed by default)
+- **Navigation Debug** — toggle `NavigationDebugPanel` (closed by default)
+
+Optional panels use `ImGui::Begin(title, &isOpen)` and skip `Begin` entirely when closed so ImGui docking does not leave empty tabs. When reopened, `PrepareOptionalWindowDocking()` tabs them into an existing dock bar (Inspector, another optional panel, Hierarchy, etc.) instead of creating a new left column.
+
+Changes to window visibility persist via `EditorWindowPrefs` (see [§26](#26-optional-windows-and-navigation-debug)).
 
 ### Dirty Indicator
 
@@ -748,6 +792,7 @@ Some engine components bypass the generic property loop and render dedicated con
 | Component | Controls |
 |-----------|----------|
 | `ParticleSystem` | **Play**, **Pause**, **Stop**, **Burst** (`burstCount`), live stats (active count, playback state), then all reflected properties |
+| `NavGridComponent` | **Bake Grid**, **Clear Baked**, baked status / walkable count; debug overlay is in **Window → Navigation Debug** (not here) |
 
 `DrawParticleSystemComponent` calls `Play()`, `Pause()`, `Stop()`, or `Emit(burstCount)` from the toolbar buttons, then draws the reflected fields (`maxParticles`, `emissionRate`, emitter shape, colors, `textureRef`, `simulateInEditMode`, etc.). Any button change triggers `OnValidate()` and marks the scene dirty.
 
@@ -1040,11 +1085,14 @@ int  GetViewportHeight() const;
 ### Grid and Collider Overlay
 
 ```cpp
-EditorGridRenderer* GetGridRenderer();
-ColliderRenderer*   GetColliderRenderer();
+EditorGridRenderer*    GetGridRenderer();
+ColliderRenderer*      GetColliderRenderer();
+NavGridDebugRenderer*  GetNavGridDebugRenderer();
 ```
 
-Both are rendered after the main geometry pass, before the framebuffer is unbound. The grid and axes are always visible. The collider wireframe is only drawn when an object with `BoxColliderComponent` is selected.
+Both grid and collider overlays are rendered after the main geometry pass, before the framebuffer is unbound. The grid and axes are always visible. The collider wireframe is only drawn when an object with `BoxColliderComponent` is selected.
+
+**Navigation debug** is drawn only in Scene View when `EditorContext::navDebug.enabled` is true (configured in the Navigation Debug panel). It is never rendered in Game View.
 
 ---
 
@@ -1921,6 +1969,30 @@ Rendered as `GL_LINES` with `blendEnabled = true`, `depthTest = true`, `depthMas
 
 Wireframe color: `(0.1, 1.0, 0.0, 1.0)` (bright green).
 
+### NavGridDebugRenderer
+
+`Source/Rendering/NavGridDebugRenderer.h` — Editor-only line overlay for grid navigation debugging in **Scene View**.
+
+```cpp
+void Render(RTBEngine::Rendering::Camera* camera,
+            RTBEngine::ECS::Scene* scene,
+            RTBEngine::ECS::GameObject* selectedObject,
+            const NavDebugSettings& settings);
+```
+
+Controlled by `EditorContext::navDebug` (see [§26](#26-optional-windows-and-navigation-debug)):
+
+| Toggle | Draws |
+|--------|-------|
+| `showBounds` | Yellow rectangle around `NavGridComponent` world bounds |
+| `showWalkableCells` | Green cell outlines |
+| `showBlockedCells` | Red cell outlines |
+| `showAgentPaths` | Blue path lines, waypoint markers, destination for registered `NavAgentComponent` instances |
+| `gridCellStep` | `0` = auto step (1 or 2); higher values skip cells for performance |
+| `yOffset` | Vertical lift above ground for all debug lines |
+
+Bake controls remain on `NavGridComponent` in the Inspector. The Navigation Debug panel only controls visualization.
+
 ---
 
 ## 21. Raycast Utilities
@@ -2102,6 +2174,17 @@ startScene=Assets/Scenes/Main.lua
 4. Save the scene. The component stores those selections as logical `Assets/...` references.
 5. Enter Play mode. The controller registers the first clip from each FBX under its internal aliases and switches between them automatically based on locomotion state.
 
+### Setting Up Grid Navigation
+
+1. Create a GameObject (e.g. "Navigation") and add `NavGridComponent`.
+2. Adjust `origin`, `size`, and `cellSize` to cover the walkable play area.
+3. In **Inspector**, click **Bake Grid** (requires scene physics initialized).
+4. **File → Save Scene** — persists bake to `Assets/Scenes/<Scene>.navmesh`.
+5. Add `NavAgentComponent` to enemies or NPCs; gameplay scripts call `SetDestination()`.
+6. **Window → Navigation Debug** → enable overlay to visualize the grid and agent paths in **Scene View** only.
+
+See engine README [§19](../../RTBEngine/RTBEngine/README.md#19-navigation-subsystem) for runtime API details.
+
 ### Exporting a Build
 
 1. Ensure all scenes, assets, and scripts are saved and compiled.
@@ -2204,7 +2287,7 @@ Message IDs: `Assets/Scripts/GameNetMessageIds.h`.
 
 ### 25.4 Editor Online Panel
 
-`Window → Online` (`OnlinePanel.cpp`):
+Open from **Window → Online** (`OnlinePanel.cpp`). The panel is **closed by default** and not part of the initial dock layout.
 
 | Setting | Purpose |
 |---------|---------|
@@ -2267,3 +2350,70 @@ Or use toolbar **Compile Scripts** in the editor (close Play mode if DLL is lock
 - [ ] Client exit removes remote pawn on host and remaining clients.
 - [ ] Host exit shows "The host abandoned the match" on clients.
 - [ ] Console free of `[ERR]` from missing `GameScripts` registration (recompile DLL).
+
+---
+
+## 26. Optional Windows and Navigation Debug
+
+Three editor panels are **optional**: they start closed, open from the **Window** menu, and can be closed with the window **X** without leaving a ghost tab in the dock.
+
+| Panel | Window title | Purpose |
+|-------|--------------|---------|
+| `OnlinePanel` | Online | Multiplayer ports, relay URL, multiplayer test launcher |
+| `PhysicsLayersPanel` | Physics Layers | Layer names and collision matrix for the active project |
+| `NavigationDebugPanel` | Navigation Debug | Navigation overlay toggles + scene grid status |
+
+### 26.1 Window Menu and Visibility
+
+`MainMenuBar` exposes checkboxes under **Window** bound to `EditorContext::optionalWindows`.
+
+Closing with **X** sets the flag to `false` and the panel skips `ImGui::Begin` on subsequent frames (required for correct ImGui docking behavior). Reopen from **Window** or restore from prefs on next launch.
+
+### 26.2 Docking Behavior
+
+`EditorDockingUtils::PrepareOptionalWindowDocking(windowName)` runs on the first frame a panel opens. It finds an existing dock node in this order:
+
+1. Another open optional panel (Online, Physics Layers, Navigation Debug)
+2. Inspector → Hierarchy → Console → Content Browser → Scene → Game
+
+The new window is tabbed into that node via `ImGui::SetNextWindowDockID`. Dock **positions** are also persisted by `imgui.ini` in the editor working directory.
+
+### 26.3 Persistence
+
+`EditorWindowPrefs` (`Source/UI/EditorWindowPrefs.h`) saves to:
+
+```
+%LOCALAPPDATA%\RTBEngineEditor\EditorWindowPrefs.json
+```
+
+| Field | Content |
+|-------|---------|
+| `online`, `physicsLayers`, `navigationDebug` | Panel open/closed |
+| `navDebug` | Overlay enabled + per-layer toggles, grid step, Y offset |
+
+Loaded in `EditorLayer` constructor; saved on editor shutdown, Window menu changes, panel close (X), and Navigation Debug setting edits.
+
+### 26.4 Navigation Debug Panel
+
+`NavigationDebugPanel` does **not** bake the grid — use **Inspector → NavGridComponent → Bake** for that (see engine README [§19](../../RTBEngine/RTBEngine/README.md#19-navigation-subsystem)).
+
+Panel controls:
+
+- **Enable debug overlay** — master switch for `NavGridDebugRenderer` in Scene View
+- Per-layer visibility: bounds, walkable/blocked cells, agent paths
+- **Grid step** and **Y offset**
+- Read-only status: baked dimensions, walkable cell count
+
+### 26.5 Physics Layers Panel
+
+Open from **Window → Physics Layers**. Edits `PhysicsLayerSettings` for the active project (layer names, collision matrix). **Save** writes project settings; **Reset to engine default** restores built-in layer setup.
+
+### 26.6 Scene View vs Game View
+
+| Overlay | Scene View | Game View |
+|---------|------------|-----------|
+| Editor grid / axes | Yes | No |
+| Selected collider wireframe | Yes | No |
+| Navigation debug | If enabled in Navigation Debug panel | **Never** |
+
+This matches the rule that editor debug visuals are authoring aids only and must not appear in the player-facing Game View.
