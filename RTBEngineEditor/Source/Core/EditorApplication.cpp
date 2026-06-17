@@ -1,4 +1,5 @@
 #include "EditorApplication.h"
+#include <RTBEngine/ECS/NavGridComponent.h>
 #include "EditorOnlineSettings.h"
 #include <imgui.h>
 #include <GL/glew.h>
@@ -177,6 +178,16 @@ namespace RTBEditor {
             RenderUnsavedScenePopup();
             });
 
+        uiLayer->GetContext().ensureScenePhysicsReady = [this]() -> bool {
+            RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
+            if (!scene || !engineApp) {
+                return false;
+            }
+
+            engineApp->RebuildPhysicsForScene(scene);
+            return engineApp->GetPhysicsWorld() != nullptr;
+        };
+
         uiLayer->GetMenuBar()->SetSaveSceneCallback([this]() {
             auto& sm = RTBEngine::ECS::SceneManager::GetInstance();
             if (RTBEngine::Scripting::SceneSaver::SaveScene(sm.GetActiveScene(), sm.GetActiveScenePath())) {
@@ -354,8 +365,13 @@ namespace RTBEditor {
 
         // Reset and re-initialize physics for the current scene before entering Play
         RTBEngine::ECS::Scene* scene = sm.GetActiveScene();
+        if (scene) {
+            scene->PrepareForPlayMode();
+            RTB_INFO("EditorApplication: Entering Play mode (OnStart will run this session).");
+        }
         if (scene && engineApp) {
             engineApp->RebuildPhysicsForScene(scene);
+            RTBEngine::ECS::NavGridComponent::ActivateAllBakedInScene(scene);
         }
 
         if (engineApp && engineApp->GetWindow()) {
@@ -414,6 +430,13 @@ namespace RTBEditor {
         const std::string& sceneToRestore = !scenePathBeforePlay.empty()
             ? scenePathBeforePlay
             : (project ? project->GetStartScene() : std::string("Assets/Scenes/DefaultScene.lua"));
+
+        RTBEngine::ECS::Scene* sceneBeforeReload =
+            RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
+        if (sceneBeforeReload) {
+            RTBEngine::ECS::NavGridComponent::SaveNavMeshForScene(sceneToRestore, sceneBeforeReload);
+        }
+
         RTBEngine::ECS::SceneManager::GetInstance().LoadScene(sceneToRestore);
         scenePathBeforePlay.clear();
     }
@@ -596,6 +619,10 @@ namespace RTBEditor {
                     sceneView->GetColliderRenderer()->RenderSelection(editorCamera, uiLayer->GetSelectedGameObject());
                 }
 
+                if (sceneView->GetNavGridDebugRenderer()) {
+                    sceneView->GetNavGridDebugRenderer()->Render(editorCamera, scene, uiLayer->GetSelectedGameObject());
+                }
+
                 framebuffer->Unbind();
             }
         }
@@ -617,6 +644,10 @@ namespace RTBEditor {
                     glViewport(0, 0, vpWidth, vpHeight);
                     // For now, reuse shadow maps from first pass
                     engineApp->RenderGeometryPass(scene, mainCamera);
+
+                    if (sceneView && sceneView->GetNavGridDebugRenderer()) {
+                        sceneView->GetNavGridDebugRenderer()->Render(mainCamera, scene, uiLayer->GetSelectedGameObject());
+                    }
 
                     // Note: Scene UI is rendered in GameViewPanel::OnUIRender()
                     // after the framebuffer image, within the ImGui frame

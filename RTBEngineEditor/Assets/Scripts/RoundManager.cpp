@@ -22,9 +22,12 @@
 #include <RTBEngine/Animation/Animator.h>
 #include <RTBEngine/Core/Logger.h>
 #include <RTBEngine/ECS/GameObject.h>
+#include <RTBEngine/ECS/NavAgentComponent.h>
+#include <RTBEngine/ECS/NavGridComponent.h>
 #include <RTBEngine/ECS/PrefabRegistry.h>
 #include <RTBEngine/ECS/Scene.h>
 #include <RTBEngine/ECS/SceneManager.h>
+#include <RTBEngine/Navigation/NavPathService.h>
 
 #include <algorithm>
 #include <cmath>
@@ -48,6 +51,9 @@ RTB_END_REGISTER(RoundManager)
 
 void RoundManager::OnStart()
 {
+    RTB_INFO("[RoundManager] OnStart (countdown=" + std::to_string(roundCountdownDuration) +
+        "s, enemyPrefabName='" + enemyPrefabName + "').");
+
     GameSession::GetInstance().Reset();
     hasRequestedEndScene = false;
     finalSceneLoadRequested = false;
@@ -332,31 +338,37 @@ void RoundManager::RefreshSpawnPoints()
 
 void RoundManager::CreateEnemyPrefabFromTemplate()
 {
-    if (enemyPrefab || !enemyTemplate) {
+    if (!enemyTemplate) {
         return;
     }
 
     auto& sceneManager = RTBEngine::ECS::SceneManager::GetInstance();
-    if (!sceneManager.GetActiveScene()) {
-        return;
+    if (sceneManager.GetActiveScene()) {
+        RTB_INFO("[RoundManager] Deactivating scene enemy template '" + enemyTemplate->GetName() +
+            "'. Spawns will use prefab asset '" + enemyPrefabName + "'.");
+        sceneManager.DeactivateHierarchy(enemyTemplate);
     }
 
-    enemyPrefab = RTBEngine::ECS::Prefab::CreateFromGameObject(enemyTemplate);
-    sceneManager.DeactivateHierarchy(enemyTemplate);
     enemyTemplate = nullptr;
 }
 
 RTBEngine::ECS::Prefab* RoundManager::ResolveEnemySpawnPrefab() const
 {
+    if (!enemyPrefabName.empty()) {
+        if (RTBEngine::ECS::Prefab* registryPrefab =
+                RTBEngine::ECS::PrefabRegistry::GetInstance().Get(enemyPrefabName)) {
+            return registryPrefab;
+        }
+
+        RTB_WARN("[RoundManager] Prefab asset '" + enemyPrefabName + "' was not found in PrefabRegistry.");
+    }
+
     if (enemyPrefab) {
+        RTB_WARN("[RoundManager] Falling back to legacy runtime enemy template snapshot.");
         return enemyPrefab.get();
     }
 
-    if (enemyPrefabName.empty()) {
-        return nullptr;
-    }
-
-    return RTBEngine::ECS::PrefabRegistry::GetInstance().Get(enemyPrefabName);
+    return nullptr;
 }
 
 void RoundManager::UpdateCountdown(float deltaTime)
@@ -402,6 +414,9 @@ void RoundManager::StartRound()
     }
 
     const int enemyCount = GetEnemyCountForRound(currentRound);
+
+    RTB_INFO("[RoundManager] Starting round " + std::to_string(currentRound) +
+        " with " + std::to_string(enemyCount) + " enemies from prefab '" + enemyPrefabName + "'.");
 
     if (RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby() &&
         RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
@@ -513,6 +528,18 @@ RTBEngine::ECS::GameObject* RoundManager::SpawnEnemyAt(
 
     ConfigureOnlineEnemy(spawnedEnemy, networkId);
     RebindSpawnedEnemy(spawnedEnemy);
+
+    auto* navAgent = spawnedEnemy->GetComponent<RTBEngine::ECS::NavAgentComponent>();
+    auto* meleeAI = spawnedEnemy->GetComponent<EnemyMeleeAI>();
+    auto* targetTracker = spawnedEnemy->GetComponent<EnemyTargetTracker>();
+    const bool hasTarget = targetTracker && targetTracker->targetObject;
+    RTB_INFO("[RoundManager] Spawned '" + spawnedEnemy->GetName() + "' at spawn point '" +
+        spawnPoint->GetName() + "' | prefab='" + enemyPrefabName +
+        "' NavAgentComponent=" + (navAgent ? "yes" : "NO") +
+        " EnemyMeleeAI=" + (meleeAI ? "yes" : "NO") +
+        " navAgentLinked=" + (meleeAI && meleeAI->navAgent ? "yes" : "NO") +
+        " target=" + (hasTarget ? targetTracker->targetObject->GetName() : "none") + ".");
+
     return spawnedEnemy;
 }
 
@@ -525,6 +552,7 @@ void RoundManager::RebindSpawnedEnemy(RTBEngine::ECS::GameObject* spawnedEnemy)
     auto* targetTracker = spawnedEnemy->GetComponent<EnemyTargetTracker>();
     auto* animationDriver = spawnedEnemy->GetComponent<EnemyAnimationDriver>();
     auto* locomotion = spawnedEnemy->GetComponent<EnemyLocomotionController>();
+    auto* navAgent = spawnedEnemy->GetComponent<RTBEngine::ECS::NavAgentComponent>();
     auto* meleeAI = spawnedEnemy->GetComponent<EnemyMeleeAI>();
     auto* meleeAttack = spawnedEnemy->GetComponent<MeleeSphereAttackAbility>();
     auto* health = spawnedEnemy->GetComponent<HealthComponent>();
@@ -543,7 +571,20 @@ void RoundManager::RebindSpawnedEnemy(RTBEngine::ECS::GameObject* spawnedEnemy)
         meleeAI->targetTracker = targetTracker;
         meleeAI->animationDriver = animationDriver;
         meleeAI->locomotion = locomotion;
+        meleeAI->navAgent = navAgent;
         meleeAI->meleeAttack = meleeAttack;
+
+        if (!navAgent) {
+            RTB_WARN("[RoundManager] Spawned enemy '" + spawnedEnemy->GetName() +
+                "' is missing NavAgentComponent; navigation will be disabled.");
+        } else if (targetTracker && targetTracker->targetObject) {
+            navAgent->SetDestination(targetTracker->targetObject->GetWorldPosition());
+            navAgent->EnsurePathReady();
+        }
+    }
+
+    if (RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene()) {
+        RTBEngine::ECS::NavGridComponent::ActivateAllBakedInScene(scene);
     }
 }
 

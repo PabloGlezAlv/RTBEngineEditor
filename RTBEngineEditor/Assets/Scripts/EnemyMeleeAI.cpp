@@ -7,7 +7,10 @@
 #include "MeleeSphereAttackAbility.h"
 #include "OnlineGameNetMessages.h"
 
+#include <RTBEngine/Core/Logger.h>
+#include <RTBEngine/Core/Time.h>
 #include <RTBEngine/ECS/GameObject.h>
+#include <RTBEngine/ECS/NavAgentComponent.h>
 #include <RTBEngine/ECS/NetworkIdentity.h>
 #include <RTBEngine/ECS/RigidBodyComponent.h>
 #include <RTBEngine/Math/Math.h>
@@ -24,6 +27,7 @@ RTB_REGISTER_COMPONENT(EnemyMeleeAI)
     RTB_PROPERTY_COMPONENT(targetTracker, EnemyTargetTracker)
     RTB_PROPERTY_COMPONENT(animationDriver, EnemyAnimationDriver)
     RTB_PROPERTY_COMPONENT(locomotion, EnemyLocomotionController)
+    RTB_PROPERTY_COMPONENT(navAgent, RTBEngine::ECS::NavAgentComponent)
     RTB_PROPERTY_COMPONENT(meleeAttack, MeleeSphereAttackAbility)
     RTB_PROPERTY_RANGE(attackRange, 0.1f, 5.0f)
     RTB_PROPERTY_RANGE(preferredAttackDistance, 0.1f, 5.0f)
@@ -109,6 +113,8 @@ void EnemyMeleeAI::OnFixedUpdate(float fixedDeltaTime)
         return;
     }
 
+    ResolveDependencies();
+
     if (!HasSimulationAuthority()) {
         locomotion->StopPlanarMotion();
         return;
@@ -116,13 +122,58 @@ void EnemyMeleeAI::OnFixedUpdate(float fixedDeltaTime)
 
     switch (state) {
     case State::Chasing:
-        if (targetTracker) {
-            locomotion->MoveTowards(targetTracker->GetPlanarDirectionTo(owner), fixedDeltaTime);
+        if (navAgent && targetTracker && targetTracker->targetObject) {
+            navAgent->SetDestination(targetTracker->targetObject->GetWorldPosition());
+            navAgent->EnsurePathReady();
+            if (navAgent->HasActivePath()) {
+                const RTBEngine::Math::Vector3 moveDirection =
+                    navAgent->GetPlanarMoveDirection(owner->GetWorldPosition());
+                if (EnemyMeleeAIDetail::HasPlanarDirection(moveDirection)) {
+                    locomotion->MoveTowards(moveDirection, fixedDeltaTime);
+                } else {
+                    locomotion->StopPlanarMotion();
+                }
+            } else {
+                locomotion->StopPlanarMotion();
+            }
+        } else {
+            if (!navAgent) {
+                static bool warnedMissingNavAgent = false;
+                if (!warnedMissingNavAgent) {
+                    warnedMissingNavAgent = true;
+                    RTB_WARN("[EnemyMeleeAI] Chasing without NavAgentComponent on '" +
+                        owner->GetName() + "'; enemy will stay still.");
+                }
+            }
+            locomotion->StopPlanarMotion();
         }
         break;
     case State::Repositioning:
-        if (targetTracker) {
-            locomotion->MoveTowards(targetTracker->GetPlanarDirectionTo(owner) * -1.0f, fixedDeltaTime);
+        if (navAgent && targetTracker && targetTracker->targetObject && owner) {
+            const RTBEngine::Math::Vector3 awayDirection =
+                targetTracker->GetPlanarDirectionTo(owner) * -1.0f;
+            if (EnemyMeleeAIDetail::HasPlanarDirection(awayDirection)) {
+                constexpr float kRepositionDistance = 2.0f;
+                const RTBEngine::Math::Vector3 retreatDestination =
+                    owner->GetWorldPosition() + awayDirection * kRepositionDistance;
+                navAgent->SetDestination(retreatDestination);
+                navAgent->EnsurePathReady();
+                if (navAgent->HasActivePath()) {
+                    const RTBEngine::Math::Vector3 moveDirection =
+                        navAgent->GetPlanarMoveDirection(owner->GetWorldPosition());
+                    if (EnemyMeleeAIDetail::HasPlanarDirection(moveDirection)) {
+                        locomotion->MoveTowards(moveDirection, fixedDeltaTime);
+                    } else {
+                        locomotion->StopPlanarMotion();
+                    }
+                } else {
+                    locomotion->StopPlanarMotion();
+                }
+            } else {
+                locomotion->StopPlanarMotion();
+            }
+        } else {
+            locomotion->StopPlanarMotion();
         }
         break;
     case State::Attacking:
@@ -240,6 +291,9 @@ void EnemyMeleeAI::ResolveDependencies()
     }
     if (!locomotion) {
         locomotion = owner->GetComponent<EnemyLocomotionController>();
+    }
+    if (!navAgent) {
+        navAgent = owner->GetComponent<RTBEngine::ECS::NavAgentComponent>();
     }
     ResolveMeleeAttack();
 }
@@ -444,6 +498,9 @@ void EnemyMeleeAI::EnterIdle()
 void EnemyMeleeAI::EnterChasing()
 {
     state = State::Chasing;
+    if (navAgent && targetTracker && targetTracker->targetObject) {
+        navAgent->SetDestination(targetTracker->targetObject->GetWorldPosition());
+    }
     if (animationDriver) {
         animationDriver->PlayWalkLoop();
     }

@@ -13,6 +13,7 @@ namespace RTBEngine {
         class GameObject;
         class Component;
         class ParticleSystem;
+        class NavGridComponent;
     }
     namespace Reflection {
         struct PropertyInfo;
@@ -33,7 +34,7 @@ namespace RTBEditor {
         virtual void OnUIRender(EditorContext& context) override;
 
     private:
-        void DrawComponents(RTBEngine::ECS::GameObject* gameObject);
+        void DrawComponents(RTBEngine::ECS::GameObject* gameObject, EditorContext& context);
         void DrawProperty(RTBEngine::ECS::Component* component, const RTBEngine::Reflection::PropertyInfo& prop);
         bool DrawSceneStringProperty(RTBEngine::ECS::Component* component,
                                      const RTBEngine::Reflection::PropertyInfo& prop,
@@ -45,6 +46,7 @@ namespace RTBEditor {
 
         void DrawAnimatorComponent(RTBEngine::Animation::Animator* animator);
         void DrawParticleSystemComponent(RTBEngine::ECS::ParticleSystem* particleSystem);
+        void DrawNavGridComponent(RTBEngine::ECS::NavGridComponent* navGridComponent, EditorContext& context);
         void DrawCubemapAssetInspector(const std::filesystem::path& cubemapPath);
         void SaveCubemapAsset(const std::filesystem::path& cubemapPath);
         void DrawScriptPreview(const std::filesystem::path& scriptPath);

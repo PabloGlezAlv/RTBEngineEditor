@@ -7,6 +7,7 @@
 #include <RTBEngine/ECS/GameObject.h>
 #include <RTBEngine/Animation/Animator.h>
 #include <RTBEngine/ECS/ParticleSystem.h>
+#include <RTBEngine/ECS/NavGridComponent.h>
 #include <RTBEngine/Math/Vectors/Vector2.h>
 #include <RTBEngine/Math/Vectors/Vector3.h>
 #include <RTBEngine/Math/Vectors/Vector4.h>
@@ -481,7 +482,7 @@ namespace RTBEditor {
 
             ImGui::Separator();
 
-            DrawComponents(context.selectedGameObject);
+            DrawComponents(context.selectedGameObject, context);
 
             ImGui::Separator();
             ImGui::Spacing();
@@ -589,7 +590,7 @@ namespace RTBEditor {
         ImGui::End();
     }
 
-    void InspectorPanel::DrawComponents(RTBEngine::ECS::GameObject* gameObject) {
+    void InspectorPanel::DrawComponents(RTBEngine::ECS::GameObject* gameObject, EditorContext& context) {
         // Detect if this GameObject has any UIElement — if so show Rect Transform instead of Transform
         RTBEngine::UI::UIElement* uiElement = gameObject->GetComponent<RTBEngine::UI::UIElement>();
 
@@ -733,6 +734,8 @@ namespace RTBEditor {
                     DrawAnimatorComponent(static_cast<RTBEngine::Animation::Animator*>(component.get()));
                 } else if (std::string(typeName) == "ParticleSystem") {
                     DrawParticleSystemComponent(static_cast<RTBEngine::ECS::ParticleSystem*>(component.get()));
+                } else if (std::string(typeName) == "NavGridComponent") {
+                    DrawNavGridComponent(static_cast<RTBEngine::ECS::NavGridComponent*>(component.get()), context);
                 } else if (typeInfo) {
                     auto properties = typeInfo->GetInspectorProperties();
                     for (const auto* prop : properties) {
@@ -1625,6 +1628,62 @@ namespace RTBEditor {
 
         if (changed) {
             particleSystem->OnValidate();
+            RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+        }
+    }
+
+    void InspectorPanel::DrawNavGridComponent(RTBEngine::ECS::NavGridComponent* navGridComponent,
+                                              EditorContext& context)
+    {
+        if (!navGridComponent) {
+            return;
+        }
+
+        bool changed = false;
+
+        if (navGridComponent->IsBaked()) {
+            ImGui::TextColored(ImVec4(0.3f, 0.9f, 0.4f, 1.0f), "Status: Baked");
+            ImGui::Text("Walkable cells: %d", navGridComponent->GetWalkableCellCount());
+            ImGui::Text("Resolution: %dx%d",
+                navGridComponent->GetGrid().GetWidth(),
+                navGridComponent->GetGrid().GetHeight());
+        } else {
+            ImGui::TextColored(ImVec4(0.95f, 0.55f, 0.2f, 1.0f), "Status: Not baked");
+            ImGui::TextDisabled("Bake is stored in a .navmesh file next to the scene.");
+        }
+
+        const RTBEngine::Math::Vector3 worldOrigin = navGridComponent->GetWorldOrigin();
+        ImGui::Text("World origin: (%.1f, %.1f, %.1f)", worldOrigin.x, worldOrigin.y, worldOrigin.z);
+
+        ImGui::Spacing();
+        if (ImGui::Button("Rebake Grid", ImVec2(120.0f, 0.0f))) {
+            if (context.ensureScenePhysicsReady) {
+                context.ensureScenePhysicsReady();
+            }
+            if (navGridComponent->BakeGrid()) {
+                changed = true;
+            }
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Clear Bake", ImVec2(120.0f, 0.0f))) {
+            navGridComponent->ClearBakedGrid();
+            changed = true;
+        }
+
+        ImGui::Spacing();
+        ImGui::Separator();
+        ImGui::Spacing();
+
+        const RTBEngine::Reflection::TypeInfo* typeInfo = navGridComponent->GetTypeInfo();
+        if (typeInfo) {
+            auto properties = typeInfo->GetInspectorProperties();
+            for (const auto* prop : properties) {
+                DrawProperty(navGridComponent, *prop);
+            }
+        }
+
+        if (changed) {
+            navGridComponent->OnValidate();
             RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
         }
     }

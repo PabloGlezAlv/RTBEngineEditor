@@ -11,6 +11,7 @@
 namespace RTBEngine {
     namespace ECS {
         class GameObject;
+        class NavAgentComponent;
     }
 
     namespace Physics {
@@ -42,6 +43,7 @@ public:
     EnemyAnimationDriver* animationDriver = nullptr;
     EnemyLocomotionController* locomotion = nullptr;
     MeleeSphereAttackAbility* meleeAttack = nullptr;
+    RTBEngine::ECS::NavAgentComponent* navAgent = nullptr;
     float attackRange = 1.35f;
     float preferredAttackDistance = 1.05f;
     float hitReactDuration = 0.4f;

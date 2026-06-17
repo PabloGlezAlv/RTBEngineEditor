@@ -498,6 +498,21 @@ function CreateScene()
                 }
             },
             {
+                name = "Navigation",
+                uuid = "A1B2C3D4-E5F6-4789-A012-3456789ABCDE",
+                position = Vector3(0.00, 0.38, 0.00),
+                components = {
+                    {
+                        type = "NavGridComponent",
+                        origin = Vector3(-16.00, 0.00, -16.00),
+                        size = Vector3(32.00, 0.00, 32.00),
+                        cellSize = 0.50,
+                        agentRadius = 0.40,
+                        groundProbeHeight = 4.00
+                    },
+                }
+            },
+            {
                 name = "EnemySpawnPointLeft",
                 uuid = "74B6BC8E-5892-4C38-A4B6-8AAAF7B1F001",
                 position = Vector3(-11.80, 0.00, 8.60),
@@ -532,13 +547,14 @@ function CreateScene()
             {
                 name = "Barbarian",
                 uuid = "753770D2-B00E-4859-B7D3-5ABF1249B014",
+                active = false,
                 collisionLayer = "Characters",
                 prefab = "Enemy Melee",
                 position = Vector3(-3.00, 0.00, 0.00),
                 overrides = {
                     components = {
                         { type = "EnemyTargetTracker",
-                            targetObject = nil,
+                            targetObject = "E8682E33-50ED-45D8-BC76-B31113639F9E",
                         },
                         { type = "EnemyAnimationDriver",
                             animator = "E1F5A9B7-1030-4F9B-9A18-77AD11B06E20/Animator",
@@ -548,6 +564,7 @@ function CreateScene()
                             targetTracker = "753770D2-B00E-4859-B7D3-5ABF1249B014/EnemyTargetTracker",
                             animationDriver = "753770D2-B00E-4859-B7D3-5ABF1249B014/EnemyAnimationDriver",
                             locomotion = "753770D2-B00E-4859-B7D3-5ABF1249B014/EnemyLocomotionController",
+                            navAgent = "753770D2-B00E-4859-B7D3-5ABF1249B014/NavAgentComponent",
                             meleeAttack = "753770D2-B00E-4859-B7D3-5ABF1249B014/MeleeSphereAttackAbility",
                         },
                     },
@@ -738,7 +755,7 @@ function CreateScene()
                 name = "Player GO",
                 uuid = "E8682E33-50ED-45D8-BC76-B31113639F9E",
                 collisionLayer = "Characters",
-                position = Vector3(0.90, 0.00, 0.00),
+                position = Vector3(0.90, 0.10, 0.00),
                 components = {
                     {
                         type = "NetworkIdentity",
@@ -1186,7 +1203,7 @@ function CreateScene()
                                                                                                     {
                                                                                                         name = "Ranger_Bow",
                                                                                                         uuid = "109DAEF5-4736-4BB3-B63F-DD6B5B44855E",
-                                                                                                        rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
+                                                                                                        rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
                                                                                                         components = {
                                                                                                             {
                                                                                                                 type = "MeshRenderer",
@@ -2755,7 +2772,7 @@ function CreateScene()
                                 name = "wall_corner_ne",
                                 uuid = "2511373C-D1A9-4183-AE10-3CC6C9A44409",
                                 position = Vector3(14.00, 0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
@@ -2972,7 +2989,7 @@ function CreateScene()
                                 name = "wall_n_-12",
                                 uuid = "56BF061A-D1D6-441B-B6E6-26165AEED521",
                                 position = Vector3(-12.00, 0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
@@ -3000,7 +3017,7 @@ function CreateScene()
                                 name = "wall_n_-8",
                                 uuid = "0475162D-E451-45F6-90B0-551038025002",
                                 position = Vector3(-8.00, 0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
@@ -3028,7 +3045,7 @@ function CreateScene()
                                 name = "wall_n_-4",
                                 uuid = "8987FEDF-75C9-4809-90E3-782CB9278901",
                                 position = Vector3(-4.00, 0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
@@ -3056,7 +3073,7 @@ function CreateScene()
                                 name = "wall_n_0",
                                 uuid = "013C2A45-B1B5-4645-A8AC-EE5824F94914",
                                 position = Vector3(0.00, 0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
@@ -3084,7 +3101,7 @@ function CreateScene()
                                 name = "wall_n_4",
                                 uuid = "06B97D68-350C-4301-8DE6-C714191DBF3D",
                                 position = Vector3(4.00, 0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
@@ -3112,7 +3129,7 @@ function CreateScene()
                                 name = "wall_n_8",
                                 uuid = "03EA9125-FCEF-4F65-A817-7C2697593C83",
                                 position = Vector3(8.00, 0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
@@ -3140,7 +3157,7 @@ function CreateScene()
                                 name = "wall_n_12",
                                 uuid = "677F63A1-66E1-4D54-9A76-C7F8BC485349",
                                 position = Vector3(12.00, 0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
@@ -3924,7 +3941,7 @@ function CreateScene()
                                 name = "torch_n",
                                 uuid = "31C7F376-69C7-4C51-B45C-57D2EBB9EA73",
                                 position = Vector3(0.00, 0.00, 13.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
@@ -3986,7 +4003,7 @@ function CreateScene()
                                 name = "banner_1",
                                 uuid = "60FDC273-65AE-491F-A7EC-4B6E0DB54C3F",
                                 position = Vector3(0.00, 0.00, 13.50),
-                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",

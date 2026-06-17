@@ -33,12 +33,19 @@ return {
             knockbackImpulse = 3.50
         },
         {
+            type = "NavAgentComponent",
+            recalcInterval = 0.50,
+            targetMoveThreshold = 0.75,
+            waypointReachDistance = 0.35
+        },
+        {
             type = "EnemyMeleeAI",
             health = "753770D2-B00E-4859-B7D3-5ABF1249B014/HealthComponent",
             team = 2,
             targetTracker = "753770D2-B00E-4859-B7D3-5ABF1249B014/EnemyTargetTracker",
             animationDriver = "753770D2-B00E-4859-B7D3-5ABF1249B014/EnemyAnimationDriver",
             locomotion = "753770D2-B00E-4859-B7D3-5ABF1249B014/EnemyLocomotionController",
+            navAgent = "753770D2-B00E-4859-B7D3-5ABF1249B014/NavAgentComponent",
             meleeAttack = "753770D2-B00E-4859-B7D3-5ABF1249B014/MeleeSphereAttackAbility",
             attackRange = 1.35,
             hitReactDuration = 0.40,

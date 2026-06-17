@@ -46,6 +46,7 @@ namespace RTBEditor {
         std::function<void()> onDuplicateSelection;
         std::function<bool()> canCopySelection;
         std::function<bool()> hasClipboardContent;
+        std::function<bool()> ensureScenePhysicsReady;
     };
 
     inline void ClearSelection(EditorContext& context) {

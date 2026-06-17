@@ -4,6 +4,7 @@
 #include <RTBEngine/Rendering/Camera.h>
 #include "../../Rendering/EditorGridRenderer.h"
 #include "../../Rendering/ColliderRenderer.h"
+#include "../../Rendering/NavGridDebugRenderer.h"
 #include "../../Utils/RaycastUtils.h"
 #include <memory>
 
@@ -33,6 +34,7 @@ namespace RTBEditor {
 
         // Collider renderer access
         ColliderRenderer* GetColliderRenderer() const { return colliderRenderer.get(); }
+        NavGridDebugRenderer* GetNavGridDebugRenderer() const { return navGridDebugRenderer.get(); }
 
         // Check if the panel is focused/hovered
         bool IsFocused() const { return isFocused; }
@@ -55,6 +57,7 @@ namespace RTBEditor {
         RTBEngine::Rendering::Camera editorCamera;
         std::unique_ptr<EditorGridRenderer> gridRenderer;
         std::unique_ptr<ColliderRenderer> colliderRenderer;
+        std::unique_ptr<NavGridDebugRenderer> navGridDebugRenderer;
 
         // Viewport state
         int viewportWidth = 0;
