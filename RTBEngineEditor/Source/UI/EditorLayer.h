@@ -64,6 +64,7 @@ namespace RTBEditor {
         bool HasClipboardContent() const { return !clipboardPrefabs.empty(); }
         EditorContext& GetContext() { return context; }
         void OpenBuildDialog();
+        void PersistWindowPrefs();
 
     private:
         void SetupDockspace();

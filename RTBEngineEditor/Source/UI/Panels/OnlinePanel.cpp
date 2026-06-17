@@ -1,5 +1,7 @@
 #include "OnlinePanel.h"
 
+#include "../EditorDockingUtils.h"
+
 #include <imgui.h>
 
 #include <RTBEngine/Online/OnlineSystem.h>
@@ -32,9 +34,18 @@ namespace RTBEditor {
 
     OnlinePanel::~OnlinePanel() = default;
 
-    void OnlinePanel::OnUIRender(EditorContext&)
+    void OnlinePanel::OnUIRender(EditorContext& context)
     {
-        ImGui::Begin("Online");
+        if (!context.optionalWindows.online) {
+            return;
+        }
+
+        PrepareOptionalWindowDocking("Online");
+
+        if (!ImGui::Begin("Online", &context.optionalWindows.online)) {
+            ImGui::End();
+            return;
+        }
 
         DrawInfrastructureSection();
         ImGui::Separator();

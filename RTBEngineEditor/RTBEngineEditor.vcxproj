@@ -120,6 +120,8 @@ if exist "$(ProjectDir)MyProject.rtbproj" xcopy /y /d "$(ProjectDir)MyProject.rt
     <ClCompile Include="Source\main.cpp" />
     <ClCompile Include="Source\Project\Project.cpp" />
     <ClCompile Include="Source\UI\EditorLayer.cpp" />
+    <ClCompile Include="Source\UI\EditorDockingUtils.cpp" />
+    <ClCompile Include="Source\UI\EditorWindowPrefs.cpp" />
     <ClCompile Include="Source\UI\MainMenuBar.cpp" />
     <ClCompile Include="Source\UI\Panels\ContentBrowserPanel.cpp" />
     <ClCompile Include="Source\UI\Panels\InspectorPanel.cpp" />
@@ -127,6 +129,7 @@ if exist "$(ProjectDir)MyProject.rtbproj" xcopy /y /d "$(ProjectDir)MyProject.rt
     <ClCompile Include="Source\UI\Panels\ConsolePanel.cpp" />
     <ClCompile Include="Source\UI\Panels\OnlinePanel.cpp" />
     <ClCompile Include="Source\UI\Panels\PhysicsLayersPanel.cpp" />
+    <ClCompile Include="Source\UI\Panels\NavigationDebugPanel.cpp" />
     <ClCompile Include="Source\UI\Panels\SceneViewPanel.cpp" />
     <ClCompile Include="Source\UI\Panels\ToolbarPanel.cpp" />
     <ClCompile Include="Source\UI\Panels\StatsOverlayPanel.cpp" />
@@ -153,6 +156,8 @@ if exist "$(ProjectDir)MyProject.rtbproj" xcopy /y /d "$(ProjectDir)MyProject.rt
     <ClInclude Include="Source\Project\Project.h" />
     <ClInclude Include="Source\UI\DragDropPayloads.h" />
     <ClInclude Include="Source\UI\EditorLayer.h" />
+    <ClInclude Include="Source\UI\EditorDockingUtils.h" />
+    <ClInclude Include="Source\UI\EditorWindowPrefs.h" />
     <ClInclude Include="Source\UI\MainMenuBar.h" />
     <ClInclude Include="Source\UI\Panels\ContentBrowserPanel.h" />
     <ClInclude Include="Source\UI\Panels\EditorPanel.h" />
@@ -161,6 +166,7 @@ if exist "$(ProjectDir)MyProject.rtbproj" xcopy /y /d "$(ProjectDir)MyProject.rt
     <ClInclude Include="Source\UI\Panels\ConsolePanel.h" />
     <ClInclude Include="Source\UI\Panels\OnlinePanel.h" />
     <ClInclude Include="Source\UI\Panels\PhysicsLayersPanel.h" />
+    <ClInclude Include="Source\UI\Panels\NavigationDebugPanel.h" />
     <ClInclude Include="Source\UI\Panels\SceneViewPanel.h" />
     <ClInclude Include="Source\UI\Panels\ToolbarPanel.h" />
     <ClInclude Include="Source\UI\Panels\StatsOverlayPanel.h" />

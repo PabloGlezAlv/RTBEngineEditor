@@ -31,6 +31,22 @@ namespace RTBEditor {
         uint32_t audioSources = 0;
     };
 
+    struct NavDebugSettings {
+        bool enabled = false;
+        bool showBounds = true;
+        bool showWalkableCells = true;
+        bool showBlockedCells = true;
+        bool showAgentPaths = true;
+        int gridCellStep = 0;
+        float yOffset = 0.15f;
+    };
+
+    struct OptionalWindowState {
+        bool online = false;
+        bool physicsLayers = false;
+        bool navigationDebug = false;
+    };
+
     struct EditorContext {
         RTBEngine::ECS::GameObject* selectedGameObject = nullptr;
         std::vector<RTBEngine::ECS::GameObject*> selectedGameObjects;
@@ -39,6 +55,8 @@ namespace RTBEditor {
         std::filesystem::path pendingSceneLoad;
         StatsData stats;
         bool showStatsOverlay = false;
+        NavDebugSettings navDebug;
+        OptionalWindowState optionalWindows;
         RTBEngineCore::Window* window = nullptr;
 
         std::function<void()> onCopySelection;

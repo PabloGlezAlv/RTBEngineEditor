@@ -1,5 +1,7 @@
 #include "PhysicsLayersPanel.h"
 
+#include "../EditorDockingUtils.h"
+
 #include <imgui.h>
 
 #include <algorithm>
@@ -360,9 +362,18 @@ namespace RTBEditor {
         ImGui::EndChild();
     }
 
-    void PhysicsLayersPanel::OnUIRender(EditorContext&)
+    void PhysicsLayersPanel::OnUIRender(EditorContext& context)
     {
-        ImGui::Begin("Physics Layers");
+        if (!context.optionalWindows.physicsLayers) {
+            return;
+        }
+
+        PrepareOptionalWindowDocking("Physics Layers");
+
+        if (!ImGui::Begin("Physics Layers", &context.optionalWindows.physicsLayers)) {
+            ImGui::End();
+            return;
+        }
 
         DrawLayerNames();
         DrawCollisionMatrix();

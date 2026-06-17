@@ -620,7 +620,11 @@ namespace RTBEditor {
                 }
 
                 if (sceneView->GetNavGridDebugRenderer()) {
-                    sceneView->GetNavGridDebugRenderer()->Render(editorCamera, scene, uiLayer->GetSelectedGameObject());
+                    sceneView->GetNavGridDebugRenderer()->Render(
+                        editorCamera,
+                        scene,
+                        uiLayer->GetSelectedGameObject(),
+                        uiLayer->GetContext().navDebug);
                 }
 
                 framebuffer->Unbind();
@@ -644,10 +648,6 @@ namespace RTBEditor {
                     glViewport(0, 0, vpWidth, vpHeight);
                     // For now, reuse shadow maps from first pass
                     engineApp->RenderGeometryPass(scene, mainCamera);
-
-                    if (sceneView && sceneView->GetNavGridDebugRenderer()) {
-                        sceneView->GetNavGridDebugRenderer()->Render(mainCamera, scene, uiLayer->GetSelectedGameObject());
-                    }
 
                     // Note: Scene UI is rendered in GameViewPanel::OnUIRender()
                     // after the framebuffer image, within the ImGui frame

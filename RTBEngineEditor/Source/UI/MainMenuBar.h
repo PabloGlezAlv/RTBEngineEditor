@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Panels/EditorPanel.h"
 #include <functional>
 
 namespace RTBEditor {
@@ -16,7 +17,7 @@ namespace RTBEditor {
         MainMenuBar();
         ~MainMenuBar();
 
-        void OnUIRender();
+        void OnUIRender(EditorContext& context);
         void SetExitCallback(ExitCallback callback) { exitCallback = callback; }
         void SetBuildCallback(BuildCallback callback) { buildCallback = callback; }
 
@@ -29,6 +30,9 @@ namespace RTBEditor {
         void SetDuplicateCallback(EditCommandCallback callback) { duplicateCallback = callback; }
         void SetCanCopyProvider(EditCommandPredicate provider) { canCopyProvider = provider; }
         void SetCanPasteProvider(EditCommandPredicate provider) { canPasteProvider = provider; }
+        void SetPersistWindowPrefsCallback(std::function<void()> callback) {
+            persistWindowPrefsCallback = callback;
+        }
 
     private:
         ExitCallback exitCallback;
@@ -41,6 +45,7 @@ namespace RTBEditor {
         EditCommandCallback duplicateCallback;
         EditCommandPredicate canCopyProvider;
         EditCommandPredicate canPasteProvider;
+        std::function<void()> persistWindowPrefsCallback;
         bool sceneDirty = false;
     };
 

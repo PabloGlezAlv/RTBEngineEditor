@@ -7,7 +7,7 @@ namespace RTBEditor {
     MainMenuBar::MainMenuBar() {}
     MainMenuBar::~MainMenuBar() {}
 
-    void MainMenuBar::OnUIRender() {
+    void MainMenuBar::OnUIRender(EditorContext& context) {
         ImGuiIO& io = ImGui::GetIO();
 
         if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_S, false)) {
@@ -62,6 +62,20 @@ namespace RTBEditor {
             }
 
             if (ImGui::BeginMenu("Window")) {
+                OptionalWindowState previousWindows = context.optionalWindows;
+
+                ImGui::MenuItem("Online", nullptr, &context.optionalWindows.online);
+                ImGui::MenuItem("Physics Layers", nullptr, &context.optionalWindows.physicsLayers);
+                ImGui::MenuItem("Navigation Debug", nullptr, &context.optionalWindows.navigationDebug);
+
+                if (context.optionalWindows.online != previousWindows.online ||
+                    context.optionalWindows.physicsLayers != previousWindows.physicsLayers ||
+                    context.optionalWindows.navigationDebug != previousWindows.navigationDebug) {
+                    if (persistWindowPrefsCallback) {
+                        persistWindowPrefsCallback();
+                    }
+                }
+
                 ImGui::EndMenu();
             }
 

@@ -9,6 +9,8 @@
 #include "Panels/SceneViewPanel.h"
 #include "Panels/OnlinePanel.h"
 #include "Panels/PhysicsLayersPanel.h"
+#include "Panels/NavigationDebugPanel.h"
+#include "EditorWindowPrefs.h"
 #include "MainMenuBar.h"
 #include <imgui_internal.h>
 #include <utility>
@@ -22,6 +24,8 @@
 namespace RTBEditor {
 
     EditorLayer::EditorLayer() {
+        EditorWindowPrefs::LoadInto(context);
+
         menuBar = std::make_unique<MainMenuBar>();
         buildDialog = std::make_unique<BuildDialog>();
         
@@ -40,6 +44,7 @@ namespace RTBEditor {
         AddPanel(std::make_unique<ConsolePanel>());
         AddPanel(std::make_unique<OnlinePanel>());
         AddPanel(std::make_unique<PhysicsLayersPanel>());
+        AddPanel(std::make_unique<NavigationDebugPanel>());
         AddPanel(std::make_unique<StatsOverlayPanel>());
 
         context.onCopySelection = [this]() { CopySelectionToClipboard(); };
@@ -57,9 +62,12 @@ namespace RTBEditor {
             return context.selectedGameObject != nullptr || !context.selectedGameObjects.empty();
         });
         menuBar->SetCanPasteProvider([this]() { return HasClipboardContent(); });
+        menuBar->SetPersistWindowPrefsCallback([this]() { PersistWindowPrefs(); });
     }
 
-    EditorLayer::~EditorLayer() {}
+    EditorLayer::~EditorLayer() {
+        PersistWindowPrefs();
+    }
 
     void EditorLayer::Initialize(void* imguiContext) {
         if (imguiContext) {
@@ -86,6 +94,14 @@ namespace RTBEditor {
         // Render all registered panels
         for (auto& panel : panels) {
             panel->OnUIRender(context);
+        }
+
+        static OptionalWindowState lastPersistedWindows = context.optionalWindows;
+        if (context.optionalWindows.online != lastPersistedWindows.online ||
+            context.optionalWindows.physicsLayers != lastPersistedWindows.physicsLayers ||
+            context.optionalWindows.navigationDebug != lastPersistedWindows.navigationDebug) {
+            PersistWindowPrefs();
+            lastPersistedWindows = context.optionalWindows;
         }
 
         HandleGlobalShortcuts();
@@ -153,7 +169,7 @@ namespace RTBEditor {
 
         // Menu bar
         if (menuBar) {
-            menuBar->OnUIRender();
+            menuBar->OnUIRender(context);
         }
 
         ImGui::End();
@@ -179,8 +195,6 @@ namespace RTBEditor {
         ImGui::DockBuilderDockWindow("Game", dock_id_center);
         ImGui::DockBuilderDockWindow("Hierarchy", dock_id_left);
         ImGui::DockBuilderDockWindow("Inspector", dock_id_right);
-        ImGui::DockBuilderDockWindow("Online", dock_id_right);
-        ImGui::DockBuilderDockWindow("Physics Layers", dock_id_right);
         ImGui::DockBuilderDockWindow("Content Browser", dock_id_bottom);
         ImGui::DockBuilderDockWindow("Console", dock_id_bottom);
         
@@ -351,6 +365,10 @@ namespace RTBEditor {
 
         CopySelectionToClipboard();
         PasteClipboardIntoScene();
+    }
+
+    void EditorLayer::PersistWindowPrefs() {
+        EditorWindowPrefs::SaveFrom(context);
     }
 
 }
