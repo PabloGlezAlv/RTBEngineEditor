@@ -21,6 +21,7 @@
 #include <RTBEngine/Physics/PhysicsWorld.h>
 #include <RTBEngine/ECS/ParticleSystem.h>
 #include <RTBEngine/Animation/Animator.h>
+#include <RTBEngine/UI/CanvasSystem.h>
 #include "../UI/Panels/SceneViewPanel.h"
 #include "../Build/BuildSystem.h"
 
@@ -588,6 +589,8 @@ namespace RTBEditor {
 
         // Reset per-frame render counters before any draw submissions
         RTBEngine::ECS::MeshRenderer::ResetRenderStats();
+
+        RTBEngine::UI::CanvasSystem::GetInstance().Update(scene);
 
         // 1. Render Scene View (Editor Camera)
         SceneViewPanel* sceneView = uiLayer->GetSceneViewPanel();

@@ -129,7 +129,6 @@ namespace RTBEditor {
             RTBEngine::Math::Vector2 screenOffset(displayOrigin.x, displayOrigin.y);
 
             auto& canvasSystem = RTBEngine::UI::CanvasSystem::GetInstance();
-            canvasSystem.Update(scene);
             canvasSystem.UpdateAllRectTransforms(logicalSize);
 
             ImVec2 mousePos = ImGui::GetMousePos();
