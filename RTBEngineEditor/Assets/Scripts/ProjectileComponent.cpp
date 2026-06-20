@@ -2,7 +2,9 @@
 
 #include "CharacterBase.h"
 
+#include <RTBEngine/Scene/AudioSourceComponent.h>
 #include <RTBEngine/Scene/GameObject.h>
+#include <RTBEngine/Scene/NetworkIdentity.h>
 #include <RTBEngine/Scene/RigidBodyComponent.h>
 #include <RTBEngine/Scene/Scene.h>
 #include <RTBEngine/Scene/SceneManager.h>
@@ -71,6 +73,21 @@ namespace {
         }
 
         return false;
+    }
+
+    bool IsLocallyControlledInstigator(RTBEngine::ECS::GameObject* instigatorObject)
+    {
+        if (!instigatorObject) {
+            return false;
+        }
+
+        const RTBEngine::ECS::NetworkIdentity* identity =
+            instigatorObject->GetComponent<RTBEngine::ECS::NetworkIdentity>();
+        if (!identity) {
+            return true;
+        }
+
+        return identity->IsLocallyControlled();
     }
 }
 
@@ -152,6 +169,7 @@ void ProjectileComponent::OnDestroy()
 void ProjectileComponent::Initialize(const ProjectileConfig& config)
 {
     instigator = config.instigator;
+    hitAudio = config.hitAudio;
     physicsWorld = config.physicsWorld;
     speed = config.speed;
     maxDistance = config.maxDistance;
@@ -323,6 +341,10 @@ bool ProjectileComponent::HandleSweepHit(const RTBEngine::Math::Vector3& previou
             damageContext.hitPoint = hit.point;
             damageContext.hitDirection = direction;
             targetHealth->TakeDamage(damage, damageContext);
+
+            if (IsLocallyControlledInstigator(instigator) && hitAudio) {
+                hitAudio->PlayOneShot();
+            }
 
             hitTargets.push_back(targetHealth);
             ++appliedHitCount;

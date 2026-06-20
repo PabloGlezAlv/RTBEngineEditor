@@ -826,6 +826,8 @@ function CreateScene()
                         attackOriginOffset = Vector3(0.20, 1.00, 0.40),
                         launchOriginObject = "109DAEF5-4736-4BB3-B63F-DD6B5B44855E",
                         launchForwardOffset = 0.35,
+                        fireAudio = "C0MBAT-F1RE-4001-8000-000000000001/AudioSourceComponent",
+                        hitAudio = "C0MBAT-H1T0-4001-8000-000000000001/AudioSourceComponent",
                         projectileModel = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/arrow_bow.obj",
                         projectileTexture = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/ranger_texture.png",
                         cooldown = 0.80,
@@ -858,6 +860,30 @@ function CreateScene()
                     },
                 },
                 children = {
+                    {
+                        name = "CombatFireAudio",
+                        uuid = "C0MBAT-F1RE-4001-8000-000000000001",
+                        components = {
+                            {
+                                type = "AudioSourceComponent",
+                                clip = "Assets/Audio/Combat/bow_release.mp3",
+                                volume = 0.85,
+                                playOnStart = false
+                            },
+                        }
+                    },
+                    {
+                        name = "CombatHitAudio",
+                        uuid = "C0MBAT-H1T0-4001-8000-000000000001",
+                        components = {
+                            {
+                                type = "AudioSourceComponent",
+                                clip = "Assets/Audio/Combat/hit_projectile.mp3",
+                                volume = 0.85,
+                                playOnStart = false
+                            },
+                        }
+                    },
                     {
                         name = "PlayerNameplate",
                         uuid = "A1000001-0001-4000-8000-000000000001",

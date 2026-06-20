@@ -13,6 +13,7 @@
 
 #include <RTBEngine/Online/OnlineGameplayNet.h>
 #include <RTBEngine/Scene/CapsuleColliderComponent.h>
+#include <RTBEngine/Scene/AudioSourceComponent.h>
 #include <RTBEngine/Scene/GameObject.h>
 #include <RTBEngine/Scene/MeshRenderer.h>
 #include <RTBEngine/Scene/RigidBodyComponent.h>
@@ -34,6 +35,21 @@ namespace {
     bool HasPlanarDirection(const RTBEngine::Math::Vector3& value)
     {
         return std::abs(value.x) > kDirectionEpsilon || std::abs(value.z) > kDirectionEpsilon;
+    }
+
+    bool IsLocallyControlledInstigator(RTBEngine::ECS::GameObject* instigator)
+    {
+        if (!instigator) {
+            return false;
+        }
+
+        const RTBEngine::ECS::NetworkIdentity* identity =
+            instigator->GetComponent<RTBEngine::ECS::NetworkIdentity>();
+        if (!identity) {
+            return true;
+        }
+
+        return identity->IsLocallyControlled();
     }
 
     int ResolveCharacterTeam(RTBEngine::ECS::GameObject* gameObject)
@@ -68,6 +84,8 @@ RTB_REGISTER_COMPONENT(ProjectileAttackAbility)
     RTB_PROPERTY(destroyOnHit)
     RTB_PROPERTY_RANGE(maxHits, 0, 100)
     RTB_PROPERTY(ignoreSameTeam)
+    RTB_PROPERTY_COMPONENT(fireAudio, AudioSourceComponent)
+    RTB_PROPERTY_COMPONENT(hitAudio, AudioSourceComponent)
 RTB_END_REGISTER(ProjectileAttackAbility)
 
 void ProjectileAttackAbility::OnValidate()
@@ -216,6 +234,7 @@ bool ProjectileAttackAbility::SpawnProjectile(RTBEngine::ECS::GameObject* instig
 
     ProjectileComponent::ProjectileConfig config;
     config.instigator = instigator;
+    config.hitAudio = hitAudio;
     config.instigatorTeam = ResolveCharacterTeam(instigator);
     config.ignoreSameTeam = ignoreSameTeam;
     config.physicsWorld = physicsWorld ? physicsWorld : ResolvePhysicsWorld(instigator);
@@ -230,6 +249,10 @@ bool ProjectileAttackAbility::SpawnProjectile(RTBEngine::ECS::GameObject* instig
     config.applyDamage = !RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby() ||
         RTBEngine::Online::OnlineGameplayNet::IsLobbyHost();
     projectile->Initialize(config);
+
+    if (IsLocallyControlledInstigator(instigator) && fireAudio) {
+        fireAudio->PlayOneShot();
+    }
 
     if (broadcastOnlineSpawn &&
         RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby() &&

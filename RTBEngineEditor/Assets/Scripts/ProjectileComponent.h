@@ -10,6 +10,7 @@
 
 namespace RTBEngine {
     namespace ECS {
+        class AudioSourceComponent;
         class GameObject;
     }
 
@@ -23,6 +24,7 @@ class ProjectileComponent : public RTBEngine::ECS::Component
 public:
     struct ProjectileConfig {
         RTBEngine::ECS::GameObject* instigator = nullptr;
+        RTBEngine::ECS::AudioSourceComponent* hitAudio = nullptr;
         RTBEngine::Physics::PhysicsWorld* physicsWorld = nullptr;
         RTBEngine::Math::Vector3 origin = RTBEngine::Math::Vector3::Zero();
         RTBEngine::Math::Vector3 direction = RTBEngine::Math::Vector3::Forward();
@@ -61,6 +63,7 @@ public:
 
 private:
     RTBEngine::ECS::GameObject* instigator = nullptr;
+    RTBEngine::ECS::AudioSourceComponent* hitAudio = nullptr;
     RTBEngine::Physics::PhysicsWorld* physicsWorld = nullptr;
     RTBEngine::Math::Vector3 direction = RTBEngine::Math::Vector3::Forward();
     float fixedHeight = 0.0f;

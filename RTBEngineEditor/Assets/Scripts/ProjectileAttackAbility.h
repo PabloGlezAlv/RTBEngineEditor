@@ -11,6 +11,7 @@ namespace GameNet {
 
 namespace RTBEngine {
     namespace ECS {
+        class AudioSourceComponent;
         class GameObject;
     }
 
@@ -42,6 +43,8 @@ public:
     bool destroyOnHit = true;
     int maxHits = 1;
     bool ignoreSameTeam = true;
+    RTBEngine::ECS::AudioSourceComponent* fireAudio = nullptr;
+    RTBEngine::ECS::AudioSourceComponent* hitAudio = nullptr;
 
     RTB_COMPONENT(ProjectileAttackAbility)
 
