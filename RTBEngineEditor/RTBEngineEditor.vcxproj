@@ -51,7 +51,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(ProjectDir)RTBEngine_SDK\Include;$(ProjectDir)RTBEngine_SDK\Include\RTBEngine;$(ProjectDir)RTBEngine_SDK\Include\SDL2;$(ProjectDir)RTBEngine_SDK\Include\Bullet;$(ProjectDir)RTBEngine_SDK\Include\ImGui;$(ProjectDir)RTBEngine_SDK\Include\assimp;$(ProjectDir)ThirdParty\ImGuizmo-1.83;$(ProjectDir)Source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)RTBEngine_SDK\Include;$(ProjectDir)RTBEngine_SDK\Include\RTBEngine;$(ProjectDir)RTBEngine_SDK\Include\SDL2;$(ProjectDir)RTBEngine_SDK\Include\Bullet;$(ProjectDir)RTBEngine_SDK\Include\ImGui;$(ProjectDir)RTBEngine_SDK\Include\assimp;$(ProjectDir)ThirdParty\ImGuizmo-1.83;$(ProjectDir)Source;$(ProjectDir)Assets\Scripts;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -85,7 +85,7 @@ if exist "$(ProjectDir)MyProject.rtbproj" xcopy /y /d "$(ProjectDir)MyProject.rt
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(ProjectDir)RTBEngine_SDK\Include;$(ProjectDir)RTBEngine_SDK\Include\RTBEngine;$(ProjectDir)RTBEngine_SDK\Include\SDL2;$(ProjectDir)RTBEngine_SDK\Include\Bullet;$(ProjectDir)RTBEngine_SDK\Include\ImGui;$(ProjectDir)RTBEngine_SDK\Include\assimp;$(ProjectDir)ThirdParty\ImGuizmo-1.83;$(ProjectDir)Source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)RTBEngine_SDK\Include;$(ProjectDir)RTBEngine_SDK\Include\RTBEngine;$(ProjectDir)RTBEngine_SDK\Include\SDL2;$(ProjectDir)RTBEngine_SDK\Include\Bullet;$(ProjectDir)RTBEngine_SDK\Include\ImGui;$(ProjectDir)RTBEngine_SDK\Include\assimp;$(ProjectDir)ThirdParty\ImGuizmo-1.83;$(ProjectDir)Source;$(ProjectDir)Assets\Scripts;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>

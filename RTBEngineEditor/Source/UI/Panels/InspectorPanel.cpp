@@ -25,6 +25,7 @@
 #include "../DragDropPayloads.h"
 #include "../Modals/AssetBrowserModal.h"
 #include "../../Project/Project.h"
+#include <RTBEngine/Reflection/ListPropertyAccess.h>
 #include <fstream>
 #include <sstream>
 #include <filesystem>
@@ -882,6 +883,348 @@ namespace RTBEditor {
         return changed;
     }
 
+    namespace {
+        bool BeginInspectorListFoldout(const char* label)
+        {
+            return ImGui::TreeNodeEx(
+                label,
+                ImGuiTreeNodeFlags_DefaultOpen |
+                ImGuiTreeNodeFlags_SpanAvailWidth |
+                ImGuiTreeNodeFlags_OpenOnArrow);
+        }
+
+        void EndInspectorListFoldout()
+        {
+            ImGui::TreePop();
+        }
+    }
+
+    bool InspectorPanel::DrawListProperty(RTBEngine::ECS::Component* component,
+                                          const RTBEngine::Reflection::PropertyInfo& prop) {
+        using namespace RTBEngine::Reflection;
+
+        bool changed = false;
+        RTBEngine::ECS::Scene* activeScene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
+
+        size_t elementCount = 0;
+        switch (prop.listElementType) {
+            case ListElementType::String: {
+                auto* values = ListPropertyAccess::GetStringVector(component, prop);
+                if (!values) {
+                    return false;
+                }
+                elementCount = values->size();
+
+                const std::string header = prop.displayName + " (" + std::to_string(elementCount) + ")";
+                if (!BeginInspectorListFoldout(header.c_str())) {
+                    break;
+                }
+
+                std::vector<size_t> indicesToRemove;
+                for (size_t index = 0; index < values->size(); ++index) {
+                    ImGui::PushID(static_cast<int>(index));
+                    ImGui::Text("Element %zu", index);
+                    ImGui::SameLine();
+
+                    char buffer[1024] = {};
+                    strncpy_s(buffer, sizeof(buffer), (*values)[index].c_str(), _TRUNCATE);
+                    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - 90.0f);
+                    if (ImGui::InputText("##ListString", buffer, sizeof(buffer))) {
+                        (*values)[index] = buffer;
+                        changed = true;
+                    }
+
+                    ImGui::SameLine();
+                    if (index > 0 && ImGui::SmallButton("^")) {
+                        std::swap((*values)[index], (*values)[index - 1]);
+                        changed = true;
+                    }
+
+                    ImGui::SameLine();
+                    if (index + 1 < values->size() && ImGui::SmallButton("v")) {
+                        std::swap((*values)[index], (*values)[index + 1]);
+                        changed = true;
+                    }
+
+                    ImGui::SameLine();
+                    if (ImGui::SmallButton("x")) {
+                        indicesToRemove.push_back(index);
+                        changed = true;
+                    }
+
+                    ImGui::PopID();
+                }
+
+                for (auto it = indicesToRemove.rbegin(); it != indicesToRemove.rend(); ++it) {
+                    values->erase(values->begin() + static_cast<std::ptrdiff_t>(*it));
+                }
+
+                if (ImGui::Button("+ Add")) {
+                    values->push_back("");
+                    changed = true;
+                }
+                EndInspectorListFoldout();
+                break;
+            }
+            case ListElementType::AssetRef: {
+                auto* values = ListPropertyAccess::GetStringVector(component, prop);
+                if (!values) {
+                    return false;
+                }
+                elementCount = values->size();
+
+                const std::string header = prop.displayName + " (" + std::to_string(elementCount) + ")";
+                if (!BeginInspectorListFoldout(header.c_str())) {
+                    break;
+                }
+
+                std::vector<size_t> indicesToRemove;
+                for (size_t index = 0; index < values->size(); ++index) {
+                    ImGui::PushID(static_cast<int>(index));
+                    ImGui::Text("Element %zu", index);
+                    ImGui::SameLine();
+
+                    if (DrawAssetRefProperty(component, prop, &(*values)[index])) {
+                        changed = true;
+                    }
+
+                    ImGui::SameLine();
+                    if (index > 0 && ImGui::SmallButton("^")) {
+                        std::swap((*values)[index], (*values)[index - 1]);
+                        changed = true;
+                    }
+
+                    ImGui::SameLine();
+                    if (index + 1 < values->size() && ImGui::SmallButton("v")) {
+                        std::swap((*values)[index], (*values)[index + 1]);
+                        changed = true;
+                    }
+
+                    ImGui::SameLine();
+                    if (ImGui::SmallButton("x")) {
+                        indicesToRemove.push_back(index);
+                        changed = true;
+                    }
+
+                    ImGui::PopID();
+                }
+
+                for (auto it = indicesToRemove.rbegin(); it != indicesToRemove.rend(); ++it) {
+                    values->erase(values->begin() + static_cast<std::ptrdiff_t>(*it));
+                }
+
+                if (ImGui::Button("+ Add")) {
+                    values->push_back("");
+                    changed = true;
+                }
+                EndInspectorListFoldout();
+                break;
+            }
+            case ListElementType::GameObjectRef: {
+                auto* values = ListPropertyAccess::GetGameObjectVector(component, prop);
+                if (!values) {
+                    return false;
+                }
+                elementCount = values->size();
+
+                const std::string header = prop.displayName + " (" + std::to_string(elementCount) + ")";
+                if (!BeginInspectorListFoldout(header.c_str())) {
+                    break;
+                }
+
+                std::vector<size_t> indicesToRemove;
+                for (size_t index = 0; index < values->size(); ++index) {
+                    ImGui::PushID(static_cast<int>(index));
+
+                    RTBEngine::ECS::GameObject* gameObjectRef = (*values)[index];
+                    const bool hasLiveGameObject = gameObjectRef && IsGameObjectInScene(activeScene, gameObjectRef);
+
+                    ImGui::Text("Element %zu", index);
+                    ImGui::SameLine();
+
+                    if (hasLiveGameObject) {
+                        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 0.8f, 1.0f, 1.0f));
+                    } else if (gameObjectRef) {
+                        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.55f, 0.25f, 1.0f));
+                    } else {
+                        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
+                    }
+
+                    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+                    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3f, 0.5f, 0.8f, 0.3f));
+                    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.3f, 0.5f, 0.8f, 0.5f));
+
+                    if (hasLiveGameObject) {
+                        ImGui::Button(gameObjectRef->GetName().c_str(), ImVec2(150, 0));
+                    } else if (gameObjectRef) {
+                        ImGui::Button("[Missing]##ListGODrop", ImVec2(150, 0));
+                    } else {
+                        ImGui::Button("[None]##ListGODrop", ImVec2(150, 0));
+                    }
+
+                    ImGui::PopStyleColor(4);
+
+                    if (ImGui::BeginDragDropTarget()) {
+                        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(PAYLOAD_GAMEOBJECT)) {
+                            const GameObjectPayload* payloadData = static_cast<const GameObjectPayload*>(payload->Data);
+                            RTBEngine::ECS::GameObject* draggedGameObject =
+                                reinterpret_cast<RTBEngine::ECS::GameObject*>(payloadData->gameObjectId);
+                            if (draggedGameObject) {
+                                (*values)[index] = draggedGameObject;
+                                changed = true;
+                            }
+                        }
+                        ImGui::EndDragDropTarget();
+                    }
+
+                    ImGui::SameLine();
+                    if (index > 0 && ImGui::SmallButton("^")) {
+                        std::swap((*values)[index], (*values)[index - 1]);
+                        changed = true;
+                    }
+
+                    ImGui::SameLine();
+                    if (index + 1 < values->size() && ImGui::SmallButton("v")) {
+                        std::swap((*values)[index], (*values)[index + 1]);
+                        changed = true;
+                    }
+
+                    ImGui::SameLine();
+                    if (ImGui::SmallButton("x")) {
+                        indicesToRemove.push_back(index);
+                        changed = true;
+                    }
+
+                    ImGui::PopID();
+                }
+
+                for (auto it = indicesToRemove.rbegin(); it != indicesToRemove.rend(); ++it) {
+                    values->erase(values->begin() + static_cast<std::ptrdiff_t>(*it));
+                }
+
+                if (ImGui::Button("+ Add")) {
+                    values->push_back(nullptr);
+                    changed = true;
+                }
+                EndInspectorListFoldout();
+                break;
+            }
+            case ListElementType::ComponentRef: {
+                auto* values = ListPropertyAccess::GetComponentVector(component, prop);
+                if (!values) {
+                    return false;
+                }
+                elementCount = values->size();
+
+                const std::string header = prop.displayName + " (" + std::to_string(elementCount) + ")";
+                if (!BeginInspectorListFoldout(header.c_str())) {
+                    break;
+                }
+
+                std::vector<size_t> indicesToRemove;
+                for (size_t index = 0; index < values->size(); ++index) {
+                    ImGui::PushID(static_cast<int>(index));
+
+                    RTBEngine::ECS::Component* componentRef = (*values)[index];
+                    const bool hasLiveComponent = componentRef && IsComponentInScene(activeScene, componentRef);
+
+                    ImGui::Text("Element %zu", index);
+                    ImGui::SameLine();
+
+                    if (hasLiveComponent) {
+                        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.8f, 0.6f, 1.0f, 1.0f));
+                    } else if (componentRef) {
+                        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.55f, 0.25f, 1.0f));
+                    } else {
+                        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
+                    }
+
+                    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+                    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.5f, 0.3f, 0.8f, 0.3f));
+                    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.5f, 0.3f, 0.8f, 0.5f));
+
+                    if (hasLiveComponent) {
+                        const std::string label = std::string("[") + componentRef->GetTypeName() + "]##ListCompDrop";
+                        ImGui::Button(label.c_str(), ImVec2(150, 0));
+                    } else if (componentRef) {
+                        ImGui::Button("[Missing]##ListCompDrop", ImVec2(150, 0));
+                    } else {
+                        ImGui::Button("[None]##ListCompDrop", ImVec2(150, 0));
+                    }
+
+                    ImGui::PopStyleColor(4);
+
+                    if (ImGui::BeginDragDropTarget()) {
+                        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(PAYLOAD_GAMEOBJECT)) {
+                            const GameObjectPayload* payloadData = static_cast<const GameObjectPayload*>(payload->Data);
+                            RTBEngine::ECS::GameObject* draggedGameObject =
+                                reinterpret_cast<RTBEngine::ECS::GameObject*>(payloadData->gameObjectId);
+
+                            if (draggedGameObject) {
+                                bool foundComponent = false;
+                                for (const auto& comp : draggedGameObject->GetComponents()) {
+                                    if (std::string(comp->GetTypeName()) == prop.componentTypeName) {
+                                        (*values)[index] = comp.get();
+                                        foundComponent = true;
+                                        changed = true;
+                                        break;
+                                    }
+                                }
+
+                                if (!foundComponent) {
+                                    ImGui::SetTooltip("GameObject '%s' doesn't have a %s component",
+                                        draggedGameObject->GetName().c_str(),
+                                        prop.componentTypeName.c_str());
+                                }
+                            }
+                        }
+                        ImGui::EndDragDropTarget();
+                    }
+
+                    ImGui::SameLine();
+                    if (index > 0 && ImGui::SmallButton("^")) {
+                        std::swap((*values)[index], (*values)[index - 1]);
+                        changed = true;
+                    }
+
+                    ImGui::SameLine();
+                    if (index + 1 < values->size() && ImGui::SmallButton("v")) {
+                        std::swap((*values)[index], (*values)[index + 1]);
+                        changed = true;
+                    }
+
+                    ImGui::SameLine();
+                    if (ImGui::SmallButton("x")) {
+                        indicesToRemove.push_back(index);
+                        changed = true;
+                    }
+
+                    ImGui::PopID();
+                }
+
+                for (auto it = indicesToRemove.rbegin(); it != indicesToRemove.rend(); ++it) {
+                    values->erase(values->begin() + static_cast<std::ptrdiff_t>(*it));
+                }
+
+                if (ImGui::Button("+ Add")) {
+                    values->push_back(nullptr);
+                    changed = true;
+                }
+                EndInspectorListFoldout();
+                break;
+            }
+            default:
+                ImGui::Text("%s: [Unsupported List Element Type]", prop.displayName.c_str());
+                break;
+        }
+
+        if (prop.tooltip && ImGui::IsItemHovered()) {
+            ImGui::SetTooltip("%s", prop.tooltip->c_str());
+        }
+
+        return changed;
+    }
+
     void InspectorPanel::DrawProperty(RTBEngine::ECS::Component* component, const RTBEngine::Reflection::PropertyInfo& prop) {
         void* data = prop.GetMutableData(component);
         bool changed = false;
@@ -1386,6 +1729,10 @@ namespace RTBEditor {
 
                 break;
             }
+            case RTBEngine::Reflection::PropertyType::List: {
+                changed |= DrawListProperty(component, prop);
+                break;
+            }
             default:
                 ImGui::Text("%s: [Unsupported Type]", prop.displayName.c_str());
                 break;
@@ -1427,53 +1774,8 @@ namespace RTBEditor {
             }
         }
 
-        //Additional models list
-        std::string totalAnimations = std::to_string(animator->additionalModels.size());
-        std::string header = "Additional Models (" + totalAnimations + ")";
+        //Additional models are drawn via generic list property reflection.
 
-        ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.18f, 0.32f, 0.22f, 1.0f));
-        ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.24f, 0.42f, 0.28f, 1.0f));
-        ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(0.16f, 0.28f, 0.20f, 1.0f));
-        if (ImGui::CollapsingHeader(header.c_str()))
-        {
-            std::vector<int> toRemove;
-            //Populate the list with animation list
-            for (int i = 0; i < static_cast<int>(animator->additionalModels.size()); i++) {
-                ImGui::PushID(i);
-
-                char buf[1024];
-                memset(buf, 0, sizeof(buf));
-                strncpy_s(buf, sizeof(buf), animator->additionalModels[i].c_str(), _TRUNCATE);
-
-                ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - 30.0f);
-                if (ImGui::InputText("##addModel", buf, sizeof(buf))) {
-                    animator->additionalModels[i] = buf;
-                    animatorScanStatus.clear();
-                    changed = true;
-                }
-
-                ImGui::SameLine();
-                if (ImGui::SmallButton("x")) {
-                    toRemove.push_back(i);
-                    changed = true;
-                }
-                ImGui::PopID();
-            }
-
-            //Remove animation from list
-            for (int i = static_cast<int>(toRemove.size()) - 1; i >= 0; i--) {
-                animator->additionalModels.erase(animator->additionalModels.begin() + toRemove[i]);
-            }
-        }
-
-        ImGui::PopStyleColor(3);
-
-        if (ImGui::Button("+ Add Model")) {
-            animator->additionalModels.push_back("");
-            animatorScanStatus.clear();
-            changed = true;
-        }
-        ImGui::SameLine();
         if (ImGui::Button("Reload Clips")) {
             ReloadAnimatorClips(animator);
             animatorScanStatus = "Reloaded clips from the model and additional animation FBX files.";
@@ -1571,7 +1873,20 @@ namespace RTBEditor {
             }
             ImGui::EndChild();
         }
+
+        if (const RTBEngine::Reflection::TypeInfo* typeInfo = animator->GetTypeInfo()) {
+            for (const RTBEngine::Reflection::PropertyInfo* prop : typeInfo->GetInspectorProperties()) {
+                if (prop->type == RTBEngine::Reflection::PropertyType::List) {
+                    if (DrawListProperty(animator, *prop)) {
+                        animatorScanStatus.clear();
+                        changed = true;
+                    }
+                }
+            }
+        }
+
         if (changed) {
+            animator->OnValidate();
             RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
         }
     }

@@ -293,10 +293,6 @@ function CreateScene()
                                                 enableDefaultHoverVisuals = false
                                             },
                                             {
-                                                type = "ResumeGameButton",
-                                                controller = nil
-                                            },
-                                            {
                                                 type = "ButtonStyle",
                                                 backgroundImage = "F1A2B3C4-D5E6-4789-A012-3456789AB201/UIImage",
                                                 label = "5DE3585B-3426-421D-8F36-DBAF43123F50/UIText",
@@ -312,12 +308,14 @@ function CreateScene()
                                                 clickTextColor = Color(0.86, 0.84, 0.78, 1.00),
                                                 clickImageTint = Color(0.92, 0.92, 0.92, 1.00),
                                                 clickScaleBoost = 0.97,
-                                                disabledTextColor = Color(0.55, 0.54, 0.50, 1.00),
-                                                disabledImageTint = Color(0.45, 0.45, 0.45, 1.00),
                                                 hoverInTimeSec = 0.12,
                                                 hoverOutTimeSec = 0.18,
                                                 pressInTimeSec = 0.08,
                                                 pressOutTimeSec = 0.12
+                                            },
+                                            {
+                                                type = "ResumeGameButton",
+                                                controller = "62E6AE07-7DC2-42B3-8F0E-AA7CA40264F0/PauseMenuController"
                                             },
                                         },
                                         children = {
@@ -397,10 +395,6 @@ function CreateScene()
                                                 enableDefaultHoverVisuals = false
                                             },
                                             {
-                                                type = "ExitToMenuButton",
-                                                controller = nil
-                                            },
-                                            {
                                                 type = "ButtonStyle",
                                                 backgroundImage = "F1A2B3C4-D5E6-4789-A012-3456789AB202/UIImage",
                                                 label = "2F7C83F3-A334-41DA-BF4C-A4FDDE59BA6C/UIText",
@@ -416,12 +410,14 @@ function CreateScene()
                                                 clickTextColor = Color(0.86, 0.84, 0.78, 1.00),
                                                 clickImageTint = Color(0.92, 0.92, 0.92, 1.00),
                                                 clickScaleBoost = 0.97,
-                                                disabledTextColor = Color(0.55, 0.54, 0.50, 1.00),
-                                                disabledImageTint = Color(0.45, 0.45, 0.45, 1.00),
                                                 hoverInTimeSec = 0.12,
                                                 hoverOutTimeSec = 0.18,
                                                 pressInTimeSec = 0.08,
                                                 pressOutTimeSec = 0.12
+                                            },
+                                            {
+                                                type = "SceneChangeButton",
+                                                scenePath = "Assets/Scenes/MainMenu.lua"
                                             },
                                         },
                                         children = {
@@ -484,17 +480,15 @@ function CreateScene()
                     {
                         type = "RoundManager",
                         enemyTemplate = "753770D2-B00E-4859-B7D3-5ABF1249B014",
+                        enemyPrefabName = "Enemy Melee",
                         playerObject = "E8682E33-50ED-45D8-BC76-B31113639F9E",
                         onlinePlayerManager = "B1A2C3D4-E5F6-7890-ABCD-EF1234567891/OnlinePlayerManager",
                         uiHandler = "62E6AE07-7DC2-42B3-8F0E-AA7CA40264F0/RoundUIHandler",
-                        roundCountdownDuration = 5.00,
-                        baseEnemiesPerRound = 2,
-                        additionalEnemiesPerRound = 1,
-                        winningRound = 5,
-                        playerRespawnDelay = 30.00,
-                        teamWipeSceneDelay = 5.00,
-                        finalScenePath = "Assets/Scenes/FinalScene.lua",
-                        enemyPrefabName = "Enemy Melee"
+                        spawnPoints = {
+                            "74B6BC8E-5892-4C38-A4B6-8AAAF7B1F001",
+                            "74B6BC8E-5892-4C38-A4B6-8AAAF7B1F002",
+                            "74B6BC8E-5892-4C38-A4B6-8AAAF7B1F003",
+                        },
                     },
                 }
             },
@@ -518,32 +512,17 @@ function CreateScene()
                 uuid = "74B6BC8E-5892-4C38-A4B6-8AAAF7B1F001",
                 position = Vector3(-11.80, 0.00, 8.60),
                 rotation = Quaternion.FromEulerAngles(0.00, 135.00, 0.00),
-                components = {
-                    {
-                        type = "EnemySpawnPoint"
-                    },
-                }
             },
             {
                 name = "EnemySpawnPointRight",
                 uuid = "74B6BC8E-5892-4C38-A4B6-8AAAF7B1F002",
                 position = Vector3(11.90, 0.00, 9.60),
                 rotation = Quaternion.FromEulerAngles(0.00, -135.00, 0.00),
-                components = {
-                    {
-                        type = "EnemySpawnPoint"
-                    },
-                }
             },
             {
                 name = "EnemySpawnPointRear",
                 uuid = "74B6BC8E-5892-4C38-A4B6-8AAAF7B1F003",
                 position = Vector3(0.00, 0.00, -11.80),
-                components = {
-                    {
-                        type = "EnemySpawnPoint"
-                    },
-                }
             },
             {
                 name = "Barbarian",
@@ -554,18 +533,20 @@ function CreateScene()
                 position = Vector3(-3.00, 0.00, 0.00),
                 overrides = {
                     components = {
-                        { type = "EnemyTargetTracker",
+                        {
+                            type = "EnemyTargetTracker",
                             targetObject = "E8682E33-50ED-45D8-BC76-B31113639F9E",
                         },
-                        { type = "EnemyAnimationDriver",
+                        {
+                            type = "EnemyAnimationDriver",
                             animator = "E1F5A9B7-1030-4F9B-9A18-77AD11B06E20/Animator",
                         },
-                        { type = "EnemyMeleeAI",
+                        {
+                            type = "EnemyMeleeAI",
                             health = "753770D2-B00E-4859-B7D3-5ABF1249B014/HealthComponent",
                             targetTracker = "753770D2-B00E-4859-B7D3-5ABF1249B014/EnemyTargetTracker",
                             animationDriver = "753770D2-B00E-4859-B7D3-5ABF1249B014/EnemyAnimationDriver",
                             locomotion = "753770D2-B00E-4859-B7D3-5ABF1249B014/EnemyLocomotionController",
-                            navAgent = "753770D2-B00E-4859-B7D3-5ABF1249B014/NavAgentComponent",
                             meleeAttack = "753770D2-B00E-4859-B7D3-5ABF1249B014/MeleeSphereAttackAbility",
                         },
                     },
@@ -774,15 +755,13 @@ function CreateScene()
                     {
                         type = "ThirdPersonCharacterController",
                         cameraObject = "0E7CE370-7C0E-45A8-89CA-AD7A3E70C216",
-                        health = "E8682E33-50ED-45D8-BC76-B31113639F9E/HealthComponent",
                         team = 1,
                         moveSpeed = 4.00,
                         sprintMultiplier = 1.75,
                         turnSpeed = 720.00,
                         cameraDistance = 11.00,
-                        cameraFocusOffset = Vector3(0.00, 0.05, 0.00),
+                        cameraFocusOffset = Vector3(0.00, 1.05, 0.00),
                         animator = "5200AC9B-039A-416E-82AE-FD5FE1754C95/Animator",
-                        projectileAttack = "E8682E33-50ED-45D8-BC76-B31113639F9E/ProjectileAttackAbility",
                         attackJoystick = "B4C7E92D-5F22-43A9-8E3B-2A6D7D1A8C10/UIJoystick",
                         attackAimTrail = "7C57C988-6629-4FE8-AFF1-8D4D39C84D1B/TrailRenderer",
                         aimArrowVisual = "R4NG3R00-ARRO-4000-8000-000000000001",
@@ -795,6 +774,14 @@ function CreateScene()
                         deathAnimationFbx = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_General.fbx|Death_A"
                     },
                     {
+                        type = "HealthComponent",
+                        maxHealth = 100.00,
+                        currentHealth = 100.00
+                    },
+                    {
+                        type = "PlayerHealthNetSync"
+                    },
+                    {
                         type = "ProjectileAttackAbility",
                         attackOriginOffset = Vector3(0.20, 1.00, 0.40),
                         launchOriginObject = "109DAEF5-4736-4BB3-B63F-DD6B5B44855E",
@@ -803,22 +790,14 @@ function CreateScene()
                         projectileTexture = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/ranger_texture.png",
                         cooldown = 0.80,
                         damage = 25.00,
-                        hitDelay = 0.28,
+                        hitDelay = 0.30,
                         recoveryDuration = 0.45,
                         projectileSpeed = 14.00,
                         projectileLifetime = 0.85,
-                        projectileRadius = 0.12,
+                        projectileRadius = 0.06,
                         destroyOnHit = true,
                         maxHits = 1,
                         ignoreSameTeam = true
-                    },
-                    {
-                        type = "HealthComponent",
-                        maxHealth = 100.00,
-                        currentHealth = 100.00
-                    },
-                    {
-                        type = "PlayerHealthNetSync"
                     },
                     {
                         type = "RigidBodyComponent",
@@ -941,9 +920,9 @@ function CreateScene()
                                                         type = "HealthBarUI",
                                                         health = "E8682E33-50ED-45D8-BC76-B31113639F9E/HealthComponent",
                                                         fillPanel = "A1000001-0006-4000-8000-000000000006/UIPanel",
-                                                        highHealthColor = Color(0.24, 0.75, 0.63, 1.00),
-                                                        midHealthColor = Color(0.91, 0.66, 0.29, 1.00),
-                                                        lowHealthColor = Color(0.77, 0.29, 0.29, 1.00)
+                                                        highHealthColor = Color(0.12, 0.78, 0.24, 1.00),
+                                                        midHealthColor = Color(0.95, 0.74, 0.16, 1.00),
+                                                        lowHealthColor = Color(0.82, 0.18, 0.18, 1.00)
                                                     },
                                                 },
                                                 children = {
@@ -1041,7 +1020,7 @@ function CreateScene()
                             {
                                 type = "Animator",
                                 modelRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Ranger.fbx",
-                                currentClipName = "ThirdPerson.Idle",
+                                currentClipName = "Death_A",
                                 defaultClip = "Ranged_Bow_Aiming_Idle",
                                 speed = 1.00,
                                 playing = true,
@@ -1208,7 +1187,7 @@ function CreateScene()
                                                                                                     {
                                                                                                         name = "Ranger_Bow",
                                                                                                         uuid = "109DAEF5-4736-4BB3-B63F-DD6B5B44855E",
-                                                                                                        rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                                                                                        rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
                                                                                                         components = {
                                                                                                             {
                                                                                                                 type = "MeshRenderer",
@@ -2777,7 +2756,7 @@ function CreateScene()
                                 name = "wall_corner_ne",
                                 uuid = "2511373C-D1A9-4183-AE10-3CC6C9A44409",
                                 position = Vector3(14.00, 0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
@@ -2994,7 +2973,7 @@ function CreateScene()
                                 name = "wall_n_-12",
                                 uuid = "56BF061A-D1D6-441B-B6E6-26165AEED521",
                                 position = Vector3(-12.00, 0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
@@ -3022,7 +3001,7 @@ function CreateScene()
                                 name = "wall_n_-8",
                                 uuid = "0475162D-E451-45F6-90B0-551038025002",
                                 position = Vector3(-8.00, 0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
@@ -3050,7 +3029,7 @@ function CreateScene()
                                 name = "wall_n_-4",
                                 uuid = "8987FEDF-75C9-4809-90E3-782CB9278901",
                                 position = Vector3(-4.00, 0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
@@ -3078,7 +3057,7 @@ function CreateScene()
                                 name = "wall_n_0",
                                 uuid = "013C2A45-B1B5-4645-A8AC-EE5824F94914",
                                 position = Vector3(0.00, 0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
@@ -3106,7 +3085,7 @@ function CreateScene()
                                 name = "wall_n_4",
                                 uuid = "06B97D68-350C-4301-8DE6-C714191DBF3D",
                                 position = Vector3(4.00, 0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
@@ -3134,7 +3113,7 @@ function CreateScene()
                                 name = "wall_n_8",
                                 uuid = "03EA9125-FCEF-4F65-A817-7C2697593C83",
                                 position = Vector3(8.00, 0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
@@ -3162,7 +3141,7 @@ function CreateScene()
                                 name = "wall_n_12",
                                 uuid = "677F63A1-66E1-4D54-9A76-C7F8BC485349",
                                 position = Vector3(12.00, 0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
@@ -3946,7 +3925,7 @@ function CreateScene()
                                 name = "torch_n",
                                 uuid = "31C7F376-69C7-4C51-B45C-57D2EBB9EA73",
                                 position = Vector3(0.00, 0.00, 13.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
@@ -4008,7 +3987,7 @@ function CreateScene()
                                 name = "banner_1",
                                 uuid = "60FDC273-65AE-491F-A7EC-4B6E0DB54C3F",
                                 position = Vector3(0.00, 0.00, 13.50),
-                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",

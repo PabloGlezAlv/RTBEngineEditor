@@ -12,7 +12,6 @@
 #include "EnemyAnimationDriver.h"
 #include "EnemyLocomotionController.h"
 #include "EnemyMeleeAI.h"
-#include "EnemySpawnPoint.h"
 #include "EnemyTargetTracker.h"
 #include "GameSession.h"
 #include "HealthComponent.h"
@@ -48,6 +47,7 @@ RTB_REGISTER_COMPONENT(RoundManager)
     RTB_PROPERTY_RANGE(teamWipeSceneDelay, 0.0f, 30.0f)
     RTB_PROPERTY(finalScenePath)
     RTB_PROPERTY(enemyPrefabName)
+    RTB_PROPERTY_GAMEOBJECT_LIST(spawnPoints)
 RTB_END_REGISTER(RoundManager)
 
 void RoundManager::OnStart()
@@ -80,8 +80,8 @@ void RoundManager::OnStart()
         return;
     }
 
-    if (spawnPoints.empty()) {
-        RTB_WARN("[RoundManager] Add at least one EnemySpawnPoint to the scene.");
+    if (!HasAnySpawnPoint()) {
+        RTB_WARN("[RoundManager] Assign at least one spawn point in the Spawn Points list.");
         state = State::Stopped;
         return;
     }
@@ -100,7 +100,6 @@ void RoundManager::OnUpdate(float deltaTime)
     }
 
     UpdateLocalRespawnCountdown(deltaTime);
-    RefreshSpawnPoints();
     CleanupSpawnedEnemies();
 
     switch (state) {
@@ -142,7 +141,7 @@ void RoundManager::ApplyNetworkRoundStart(int roundNumber, int enemyCount)
 
     RefreshSpawnPoints();
     CreateEnemyPrefabFromTemplate();
-    if (!ResolveEnemySpawnPrefab() || spawnPoints.empty()) {
+    if (!ResolveEnemySpawnPrefab() || !HasAnySpawnPoint()) {
         RTB_WARN("[RoundManager] Cannot apply network round start: spawn setup is incomplete.");
         return;
     }
@@ -181,6 +180,9 @@ void RoundManager::ApplyNetworkEnemySpawn(
     }
 
     RTBEngine::ECS::GameObject* spawnPoint = spawnPoints[static_cast<size_t>(spawnPointIndex)];
+    if (!spawnPoint) {
+        return;
+    }
     RTBEngine::ECS::GameObject* spawnedEnemy =
         SpawnEnemyAt(spawnPoint, roundNumber, spawnIndex, networkId);
     if (!spawnedEnemy) {
@@ -204,7 +206,7 @@ void RoundManager::ApplyNetworkEnemySpawn(
 
 bool RoundManager::CanSpawnEnemies() const
 {
-    return ResolveEnemySpawnPrefab() != nullptr && !spawnPoints.empty();
+    return ResolveEnemySpawnPrefab() != nullptr && HasAnySpawnPoint();
 }
 
 void RoundManager::OnValidate()
@@ -320,26 +322,37 @@ void RoundManager::RefreshSpawnPoints()
 {
     RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
     if (!scene) {
-        spawnPoints.clear();
-        cachedHierarchyVersion = 0;
         return;
     }
 
-    const uint32_t hierarchyVersion = RTBEngine::ECS::GameObject::GetHierarchyVersion();
-    if (!spawnPoints.empty() && hierarchyVersion == cachedHierarchyVersion) {
-        return;
-    }
-
-    spawnPoints.clear();
-    for (const auto& gameObject : scene->GetGameObjects()) {
-        if (!gameObject || !gameObject->GetComponent<EnemySpawnPoint>()) {
+    for (auto*& spawnPointRef : spawnPoints) {
+        if (!spawnPointRef) {
             continue;
         }
 
-        spawnPoints.push_back(gameObject.get());
+        bool foundInScene = false;
+        for (const auto& gameObject : scene->GetGameObjects()) {
+            if (gameObject.get() == spawnPointRef) {
+                foundInScene = true;
+                break;
+            }
+        }
+
+        if (!foundInScene) {
+            spawnPointRef = nullptr;
+        }
+    }
+}
+
+bool RoundManager::HasAnySpawnPoint() const
+{
+    for (RTBEngine::ECS::GameObject* spawnPointRef : spawnPoints) {
+        if (spawnPointRef) {
+            return true;
+        }
     }
 
-    cachedHierarchyVersion = hierarchyVersion;
+    return false;
 }
 
 void RoundManager::CreateEnemyPrefabFromTemplate()
@@ -402,7 +415,7 @@ void RoundManager::StartRound()
         return;
     }
 
-    if (!ResolveEnemySpawnPrefab() || spawnPoints.empty()) {
+    if (!ResolveEnemySpawnPrefab() || !HasAnySpawnPoint()) {
         state = State::Stopped;
         if (uiHandler) {
             uiHandler->HideCountdown();
@@ -470,6 +483,10 @@ void RoundManager::SpawnRoundEnemies(int count, bool allowClientSpawn)
     for (int index = 0; index < count; ++index) {
         const int spawnPointIndex = static_cast<int>(index % spawnPoints.size());
         RTBEngine::ECS::GameObject* spawnPoint = spawnPoints[static_cast<size_t>(spawnPointIndex)];
+        if (!spawnPoint) {
+            continue;
+        }
+
         RTBEngine::ECS::GameObject* spawnedEnemy = SpawnEnemyAt(spawnPoint, currentRound, index);
         if (!spawnedEnemy) {
             continue;

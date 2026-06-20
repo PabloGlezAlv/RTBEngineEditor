@@ -25,6 +25,9 @@ namespace RTBEngine {
 
 namespace RTBEditor {
     class AssetBrowserModal;
+}
+
+namespace RTBEditor {
 
     class InspectorPanel : public EditorPanel {
     public:
@@ -36,6 +39,7 @@ namespace RTBEditor {
     private:
         void DrawComponents(RTBEngine::ECS::GameObject* gameObject, EditorContext& context);
         void DrawProperty(RTBEngine::ECS::Component* component, const RTBEngine::Reflection::PropertyInfo& prop);
+        bool DrawListProperty(RTBEngine::ECS::Component* component, const RTBEngine::Reflection::PropertyInfo& prop);
         bool DrawSceneStringProperty(RTBEngine::ECS::Component* component,
                                      const RTBEngine::Reflection::PropertyInfo& prop,
                                      std::string* value);
