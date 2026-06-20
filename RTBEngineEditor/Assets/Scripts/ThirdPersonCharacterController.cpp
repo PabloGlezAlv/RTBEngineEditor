@@ -754,14 +754,13 @@ void ThirdPersonCharacterController::UpdateAimingMovement(float deltaTime)
         : 0.0f;
 
     if (useDynamicRigidBody) {
-        RTBEngine::Physics::PhysicsUtils::ApplyPlanarDynamicBodyMotion(
+        ApplyDynamicPlanarMotion(
             rigidBody,
             desiredMove,
             RTBEngine::Math::Vector3::Zero(),
             speed,
-            0.0f,
             deltaTime,
-            owner->GetTransform().GetRotation());
+            0.0f);
         return;
     }
 
@@ -865,14 +864,12 @@ void ThirdPersonCharacterController::UpdateAttackFacingLock(float deltaTime)
         rigidBody && rigidBody->GetType() == RTBEngine::Physics::RigidBodyType::Dynamic;
 
     if (useDynamicRigidBody) {
-        RTBEngine::Physics::PhysicsUtils::ApplyPlanarDynamicBodyMotion(
+        ApplyDynamicPlanarMotion(
             rigidBody,
             desiredMove,
             attackDirection,
             speed,
-            turnSpeed,
-            deltaTime,
-            owner->GetTransform().GetRotation());
+            deltaTime);
         return;
     }
 
@@ -895,14 +892,12 @@ void ThirdPersonCharacterController::UpdateMovement(float deltaTime)
 
     if (!hasMovementInput) {
         if (useDynamicRigidBody) {
-            RTBEngine::Physics::PhysicsUtils::ApplyPlanarDynamicBodyMotion(
+            ApplyDynamicPlanarMotion(
                 rigidBody,
                 RTBEngine::Math::Vector3::Zero(),
                 RTBEngine::Math::Vector3::Zero(),
                 0.0f,
-                turnSpeed,
-                deltaTime,
-                owner->GetTransform().GetRotation());
+                deltaTime);
         }
 
         UpdateAnimatorLocomotion(false, false);
@@ -912,14 +907,12 @@ void ThirdPersonCharacterController::UpdateMovement(float deltaTime)
     const float speed = moveSpeed * (isRunning ? sprintMultiplier : 1.0f);
 
     if (useDynamicRigidBody) {
-        RTBEngine::Physics::PhysicsUtils::ApplyPlanarDynamicBodyMotion(
+        ApplyDynamicPlanarMotion(
             rigidBody,
             desiredMove,
             desiredMove,
             speed,
-            turnSpeed,
-            deltaTime,
-            owner->GetTransform().GetRotation());
+            deltaTime);
     } else {
         const float targetYaw = -std::atan2(desiredMove.x, desiredMove.z) * kRadToDeg;
         RTBEngine::Math::Vector3 currentEuler = owner->GetTransform().GetRotation().ToEulerAngles();
@@ -1116,6 +1109,73 @@ HealthComponent* ThirdPersonCharacterController::PeekHealthSlot() const
 int ThirdPersonCharacterController::GetCharacterTeam() const
 {
     return team;
+}
+
+void ThirdPersonCharacterController::AddPlanarKnockback(
+    const RTBEngine::Math::Vector3& direction,
+    float strength)
+{
+    if (strength <= 0.0f) {
+        return;
+    }
+
+    RTBEngine::Math::Vector3 planarDirection = direction;
+    planarDirection.y = 0.0f;
+    if (!HasMovementInput(planarDirection)) {
+        return;
+    }
+
+    planarDirection.Normalize();
+    externalPlanarVelocity += planarDirection * strength;
+}
+
+void ThirdPersonCharacterController::ApplyDynamicPlanarMotion(
+    RTBEngine::Physics::RigidBody* rigidBody,
+    const RTBEngine::Math::Vector3& moveDirection,
+    const RTBEngine::Math::Vector3& facingDirection,
+    float moveSpeed,
+    float deltaTime,
+    float turnSpeedDegrees)
+{
+    if (!rigidBody || !owner) {
+        return;
+    }
+
+    const float resolvedTurnSpeed = turnSpeedDegrees >= 0.0f ? turnSpeedDegrees : turnSpeed;
+
+    RTBEngine::Physics::PhysicsUtils::ApplyPlanarDynamicBodyMotion(
+        rigidBody,
+        moveDirection,
+        facingDirection,
+        moveSpeed,
+        resolvedTurnSpeed,
+        deltaTime,
+        owner->GetTransform().GetRotation());
+    ApplyExternalKnockbackVelocity(rigidBody, deltaTime);
+}
+
+void ThirdPersonCharacterController::ApplyExternalKnockbackVelocity(
+    RTBEngine::Physics::RigidBody* rigidBody,
+    float deltaTime)
+{
+    if (!rigidBody || externalPlanarVelocity.LengthSquared() <= kDirectionEpsilon) {
+        externalPlanarVelocity = RTBEngine::Math::Vector3::Zero();
+        return;
+    }
+
+    btVector3 velocity = rigidBody->GetLinearVelocity();
+    velocity.setX(velocity.x() + externalPlanarVelocity.x);
+    velocity.setZ(velocity.z() + externalPlanarVelocity.z);
+    rigidBody->SetLinearVelocity(velocity);
+
+    const float speed = externalPlanarVelocity.Length();
+    const float decayAmount = std::max(0.0f, externalPlanarDecay * std::max(0.0f, deltaTime));
+    if (speed <= decayAmount) {
+        externalPlanarVelocity = RTBEngine::Math::Vector3::Zero();
+        return;
+    }
+
+    externalPlanarVelocity *= (speed - decayAmount) / speed;
 }
 
 void ThirdPersonCharacterController::FaceAttackDirection(const RTBEngine::Math::Vector3& attackDirection)

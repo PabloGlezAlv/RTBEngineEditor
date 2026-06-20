@@ -31,6 +31,7 @@ public:
     float recoveryDuration = 0.45f;
     float sphereRadius = 0.45f;
     float sphereDistance = 0.95f;
+    float knockbackStrength = 2.5f;
     bool ignoreSameTeam = true;
 
     RTB_COMPONENT(MeleeSphereAttackAbility)

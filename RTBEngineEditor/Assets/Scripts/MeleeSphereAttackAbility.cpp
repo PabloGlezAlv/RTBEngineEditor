@@ -57,6 +57,7 @@ RTB_REGISTER_COMPONENT(MeleeSphereAttackAbility)
     RTB_PROPERTY_RANGE(recoveryDuration, 0.0f, 10.0f)
     RTB_PROPERTY_RANGE(sphereRadius, 0.05f, 5.0f)
     RTB_PROPERTY_RANGE(sphereDistance, 0.05f, 10.0f)
+    RTB_PROPERTY_RANGE(knockbackStrength, 0.0f, 20.0f)
     RTB_PROPERTY(ignoreSameTeam)
 RTB_END_REGISTER(MeleeSphereAttackAbility)
 
@@ -142,6 +143,7 @@ bool MeleeSphereAttackAbility::ApplySphereHit(
     damageContext.instigator = instigator;
     damageContext.hitPoint = hit.point;
     damageContext.hitDirection = castDirection;
+    damageContext.knockbackStrength = knockbackStrength;
     targetHealth->TakeDamage(damage, damageContext);
 
     return true;
@@ -182,4 +184,5 @@ void MeleeSphereAttackAbility::ClampSettings()
     recoveryDuration = std::max(0.0f, recoveryDuration);
     sphereRadius = std::max(0.05f, sphereRadius);
     sphereDistance = std::max(0.05f, sphereDistance);
+    knockbackStrength = std::max(0.0f, knockbackStrength);
 }

@@ -19,6 +19,7 @@ public:
         RTBEngine::ECS::GameObject* instigator = nullptr;
         RTBEngine::Math::Vector3 hitPoint = RTBEngine::Math::Vector3::Zero();
         RTBEngine::Math::Vector3 hitDirection = RTBEngine::Math::Vector3::Zero();
+        float knockbackStrength = 0.0f;
     };
 
     struct HealthChangedEvent {

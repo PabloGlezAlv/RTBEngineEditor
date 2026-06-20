@@ -61,6 +61,7 @@ return {
             recoveryDuration = 0.45,
             sphereRadius = 0.45,
             sphereDistance = 0.95,
+            knockbackStrength = 2.50,
             ignoreSameTeam = true
         },
         {

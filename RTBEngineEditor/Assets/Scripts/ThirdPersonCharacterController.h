@@ -24,6 +24,7 @@ namespace RTBEngine {
 
     namespace Physics {
         class PhysicsWorld;
+        class RigidBody;
     }
 
     namespace UI {
@@ -48,6 +49,7 @@ public:
 
     void ForceDeathState();
     void ReviveFromDeath();
+    void AddPlanarKnockback(const RTBEngine::Math::Vector3& direction, float strength);
 
     RTBEngine::ECS::GameObject* cameraObject = nullptr;
     HealthComponent* health = nullptr;
@@ -158,7 +160,16 @@ private:
     void TryProcessRemoteAttackInput();
     void PlayPredictedAttackVisual(const RTBEngine::Math::Vector3& attackDirection);
     void UpdatePredictedAttackVisual(float deltaTime);
+    void ApplyDynamicPlanarMotion(RTBEngine::Physics::RigidBody* rigidBody,
+                                  const RTBEngine::Math::Vector3& moveDirection,
+                                  const RTBEngine::Math::Vector3& facingDirection,
+                                  float moveSpeed,
+                                  float deltaTime,
+                                  float turnSpeedDegrees = -1.0f);
+    void ApplyExternalKnockbackVelocity(RTBEngine::Physics::RigidBody* rigidBody, float deltaTime);
 
+    RTBEngine::Math::Vector3 externalPlanarVelocity = RTBEngine::Math::Vector3::Zero();
+    float externalPlanarDecay = 10.0f;
     std::uint32_t inputSequenceNumber = 0;
     std::uint32_t networkAttackSequence = 0;
     std::uint32_t lastProcessedRemoteAttackSequence = 0;

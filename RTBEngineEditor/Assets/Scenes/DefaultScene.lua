@@ -802,6 +802,18 @@ function CreateScene()
                         type = "PlayerHealthNetSync"
                     },
                     {
+                        type = "AudioSourceComponent",
+                        clip = "Assets/Audio/Combat/player_grunt.mp3",
+                        volume = 0.85,
+                        playOnStart = false
+                    },
+                    {
+                        type = "PlayerDamageFeedback",
+                        health = "E8682E33-50ED-45D8-BC76-B31113639F9E/HealthComponent",
+                        hurtSoundPath = "Assets/Audio/Combat/player_grunt.mp3",
+                        soundCooldown = 0.12
+                    },
+                    {
                         type = "ProjectileAttackAbility",
                         attackOriginOffset = Vector3(0.20, 1.00, 0.40),
                         launchOriginObject = "109DAEF5-4736-4BB3-B63F-DD6B5B44855E",
