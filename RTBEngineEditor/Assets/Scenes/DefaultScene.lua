@@ -822,6 +822,15 @@ function CreateScene()
                         soundCooldown = 0.12
                     },
                     {
+                        type = "PlayerAmmoSystem",
+                        ammoSlider = "A1000001-0010-4000-8000-000000000010/UISlider",
+                        ammoFillPanel = "A1000001-0011-4000-8000-000000000011/UIPanel",
+                        maxShots = 3,
+                        fullReloadDuration = 10.00,
+                        fullAmmoColor = Color(0.18, 0.52, 0.95, 1.00),
+                        partialAmmoColor = Color(0.52, 0.72, 0.92, 0.55)
+                    },
+                    {
                         type = "ProjectileAttackAbility",
                         attackOriginOffset = Vector3(0.20, 1.00, 0.40),
                         launchOriginObject = "109DAEF5-4736-4BB3-B63F-DD6B5B44855E",
@@ -830,7 +839,6 @@ function CreateScene()
                         hitAudio = "C0MBAT-H1T0-4001-8000-000000000001/AudioSourceComponent",
                         projectileModel = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/arrow_bow.obj",
                         projectileTexture = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/ranger_texture.png",
-                        cooldown = 0.80,
                         damage = 25.00,
                         hitDelay = 0.30,
                         recoveryDuration = 0.45,
@@ -1041,6 +1049,104 @@ function CreateScene()
                                                     {
                                                         name = "NameplateHandle",
                                                         uuid = "A1000001-0007-4000-8000-000000000007",
+                                                        components = {
+                                                            {
+                                                                type = "UIPanel",
+                                                                backgroundColor = Color(0.00, 0.00, 0.00, 0.00),
+                                                                borderColor = Color(0.00, 0.00, 0.00, 0.00),
+                                                                borderThickness = 0.00,
+                                                                hasBorder = false,
+                                                                isVisible = false,
+                                                                raycastTarget = false,
+                                                                anchorMin = Vector2(0.00, 0.50),
+                                                                anchorMax = Vector2(0.00, 0.50),
+                                                                pivot = Vector2(0.50, 0.50),
+                                                                anchoredPosition = Vector2(168.00, 0.00),
+                                                                sizeDelta = Vector2(1.00, 1.00),
+                                                                rotation = 0.00,
+                                                                scale = Vector2(1.00, 1.00)
+                                                            },
+                                                        }
+                                                    },
+                                                }
+                                            },
+                                            {
+                                                name = "NameplateAmmoTrack",
+                                                uuid = "A1000001-0010-4000-8000-000000000010",
+                                                components = {
+                                                    {
+                                                        type = "UIPanel",
+                                                        backgroundColor = Color(0.00, 0.00, 0.00, 0.00),
+                                                        borderColor = Color(0.00, 0.00, 0.00, 0.00),
+                                                        borderThickness = 0.00,
+                                                        hasBorder = false,
+                                                        isVisible = true,
+                                                        raycastTarget = false,
+                                                        anchorMin = Vector2(0.50, 0.10),
+                                                        anchorMax = Vector2(0.50, 0.10),
+                                                        pivot = Vector2(0.50, 0.50),
+                                                        anchoredPosition = Vector2(0.00, -10.00),
+                                                        sizeDelta = Vector2(168.00, 5.00),
+                                                        rotation = 0.00,
+                                                        scale = Vector2(1.00, 1.00)
+                                                    },
+                                                    {
+                                                        type = "UISlider",
+                                                        minValue = 0.00,
+                                                        maxValue = 1.00,
+                                                        value = 1.00,
+                                                        interactable = false,
+                                                        fillPanel = "A1000001-0011-4000-8000-000000000011/UIPanel",
+                                                        handlePanel = "A1000001-0012-4000-8000-000000000012/UIPanel"
+                                                    },
+                                                },
+                                                children = {
+                                                    {
+                                                        name = "AmmoTrackImage",
+                                                        uuid = "A1000001-0013-4000-8000-000000000013",
+                                                        components = {
+                                                            {
+                                                                type = "UIImage",
+                                                                texture = "Assets/UI/GuildSlate/health_bar_track.texture",
+                                                                tintColor = Color(1.00, 1.00, 1.00, 1.00),
+                                                                preserveAspect = false,
+                                                                isVisible = true,
+                                                                raycastTarget = false,
+                                                                anchorMin = Vector2(0.50, 0.50),
+                                                                anchorMax = Vector2(0.50, 0.50),
+                                                                pivot = Vector2(0.50, 0.50),
+                                                                anchoredPosition = Vector2(0.00, 0.00),
+                                                                sizeDelta = Vector2(168.00, 13.00),
+                                                                rotation = 0.00,
+                                                                scale = Vector2(1.00, 1.00)
+                                                            },
+                                                        }
+                                                    },
+                                                    {
+                                                        name = "NameplateAmmoFill",
+                                                        uuid = "A1000001-0011-4000-8000-000000000011",
+                                                        components = {
+                                                            {
+                                                                type = "UIPanel",
+                                                                backgroundColor = Color(0.18, 0.52, 0.95, 1.00),
+                                                                borderColor = Color(0.00, 0.00, 0.00, 0.00),
+                                                                borderThickness = 0.00,
+                                                                hasBorder = false,
+                                                                isVisible = true,
+                                                                raycastTarget = false,
+                                                                anchorMin = Vector2(0.00, 0.50),
+                                                                anchorMax = Vector2(0.00, 0.50),
+                                                                pivot = Vector2(0.00, 0.50),
+                                                                anchoredPosition = Vector2(1.00, 0.00),
+                                                                sizeDelta = Vector2(168.00, 12.00),
+                                                                rotation = 0.00,
+                                                                scale = Vector2(1.00, 1.00)
+                                                            },
+                                                        }
+                                                    },
+                                                    {
+                                                        name = "NameplateAmmoHandle",
+                                                        uuid = "A1000001-0012-4000-8000-000000000012",
                                                         components = {
                                                             {
                                                                 type = "UIPanel",

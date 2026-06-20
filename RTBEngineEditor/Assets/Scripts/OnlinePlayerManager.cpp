@@ -1,4 +1,5 @@
 #include "OnlinePlayerManager.h"
+#include "PlayerAmmoSystem.h"
 
 #include "OnlineGameNetMessages.h"
 #include "ProjectileAttackAbility.h"
@@ -197,6 +198,10 @@ void OnlinePlayerManager::ConfigureOnlinePlayers()
             spawnedRemotePawns.push_back(remotePawn);
         }
     }
+
+    if (PlayerAmmoSystem* localAmmo = localPlayerObject->GetComponent<PlayerAmmoSystem>()) {
+        localAmmo->RefreshNetworkState();
+    }
 }
 
 void OnlinePlayerManager::RegisterPlayerSessionProfiles(
@@ -273,6 +278,10 @@ void OnlinePlayerManager::ConfigurePawn(
             }
             // Clients keep Update/LateUpdate enabled so animator can run after NetworkTransform in LateUpdate.
         }
+    }
+
+    if (PlayerAmmoSystem* ammoSystem = pawn->GetComponent<PlayerAmmoSystem>()) {
+        ammoSystem->RefreshNetworkState();
     }
 
     auto* rigidBodyComponent = pawn->GetComponent<RTBEngine::ECS::RigidBodyComponent>();

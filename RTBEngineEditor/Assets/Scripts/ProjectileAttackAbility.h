@@ -33,7 +33,6 @@ public:
     float launchForwardOffset = 0.35f;
     std::string projectileModel;
     std::string projectileTexture;
-    float cooldown = 0.8f;
     float damage = 25.0f;
     float hitDelay = 0.35f;
     float recoveryDuration = 0.5f;
@@ -57,14 +56,13 @@ public:
                                              const RTBEngine::Math::Vector3& attackDirection) const;
     float GetTravelDistance() const;
     float GetLaunchClearance(RTBEngine::ECS::GameObject* instigator) const;
-    float GetCooldownSeconds() const { return cooldown; }
     float GetHitDelaySeconds() const { return hitDelay; }
     float GetRecoverySeconds() const { return recoveryDuration; }
     float GetDamageAmount() const { return damage; }
     float GetProjectileRadius() const { return projectileRadius; }
 
 protected:
-    float GetCooldownDuration() const override { return cooldown; }
+    float GetCooldownDuration() const override { return 0.0f; }
     float GetHitDelayDuration() const override { return hitDelay; }
     float GetRecoveryDuration() const override { return recoveryDuration; }
     bool CanActivateAbility(RTBEngine::ECS::GameObject* instigator,

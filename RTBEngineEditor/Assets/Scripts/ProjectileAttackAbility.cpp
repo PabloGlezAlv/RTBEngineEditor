@@ -1,6 +1,7 @@
 #include "ProjectileAttackAbility.h"
 
 #include "CharacterBase.h"
+#include "PlayerAmmoSystem.h"
 #include "ProjectileComponent.h"
 
 #include <RTBEngine/Core/ResourceManager.h>
@@ -74,7 +75,6 @@ RTB_REGISTER_COMPONENT(ProjectileAttackAbility)
     RTB_PROPERTY_RANGE(launchForwardOffset, -2.0f, 2.0f)
     RTB_PROPERTY(projectileModel)
     RTB_PROPERTY(projectileTexture)
-    RTB_PROPERTY_RANGE(cooldown, 0.0f, 10.0f)
     RTB_PROPERTY_RANGE(damage, 0.0f, 1000.0f)
     RTB_PROPERTY_RANGE(hitDelay, 0.0f, 10.0f)
     RTB_PROPERTY_RANGE(recoveryDuration, 0.0f, 10.0f)
@@ -97,7 +97,14 @@ bool ProjectileAttackAbility::FireNow(RTBEngine::ECS::GameObject* instigator,
                                       const RTBEngine::Math::Vector3& attackDirection,
                                       RTBEngine::Physics::PhysicsWorld* physicsWorld)
 {
-    return SpawnProjectile(instigator, attackDirection, physicsWorld, true);
+    const bool spawned = SpawnProjectile(instigator, attackDirection, physicsWorld, true);
+    if (spawned && IsLocallyControlledInstigator(instigator)) {
+        if (auto* ammoSystem = instigator->GetComponent<PlayerAmmoSystem>()) {
+            ammoSystem->ConsumeShot();
+        }
+    }
+
+    return spawned;
 }
 
 bool ProjectileAttackAbility::SpawnFromNetworkSnapshot(
@@ -366,7 +373,19 @@ bool ProjectileAttackAbility::CanActivateAbility(
     RTBEngine::ECS::GameObject* instigator,
     const RTBEngine::Math::Vector3& direction) const
 {
-    return instigator && damage > 0.0f && HasPlanarDirection(direction);
+    if (!instigator || damage <= 0.0f || !HasPlanarDirection(direction)) {
+        return false;
+    }
+
+    if (IsLocallyControlledInstigator(instigator)) {
+        if (const auto* ammoSystem = instigator->GetComponent<PlayerAmmoSystem>()) {
+            if (!ammoSystem->CanFire()) {
+                return false;
+            }
+        }
+    }
+
+    return true;
 }
 
 void ProjectileAttackAbility::ExecuteAbilityHit()
@@ -389,7 +408,6 @@ void ProjectileAttackAbility::ExecuteAbilityHit()
 
 void ProjectileAttackAbility::ClampSettings()
 {
-    cooldown = std::max(0.0f, cooldown);
     damage = std::max(0.0f, damage);
     hitDelay = std::max(0.0f, hitDelay);
     recoveryDuration = std::max(0.0f, recoveryDuration);

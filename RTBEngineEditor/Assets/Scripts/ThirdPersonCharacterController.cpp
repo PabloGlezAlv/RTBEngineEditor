@@ -7,6 +7,7 @@
 #include <RTBEngine/Scene/NetworkIdentity.h>
 #include <RTBEngine/Online/OnlineGameplayNet.h>
 #include "PauseMenuController.h"
+#include "PlayerAmmoSystem.h"
 #include "ProjectileAttackAbility.h"
 
 #include <RTBEngine/Animation/Animator.h>
@@ -600,7 +601,6 @@ void ThirdPersonCharacterController::HandleJoystickAttackReleased(const RTBEngin
 
     if (!projectileAttack ||
         projectileAttack->GetDamageAmount() <= 0.0f ||
-        projectileAttack->IsCoolingDown() ||
         PauseMenuController::IsAnyMenuOpen()) {
         if (wasAiming) {
             FinishAiming();
@@ -616,8 +616,21 @@ void ThirdPersonCharacterController::HandleJoystickAttackReleased(const RTBEngin
         return;
     }
 
+    if (PlayerAmmoSystem* ammoSystem = owner->GetComponent<PlayerAmmoSystem>()) {
+        if (!ammoSystem->CanFire()) {
+            if (wasAiming) {
+                FinishAiming();
+            }
+            return;
+        }
+    }
+
     if (RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby() &&
         !RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
+        if (PlayerAmmoSystem* ammoSystem = owner->GetComponent<PlayerAmmoSystem>()) {
+            ammoSystem->ConsumeShot();
+        }
+
         ++networkAttackSequence;
         pendingNetworkAttackDirection = attackDirection;
         PlayPredictedAttackVisual(attackDirection);
@@ -632,7 +645,6 @@ bool ThirdPersonCharacterController::CanStartAiming() const
     return attackJoystick &&
         projectileAttack &&
         projectileAttack->GetDamageAmount() > 0.0f &&
-        !projectileAttack->IsCoolingDown() &&
         !PauseMenuController::IsAnyMenuOpen() &&
         state == State::Locomotion;
 }
@@ -800,7 +812,6 @@ void ThirdPersonCharacterController::UpdateAttackAimTrail()
         !attackJoystick->IsDragging() ||
         !projectileAttack ||
         projectileAttack->GetDamageAmount() <= 0.0f ||
-        projectileAttack->IsCoolingDown() ||
         state != State::Aiming ||
         PauseMenuController::IsAnyMenuOpen()) {
         HideAttackAimTrail();
