@@ -66,7 +66,6 @@ void EnemyMeleeAI::OnUpdate(float deltaTime)
         return;
     }
 
-    ClampSettings();
     RebindHealthSubscriptions();
 
     if (!HasSimulationAuthority()) {

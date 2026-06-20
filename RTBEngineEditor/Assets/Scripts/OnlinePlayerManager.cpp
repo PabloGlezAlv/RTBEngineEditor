@@ -1,6 +1,5 @@
 #include "OnlinePlayerManager.h"
 
-#include "HealthComponent.h"
 #include "OnlineGameNetMessages.h"
 #include "ProjectileAttackAbility.h"
 #include "RoundManager.h"
@@ -28,26 +27,6 @@ using ThisClass = OnlinePlayerManager;
 
 namespace {
 
-    RoundManager* FindRoundManager()
-    {
-        RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
-        if (!scene) {
-            return nullptr;
-        }
-
-        for (const auto& gameObject : scene->GetGameObjects()) {
-            if (!gameObject) {
-                continue;
-            }
-
-            if (RoundManager* roundManager = gameObject->GetComponent<RoundManager>()) {
-                return roundManager;
-            }
-        }
-
-        return nullptr;
-    }
-
     void ProcessPlayerNetworkBinds()
     {
         if (RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
@@ -60,13 +39,13 @@ namespace {
         }
     }
 
-    void ProcessNetworkRoundEvents()
+    void ProcessNetworkRoundEvents(OnlinePlayerManager* onlinePlayerManager)
     {
         if (RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
             return;
         }
 
-        RoundManager* roundManager = FindRoundManager();
+        RoundManager* roundManager = onlinePlayerManager ? onlinePlayerManager->roundManager : nullptr;
         if (!roundManager) {
             return;
         }
@@ -111,6 +90,7 @@ namespace {
 
 RTB_REGISTER_COMPONENT(OnlinePlayerManager)
     RTB_PROPERTY_GAMEOBJECT(localPlayerObject)
+    RTB_PROPERTY_COMPONENT(roundManager, RoundManager)
     RTB_PROPERTY_RANGE(remoteSpawnOffsetX, 0.5f, 20.0f)
 RTB_END_REGISTER(OnlinePlayerManager)
 
@@ -137,7 +117,7 @@ void OnlinePlayerManager::OnUpdate(float deltaTime)
     }
 
     ProcessPlayerNetworkBinds();
-    ProcessNetworkRoundEvents();
+    ProcessNetworkRoundEvents(this);
     GameNet::OnlineGameNetSubsystem::DetectAndDespawnDisconnectedPlayers();
 
     if (!RTBEngine::Online::OnlineGameplayNet::IsLobbyHost() ||
@@ -308,14 +288,6 @@ void OnlinePlayerManager::ConfigurePawn(
     }
 
     rigidBodyComponent->OnValidate();
-
-    if (RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
-        if (HealthComponent* health = pawn->GetComponent<HealthComponent>()) {
-            GameNet::OnlineGameNetSubsystem::TrySyncPlayerHealthFromComponent(
-                health,
-                health->GetHealthNormalized());
-        }
-    }
 }
 
 RTBEngine::ECS::GameObject* OnlinePlayerManager::SpawnRemotePawn(

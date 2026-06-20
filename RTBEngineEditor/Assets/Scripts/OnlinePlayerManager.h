@@ -11,12 +11,15 @@
 #include <memory>
 #include <vector>
 
+class RoundManager;
+
 class OnlinePlayerManager : public RTBEngine::ECS::Component {
 public:
     OnlinePlayerManager() = default;
     ~OnlinePlayerManager() override = default;
 
     RTBEngine::ECS::GameObject* localPlayerObject = nullptr;
+    RoundManager* roundManager = nullptr;
     float remoteSpawnOffsetX = 2.5f;
 
     RTB_COMPONENT(OnlinePlayerManager)

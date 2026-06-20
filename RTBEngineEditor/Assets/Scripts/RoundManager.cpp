@@ -38,6 +38,7 @@ using ThisClass = RoundManager;
 RTB_REGISTER_COMPONENT(RoundManager)
     RTB_PROPERTY_GAMEOBJECT(enemyTemplate)
     RTB_PROPERTY_GAMEOBJECT(playerObject)
+    RTB_PROPERTY_COMPONENT(onlinePlayerManager, OnlinePlayerManager)
     RTB_PROPERTY_COMPONENT(uiHandler, RoundUIHandler)
     RTB_PROPERTY_RANGE(roundCountdownDuration, 0.0f, 30.0f)
     RTB_PROPERTY_RANGE(baseEnemiesPerRound, 1.0f, 100.0f)
@@ -60,6 +61,8 @@ void RoundManager::OnStart()
     finalSceneDelayRemaining = 0.0f;
     localRespawnPending = false;
     localRespawnRemaining = 0.0f;
+    cachedResolvedPlayerObject = nullptr;
+    cachedPlayerHealthResolveVersion = 0;
     ClampSettings();
     ResolveDependencies();
 
@@ -88,7 +91,6 @@ void RoundManager::OnStart()
 
 void RoundManager::OnUpdate(float deltaTime)
 {
-    ClampSettings();
     ResolveDependencies();
     RefreshTrackedPlayers();
 
@@ -208,6 +210,8 @@ bool RoundManager::CanSpawnEnemies() const
 void RoundManager::OnValidate()
 {
     ClampSettings();
+    cachedResolvedPlayerObject = nullptr;
+    cachedPlayerHealthResolveVersion = 0;
     ResolveDependencies();
     RefreshSpawnPoints();
 }
@@ -233,26 +237,28 @@ void RoundManager::ResolveDependencies()
         uiHandler = owner->GetComponent<RoundUIHandler>();
     }
 
-    if (RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby()) {
-        RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
-        if (scene) {
-            for (const auto& gameObject : scene->GetGameObjects()) {
-                if (!gameObject) {
-                    continue;
-                }
-
-                OnlinePlayerManager* onlinePlayers = gameObject->GetComponent<OnlinePlayerManager>();
-                if (onlinePlayers && onlinePlayers->localPlayerObject) {
-                    playerObject = onlinePlayers->localPlayerObject;
-                    break;
-                }
-            }
-        }
+    if (RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby() &&
+        onlinePlayerManager &&
+        onlinePlayerManager->localPlayerObject) {
+        playerObject = onlinePlayerManager->localPlayerObject;
     }
 
     if (!playerObject) {
+        cachedResolvedPlayerObject = nullptr;
+        cachedPlayerHealthResolveVersion = 0;
+        playerHealth = nullptr;
         return;
     }
+
+    const uint32_t hierarchyVersion = RTBEngine::ECS::GameObject::GetHierarchyVersion();
+    if (playerObject == cachedResolvedPlayerObject &&
+        hierarchyVersion == cachedPlayerHealthResolveVersion &&
+        playerHealth != nullptr) {
+        return;
+    }
+
+    cachedResolvedPlayerObject = playerObject;
+    cachedPlayerHealthResolveVersion = hierarchyVersion;
 
     HealthComponent* resolvedHealth = playerObject->GetComponent<HealthComponent>();
     if (!resolvedHealth) {

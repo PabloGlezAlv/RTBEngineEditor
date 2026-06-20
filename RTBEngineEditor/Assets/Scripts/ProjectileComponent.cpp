@@ -106,8 +106,6 @@ void ProjectileComponent::OnUpdate(float deltaTime)
         return;
     }
 
-    ClampSettings();
-
     const float remainingDistance = maxDistance - distanceTravelled;
     if (remainingDistance <= kDistanceEpsilon) {
         DestroyProjectile();

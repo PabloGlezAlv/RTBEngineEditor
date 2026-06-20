@@ -36,6 +36,8 @@ namespace RTBEngine {
 
 class HealthComponent;
 
+class OnlinePlayerManager;
+
 class RoundUIHandler;
 
 enum class GameResult;
@@ -69,6 +71,8 @@ public:
     RTBEngine::ECS::GameObject* enemyTemplate = nullptr;
 
     RTBEngine::ECS::GameObject* playerObject = nullptr;
+
+    OnlinePlayerManager* onlinePlayerManager = nullptr;
 
     RoundUIHandler* uiHandler = nullptr;
 
@@ -153,6 +157,10 @@ private:
     uint32_t cachedHierarchyVersion = 0;
 
     uint32_t cachedPlayerScanVersion = 0;
+
+    RTBEngine::ECS::GameObject* cachedResolvedPlayerObject = nullptr;
+
+    uint32_t cachedPlayerHealthResolveVersion = 0;
 
     bool hasRequestedEndScene = false;
 

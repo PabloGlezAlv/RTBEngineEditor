@@ -42,8 +42,6 @@ void PauseMenuController::OnStart()
 
 void PauseMenuController::OnUpdate(float deltaTime)
 {
-    BindButtons();
-
     RTBEngine::Input::InputManager& input = RTBEngine::Input::InputManager::GetInstance();
     if (input.IsKeyJustPressed(RTBEngine::Input::KeyCode::Tab)) {
         TogglePause();
@@ -78,6 +76,10 @@ void PauseMenuController::OnDestroy()
 
 void PauseMenuController::BindButtons()
 {
+    if (resumeButtonBound && exitButtonBound) {
+        return;
+    }
+
     if (!resumeButtonBound && resumeButton) {
         resumeButton->SetOnClick([this]() { ResumeGame(); });
         resumeButtonBound = true;

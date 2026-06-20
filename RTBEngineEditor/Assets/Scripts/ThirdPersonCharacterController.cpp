@@ -160,8 +160,6 @@ void ThirdPersonCharacterController::OnUpdate(float deltaTime)
         return;
     }
 
-    ClampSettings();
-
     if (state == State::Dead) {
         HideAttackAimTrail();
         SetAimArrowVisible(false);
@@ -205,8 +203,6 @@ void ThirdPersonCharacterController::OnFixedUpdate(float fixedDeltaTime)
     if (!HasSimulationAuthority()) {
         return;
     }
-
-    ClampSettings();
 
     if (state == State::Dead) {
         HideAttackAimTrail();

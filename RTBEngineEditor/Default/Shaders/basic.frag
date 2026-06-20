@@ -13,18 +13,22 @@ uniform sampler2D uTexture;
 uniform bool uHasTexture;
 uniform vec4 uColor;
 uniform vec3 uDiffuseColor;
-uniform vec3 uViewPos;
 
-// Directional Light
+layout(std140, binding = 1) uniform CameraData {
+    mat4 view;
+    mat4 projection;
+    vec3 viewPos;
+};
+
+#define MAX_POINT_LIGHTS 8
+#define MAX_SPOT_LIGHTS 8
+
 struct DirectionalLight {
     vec3 direction;
     vec3 color;
     float intensity;
 };
-uniform DirectionalLight dirLight;
 
-// Point Lights
-#define MAX_POINT_LIGHTS 8
 struct PointLight {
     vec3 position;
     vec3 color;
@@ -34,11 +38,7 @@ struct PointLight {
     float quadratic;
     float range;
 };
-uniform PointLight pointLights[MAX_POINT_LIGHTS];
-uniform int numPointLights;
 
-// Spot Lights
-#define MAX_SPOT_LIGHTS 8
 struct SpotLight {
     vec3 position;
     vec3 direction;
@@ -51,8 +51,14 @@ struct SpotLight {
     float quadratic;
     float range;
 };
-uniform SpotLight spotLights[MAX_SPOT_LIGHTS];
-uniform int numSpotLights;
+
+layout(std140, binding = 0) uniform LightingData {
+    DirectionalLight dirLight;
+    PointLight pointLights[MAX_POINT_LIGHTS];
+    SpotLight spotLights[MAX_SPOT_LIGHTS];
+    int numPointLights;
+    int numSpotLights;
+};
 
 uniform sampler2D uShadowMap;
 uniform bool uHasShadows;
@@ -65,7 +71,7 @@ float ShadowCalculation(vec4 fragPosLightSpace, float bias);
 
 void main() {
     vec3 norm = normalize(vNormal);
-    vec3 viewDir = normalize(uViewPos - vFragPos);
+    vec3 viewDir = normalize(viewPos - vFragPos);
 
     // Ambient - use a neutral gray, not tinted by light color
     vec3 ambient = vec3(0.1);

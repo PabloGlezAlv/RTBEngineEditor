@@ -5,6 +5,8 @@
 #include <RTBEngine/ECS/Component.h>
 #include <RTBEngine/Math/Vectors/Vector3.h>
 #include <RTBEngine/Reflection/PropertyMacros.h>
+
+#include <cstdint>
 #include <string>
 
 namespace RTBEngine {
@@ -40,7 +42,10 @@ public:
 private:
     std::string targetObjectUuid;
     RTBEngine::ECS::GameObject* lastCapturedTarget = nullptr;
+    uint32_t cachedResolveVersion = 0;
 
+    void InvalidateTargetCache();
     void CaptureTargetIdentity();
     void ResolveTarget();
+    void ResolveTargetIfNeeded();
 };

@@ -485,6 +485,7 @@ function CreateScene()
                         type = "RoundManager",
                         enemyTemplate = "753770D2-B00E-4859-B7D3-5ABF1249B014",
                         playerObject = "E8682E33-50ED-45D8-BC76-B31113639F9E",
+                        onlinePlayerManager = "B1A2C3D4-E5F6-7890-ABCD-EF1234567891/OnlinePlayerManager",
                         uiHandler = "62E6AE07-7DC2-42B3-8F0E-AA7CA40264F0/RoundUIHandler",
                         roundCountdownDuration = 5.00,
                         baseEnemiesPerRound = 2,
@@ -747,6 +748,7 @@ function CreateScene()
                     {
                         type = "OnlinePlayerManager",
                         localPlayerObject = "E8682E33-50ED-45D8-BC76-B31113639F9E",
+                        roundManager = "4A7C26F9-7F62-4A3A-B8F0-91A4B36C1601/RoundManager",
                         remoteSpawnOffsetX = 0.50
                     },
                 }
@@ -814,6 +816,9 @@ function CreateScene()
                         type = "HealthComponent",
                         maxHealth = 100.00,
                         currentHealth = 100.00
+                    },
+                    {
+                        type = "PlayerHealthNetSync"
                     },
                     {
                         type = "RigidBodyComponent",

@@ -3,6 +3,7 @@
 #include "EnemyMeleeAIShared.h"
 
 #include <RTBEngine/ECS/GameObject.h>
+#include <RTBEngine/ECS/GameObject.h>
 #include <RTBEngine/ECS/Scene.h>
 #include <RTBEngine/ECS/SceneManager.h>
 
@@ -14,18 +15,19 @@ RTB_END_REGISTER(EnemyTargetTracker)
 
 void EnemyTargetTracker::OnStart()
 {
+    InvalidateTargetCache();
     CaptureTargetIdentity();
     ResolveTarget();
 }
 
 void EnemyTargetTracker::OnUpdate(float /*deltaTime*/)
 {
-    CaptureTargetIdentity();
-    ResolveTarget();
+    ResolveTargetIfNeeded();
 }
 
 void EnemyTargetTracker::OnValidate()
 {
+    InvalidateTargetCache();
     CaptureTargetIdentity();
     ResolveTarget();
 }
@@ -108,8 +110,15 @@ bool EnemyTargetTracker::IsWithinTargetHierarchy(const RTBEngine::ECS::GameObjec
 void EnemyTargetTracker::SetTarget(RTBEngine::ECS::GameObject* target)
 {
     targetObject = (target != owner) ? target : nullptr;
+    InvalidateTargetCache();
     CaptureTargetIdentity();
     ResolveTarget();
+}
+
+void EnemyTargetTracker::InvalidateTargetCache()
+{
+    cachedResolveVersion = 0;
+    lastCapturedTarget = nullptr;
 }
 
 void EnemyTargetTracker::CaptureTargetIdentity()
@@ -126,6 +135,18 @@ void EnemyTargetTracker::CaptureTargetIdentity()
 
     targetObjectUuid = targetObject->GetUUID();
     lastCapturedTarget = targetObject;
+}
+
+void EnemyTargetTracker::ResolveTargetIfNeeded()
+{
+    const uint32_t hierarchyVersion = RTBEngine::ECS::GameObject::GetHierarchyVersion();
+    if (targetObject != nullptr && hierarchyVersion == cachedResolveVersion) {
+        return;
+    }
+
+    CaptureTargetIdentity();
+    ResolveTarget();
+    cachedResolveVersion = hierarchyVersion;
 }
 
 void EnemyTargetTracker::ResolveTarget()

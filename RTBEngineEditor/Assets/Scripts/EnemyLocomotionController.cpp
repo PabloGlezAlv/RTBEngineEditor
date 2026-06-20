@@ -26,7 +26,6 @@ void EnemyLocomotionController::OnStart()
 
 void EnemyLocomotionController::OnUpdate(float /*deltaTime*/)
 {
-    ClampSettings();
     ConfigurePhysicsBody();
 }
 
