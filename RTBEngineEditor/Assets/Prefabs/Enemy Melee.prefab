@@ -81,6 +81,13 @@ return {
             cooldown = 0.15
         },
         {
+            type = "HitFlashComponent",
+            health = "753770D2-B00E-4859-B7D3-5ABF1249B014/HealthComponent",
+            flashColor = Color(2.50, 0.50, 0.45, 1.00),
+            flashDuration = 0.15,
+            includeChildren = true
+        },
+        {
             type = "RigidBodyComponent",
             mass = 1.00,
             friction = 0.80,

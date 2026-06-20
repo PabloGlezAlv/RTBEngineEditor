@@ -102,6 +102,7 @@ private:
     RTBEngine::Physics::PhysicsWorld* ResolvePhysicsWorld() const;
     void HandleDamageTaken(const HealthComponent::DamageTakenEvent& eventData);
     void HandleDeath(const HealthComponent::DeathEvent& eventData);
+    void LockDeathPose();
     void HandleCharacterDeath(const HealthComponent::DeathEvent& eventData) override;
     HealthComponent*& AccessHealthSlot() override;
     HealthComponent* PeekHealthSlot() const override;

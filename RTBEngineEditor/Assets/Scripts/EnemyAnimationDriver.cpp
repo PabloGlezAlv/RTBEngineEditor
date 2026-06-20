@@ -145,3 +145,12 @@ bool EnemyAnimationDriver::IsDeathPlaying() const
         animator->GetCurrentClipName() == EnemyMeleeAIDetail::kDeathAlias &&
         animator->IsPlaying();
 }
+
+void EnemyAnimationDriver::HoldDeathPose()
+{
+    if (!HasDeathAnimation()) {
+        return;
+    }
+
+    animator->HoldCurrentPose();
+}

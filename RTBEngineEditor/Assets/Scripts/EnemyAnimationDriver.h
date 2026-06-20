@@ -34,6 +34,7 @@ public:
     bool HasDeathAnimation() const;
     bool IsAttackPlaying() const;
     bool IsDeathPlaying() const;
+    void HoldDeathPose();
 
 private:
     struct AnimationSlotState {

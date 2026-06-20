@@ -1,6 +1,7 @@
 #include "ProjectileComponent.h"
 
 #include "CharacterBase.h"
+#include "HitFlashComponent.h"
 
 #include <RTBEngine/Scene/AudioSourceComponent.h>
 #include <RTBEngine/Scene/GameObject.h>
@@ -88,6 +89,16 @@ namespace {
         }
 
         return identity->IsLocallyControlled();
+    }
+
+    void TryTriggerHitFlash(RTBEngine::ECS::GameObject* hitObject)
+    {
+        for (RTBEngine::ECS::GameObject* current = hitObject; current; current = current->GetParent()) {
+            if (auto* hitFlash = current->GetComponent<HitFlashComponent>()) {
+                hitFlash->TriggerFlash();
+                return;
+            }
+        }
     }
 }
 
@@ -332,8 +343,12 @@ bool ProjectileComponent::HandleSweepHit(const RTBEngine::Math::Vector3& previou
         return false;
     }
 
+    HealthComponent* targetHealth = ResolveHitHealth(hit.gameObject);
+    if (targetHealth && !HasAlreadyHit(targetHealth)) {
+        TryTriggerHitFlash(hit.gameObject);
+    }
+
     if (applyDamage) {
-        HealthComponent* targetHealth = ResolveHitHealth(hit.gameObject);
         if (targetHealth && !HasAlreadyHit(targetHealth)) {
             HealthComponent::DamageContext damageContext;
             damageContext.amount = damage;

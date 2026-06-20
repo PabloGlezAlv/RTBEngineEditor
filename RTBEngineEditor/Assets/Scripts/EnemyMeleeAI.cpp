@@ -228,7 +228,7 @@ void EnemyMeleeAI::OnLateUpdate(float deltaTime)
     }
 
     if (!animationDriver->HasDeathAnimation()) {
-        deathPoseLocked = true;
+        LockDeathPose();
         return;
     }
 
@@ -236,7 +236,7 @@ void EnemyMeleeAI::OnLateUpdate(float deltaTime)
         return;
     }
 
-    deathPoseLocked = true;
+    LockDeathPose();
 }
 
 void EnemyMeleeAI::OnValidate()
@@ -557,7 +557,7 @@ void EnemyMeleeAI::UpdateReplicatedLocomotionAnimation(float deltaTime)
         return;
     }
 
-    if (state == State::Attacking) {
+    if (state == State::Attacking || state == State::Dying || state == State::Shrinking || state == State::Dead) {
         return;
     }
 
@@ -580,8 +580,34 @@ void EnemyMeleeAI::UpdateReplicatedLocomotionAnimation(float deltaTime)
     }
 }
 
-void EnemyMeleeAI::HandleDamageTaken(const HealthComponent::DamageTakenEvent& /*eventData*/)
+void EnemyMeleeAI::HandleDamageTaken(const HealthComponent::DamageTakenEvent& eventData)
 {
+    if (!owner || eventData.damage.amount <= 0.0f ||
+        state == State::Dead || state == State::Dying || state == State::Shrinking) {
+        return;
+    }
+
+    if (!HasSimulationAuthority()) {
+        return;
+    }
+
+    if (meleeAttack && meleeAttack->IsAbilityActive()) {
+        meleeAttack->CancelAbility();
+        meleeAttack->ClearTargetContext();
+    }
+
+    if (locomotion) {
+        RTBEngine::Math::Vector3 fallbackDirection = RTBEngine::Math::Vector3::Zero();
+        if (eventData.damage.instigator) {
+            fallbackDirection =
+                owner->GetWorldPosition() - eventData.damage.instigator->GetWorldPosition();
+        }
+
+        locomotion->ApplyKnockback(eventData.damage.hitDirection, fallbackDirection);
+    }
+
+    state = State::HitReact;
+    hitReactRemaining = hitReactDuration;
 }
 
 void EnemyMeleeAI::HandleDeath(const HealthComponent::DeathEvent& /*eventData*/)
@@ -606,7 +632,7 @@ void EnemyMeleeAI::HandleDeath(const HealthComponent::DeathEvent& /*eventData*/)
     }
 
     if (!animationDriver || !animationDriver->PlayDeath()) {
-        deathPoseLocked = true;
+        LockDeathPose();
     }
 
     if (RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby() &&
@@ -616,6 +642,19 @@ void EnemyMeleeAI::HandleDeath(const HealthComponent::DeathEvent& /*eventData*/)
                 GameNet::OnlineGameNetSubsystem::BroadcastEnemyDeath(identity->GetNetworkId());
             }
         }
+    }
+}
+
+void EnemyMeleeAI::LockDeathPose()
+{
+    if (deathPoseLocked) {
+        return;
+    }
+
+    deathPoseLocked = true;
+
+    if (animationDriver) {
+        animationDriver->HoldDeathPose();
     }
 }
 
