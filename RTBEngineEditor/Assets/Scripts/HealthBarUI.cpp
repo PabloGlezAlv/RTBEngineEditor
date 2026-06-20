@@ -91,7 +91,6 @@ void HealthBarUI::UnsubscribeFromHealth()
 
 void HealthBarUI::ApplyHealthEvent(const HealthComponent::HealthChangedEvent& eventData)
 {
-    ResolveSlider();
     if (!slider) {
         return;
     }

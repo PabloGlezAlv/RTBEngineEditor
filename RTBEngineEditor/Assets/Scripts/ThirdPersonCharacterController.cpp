@@ -132,7 +132,6 @@ void ThirdPersonCharacterController::OnStart()
     ResolveAttackAimTrail();
     RegisterAnimationSlots();
     ResolveCameraObject();
-    ConfigurePhysicsBody();
     DisableCompetingCameraController();
     RebindHealthSubscription();
     RebindAttackJoystickSubscription();
@@ -326,7 +325,6 @@ void ThirdPersonCharacterController::OnValidate()
         RegisterAnimationSlots();
     }
     ResolveCameraObject();
-    ConfigurePhysicsBody();
     DisableCompetingCameraController();
     RebindAttackJoystickSubscription();
     HideAttackAimTrail();
@@ -353,21 +351,6 @@ void ThirdPersonCharacterController::ClampSettings()
     sprintMultiplier = std::max(1.0f, sprintMultiplier);
     turnSpeed = std::max(0.0f, turnSpeed);
     cameraDistance = std::max(0.1f, cameraDistance);
-}
-
-void ThirdPersonCharacterController::ConfigurePhysicsBody() const
-{
-    if (!owner) {
-        return;
-    }
-
-    auto* rbComp = owner->GetComponent<RTBEngine::ECS::RigidBodyComponent>();
-    if (!rbComp || !rbComp->HasRigidBody()) {
-        return;
-    }
-
-    RTBEngine::Physics::RigidBody* rigidBody = rbComp->GetRigidBody();
-    RTBEngine::Physics::PhysicsUtils::ConfigurePlanarDynamicBody(rigidBody);
 }
 
 void ThirdPersonCharacterController::ResolveCameraObject()

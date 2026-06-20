@@ -479,8 +479,7 @@ function CreateScene()
                 components = {
                     {
                         type = "RoundManager",
-                        enemyTemplate = "753770D2-B00E-4859-B7D3-5ABF1249B014",
-                        enemyPrefabName = "Enemy Melee",
+                        enemyPrefabRef = "Assets/Prefabs/Enemy Melee.prefab",
                         playerObject = "E8682E33-50ED-45D8-BC76-B31113639F9E",
                         onlinePlayerManager = "B1A2C3D4-E5F6-7890-ABCD-EF1234567891/OnlinePlayerManager",
                         uiHandler = "62E6AE07-7DC2-42B3-8F0E-AA7CA40264F0/RoundUIHandler",
@@ -804,7 +803,9 @@ function CreateScene()
                         mass = 1.00,
                         friction = 0.50,
                         restitution = 0.00,
-                        bodyType = "Dynamic"
+                        bodyType = "Dynamic",
+                        freezeRotationX = true,
+                        freezeRotationZ = true
                     },
                     {
                         type = "CapsuleColliderComponent",

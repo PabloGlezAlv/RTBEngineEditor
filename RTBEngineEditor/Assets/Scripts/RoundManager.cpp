@@ -23,6 +23,7 @@
 #include <RTBEngine/Scene/GameObject.h>
 #include <RTBEngine/Scene/NavAgentComponent.h>
 #include <RTBEngine/Scene/NavGridComponent.h>
+#include <RTBEngine/Core/ResourceManager.h>
 #include <RTBEngine/Scene/PrefabRegistry.h>
 #include <RTBEngine/Scene/Scene.h>
 #include <RTBEngine/Scene/SceneManager.h>
@@ -35,7 +36,6 @@
 using ThisClass = RoundManager;
 
 RTB_REGISTER_COMPONENT(RoundManager)
-    RTB_PROPERTY_GAMEOBJECT(enemyTemplate)
     RTB_PROPERTY_GAMEOBJECT(playerObject)
     RTB_PROPERTY_COMPONENT(onlinePlayerManager, OnlinePlayerManager)
     RTB_PROPERTY_COMPONENT(uiHandler, RoundUIHandler)
@@ -46,14 +46,14 @@ RTB_REGISTER_COMPONENT(RoundManager)
     RTB_PROPERTY_RANGE(playerRespawnDelay, 0.0f, 120.0f)
     RTB_PROPERTY_RANGE(teamWipeSceneDelay, 0.0f, 30.0f)
     RTB_PROPERTY(finalScenePath)
-    RTB_PROPERTY(enemyPrefabName)
+    RTB_PROPERTY_ASSET_PATH(enemyPrefabRef, "prefab")
     RTB_PROPERTY_GAMEOBJECT_LIST(spawnPoints)
 RTB_END_REGISTER(RoundManager)
 
 void RoundManager::OnStart()
 {
     RTB_INFO("[RoundManager] OnStart (countdown=" + std::to_string(roundCountdownDuration) +
-        "s, enemyPrefabName='" + enemyPrefabName + "').");
+        "s, enemyPrefabRef='" + enemyPrefabRef + "').");
 
     GameSession::GetInstance().Reset();
     hasRequestedEndScene = false;
@@ -61,21 +61,15 @@ void RoundManager::OnStart()
     finalSceneDelayRemaining = 0.0f;
     localRespawnPending = false;
     localRespawnRemaining = 0.0f;
-    cachedResolvedPlayerObject = nullptr;
-    cachedPlayerHealthResolveVersion = 0;
     ClampSettings();
-    ResolveDependencies();
+    InitializeRuntime();
 
     if (RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby()) {
         GameNet::OnlineGameNetSubsystem::Init();
     }
 
-    RefreshTrackedPlayers();
-    RefreshSpawnPoints();
-    CreateEnemyPrefabFromTemplate();
-
-    if (!ResolveEnemySpawnPrefab()) {
-        RTB_WARN("[RoundManager] Assign an enemyTemplate or a valid enemyPrefabName to spawn rounds.");
+    if (!enemySpawnPrefab) {
+        RTB_WARN("[RoundManager] Assign an enemy prefab asset in the Inspector to spawn rounds.");
         state = State::Stopped;
         return;
     }
@@ -91,9 +85,6 @@ void RoundManager::OnStart()
 
 void RoundManager::OnUpdate(float deltaTime)
 {
-    ResolveDependencies();
-    RefreshTrackedPlayers();
-
     if (hasRequestedEndScene) {
         UpdateFinalSceneTransition(deltaTime);
         return;
@@ -139,9 +130,7 @@ void RoundManager::ApplyNetworkRoundStart(int roundNumber, int enemyCount)
         return;
     }
 
-    RefreshSpawnPoints();
-    CreateEnemyPrefabFromTemplate();
-    if (!ResolveEnemySpawnPrefab() || !HasAnySpawnPoint()) {
+    if (!enemySpawnPrefab || !HasAnySpawnPoint()) {
         RTB_WARN("[RoundManager] Cannot apply network round start: spawn setup is incomplete.");
         return;
     }
@@ -172,9 +161,7 @@ void RoundManager::ApplyNetworkEnemySpawn(
         return;
     }
 
-    RefreshSpawnPoints();
-    CreateEnemyPrefabFromTemplate();
-    if (!ResolveEnemySpawnPrefab() ||
+    if (!enemySpawnPrefab ||
         static_cast<size_t>(spawnPointIndex) >= spawnPoints.size()) {
         return;
     }
@@ -206,16 +193,12 @@ void RoundManager::ApplyNetworkEnemySpawn(
 
 bool RoundManager::CanSpawnEnemies() const
 {
-    return ResolveEnemySpawnPrefab() != nullptr && HasAnySpawnPoint();
+    return enemySpawnPrefab != nullptr && HasAnySpawnPoint();
 }
 
 void RoundManager::OnValidate()
 {
     ClampSettings();
-    cachedResolvedPlayerObject = nullptr;
-    cachedPlayerHealthResolveVersion = 0;
-    ResolveDependencies();
-    RefreshSpawnPoints();
 }
 
 void RoundManager::OnDestroy()
@@ -233,8 +216,11 @@ void RoundManager::ClampSettings()
     teamWipeSceneDelay = std::max(0.0f, teamWipeSceneDelay);
 }
 
-void RoundManager::ResolveDependencies()
+void RoundManager::InitializeRuntime()
 {
+    trackedPlayers.clear();
+    playerHealth = nullptr;
+
     if (!uiHandler && owner) {
         uiHandler = owner->GetComponent<RoundUIHandler>();
     }
@@ -245,47 +231,17 @@ void RoundManager::ResolveDependencies()
         playerObject = onlinePlayerManager->localPlayerObject;
     }
 
-    if (!playerObject) {
-        cachedResolvedPlayerObject = nullptr;
-        cachedPlayerHealthResolveVersion = 0;
-        playerHealth = nullptr;
-        return;
+    if (playerObject) {
+        playerHealth = playerObject->GetComponent<HealthComponent>();
+        if (!playerHealth) {
+            playerHealth = playerObject->GetComponentInChildren<HealthComponent>();
+        }
     }
 
-    const uint32_t hierarchyVersion = RTBEngine::ECS::GameObject::GetHierarchyVersion();
-    if (playerObject == cachedResolvedPlayerObject &&
-        hierarchyVersion == cachedPlayerHealthResolveVersion &&
-        playerHealth != nullptr) {
-        return;
-    }
-
-    cachedResolvedPlayerObject = playerObject;
-    cachedPlayerHealthResolveVersion = hierarchyVersion;
-
-    HealthComponent* resolvedHealth = playerObject->GetComponent<HealthComponent>();
-    if (!resolvedHealth) {
-        resolvedHealth = playerObject->GetComponentInChildren<HealthComponent>();
-    }
-
-    playerHealth = resolvedHealth;
-}
-
-void RoundManager::RefreshTrackedPlayers()
-{
     RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
     if (!scene) {
-        trackedPlayers.clear();
-        cachedPlayerScanVersion = 0;
         return;
     }
-
-    const uint32_t hierarchyVersion = RTBEngine::ECS::GameObject::GetHierarchyVersion();
-    if (!trackedPlayers.empty() && hierarchyVersion == cachedPlayerScanVersion) {
-        return;
-    }
-
-    cachedPlayerScanVersion = hierarchyVersion;
-    trackedPlayers.clear();
 
     for (const auto& gameObject : scene->GetGameObjects()) {
         if (!gameObject) {
@@ -316,30 +272,14 @@ void RoundManager::RefreshTrackedPlayers()
 
         trackedPlayers.push_back(std::move(trackedPlayer));
     }
-}
 
-void RoundManager::RefreshSpawnPoints()
-{
-    RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
-    if (!scene) {
-        return;
-    }
-
-    for (auto*& spawnPointRef : spawnPoints) {
-        if (!spawnPointRef) {
-            continue;
-        }
-
-        bool foundInScene = false;
-        for (const auto& gameObject : scene->GetGameObjects()) {
-            if (gameObject.get() == spawnPointRef) {
-                foundInScene = true;
-                break;
-            }
-        }
-
-        if (!foundInScene) {
-            spawnPointRef = nullptr;
+    enemySpawnPrefab = nullptr;
+    if (!enemyPrefabRef.empty()) {
+        const std::string resolvedPath =
+            RTBEngine::Core::ResourceManager::GetInstance().ResolvePathForRead(enemyPrefabRef);
+        enemySpawnPrefab = RTBEngine::ECS::PrefabRegistry::GetInstance().GetByPath(resolvedPath);
+        if (!enemySpawnPrefab) {
+            RTB_WARN("[RoundManager] Enemy prefab asset not found: '" + enemyPrefabRef + "'.");
         }
     }
 }
@@ -353,41 +293,6 @@ bool RoundManager::HasAnySpawnPoint() const
     }
 
     return false;
-}
-
-void RoundManager::CreateEnemyPrefabFromTemplate()
-{
-    if (!enemyTemplate) {
-        return;
-    }
-
-    auto& sceneManager = RTBEngine::ECS::SceneManager::GetInstance();
-    if (sceneManager.GetActiveScene()) {
-        RTB_INFO("[RoundManager] Deactivating scene enemy template '" + enemyTemplate->GetName() +
-            "'. Spawns will use prefab asset '" + enemyPrefabName + "'.");
-        sceneManager.DeactivateHierarchy(enemyTemplate);
-    }
-
-    enemyTemplate = nullptr;
-}
-
-RTBEngine::ECS::Prefab* RoundManager::ResolveEnemySpawnPrefab() const
-{
-    if (!enemyPrefabName.empty()) {
-        if (RTBEngine::ECS::Prefab* registryPrefab =
-                RTBEngine::ECS::PrefabRegistry::GetInstance().Get(enemyPrefabName)) {
-            return registryPrefab;
-        }
-
-        RTB_WARN("[RoundManager] Prefab asset '" + enemyPrefabName + "' was not found in PrefabRegistry.");
-    }
-
-    if (enemyPrefab) {
-        RTB_WARN("[RoundManager] Falling back to legacy runtime enemy template snapshot.");
-        return enemyPrefab.get();
-    }
-
-    return nullptr;
 }
 
 void RoundManager::UpdateCountdown(float deltaTime)
@@ -415,7 +320,7 @@ void RoundManager::StartRound()
         return;
     }
 
-    if (!ResolveEnemySpawnPrefab() || !HasAnySpawnPoint()) {
+    if (!enemySpawnPrefab || !HasAnySpawnPoint()) {
         state = State::Stopped;
         if (uiHandler) {
             uiHandler->HideCountdown();
@@ -435,7 +340,7 @@ void RoundManager::StartRound()
     const int enemyCount = GetEnemyCountForRound(currentRound);
 
     RTB_INFO("[RoundManager] Starting round " + std::to_string(currentRound) +
-        " with " + std::to_string(enemyCount) + " enemies from prefab '" + enemyPrefabName + "'.");
+        " with " + std::to_string(enemyCount) + " enemies from prefab '" + enemyPrefabRef + "'.");
 
     if (RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby() &&
         RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
@@ -469,8 +374,7 @@ void RoundManager::BeginCountdownForRound(int roundNumber)
 
 void RoundManager::SpawnRoundEnemies(int count, bool allowClientSpawn)
 {
-    RTBEngine::ECS::Prefab* spawnPrefab = ResolveEnemySpawnPrefab();
-    if (!spawnPrefab || spawnPoints.empty() || count < 1) {
+    if (!enemySpawnPrefab || spawnPoints.empty() || count < 1) {
         return;
     }
 
@@ -523,7 +427,7 @@ RTBEngine::ECS::GameObject* RoundManager::SpawnEnemyAt(
     int spawnIndex,
     std::uint32_t networkId)
 {
-    RTBEngine::ECS::Prefab* spawnPrefab = ResolveEnemySpawnPrefab();
+    RTBEngine::ECS::Prefab* spawnPrefab = enemySpawnPrefab;
     if (!spawnPoint || !spawnPrefab || roundNumber < 1 || spawnIndex < 0) {
         return nullptr;
     }
@@ -561,7 +465,7 @@ RTBEngine::ECS::GameObject* RoundManager::SpawnEnemyAt(
     auto* targetTracker = spawnedEnemy->GetComponent<EnemyTargetTracker>();
     const bool hasTarget = targetTracker && targetTracker->targetObject;
     RTB_INFO("[RoundManager] Spawned '" + spawnedEnemy->GetName() + "' at spawn point '" +
-        spawnPoint->GetName() + "' | prefab='" + enemyPrefabName +
+        spawnPoint->GetName() + "' | prefab='" + enemyPrefabRef +
         "' NavAgentComponent=" + (navAgent ? "yes" : "NO") +
         " EnemyMeleeAI=" + (meleeAI ? "yes" : "NO") +
         " navAgentLinked=" + (meleeAI && meleeAI->navAgent ? "yes" : "NO") +
@@ -591,6 +495,7 @@ void RoundManager::RebindSpawnedEnemy(RTBEngine::ECS::GameObject* spawnedEnemy)
 
     if (animationDriver) {
         animationDriver->animator = animator;
+        animationDriver->OnValidate();
     }
 
     if (meleeAI) {
@@ -600,6 +505,7 @@ void RoundManager::RebindSpawnedEnemy(RTBEngine::ECS::GameObject* spawnedEnemy)
         meleeAI->locomotion = locomotion;
         meleeAI->navAgent = navAgent;
         meleeAI->meleeAttack = meleeAttack;
+        meleeAI->FinalizeSpawnSetup();
 
         if (!navAgent) {
             RTB_WARN("[RoundManager] Spawned enemy '" + spawnedEnemy->GetName() +

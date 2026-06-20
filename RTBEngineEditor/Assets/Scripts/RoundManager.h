@@ -6,7 +6,6 @@
 #include <RTBEngine/Reflection/PropertyMacros.h>
 
 #include <cstdint>
-#include <memory>
 #include <string>
 #include <vector>
 
@@ -34,7 +33,6 @@ public:
     void OnValidate() override;
     void OnDestroy() override;
 
-    RTBEngine::ECS::GameObject* enemyTemplate = nullptr;
     RTBEngine::ECS::GameObject* playerObject = nullptr;
     OnlinePlayerManager* onlinePlayerManager = nullptr;
     RoundUIHandler* uiHandler = nullptr;
@@ -45,7 +43,7 @@ public:
     float playerRespawnDelay = 30.0f;
     float teamWipeSceneDelay = 5.0f;
     std::string finalScenePath = "Assets/Scenes/FinalScene.lua";
-    std::string enemyPrefabName = "Enemy Melee";
+    std::string enemyPrefabRef = "Assets/Prefabs/Enemy Melee.prefab";
 
     std::vector<RTBEngine::ECS::GameObject*> spawnPoints;
 
@@ -74,10 +72,10 @@ private:
         RTBEngine::Core::EventSubscription deathSubscription;
     };
 
-    std::unique_ptr<RTBEngine::ECS::Prefab> enemyPrefab;
     std::vector<RTBEngine::ECS::GameObject*> spawnedEnemies;
     std::vector<TrackedPlayer> trackedPlayers;
 
+    RTBEngine::ECS::Prefab* enemySpawnPrefab = nullptr;
     HealthComponent* playerHealth = nullptr;
     State state = State::Stopped;
     int currentRound = 0;
@@ -88,19 +86,12 @@ private:
     int displayedEndGameSeconds = -1;
     float localRespawnRemaining = 0.0f;
     float finalSceneDelayRemaining = 0.0f;
-    uint32_t cachedPlayerScanVersion = 0;
-    RTBEngine::ECS::GameObject* cachedResolvedPlayerObject = nullptr;
-    uint32_t cachedPlayerHealthResolveVersion = 0;
     bool hasRequestedEndScene = false;
     bool finalSceneLoadRequested = false;
     bool localRespawnPending = false;
 
     void ClampSettings();
-    void ResolveDependencies();
-    void RefreshSpawnPoints();
-    void RefreshTrackedPlayers();
-    void CreateEnemyPrefabFromTemplate();
-    RTBEngine::ECS::Prefab* ResolveEnemySpawnPrefab() const;
+    void InitializeRuntime();
     bool HasAnySpawnPoint() const;
     void UpdateCountdown(float deltaTime);
     void StartRound();

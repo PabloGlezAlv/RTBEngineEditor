@@ -60,13 +60,22 @@ void EnemyMeleeAI::OnStart()
     UpdateState();
 }
 
+void EnemyMeleeAI::FinalizeSpawnSetup()
+{
+    RebindHealthSubscriptions();
+
+    if (!HasSimulationAuthority()) {
+        return;
+    }
+
+    UpdateState();
+}
+
 void EnemyMeleeAI::OnUpdate(float deltaTime)
 {
     if (!owner) {
         return;
     }
-
-    RebindHealthSubscriptions();
 
     if (!HasSimulationAuthority()) {
         switch (state) {
@@ -111,8 +120,6 @@ void EnemyMeleeAI::OnFixedUpdate(float fixedDeltaTime)
     if (!locomotion) {
         return;
     }
-
-    ResolveDependencies();
 
     if (!HasSimulationAuthority()) {
         locomotion->StopPlanarMotion();
@@ -180,8 +187,6 @@ void EnemyMeleeAI::OnFixedUpdate(float fixedDeltaTime)
 
 void EnemyMeleeAI::OnLateUpdate(float deltaTime)
 {
-    ResolveDependencies();
-
     if (!HasSimulationAuthority()) {
         if (state == State::Attacking) {
             if (animationDriver && animationDriver->IsAttackPlaying()) {

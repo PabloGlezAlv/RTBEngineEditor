@@ -1,8 +1,6 @@
 #include "ResumeGameButton.h"
 
 #include <RTBEngine/Scene/GameObject.h>
-#include <RTBEngine/Scene/Scene.h>
-#include <RTBEngine/Scene/SceneManager.h>
 #include <RTBEngine/UI/Elements/UIButton.h>
 
 using ThisClass = ResumeGameButton;
@@ -21,24 +19,7 @@ void ResumeGameButton::OnPointerClick(const RTBEngine::UI::PointerEventData&)
         }
     }
 
-    PauseMenuController* targetController = controller;
-    if (!targetController) {
-        RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
-        if (scene) {
-            for (const auto& gameObject : scene->GetGameObjects()) {
-                if (!gameObject) {
-                    continue;
-                }
-
-                targetController = gameObject->GetComponent<PauseMenuController>();
-                if (targetController) {
-                    break;
-                }
-            }
-        }
-    }
-
-    if (targetController) {
-        targetController->ResumeGame();
+    if (controller) {
+        controller->ResumeGame();
     }
 }

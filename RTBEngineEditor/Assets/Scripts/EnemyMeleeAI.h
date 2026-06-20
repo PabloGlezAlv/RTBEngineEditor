@@ -51,6 +51,7 @@ public:
     float shrinkDuration = 0.85f;
 
     void PlayReplicatedAttack(std::uint32_t attackSequence);
+    void FinalizeSpawnSetup();
 
     RTB_COMPONENT(EnemyMeleeAI)
 

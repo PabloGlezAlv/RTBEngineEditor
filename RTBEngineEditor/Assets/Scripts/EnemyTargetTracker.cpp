@@ -3,9 +3,6 @@
 #include "EnemyMeleeAIShared.h"
 
 #include <RTBEngine/Scene/GameObject.h>
-#include <RTBEngine/Scene/GameObject.h>
-#include <RTBEngine/Scene/Scene.h>
-#include <RTBEngine/Scene/SceneManager.h>
 
 using ThisClass = EnemyTargetTracker;
 
@@ -15,21 +12,12 @@ RTB_END_REGISTER(EnemyTargetTracker)
 
 void EnemyTargetTracker::OnStart()
 {
-    InvalidateTargetCache();
-    CaptureTargetIdentity();
-    ResolveTarget();
-}
-
-void EnemyTargetTracker::OnUpdate(float /*deltaTime*/)
-{
-    ResolveTargetIfNeeded();
+    SanitizeTarget();
 }
 
 void EnemyTargetTracker::OnValidate()
 {
-    InvalidateTargetCache();
-    CaptureTargetIdentity();
-    ResolveTarget();
+    SanitizeTarget();
 }
 
 bool EnemyTargetTracker::HasValidTarget(const RTBEngine::ECS::GameObject* requester) const
@@ -110,63 +98,11 @@ bool EnemyTargetTracker::IsWithinTargetHierarchy(const RTBEngine::ECS::GameObjec
 void EnemyTargetTracker::SetTarget(RTBEngine::ECS::GameObject* target)
 {
     targetObject = (target != owner) ? target : nullptr;
-    InvalidateTargetCache();
-    CaptureTargetIdentity();
-    ResolveTarget();
 }
 
-void EnemyTargetTracker::InvalidateTargetCache()
+void EnemyTargetTracker::SanitizeTarget()
 {
-    cachedResolveVersion = 0;
-    lastCapturedTarget = nullptr;
-}
-
-void EnemyTargetTracker::CaptureTargetIdentity()
-{
-    if (!targetObject || targetObject == owner) {
-        lastCapturedTarget = nullptr;
-        targetObjectUuid.clear();
-        return;
+    if (targetObject == owner) {
+        targetObject = nullptr;
     }
-
-    if (targetObject == lastCapturedTarget) {
-        return;
-    }
-
-    targetObjectUuid = targetObject->GetUUID();
-    lastCapturedTarget = targetObject;
-}
-
-void EnemyTargetTracker::ResolveTargetIfNeeded()
-{
-    const uint32_t hierarchyVersion = RTBEngine::ECS::GameObject::GetHierarchyVersion();
-    if (targetObject != nullptr && hierarchyVersion == cachedResolveVersion) {
-        return;
-    }
-
-    CaptureTargetIdentity();
-    ResolveTarget();
-    cachedResolveVersion = hierarchyVersion;
-}
-
-void EnemyTargetTracker::ResolveTarget()
-{
-    targetObject = nullptr;
-
-    auto* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
-    if (!scene) {
-        lastCapturedTarget = nullptr;
-        return;
-    }
-
-    if (!targetObjectUuid.empty()) {
-        RTBEngine::ECS::GameObject* candidate = scene->FindGameObjectByUUID(targetObjectUuid);
-        if (candidate && candidate != owner) {
-            targetObject = candidate;
-            lastCapturedTarget = candidate;
-            return;
-        }
-    }
-
-    lastCapturedTarget = nullptr;
 }

@@ -73,7 +73,9 @@ return {
             mass = 1.00,
             friction = 0.80,
             restitution = 0.00,
-            bodyType = "Dynamic"
+            bodyType = "Dynamic",
+            freezeRotationX = true,
+            freezeRotationZ = true
         },
         {
             type = "CapsuleColliderComponent",

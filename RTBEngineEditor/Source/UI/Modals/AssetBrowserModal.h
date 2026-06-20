@@ -13,6 +13,7 @@ namespace RTBEditor {
         AudioClip,
         Font,
         Scene,
+        Prefab,
         Any
     };
 

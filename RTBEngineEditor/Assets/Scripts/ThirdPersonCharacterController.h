@@ -107,7 +107,6 @@ private:
     RTBEngine::Math::Vector3 activeAttackDirection = RTBEngine::Math::Vector3::Zero();
 
     void ClampSettings();
-    void ConfigurePhysicsBody() const;
     void ResolveCameraObject();
     void ResolveHealth();
     void ResolveAnimator();

@@ -6,9 +6,6 @@
 #include <RTBEngine/Math/Vectors/Vector3.h>
 #include <RTBEngine/Reflection/PropertyMacros.h>
 
-#include <cstdint>
-#include <string>
-
 namespace RTBEngine {
     namespace ECS {
         class GameObject;
@@ -22,7 +19,6 @@ public:
     ~EnemyTargetTracker() override = default;
 
     void OnStart() override;
-    void OnUpdate(float deltaTime) override;
     void OnValidate() override;
 
     RTBEngine::ECS::GameObject* targetObject = nullptr;
@@ -40,12 +36,5 @@ public:
     void SetTarget(RTBEngine::ECS::GameObject* target);
 
 private:
-    std::string targetObjectUuid;
-    RTBEngine::ECS::GameObject* lastCapturedTarget = nullptr;
-    uint32_t cachedResolveVersion = 0;
-
-    void InvalidateTargetCache();
-    void CaptureTargetIdentity();
-    void ResolveTarget();
-    void ResolveTargetIfNeeded();
+    void SanitizeTarget();
 };

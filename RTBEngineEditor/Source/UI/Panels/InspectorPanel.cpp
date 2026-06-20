@@ -358,6 +358,9 @@ namespace RTBEditor {
             if (assetType == "fbx") {
                 return "Drop an .fbx asset here.";
             }
+            if (assetType == "prefab") {
+                return "Drop a .prefab asset here.";
+            }
             return "Drop a compatible asset here.";
         }
 
@@ -825,7 +828,8 @@ namespace RTBEditor {
 
         const std::string assetType = ToLowerCopy(prop.assetType);
         const bool isFbxAsset = (assetType == "fbx");
-        if (!isFbxAsset) {
+        const bool isPrefabAsset = (assetType == "prefab");
+        if (!isFbxAsset && !isPrefabAsset) {
             return false;
         }
 
@@ -842,7 +846,8 @@ namespace RTBEditor {
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.2f, 0.5f, 0.8f, 0.3f));
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.2f, 0.5f, 0.8f, 0.5f));
 
-        const std::string label = (hasAsset ? *value : std::string("[None]")) + "##AssetRefDropArea";
+        const std::string dropAreaId = isPrefabAsset ? "##PrefabRefDropArea" : "##AssetRefDropArea";
+        const std::string label = (hasAsset ? *value : std::string("[None]")) + dropAreaId;
         ImGui::Button(label.c_str(), ImVec2(220, 0));
 
         ImGui::PopStyleColor(4);
@@ -852,11 +857,19 @@ namespace RTBEditor {
         }
 
         if (ImGui::BeginDragDropTarget()) {
-            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(PAYLOAD_MESH)) {
-                const MeshPayload* payloadData = static_cast<const MeshPayload*>(payload->Data);
-                const std::filesystem::path relativePath(payloadData->path);
-                if (HasFbxExtension(relativePath)) {
-                    *value = MakeAssetReference(relativePath);
+            if (isFbxAsset) {
+                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(PAYLOAD_MESH)) {
+                    const MeshPayload* payloadData = static_cast<const MeshPayload*>(payload->Data);
+                    const std::filesystem::path relativePath(payloadData->path);
+                    if (HasFbxExtension(relativePath)) {
+                        *value = MakeAssetReference(relativePath);
+                        changed = true;
+                    }
+                }
+            } else if (isPrefabAsset) {
+                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(PAYLOAD_PREFAB)) {
+                    const PrefabPayload* payloadData = static_cast<const PrefabPayload*>(payload->Data);
+                    *value = MakeAssetReference(payloadData->path);
                     changed = true;
                 }
             }
@@ -864,9 +877,9 @@ namespace RTBEditor {
         }
 
         ImGui::SameLine();
-        if (ImGui::SmallButton("...##SelectAssetRef")) {
+        if (ImGui::SmallButton(isPrefabAsset ? "...##SelectPrefabRef" : "...##SelectAssetRef")) {
             assetBrowserModal->Open(
-                AssetType::Fbx,
+                isPrefabAsset ? AssetType::Prefab : AssetType::Fbx,
                 [component, value](const std::string& path) {
                     *value = MakeAssetReference(path);
                     component->OnValidate();
@@ -875,7 +888,7 @@ namespace RTBEditor {
         }
 
         ImGui::SameLine();
-        if (ImGui::SmallButton("X##ClearAssetRef")) {
+        if (ImGui::SmallButton(isPrefabAsset ? "X##ClearPrefabRef" : "X##ClearAssetRef")) {
             value->clear();
             changed = true;
         }
