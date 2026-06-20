@@ -61,6 +61,7 @@ public:
     ProjectileAttackAbility* projectileAttack = nullptr;
     RTBEngine::UI::UIJoystick* attackJoystick = nullptr;
     RTBEngine::ECS::TrailRenderer* attackAimTrail = nullptr;
+    float aimTrailHeightOffset = 0.0f;
     RTBEngine::ECS::GameObject* aimArrowVisual = nullptr;
     std::string idleAnimationFbx;
     std::string walkAnimationFbx;

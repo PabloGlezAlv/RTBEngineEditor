@@ -308,6 +308,8 @@ function CreateScene()
                                                 clickTextColor = Color(0.86, 0.84, 0.78, 1.00),
                                                 clickImageTint = Color(0.92, 0.92, 0.92, 1.00),
                                                 clickScaleBoost = 0.97,
+                                                disabledTextColor = Color(0.55, 0.54, 0.50, 1.00),
+                                                disabledImageTint = Color(0.45, 0.45, 0.45, 1.00),
                                                 hoverInTimeSec = 0.12,
                                                 hoverOutTimeSec = 0.18,
                                                 pressInTimeSec = 0.08,
@@ -410,6 +412,8 @@ function CreateScene()
                                                 clickTextColor = Color(0.86, 0.84, 0.78, 1.00),
                                                 clickImageTint = Color(0.92, 0.92, 0.92, 1.00),
                                                 clickScaleBoost = 0.97,
+                                                disabledTextColor = Color(0.55, 0.54, 0.50, 1.00),
+                                                disabledImageTint = Color(0.45, 0.45, 0.45, 1.00),
                                                 hoverInTimeSec = 0.12,
                                                 hoverOutTimeSec = 0.18,
                                                 pressInTimeSec = 0.08,
@@ -479,15 +483,41 @@ function CreateScene()
                 components = {
                     {
                         type = "RoundManager",
-                        enemyPrefabRef = "Assets/Prefabs/Enemy Melee.prefab",
                         playerObject = "E8682E33-50ED-45D8-BC76-B31113639F9E",
                         onlinePlayerManager = "B1A2C3D4-E5F6-7890-ABCD-EF1234567891/OnlinePlayerManager",
                         uiHandler = "62E6AE07-7DC2-42B3-8F0E-AA7CA40264F0/RoundUIHandler",
+                        roundCountdownDuration = 5.00,
+                        baseEnemiesPerRound = 2,
+                        additionalEnemiesPerRound = 1,
+                        winningRound = 5,
+                        playerRespawnDelay = 30.00,
+                        teamWipeSceneDelay = 5.00,
+                        finalScenePath = "Assets/Scenes/FinalScene.lua",
+                        enemyPrefabRef = "Assets/Prefabs/Enemy Melee.prefab",
                         spawnPoints = {
                             "74B6BC8E-5892-4C38-A4B6-8AAAF7B1F001",
                             "74B6BC8E-5892-4C38-A4B6-8AAAF7B1F002",
                             "74B6BC8E-5892-4C38-A4B6-8AAAF7B1F003",
-                        },
+                        }
+                    },
+                },
+                children = {
+                    {
+                        name = "EnemySpawnPointLeft",
+                        uuid = "74B6BC8E-5892-4C38-A4B6-8AAAF7B1F001",
+                        position = Vector3(-11.80, 0.00, 8.60),
+                        rotation = Quaternion.FromEulerAngles(0.00, 135.00, 0.00),
+                    },
+                    {
+                        name = "EnemySpawnPointRight",
+                        uuid = "74B6BC8E-5892-4C38-A4B6-8AAAF7B1F002",
+                        position = Vector3(11.90, 0.00, 9.60),
+                        rotation = Quaternion.FromEulerAngles(0.00, -135.00, 0.00),
+                    },
+                    {
+                        name = "EnemySpawnPointRear",
+                        uuid = "74B6BC8E-5892-4C38-A4B6-8AAAF7B1F003",
+                        position = Vector3(0.00, 0.00, -11.80),
                     },
                 }
             },
@@ -507,23 +537,6 @@ function CreateScene()
                 }
             },
             {
-                name = "EnemySpawnPointLeft",
-                uuid = "74B6BC8E-5892-4C38-A4B6-8AAAF7B1F001",
-                position = Vector3(-11.80, 0.00, 8.60),
-                rotation = Quaternion.FromEulerAngles(0.00, 135.00, 0.00),
-            },
-            {
-                name = "EnemySpawnPointRight",
-                uuid = "74B6BC8E-5892-4C38-A4B6-8AAAF7B1F002",
-                position = Vector3(11.90, 0.00, 9.60),
-                rotation = Quaternion.FromEulerAngles(0.00, -135.00, 0.00),
-            },
-            {
-                name = "EnemySpawnPointRear",
-                uuid = "74B6BC8E-5892-4C38-A4B6-8AAAF7B1F003",
-                position = Vector3(0.00, 0.00, -11.80),
-            },
-            {
                 name = "Barbarian",
                 uuid = "753770D2-B00E-4859-B7D3-5ABF1249B014",
                 active = false,
@@ -532,21 +545,27 @@ function CreateScene()
                 position = Vector3(-3.00, 0.00, 0.00),
                 overrides = {
                     components = {
-                        {
-                            type = "EnemyTargetTracker",
+                        { type = "EnemyTargetTracker",
                             targetObject = "E8682E33-50ED-45D8-BC76-B31113639F9E",
                         },
-                        {
-                            type = "EnemyAnimationDriver",
+                        { type = "EnemyAnimationDriver",
                             animator = "E1F5A9B7-1030-4F9B-9A18-77AD11B06E20/Animator",
                         },
-                        {
-                            type = "EnemyMeleeAI",
+                        { type = "EnemyMeleeAI",
                             health = "753770D2-B00E-4859-B7D3-5ABF1249B014/HealthComponent",
                             targetTracker = "753770D2-B00E-4859-B7D3-5ABF1249B014/EnemyTargetTracker",
                             animationDriver = "753770D2-B00E-4859-B7D3-5ABF1249B014/EnemyAnimationDriver",
                             locomotion = "753770D2-B00E-4859-B7D3-5ABF1249B014/EnemyLocomotionController",
+                            navAgent = "753770D2-B00E-4859-B7D3-5ABF1249B014/NavAgentComponent",
                             meleeAttack = "753770D2-B00E-4859-B7D3-5ABF1249B014/MeleeSphereAttackAbility",
+                        },
+                        { type = "ComicOuchSpawner",
+                            health = nil,
+                            bubbleTextures = {
+                                "Assets/UI/Comic/Ouch/ouch_01.png",
+                                "Assets/UI/Comic/Ouch/ow_01.png",
+                                "Assets/UI/Comic/Ouch/ugh_01.png",
+                            },
                         },
                     },
                 },
@@ -754,6 +773,7 @@ function CreateScene()
                     {
                         type = "ThirdPersonCharacterController",
                         cameraObject = "0E7CE370-7C0E-45A8-89CA-AD7A3E70C216",
+                        health = "E8682E33-50ED-45D8-BC76-B31113639F9E/HealthComponent",
                         team = 1,
                         moveSpeed = 4.00,
                         sprintMultiplier = 1.75,
@@ -761,6 +781,7 @@ function CreateScene()
                         cameraDistance = 11.00,
                         cameraFocusOffset = Vector3(0.00, 1.05, 0.00),
                         animator = "5200AC9B-039A-416E-82AE-FD5FE1754C95/Animator",
+                        projectileAttack = "E8682E33-50ED-45D8-BC76-B31113639F9E/ProjectileAttackAbility",
                         attackJoystick = "B4C7E92D-5F22-43A9-8E3B-2A6D7D1A8C10/UIJoystick",
                         attackAimTrail = "7C57C988-6629-4FE8-AFF1-8D4D39C84D1B/TrailRenderer",
                         aimArrowVisual = "R4NG3R00-ARRO-4000-8000-000000000001",
@@ -803,9 +824,10 @@ function CreateScene()
                         mass = 1.00,
                         friction = 0.50,
                         restitution = 0.00,
-                        bodyType = "Dynamic",
                         freezeRotationX = true,
-                        freezeRotationZ = true
+                        freezeRotationY = false,
+                        freezeRotationZ = true,
+                        bodyType = "Dynamic"
                     },
                     {
                         type = "CapsuleColliderComponent",
@@ -954,7 +976,7 @@ function CreateScene()
                                                         components = {
                                                             {
                                                                 type = "UIPanel",
-                                                                backgroundColor = Color(0.24, 0.75, 0.63, 1.00),
+                                                                backgroundColor = Color(0.12, 0.78, 0.24, 1.00),
                                                                 borderColor = Color(0.00, 0.00, 0.00, 0.00),
                                                                 borderThickness = 0.00,
                                                                 hasBorder = false,
@@ -1003,11 +1025,11 @@ function CreateScene()
                     {
                         name = "Attack Aim Trail",
                         uuid = "7C57C988-6629-4FE8-AFF1-8D4D39C84D1B",
-                        position = Vector3(0.00, 0.05, 0.00),
+                        position = Vector3(0.00, 1.00, 0.40),
                         components = {
                             {
                                 type = "TrailRenderer",
-                                width = 0.55,
+                                width = 0.35,
                                 color = Color(1.00, 1.00, 1.00, 0.54),
                                 visible = false
                             },
@@ -1021,7 +1043,7 @@ function CreateScene()
                             {
                                 type = "Animator",
                                 modelRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Ranger.fbx",
-                                currentClipName = "Death_A",
+                                currentClipName = "ThirdPerson.Idle",
                                 defaultClip = "Ranged_Bow_Aiming_Idle",
                                 speed = 1.00,
                                 playing = true,
@@ -1188,7 +1210,7 @@ function CreateScene()
                                                                                                     {
                                                                                                         name = "Ranger_Bow",
                                                                                                         uuid = "109DAEF5-4736-4BB3-B63F-DD6B5B44855E",
-                                                                                                        rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
+                                                                                                        rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
                                                                                                         components = {
                                                                                                             {
                                                                                                                 type = "MeshRenderer",
@@ -1317,7 +1339,7 @@ function CreateScene()
                     {
                         name = "MainCamera",
                         uuid = "0E7CE370-7C0E-45A8-89CA-AD7A3E70C216",
-                        position = Vector3(0.00, 8.48, -7.07),
+                        position = Vector3(0.00, 9.48, -7.07),
                         rotation = Quaternion.FromEulerAngles(50.00, 0.00, 0.00),
                         components = {
                             {
@@ -1360,6 +1382,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                     {
@@ -1392,6 +1417,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -1419,6 +1447,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -1446,6 +1477,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -1473,6 +1507,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -1500,6 +1537,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -1527,6 +1567,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -1554,6 +1597,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -1581,6 +1627,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -1608,6 +1657,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -1635,6 +1687,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -1662,6 +1717,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -1689,6 +1747,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -1716,6 +1777,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -1743,6 +1807,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -1770,6 +1837,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -1797,6 +1867,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -1824,6 +1897,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -1851,6 +1927,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -1878,6 +1957,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -1905,6 +1987,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -1932,6 +2017,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -1959,6 +2047,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -1986,6 +2077,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -2012,6 +2106,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -2039,6 +2136,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -2066,6 +2166,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -2093,6 +2196,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -2120,6 +2226,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -2147,6 +2256,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -2174,6 +2286,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -2201,6 +2316,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -2228,6 +2346,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -2255,6 +2376,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -2282,6 +2406,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -2309,6 +2436,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -2336,6 +2466,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -2363,6 +2496,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -2390,6 +2526,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -2417,6 +2556,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -2444,6 +2586,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -2471,6 +2616,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -2498,6 +2646,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -2525,6 +2676,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -2552,6 +2706,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -2579,6 +2736,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -2606,6 +2766,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -2633,6 +2796,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -2660,6 +2826,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -2693,6 +2862,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -2721,6 +2893,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -2749,6 +2924,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -2757,7 +2935,7 @@ function CreateScene()
                                 name = "wall_corner_ne",
                                 uuid = "2511373C-D1A9-4183-AE10-3CC6C9A44409",
                                 position = Vector3(14.00, 0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
@@ -2777,6 +2955,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -2804,6 +2985,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -2831,6 +3015,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -2858,6 +3045,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -2885,6 +3075,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -2912,6 +3105,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -2939,6 +3135,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -2966,6 +3165,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -2974,7 +3176,7 @@ function CreateScene()
                                 name = "wall_n_-12",
                                 uuid = "56BF061A-D1D6-441B-B6E6-26165AEED521",
                                 position = Vector3(-12.00, 0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
@@ -2994,6 +3196,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -3002,7 +3207,7 @@ function CreateScene()
                                 name = "wall_n_-8",
                                 uuid = "0475162D-E451-45F6-90B0-551038025002",
                                 position = Vector3(-8.00, 0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
@@ -3022,6 +3227,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -3030,7 +3238,7 @@ function CreateScene()
                                 name = "wall_n_-4",
                                 uuid = "8987FEDF-75C9-4809-90E3-782CB9278901",
                                 position = Vector3(-4.00, 0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
@@ -3050,6 +3258,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -3058,7 +3269,7 @@ function CreateScene()
                                 name = "wall_n_0",
                                 uuid = "013C2A45-B1B5-4645-A8AC-EE5824F94914",
                                 position = Vector3(0.00, 0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
@@ -3078,6 +3289,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -3086,7 +3300,7 @@ function CreateScene()
                                 name = "wall_n_4",
                                 uuid = "06B97D68-350C-4301-8DE6-C714191DBF3D",
                                 position = Vector3(4.00, 0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
@@ -3106,6 +3320,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -3114,7 +3331,7 @@ function CreateScene()
                                 name = "wall_n_8",
                                 uuid = "03EA9125-FCEF-4F65-A817-7C2697593C83",
                                 position = Vector3(8.00, 0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
@@ -3134,6 +3351,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -3142,7 +3362,7 @@ function CreateScene()
                                 name = "wall_n_12",
                                 uuid = "677F63A1-66E1-4D54-9A76-C7F8BC485349",
                                 position = Vector3(12.00, 0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
@@ -3162,6 +3382,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -3190,6 +3413,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -3213,6 +3439,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                     {
@@ -3246,6 +3475,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -3274,6 +3506,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -3302,6 +3537,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -3330,6 +3568,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -3358,6 +3599,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -3386,6 +3630,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -3414,6 +3661,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -3442,6 +3692,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -3470,6 +3723,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -3498,6 +3754,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -3526,6 +3785,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -3554,6 +3816,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -3581,6 +3846,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -3608,6 +3876,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -3635,6 +3906,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -3662,6 +3936,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -3690,6 +3967,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -3718,6 +3998,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -3746,6 +4029,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -3774,6 +4060,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -3807,6 +4096,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -3834,6 +4126,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -3861,6 +4156,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -3888,6 +4186,9 @@ function CreateScene()
                                         mass = 1.00,
                                         friction = 0.50,
                                         restitution = 0.00,
+                                        freezeRotationX = false,
+                                        freezeRotationY = false,
+                                        freezeRotationZ = false,
                                         bodyType = "Static"
                                     },
                                 }
@@ -3926,7 +4227,7 @@ function CreateScene()
                                 name = "torch_n",
                                 uuid = "31C7F376-69C7-4C51-B45C-57D2EBB9EA73",
                                 position = Vector3(0.00, 0.00, 13.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
@@ -3988,7 +4289,7 @@ function CreateScene()
                                 name = "banner_1",
                                 uuid = "60FDC273-65AE-491F-A7EC-4B6E0DB54C3F",
                                 position = Vector3(0.00, 0.00, 13.50),
-                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",

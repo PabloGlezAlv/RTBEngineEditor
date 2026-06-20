@@ -1,0 +1,54 @@
+return {
+    name = "Comic Ouch Bubble",
+    uuid = "C0M1C000-0001-4000-8000-000000000001",
+    position = Vector3(0.00, 0.00, 0.00),
+    components = {
+        {
+            type = "ComicBubbleLifetime",
+            growDuration = 0.85,
+            burstDuration = 0.12,
+            startScale = 0.15,
+            holdScale = 1.00,
+            burstScale = 2.50
+        },
+    },
+    children = {
+        {
+            name = "BubbleCanvas",
+            uuid = "C0M1C000-0002-4000-8000-000000000002",
+            components = {
+                {
+                    type = "Canvas",
+                    renderMode = "WorldSpace",
+                    canvasSize = Vector2(256.00, 256.00),
+                    pixelsPerUnit = 100.00,
+                    sortOrder = 35,
+                    faceCamera = true
+                },
+            },
+            children = {
+                {
+                    name = "BubbleImage",
+                    uuid = "C0M1C000-0003-4000-8000-000000000003",
+                    components = {
+                        {
+                            type = "UIImage",
+                            texture = "Assets/UI/Comic/Ouch/ouch_01.png",
+                            tintColor = Color(1.00, 1.00, 1.00, 1.00),
+                            preserveAspect = true,
+                            isVisible = true,
+                            raycastTarget = false,
+                            anchorMin = Vector2(0.50, 0.50),
+                            anchorMax = Vector2(0.50, 0.50),
+                            pivot = Vector2(0.50, 0.50),
+                            anchoredPosition = Vector2(0.00, 0.00),
+                            sizeDelta = Vector2(220.00, 220.00),
+                            rotation = 0.00,
+                            scale = Vector2(1.00, 1.00)
+                        },
+                    }
+                },
+            }
+        },
+    }
+}

@@ -112,6 +112,7 @@ RTB_REGISTER_COMPONENT(ThirdPersonCharacterController)
     RTB_PROPERTY_COMPONENT(projectileAttack, ProjectileAttackAbility)
     RTB_PROPERTY_COMPONENT(attackJoystick, UIJoystick)
     RTB_PROPERTY_COMPONENT(attackAimTrail, TrailRenderer)
+    RTB_PROPERTY_RANGE(aimTrailHeightOffset, -2.0f, 3.0f)
     RTB_PROPERTY_GAMEOBJECT(aimArrowVisual)
     RTB_PROPERTY_FBX(idleAnimationFbx)
     RTB_PROPERTY_FBX(walkAnimationFbx)
@@ -814,7 +815,12 @@ void ThirdPersonCharacterController::UpdateAttackAimTrail()
         return;
     }
 
-    const RTBEngine::Math::Vector3 start = GetAimTrailOrigin();
+    RTBEngine::Math::Vector3 start =
+        (projectileAttack && owner)
+            ? projectileAttack->GetLaunchOrigin(owner, attackDirection)
+            : GetAimTrailOrigin();
+    start.y += aimTrailHeightOffset;
+
     const RTBEngine::Math::Vector3 end = start + attackDirection * GetProjectileTravelDistance();
     const RTBEngine::Math::Vector3 points[] = {
         start,
