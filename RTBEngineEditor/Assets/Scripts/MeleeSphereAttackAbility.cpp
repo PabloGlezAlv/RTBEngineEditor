@@ -2,7 +2,7 @@
 
 #include "CharacterBase.h"
 
-#include <RTBEngine/ECS/GameObject.h>
+#include <RTBEngine/Scene/GameObject.h>
 #include <RTBEngine/Physics/PhysicsWorld.h>
 
 #include <algorithm>

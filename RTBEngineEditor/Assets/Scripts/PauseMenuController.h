@@ -1,7 +1,7 @@
 #pragma once
 
-#include <RTBEngine/ECS/Component.h>
-#include <RTBEngine/ECS/GameObject.h>
+#include <RTBEngine/Scene/Component.h>
+#include <RTBEngine/Scene/GameObject.h>
 #include <RTBEngine/Reflection/PropertyMacros.h>
 #include <RTBEngine/UI/UIElement.h>
 #include <vector>

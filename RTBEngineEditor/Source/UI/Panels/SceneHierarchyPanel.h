@@ -1,8 +1,8 @@
 #pragma once
 
 #include "EditorPanel.h"
-#include <RTBEngine/ECS/GameObject.h>
-#include <RTBEngine/ECS/Scene.h>
+#include <RTBEngine/Scene/GameObject.h>
+#include <RTBEngine/Scene/Scene.h>
 #include <unordered_set>
 #include <vector>
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <RTBEngine/ECS/Component.h>
+#include <RTBEngine/Scene/Component.h>
 #include <RTBEngine/Math/Vectors/Vector4.h>
 #include <RTBEngine/Reflection/PropertyMacros.h>
 #include <RTBEngine/UI/Elements/UIPanel.h>

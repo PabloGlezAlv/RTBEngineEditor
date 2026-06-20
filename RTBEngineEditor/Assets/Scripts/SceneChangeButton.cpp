@@ -2,8 +2,8 @@
 
 #include <RTBEngine/Core/Logger.h>
 #include <RTBEngine/Core/Time.h>
-#include <RTBEngine/ECS/GameObject.h>
-#include <RTBEngine/ECS/SceneManager.h>
+#include <RTBEngine/Scene/GameObject.h>
+#include <RTBEngine/Scene/SceneManager.h>
 #include <RTBEngine/UI/Elements/UIButton.h>
 
 using ThisClass = SceneChangeButton;

@@ -1,9 +1,9 @@
 #include "ColliderRenderer.h"
 #include <RTBEngine/Core/ResourceManager.h>
-#include <RTBEngine/ECS/BoxColliderComponent.h>
-#include <RTBEngine/ECS/SphereColliderComponent.h>
-#include <RTBEngine/ECS/CapsuleColliderComponent.h>
-#include <RTBEngine/ECS/Transform.h>
+#include <RTBEngine/Scene/BoxColliderComponent.h>
+#include <RTBEngine/Scene/SphereColliderComponent.h>
+#include <RTBEngine/Scene/CapsuleColliderComponent.h>
+#include <RTBEngine/Scene/Transform.h>
 #include <RTBEngine/Math/Math.h>
 #include <RTBEngine/Physics/PhysicsWorld.h>
 #include <array>

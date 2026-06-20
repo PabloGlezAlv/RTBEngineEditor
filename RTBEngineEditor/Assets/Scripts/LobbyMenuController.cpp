@@ -6,7 +6,7 @@
 
 #include <RTBEngine/Core/Logger.h>
 #include <RTBEngine/Core/Time.h>
-#include <RTBEngine/ECS/SceneManager.h>
+#include <RTBEngine/Scene/SceneManager.h>
 #include <RTBEngine/Input/InputManager.h>
 #include <RTBEngine/Input/KeyCode.h>
 #include <RTBEngine/Online/IOnlineIdentity.h>

@@ -12,7 +12,7 @@
 #include <memory>
 #include <SDL.h>
 #include <functional>
-#include <RTBEngine/ECS/Prefab.h>
+#include <RTBEngine/Scene/Prefab.h>
 #include <RTBEngine/Math/Math.h>
 
 /**

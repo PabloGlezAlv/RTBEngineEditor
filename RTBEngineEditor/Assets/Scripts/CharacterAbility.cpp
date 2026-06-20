@@ -1,6 +1,6 @@
 #include "CharacterAbility.h"
 
-#include <RTBEngine/ECS/GameObject.h>
+#include <RTBEngine/Scene/GameObject.h>
 
 #include <algorithm>
 #include <cmath>

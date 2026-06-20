@@ -4,9 +4,9 @@
 
 #include <RTBEngine/Core/Event.h>
 
-#include <RTBEngine/ECS/Component.h>
+#include <RTBEngine/Scene/Component.h>
 
-#include <RTBEngine/ECS/Prefab.h>
+#include <RTBEngine/Scene/Prefab.h>
 
 #include <RTBEngine/Reflection/PropertyMacros.h>
 

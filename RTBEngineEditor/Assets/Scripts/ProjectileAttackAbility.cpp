@@ -6,18 +6,18 @@
 #include <RTBEngine/Core/ResourceManager.h>
 #include <RTBEngine/Rendering/FbxBinding.h>
 #include <RTBEngine/Rendering/ModelLoader.h>
-#include <RTBEngine/ECS/NetworkIdentity.h>
-#include <RTBEngine/ECS/Scene.h>
-#include <RTBEngine/ECS/SceneManager.h>
+#include <RTBEngine/Scene/NetworkIdentity.h>
+#include <RTBEngine/Scene/Scene.h>
+#include <RTBEngine/Scene/SceneManager.h>
 #include "OnlineGameNetMessages.h"
 
 #include <RTBEngine/Online/OnlineGameplayNet.h>
-#include <RTBEngine/ECS/CapsuleColliderComponent.h>
-#include <RTBEngine/ECS/GameObject.h>
-#include <RTBEngine/ECS/MeshRenderer.h>
-#include <RTBEngine/ECS/RigidBodyComponent.h>
-#include <RTBEngine/ECS/SceneManager.h>
-#include <RTBEngine/ECS/SphereColliderComponent.h>
+#include <RTBEngine/Scene/CapsuleColliderComponent.h>
+#include <RTBEngine/Scene/GameObject.h>
+#include <RTBEngine/Scene/MeshRenderer.h>
+#include <RTBEngine/Scene/RigidBodyComponent.h>
+#include <RTBEngine/Scene/SceneManager.h>
+#include <RTBEngine/Scene/SphereColliderComponent.h>
 #include <RTBEngine/Math/Quaternions/Quaternion.h>
 
 #include <algorithm>

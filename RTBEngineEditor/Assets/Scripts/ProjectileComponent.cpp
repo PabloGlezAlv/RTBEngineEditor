@@ -2,10 +2,10 @@
 
 #include "CharacterBase.h"
 
-#include <RTBEngine/ECS/GameObject.h>
-#include <RTBEngine/ECS/RigidBodyComponent.h>
-#include <RTBEngine/ECS/Scene.h>
-#include <RTBEngine/ECS/SceneManager.h>
+#include <RTBEngine/Scene/GameObject.h>
+#include <RTBEngine/Scene/RigidBodyComponent.h>
+#include <RTBEngine/Scene/Scene.h>
+#include <RTBEngine/Scene/SceneManager.h>
 #include <RTBEngine/Physics/PhysicsWorld.h>
 
 #include <algorithm>

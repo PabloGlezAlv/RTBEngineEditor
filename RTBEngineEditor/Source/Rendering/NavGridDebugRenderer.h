@@ -2,8 +2,8 @@
 
 #include <RTBEngine/Rendering/Camera.h>
 #include <RTBEngine/Rendering/Shader.h>
-#include <RTBEngine/ECS/GameObject.h>
-#include <RTBEngine/ECS/Scene.h>
+#include <RTBEngine/Scene/GameObject.h>
+#include <RTBEngine/Scene/Scene.h>
 #include "../UI/Panels/EditorPanel.h"
 #include <GL/glew.h>
 

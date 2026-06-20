@@ -2,10 +2,10 @@
 
 #include "EnemyMeleeAIShared.h"
 
-#include <RTBEngine/ECS/GameObject.h>
-#include <RTBEngine/ECS/GameObject.h>
-#include <RTBEngine/ECS/Scene.h>
-#include <RTBEngine/ECS/SceneManager.h>
+#include <RTBEngine/Scene/GameObject.h>
+#include <RTBEngine/Scene/GameObject.h>
+#include <RTBEngine/Scene/Scene.h>
+#include <RTBEngine/Scene/SceneManager.h>
 
 using ThisClass = EnemyTargetTracker;
 

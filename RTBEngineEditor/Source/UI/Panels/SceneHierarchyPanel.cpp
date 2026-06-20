@@ -1,11 +1,11 @@
 #include "SceneHierarchyPanel.h"
 #include <imgui.h>
-#include <RTBEngine/ECS/SceneManager.h>
-#include <RTBEngine/ECS/Scene.h>
-#include <RTBEngine/ECS/MeshRenderer.h>
-#include <RTBEngine/ECS/ParticleSystem.h>
-#include <RTBEngine/ECS/Prefab.h>
-#include <RTBEngine/ECS/PrefabRegistry.h>
+#include <RTBEngine/Scene/SceneManager.h>
+#include <RTBEngine/Scene/Scene.h>
+#include <RTBEngine/Scene/MeshRenderer.h>
+#include <RTBEngine/Scene/ParticleSystem.h>
+#include <RTBEngine/Scene/Prefab.h>
+#include <RTBEngine/Scene/PrefabRegistry.h>
 #include <RTBEngine/Core/ResourceManager.h>
 #include <RTBEngine/Rendering/Cubemap.h>
 #include <RTBEngine/Rendering/ModelLoader.h>

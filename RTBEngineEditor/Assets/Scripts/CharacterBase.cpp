@@ -1,8 +1,8 @@
 #include "CharacterBase.h"
 
-#include <RTBEngine/ECS/NetworkIdentity.h>
+#include <RTBEngine/Scene/NetworkIdentity.h>
 
-#include <RTBEngine/ECS/GameObject.h>
+#include <RTBEngine/Scene/GameObject.h>
 
 bool CharacterBase::IsCharacterDead() const
 {

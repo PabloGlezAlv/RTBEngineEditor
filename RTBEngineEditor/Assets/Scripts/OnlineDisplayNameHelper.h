@@ -1,6 +1,6 @@
 #pragma once
 
-#include <RTBEngine/ECS/NetworkIdentity.h>
+#include <RTBEngine/Scene/NetworkIdentity.h>
 #include <RTBEngine/Online/OnlineUser.h>
 
 #include <string>

@@ -1,8 +1,8 @@
 #pragma once
 
-#include <RTBEngine/ECS/Component.h>
-#include <RTBEngine/ECS/GameObject.h>
-#include <RTBEngine/ECS/Prefab.h>
+#include <RTBEngine/Scene/Component.h>
+#include <RTBEngine/Scene/GameObject.h>
+#include <RTBEngine/Scene/Prefab.h>
 #include <RTBEngine/Online/OnlineUser.h>
 #include <RTBEngine/Reflection/PropertyMacros.h>
 

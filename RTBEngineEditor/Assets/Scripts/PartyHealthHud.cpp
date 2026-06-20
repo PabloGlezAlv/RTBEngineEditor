@@ -5,9 +5,9 @@
 #include "OnlineDisplayNameHelper.h"
 #include "ThirdPersonCharacterController.h"
 
-#include <RTBEngine/ECS/NetworkIdentity.h>
-#include <RTBEngine/ECS/Scene.h>
-#include <RTBEngine/ECS/SceneManager.h>
+#include <RTBEngine/Scene/NetworkIdentity.h>
+#include <RTBEngine/Scene/Scene.h>
+#include <RTBEngine/Scene/SceneManager.h>
 #include <RTBEngine/Online/OnlineGameplayNet.h>
 #include <RTBEngine/UI/UIElement.h>
 

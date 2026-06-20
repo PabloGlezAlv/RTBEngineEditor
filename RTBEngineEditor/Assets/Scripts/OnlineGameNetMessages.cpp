@@ -6,10 +6,10 @@
 #include "OnlinePlayerManager.h"
 #include "ThirdPersonCharacterController.h"
 
-#include <RTBEngine/ECS/NetworkIdentity.h>
-#include <RTBEngine/ECS/NetworkTransform.h>
-#include <RTBEngine/ECS/Scene.h>
-#include <RTBEngine/ECS/SceneManager.h>
+#include <RTBEngine/Scene/NetworkIdentity.h>
+#include <RTBEngine/Scene/NetworkTransform.h>
+#include <RTBEngine/Scene/Scene.h>
+#include <RTBEngine/Scene/SceneManager.h>
 #include <RTBEngine/Core/Time.h>
 #include <RTBEngine/Online/IOnlineLobby.h>
 #include <RTBEngine/Online/OnlineGameplayNet.h>

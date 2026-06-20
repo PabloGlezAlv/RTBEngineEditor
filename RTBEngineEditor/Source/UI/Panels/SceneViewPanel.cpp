@@ -7,8 +7,8 @@
 #include <RTBEngine/Input/InputManager.h>
 #include <RTBEngine/Input/KeyCode.h>
 #include <RTBEngine/Input/MouseButton.h>
-#include <RTBEngine/ECS/SceneManager.h>
-#include <RTBEngine/ECS/MeshRenderer.h>
+#include <RTBEngine/Scene/SceneManager.h>
+#include <RTBEngine/Scene/MeshRenderer.h>
 #include <RTBEngine/Rendering/Mesh.h>
 #include <GL/glew.h>
 #include <limits>

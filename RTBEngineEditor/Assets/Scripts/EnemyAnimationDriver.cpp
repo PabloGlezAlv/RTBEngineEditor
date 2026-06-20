@@ -4,7 +4,7 @@
 
 #include <RTBEngine/Animation/Animator.h>
 #include <RTBEngine/Core/Logger.h>
-#include <RTBEngine/ECS/GameObject.h>
+#include <RTBEngine/Scene/GameObject.h>
 
 using ThisClass = EnemyAnimationDriver;
 

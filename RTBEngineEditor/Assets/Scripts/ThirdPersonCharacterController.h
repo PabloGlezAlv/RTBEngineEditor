@@ -4,7 +4,7 @@
 #include "HealthComponent.h"
 
 #include <RTBEngine/Core/Event.h>
-#include <RTBEngine/ECS/Component.h>
+#include <RTBEngine/Scene/Component.h>
 #include <RTBEngine/Math/Vectors/Vector2.h>
 #include <RTBEngine/Math/Vectors/Vector3.h>
 #include <RTBEngine/Reflection/PropertyMacros.h>

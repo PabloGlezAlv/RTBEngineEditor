@@ -1,8 +1,8 @@
 #include "GameViewPanel.h"
 #include <imgui.h>
 #include <RTBEngine/Core/Window.h>
-#include <RTBEngine/ECS/SceneManager.h>
-#include <RTBEngine/ECS/GameObject.h>
+#include <RTBEngine/Scene/SceneManager.h>
+#include <RTBEngine/Scene/GameObject.h>
 #include <RTBEngine/UI/CanvasSystem.h>
 #include <RTBEngine/UI/Canvas.h>
 #include <algorithm>

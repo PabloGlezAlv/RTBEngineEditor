@@ -1,7 +1,7 @@
 #pragma once
 
 #include <RTBEngine/Core/Event.h>
-#include <RTBEngine/ECS/Component.h>
+#include <RTBEngine/Scene/Component.h>
 #include <RTBEngine/Online/IOnlineLobby.h>
 #include <RTBEngine/Online/OnlineTypes.h>
 #include <RTBEngine/Reflection/PropertyMacros.h>

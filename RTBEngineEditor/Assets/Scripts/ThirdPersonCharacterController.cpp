@@ -1,25 +1,25 @@
 #include "ThirdPersonCharacterController.h"
 
 #include "HealthComponent.h"
-#include <RTBEngine/ECS/NetworkIdentity.h>
+#include <RTBEngine/Scene/NetworkIdentity.h>
 #include "OnlineGameNetMessages.h"
 
-#include <RTBEngine/ECS/NetworkIdentity.h>
+#include <RTBEngine/Scene/NetworkIdentity.h>
 #include <RTBEngine/Online/OnlineGameplayNet.h>
 #include "PauseMenuController.h"
 #include "ProjectileAttackAbility.h"
 
 #include <RTBEngine/Animation/Animator.h>
 #include <RTBEngine/Core/Logger.h>
-#include <RTBEngine/ECS/CameraComponent.h>
-#include <RTBEngine/ECS/CapsuleColliderComponent.h>
-#include <RTBEngine/ECS/FreeLookCamera.h>
-#include <RTBEngine/ECS/GameObject.h>
-#include <RTBEngine/ECS/RigidBodyComponent.h>
-#include <RTBEngine/ECS/Scene.h>
-#include <RTBEngine/ECS/SceneManager.h>
-#include <RTBEngine/ECS/SphereColliderComponent.h>
-#include <RTBEngine/ECS/TrailRenderer.h>
+#include <RTBEngine/Scene/CameraComponent.h>
+#include <RTBEngine/Scene/CapsuleColliderComponent.h>
+#include <RTBEngine/Scene/FreeLookCamera.h>
+#include <RTBEngine/Scene/GameObject.h>
+#include <RTBEngine/Scene/RigidBodyComponent.h>
+#include <RTBEngine/Scene/Scene.h>
+#include <RTBEngine/Scene/SceneManager.h>
+#include <RTBEngine/Scene/SphereColliderComponent.h>
+#include <RTBEngine/Scene/TrailRenderer.h>
 #include <RTBEngine/Input/InputManager.h>
 #include <RTBEngine/Input/KeyCode.h>
 #include <RTBEngine/Math/Quaternions/Quaternion.h>

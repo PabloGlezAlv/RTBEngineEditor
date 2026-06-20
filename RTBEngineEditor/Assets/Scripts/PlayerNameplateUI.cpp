@@ -5,8 +5,8 @@
 
 #include "HealthComponent.h"
 
-#include <RTBEngine/ECS/GameObject.h>
-#include <RTBEngine/ECS/NetworkIdentity.h>
+#include <RTBEngine/Scene/GameObject.h>
+#include <RTBEngine/Scene/NetworkIdentity.h>
 #include <RTBEngine/Online/OnlineSystem.h>
 
 using ThisClass = PlayerNameplateUI;

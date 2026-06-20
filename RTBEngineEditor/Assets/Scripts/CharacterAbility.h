@@ -1,6 +1,6 @@
 #pragma once
 
-#include <RTBEngine/ECS/Component.h>
+#include <RTBEngine/Scene/Component.h>
 #include <RTBEngine/Math/Vectors/Vector3.h>
 
 class CharacterAbility : public RTBEngine::ECS::Component

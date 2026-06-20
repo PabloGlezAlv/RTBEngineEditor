@@ -9,10 +9,10 @@
 
 #include <RTBEngine/Core/Logger.h>
 #include <RTBEngine/Core/Time.h>
-#include <RTBEngine/ECS/GameObject.h>
-#include <RTBEngine/ECS/NavAgentComponent.h>
-#include <RTBEngine/ECS/NetworkIdentity.h>
-#include <RTBEngine/ECS/RigidBodyComponent.h>
+#include <RTBEngine/Scene/GameObject.h>
+#include <RTBEngine/Scene/NavAgentComponent.h>
+#include <RTBEngine/Scene/NetworkIdentity.h>
+#include <RTBEngine/Scene/RigidBodyComponent.h>
 #include <RTBEngine/Math/Math.h>
 #include <RTBEngine/Online/OnlineGameplayNet.h>
 #include <RTBEngine/Physics/PhysicsWorld.h>

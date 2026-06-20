@@ -1,7 +1,7 @@
 #pragma once
 #include <RTBEngine/Rendering/Camera.h>
 #include <RTBEngine/Rendering/Shader.h>
-#include <RTBEngine/ECS/GameObject.h>
+#include <RTBEngine/Scene/GameObject.h>
 #include <RTBEngine/Math/Vectors/Vector3.h>
 #include <RTBEngine/Math/Vectors/Vector4.h>
 #include <GL/glew.h>

@@ -1,9 +1,9 @@
 #include "NavGridDebugRenderer.h"
 
 #include <RTBEngine/Core/ResourceManager.h>
-#include <RTBEngine/ECS/NavAgentComponent.h>
-#include <RTBEngine/ECS/NavGridComponent.h>
-#include <RTBEngine/ECS/GameObject.h>
+#include <RTBEngine/Scene/NavAgentComponent.h>
+#include <RTBEngine/Scene/NavGridComponent.h>
+#include <RTBEngine/Scene/GameObject.h>
 #include <RTBEngine/Math/Vectors/Vector4.h>
 #include <RTBEngine/Navigation/NavPathService.h>
 

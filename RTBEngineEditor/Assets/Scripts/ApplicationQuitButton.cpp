@@ -1,7 +1,7 @@
 #include "ApplicationQuitButton.h"
 
 #include <RTBEngine/Core/Application.h>
-#include <RTBEngine/ECS/GameObject.h>
+#include <RTBEngine/Scene/GameObject.h>
 #include <RTBEngine/UI/Elements/UIButton.h>
 
 using ThisClass = ApplicationQuitButton;

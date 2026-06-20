@@ -6,18 +6,18 @@
 #include "ThirdPersonCharacterController.h"
 
 #include <RTBEngine/Core/Logger.h>
-#include <RTBEngine/ECS/GameObject.h>
-#include <RTBEngine/ECS/NetworkIdentity.h>
-#include <RTBEngine/ECS/NetworkTransform.h>
-#include <RTBEngine/ECS/Scene.h>
-#include <RTBEngine/ECS/SceneManager.h>
+#include <RTBEngine/Scene/GameObject.h>
+#include <RTBEngine/Scene/NetworkIdentity.h>
+#include <RTBEngine/Scene/NetworkTransform.h>
+#include <RTBEngine/Scene/Scene.h>
+#include <RTBEngine/Scene/SceneManager.h>
 #include <RTBEngine/Online/OnlineGameplayNet.h>
 #include <RTBEngine/Online/OnlinePlayerProfile.h>
 #include <RTBEngine/Online/OnlineSystem.h>
 #include <RTBEngine/Online/IOnlineIdentity.h>
 #include <RTBEngine/Online/IOnlineLobby.h>
-#include <RTBEngine/ECS/RigidBodyComponent.h>
-#include <RTBEngine/ECS/SceneManager.h>
+#include <RTBEngine/Scene/RigidBodyComponent.h>
+#include <RTBEngine/Scene/SceneManager.h>
 #include <RTBEngine/Math/Vectors/Vector3.h>
 #include <RTBEngine/Physics/RigidBody.h>
 

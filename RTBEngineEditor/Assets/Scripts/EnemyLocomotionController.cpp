@@ -2,8 +2,8 @@
 
 #include "EnemyMeleeAIShared.h"
 
-#include <RTBEngine/ECS/GameObject.h>
-#include <RTBEngine/ECS/RigidBodyComponent.h>
+#include <RTBEngine/Scene/GameObject.h>
+#include <RTBEngine/Scene/RigidBodyComponent.h>
 #include <RTBEngine/Math/Quaternions/Quaternion.h>
 #include <RTBEngine/Physics/PhysicsUtils.h>
 

@@ -1,6 +1,6 @@
 #pragma once
-#include <RTBEngine/ECS/GameObject.h>
-#include <RTBEngine/ECS/Scene.h>
+#include <RTBEngine/Scene/GameObject.h>
+#include <RTBEngine/Scene/Scene.h>
 #include "../../Core/EditorTypes.h"
 #include <filesystem>
 #include <string>

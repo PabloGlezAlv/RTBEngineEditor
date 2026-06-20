@@ -2,7 +2,7 @@
 
 #include "PauseMenuController.h"
 
-#include <RTBEngine/ECS/Component.h>
+#include <RTBEngine/Scene/Component.h>
 #include <RTBEngine/Reflection/PropertyMacros.h>
 #include <RTBEngine/UI/EventSystem/IPointerClickHandler.h>
 

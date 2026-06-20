@@ -5,9 +5,9 @@
 
 #include <imgui.h>
 
-#include <RTBEngine/ECS/NavGridComponent.h>
-#include <RTBEngine/ECS/SceneManager.h>
-#include <RTBEngine/ECS/GameObject.h>
+#include <RTBEngine/Scene/NavGridComponent.h>
+#include <RTBEngine/Scene/SceneManager.h>
+#include <RTBEngine/Scene/GameObject.h>
 
 #include <functional>
 

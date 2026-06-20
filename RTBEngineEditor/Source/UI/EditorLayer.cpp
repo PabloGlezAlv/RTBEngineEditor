@@ -17,8 +17,8 @@
 #include <algorithm>
 #include <backends/imgui_impl_sdl2.h>
 #include <backends/imgui_impl_opengl3.h>
-#include <RTBEngine/ECS/SceneManager.h>
-#include <RTBEngine/ECS/Scene.h>
+#include <RTBEngine/Scene/SceneManager.h>
+#include <RTBEngine/Scene/Scene.h>
 #include <RTBEngine/Core/Logger.h>
 
 namespace RTBEditor {

@@ -2,7 +2,7 @@
 
 #include "HealthComponent.h"
 
-#include <RTBEngine/ECS/GameObject.h>
+#include <RTBEngine/Scene/GameObject.h>
 #include <RTBEngine/UI/Elements/UISlider.h>
 #include <algorithm>
 

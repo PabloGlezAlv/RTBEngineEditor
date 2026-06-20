@@ -4,9 +4,9 @@
 #include "OnlinePlayerManager.h"
 #include "ThirdPersonCharacterController.h"
 
-#include <RTBEngine/ECS/NetworkIdentity.h>
-#include <RTBEngine/ECS/NetworkTransform.h>
-#include <RTBEngine/ECS/RigidBodyComponent.h>
+#include <RTBEngine/Scene/NetworkIdentity.h>
+#include <RTBEngine/Scene/NetworkTransform.h>
+#include <RTBEngine/Scene/RigidBodyComponent.h>
 #include <RTBEngine/Online/OnlineGameplayNet.h>
 
 #include "EnemyAnimationDriver.h"
@@ -21,12 +21,12 @@
 
 #include <RTBEngine/Animation/Animator.h>
 #include <RTBEngine/Core/Logger.h>
-#include <RTBEngine/ECS/GameObject.h>
-#include <RTBEngine/ECS/NavAgentComponent.h>
-#include <RTBEngine/ECS/NavGridComponent.h>
-#include <RTBEngine/ECS/PrefabRegistry.h>
-#include <RTBEngine/ECS/Scene.h>
-#include <RTBEngine/ECS/SceneManager.h>
+#include <RTBEngine/Scene/GameObject.h>
+#include <RTBEngine/Scene/NavAgentComponent.h>
+#include <RTBEngine/Scene/NavGridComponent.h>
+#include <RTBEngine/Scene/PrefabRegistry.h>
+#include <RTBEngine/Scene/Scene.h>
+#include <RTBEngine/Scene/SceneManager.h>
 #include <RTBEngine/Navigation/NavPathService.h>
 
 #include <algorithm>

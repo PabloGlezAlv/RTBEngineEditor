@@ -2,6 +2,8 @@
 
 A visual game editor for **RTBEngine**, built in **C++17** using **ImGui** for the entire UI with a docking-based multi-panel layout. The editor consumes the engine through `RTBEngine_SDK` (`RTBEngine.lib` plus `RTBEngine.dll`) and adds an additional layer of tooling on top: scene authoring, property inspection, asset browsing, real-time play testing, and game build export.
 
+> **Note:** Engine scene types live in `Engine/Scene/` under namespace `RTBEngine::ECS` (legacy name). That is the GameObject–Component layer, not a data-oriented ECS. Hybrid ECS support is planned for a future engine release.
+
 ---
 
 ## Table of Contents
@@ -1274,7 +1276,7 @@ When "Create C++ Component" is selected, a dialog asks for the component name, t
 **Header** (`Assets/Scripts/ComponentName.h`):
 ```cpp
 #pragma once
-#include <RTBEngine/ECS/Component.h>
+#include <RTBEngine/Scene/Component.h>
 #include <RTBEngine/Reflection/PropertyMacros.h>
 
 class ComponentName : public RTBEngine::ECS::Component {
@@ -1697,7 +1699,7 @@ Alternatively, create the files manually following this template:
 
 ```cpp
 #pragma once
-#include <RTBEngine/ECS/Component.h>
+#include <RTBEngine/Scene/Component.h>
 #include <RTBEngine/Reflection/PropertyMacros.h>
 
 class Rotator : public RTBEngine::ECS::Component {
@@ -1729,8 +1731,8 @@ private:
 
 ```cpp
 #include "Rotator.h"
-#include <RTBEngine/ECS/Transform.h>
-#include <RTBEngine/ECS/GameObject.h>
+#include <RTBEngine/Scene/Transform.h>
+#include <RTBEngine/Scene/GameObject.h>
 
 using ThisClass = Rotator;
 

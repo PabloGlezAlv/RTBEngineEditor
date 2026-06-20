@@ -1,6 +1,6 @@
 #pragma once
 
-#include <RTBEngine/ECS/Component.h>
+#include <RTBEngine/Scene/Component.h>
 #include <RTBEngine/Reflection/PropertyMacros.h>
 
 class EnemySpawnPoint : public RTBEngine::ECS::Component

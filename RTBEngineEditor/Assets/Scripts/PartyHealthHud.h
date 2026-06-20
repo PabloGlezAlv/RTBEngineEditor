@@ -1,9 +1,9 @@
 #pragma once
 
-#include <RTBEngine/ECS/NetworkIdentity.h>
-#include <RTBEngine/ECS/Component.h>
-#include <RTBEngine/ECS/GameObject.h>
-#include <RTBEngine/ECS/Prefab.h>
+#include <RTBEngine/Scene/NetworkIdentity.h>
+#include <RTBEngine/Scene/Component.h>
+#include <RTBEngine/Scene/GameObject.h>
+#include <RTBEngine/Scene/Prefab.h>
 #include <RTBEngine/Reflection/PropertyMacros.h>
 #include <RTBEngine/UI/Elements/UIText.h>
 

@@ -2,7 +2,7 @@
 
 #include "HealthComponent.h"
 
-#include <RTBEngine/ECS/Component.h>
+#include <RTBEngine/Scene/Component.h>
 #include <RTBEngine/Math/Vectors/Vector3.h>
 #include <RTBEngine/Reflection/PropertyMacros.h>
 

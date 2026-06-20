@@ -2,11 +2,11 @@
 #include <imgui.h>
 #include <RTBEngine/Core/Logger.h>
 #include <RTBEngine/Core/ResourceManager.h>
-#include <RTBEngine/ECS/Prefab.h>
-#include <RTBEngine/ECS/PrefabRegistry.h>
+#include <RTBEngine/Scene/Prefab.h>
+#include <RTBEngine/Scene/PrefabRegistry.h>
 #include <RTBEngine/Scripting/PrefabSaver.h>
-#include <RTBEngine/ECS/SceneManager.h>
-#include <RTBEngine/ECS/Scene.h>
+#include <RTBEngine/Scene/SceneManager.h>
+#include <RTBEngine/Scene/Scene.h>
 #include <RTBEngine/Scripting/SceneSaver.h>
 #include <RTBEngine/Rendering/ModelLoader.h>
 #include "../../Project/Project.h"
@@ -617,7 +617,7 @@ namespace RTBEditor {
                     {
                         std::ofstream h(headerFile);
                         h << "#pragma once\n";
-                        h << "#include <RTBEngine/ECS/Component.h>\n";
+                        h << "#include <RTBEngine/Scene/Component.h>\n";
                         h << "#include <RTBEngine/Reflection/PropertyMacros.h>\n";
                         h << "\n";
                         h << "class " << className << " : public RTBEngine::ECS::Component {\n";

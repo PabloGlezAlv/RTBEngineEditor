@@ -3,7 +3,7 @@
 #include "HealthComponent.h"
 
 #include <RTBEngine/Core/Event.h>
-#include <RTBEngine/ECS/Component.h>
+#include <RTBEngine/Scene/Component.h>
 
 namespace RTBEngine {
     namespace ECS {

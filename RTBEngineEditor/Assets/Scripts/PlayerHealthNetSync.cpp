@@ -3,7 +3,7 @@
 #include "HealthComponent.h"
 #include "OnlineGameNetMessages.h"
 
-#include <RTBEngine/ECS/GameObject.h>
+#include <RTBEngine/Scene/GameObject.h>
 
 using ThisClass = PlayerHealthNetSync;
 
