@@ -1,6 +1,7 @@
 #include "ProjectileComponent.h"
 
 #include "CharacterBase.h"
+#include "FloatingDamageNumberSpawner.h"
 #include "HitFlashComponent.h"
 
 #include <RTBEngine/Scene/AudioSourceComponent.h>
@@ -96,6 +97,22 @@ namespace {
         for (RTBEngine::ECS::GameObject* current = hitObject; current; current = current->GetParent()) {
             if (auto* hitFlash = current->GetComponent<HitFlashComponent>()) {
                 hitFlash->TriggerFlash();
+                return;
+            }
+        }
+    }
+
+    void TryTriggerDamageNumber(RTBEngine::ECS::GameObject* hitObject,
+                                float amount,
+                                const RTBEngine::Math::Vector3& hitPoint)
+    {
+        if (amount <= 0.0f) {
+            return;
+        }
+
+        for (RTBEngine::ECS::GameObject* current = hitObject; current; current = current->GetParent()) {
+            if (auto* spawner = current->GetComponent<FloatingDamageNumberSpawner>()) {
+                spawner->SpawnDamageNumber(amount, hitPoint);
                 return;
             }
         }
@@ -346,6 +363,9 @@ bool ProjectileComponent::HandleSweepHit(const RTBEngine::Math::Vector3& previou
     HealthComponent* targetHealth = ResolveHitHealth(hit.gameObject);
     if (targetHealth && !HasAlreadyHit(targetHealth)) {
         TryTriggerHitFlash(hit.gameObject);
+        if (!applyDamage && IsLocallyControlledInstigator(instigator)) {
+            TryTriggerDamageNumber(hit.gameObject, damage, hit.point);
+        }
     }
 
     if (applyDamage) {

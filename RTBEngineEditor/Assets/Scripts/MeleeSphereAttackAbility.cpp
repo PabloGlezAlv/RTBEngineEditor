@@ -2,7 +2,9 @@
 
 #include "CharacterBase.h"
 
+#include <RTBEngine/Scene/AudioSourceComponent.h>
 #include <RTBEngine/Scene/GameObject.h>
+#include <RTBEngine/Scene/NetworkIdentity.h>
 #include <RTBEngine/Physics/PhysicsWorld.h>
 
 #include <algorithm>
@@ -47,6 +49,21 @@ namespace {
 
         return static_cast<int>(CharacterTeam::Neutral);
     }
+
+    bool IsLocallyControlledCharacter(RTBEngine::ECS::GameObject* root)
+    {
+        if (!root) {
+            return false;
+        }
+
+        const RTBEngine::ECS::NetworkIdentity* identity =
+            root->GetComponent<RTBEngine::ECS::NetworkIdentity>();
+        if (!identity) {
+            return true;
+        }
+
+        return identity->IsLocallyControlled();
+    }
 }
 
 RTB_REGISTER_COMPONENT(MeleeSphereAttackAbility)
@@ -59,6 +76,7 @@ RTB_REGISTER_COMPONENT(MeleeSphereAttackAbility)
     RTB_PROPERTY_RANGE(sphereDistance, 0.05f, 10.0f)
     RTB_PROPERTY_RANGE(knockbackStrength, 0.0f, 20.0f)
     RTB_PROPERTY(ignoreSameTeam)
+    RTB_PROPERTY_COMPONENT(hitAudio, AudioSourceComponent)
 RTB_END_REGISTER(MeleeSphereAttackAbility)
 
 void MeleeSphereAttackAbility::OnValidate()
@@ -145,6 +163,10 @@ bool MeleeSphereAttackAbility::ApplySphereHit(
     damageContext.hitDirection = castDirection;
     damageContext.knockbackStrength = knockbackStrength;
     targetHealth->TakeDamage(damage, damageContext);
+
+    if (hitAudio && IsLocallyControlledCharacter(targetRoot)) {
+        hitAudio->PlayOneShot();
+    }
 
     return true;
 }

@@ -8,6 +8,7 @@
 
 namespace RTBEngine {
     namespace ECS {
+        class AudioSourceComponent;
         class GameObject;
     }
 
@@ -33,6 +34,7 @@ public:
     float sphereDistance = 0.95f;
     float knockbackStrength = 2.5f;
     bool ignoreSameTeam = true;
+    RTBEngine::ECS::AudioSourceComponent* hitAudio = nullptr;
 
     RTB_COMPONENT(MeleeSphereAttackAbility)
 

@@ -1,0 +1,58 @@
+return {
+    name = "Floating Damage Number",
+    uuid = "F10AT1NG-0001-4000-8000-000000000001",
+    position = Vector3(0.00, 0.00, 0.00),
+    components = {
+        {
+            type = "FloatingDamageNumberLifetime",
+            lifetime = 1.06,
+            popDuration = 0.12,
+            fadeStartNormalized = 0.55,
+            riseDistance = 0.85,
+            startScale = 0.35,
+            holdScale = 1.00,
+            textColor = Color(1.00, 0.92, 0.35, 1.00)
+        },
+    },
+    children = {
+        {
+            name = "DamageCanvas",
+            uuid = "F10AT1NG-0002-4000-8000-000000000002",
+            components = {
+                {
+                    type = "Canvas",
+                    renderMode = "WorldSpace",
+                    canvasSize = Vector2(256.00, 128.00),
+                    pixelsPerUnit = 100.00,
+                    sortOrder = 40,
+                    faceCamera = true
+                },
+            },
+            children = {
+                {
+                    name = "DamageText",
+                    uuid = "F10AT1NG-0003-4000-8000-000000000003",
+                    components = {
+                        {
+                            type = "UIText",
+                            text = "0",
+                            color = Color(1.00, 0.92, 0.35, 1.00),
+                            fontSize = 60.00,
+                            alignment = "Center",
+                            font = nil,
+                            isVisible = true,
+                            raycastTarget = false,
+                            anchorMin = Vector2(0.50, 0.50),
+                            anchorMax = Vector2(0.50, 0.50),
+                            pivot = Vector2(0.50, 0.50),
+                            anchoredPosition = Vector2(0.00, 0.00),
+                            sizeDelta = Vector2(208.00, 83.00),
+                            rotation = 0.00,
+                            scale = Vector2(1.00, 1.00)
+                        },
+                    }
+                },
+            }
+        },
+    }
+}
