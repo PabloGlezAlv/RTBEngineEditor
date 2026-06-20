@@ -59,6 +59,12 @@ function CreateScene()
                         faceCamera = false
                     },
                     {
+                        type = "AudioSourceComponent",
+                        clip = "Assets/Audio/UI/button_click.mp3",
+                        volume = 0.85,
+                        playOnStart = false
+                    },
+                    {
                         type = "CursorUnlocker"
                     },
                     {
@@ -231,6 +237,7 @@ function CreateScene()
                             },
                             {
                                 type = "ButtonStyle",
+                                clickAudio = "073830E4-5E61-4968-B33A-433B8A60D77C/AudioSourceComponent",
                                 backgroundImage = "E8F1A2B3-C4D5-4E6F-9012-ABCDEF010101/UIImage",
                                 label = "6C243A1E-F469-47BE-9CB9-7DAC1471F31F/UIText",
                                 normalTexture = "Assets/UI/GuildSlate/btn_accent_normal.png",
@@ -331,6 +338,7 @@ function CreateScene()
                             },
                             {
                                 type = "ButtonStyle",
+                                clickAudio = "073830E4-5E61-4968-B33A-433B8A60D77C/AudioSourceComponent",
                                 backgroundImage = "MPBG01-2345-6789-ABCD-EF0123456701/UIImage",
                                 label = "MPLBL01-2345-6789-ABCD-EF0123456701/UIText",
                                 normalTexture = "Assets/UI/GuildSlate/btn_accent_normal.png",
@@ -431,6 +439,7 @@ function CreateScene()
                             },
                             {
                                 type = "ButtonStyle",
+                                clickAudio = "073830E4-5E61-4968-B33A-433B8A60D77C/AudioSourceComponent",
                                 backgroundImage = "E8F1A2B3-C4D5-4E6F-9012-ABCDEF010102/UIImage",
                                 label = "6C4B352B-BAFB-4A6C-806C-2E24DB7CB30B/UIText",
                                 normalTexture = "Assets/UI/GuildSlate/btn_danger_normal.png",

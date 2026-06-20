@@ -26,6 +26,10 @@
 
 namespace RTBEngine {
 
+    namespace ECS {
+        class AudioSourceComponent;
+    }
+
     namespace Rendering {
 
         class Texture;
@@ -120,7 +124,8 @@ public:
 
     float pressOutTimeSec = 0.12f;
 
-
+    bool playClickSound = true;
+    RTBEngine::ECS::AudioSourceComponent* clickAudio = nullptr;
 
     RTB_COMPONENT(ButtonStyle)
 

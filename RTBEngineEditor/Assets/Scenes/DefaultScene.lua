@@ -34,6 +34,12 @@ function CreateScene()
                         faceCamera = false
                     },
                     {
+                        type = "AudioSourceComponent",
+                        clip = "Assets/Audio/UI/button_click.mp3",
+                        volume = 0.85,
+                        playOnStart = false
+                    },
+                    {
                         type = "RoundUIHandler",
                         roundText = "D7D85F5A-5A9A-4E6A-8AA2-9032EC0F0B11/UIText",
                         countdownText = "A5C9F5F4-2D0B-4D2C-9FE5-443A683E1A22/UIText",
@@ -294,6 +300,7 @@ function CreateScene()
                                             },
                                             {
                                                 type = "ButtonStyle",
+                                                clickAudio = "62E6AE07-7DC2-42B3-8F0E-AA7CA40264F0/AudioSourceComponent",
                                                 backgroundImage = "F1A2B3C4-D5E6-4789-A012-3456789AB201/UIImage",
                                                 label = "5DE3585B-3426-421D-8F36-DBAF43123F50/UIText",
                                                 normalTexture = "Assets/UI/GuildSlate/btn_accent_normal.png",
@@ -398,6 +405,7 @@ function CreateScene()
                                             },
                                             {
                                                 type = "ButtonStyle",
+                                                clickAudio = "62E6AE07-7DC2-42B3-8F0E-AA7CA40264F0/AudioSourceComponent",
                                                 backgroundImage = "F1A2B3C4-D5E6-4789-A012-3456789AB202/UIImage",
                                                 label = "2F7C83F3-A334-41DA-BF4C-A4FDDE59BA6C/UIText",
                                                 normalTexture = "Assets/UI/GuildSlate/btn_secondary_normal.png",

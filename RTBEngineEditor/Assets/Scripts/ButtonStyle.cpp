@@ -1,13 +1,10 @@
 #include "ButtonStyle.h"
 
-
-
 #include <RTBEngine/Core/Logger.h>
 
+#include <RTBEngine/Scene/AudioSourceComponent.h>
 #include <RTBEngine/Scene/GameObject.h>
-
 #include <RTBEngine/Scene/SceneManager.h>
-
 #include <RTBEngine/UI/Elements/UIButton.h>
 
 #include <RTBEngine/UI/Elements/UIImage.h>
@@ -77,6 +74,10 @@ RTB_REGISTER_COMPONENT(ButtonStyle)
     RTB_PROPERTY_RANGE(pressInTimeSec,  0.0f, 3.0f)
 
     RTB_PROPERTY_RANGE(pressOutTimeSec, 0.0f, 3.0f)
+
+    RTB_PROPERTY(playClickSound)
+
+    RTB_PROPERTY_COMPONENT(clickAudio, AudioSourceComponent)
 
 RTB_END_REGISTER(ButtonStyle)
 
@@ -945,6 +946,14 @@ void ButtonStyle::OnPointerUp(const RTBEngine::UI::PointerEventData&)
 void ButtonStyle::OnPointerClick(const RTBEngine::UI::PointerEventData&)
 
 {
+
+    if (!playClickSound || !IsButtonInteractable() || !clickAudio) {
+
+        return;
+
+    }
+
+    clickAudio->PlayOneShot();
 
 }
 

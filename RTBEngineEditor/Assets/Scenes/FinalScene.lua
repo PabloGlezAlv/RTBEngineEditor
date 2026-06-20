@@ -51,6 +51,12 @@ function CreateScene()
                         sortOrder = 0
                     },
                     {
+                        type = "AudioSourceComponent",
+                        clip = "Assets/Audio/UI/button_click.mp3",
+                        volume = 0.85,
+                        playOnStart = false
+                    },
+                    {
                         type = "CursorUnlocker"
                     },
                     {
@@ -137,6 +143,7 @@ function CreateScene()
                             },
                             {
                                 type = "ButtonStyle",
+                                clickAudio = "6233C2FA-C05A-4C30-B771-E1185E584E8A/AudioSourceComponent",
                                 backgroundImage = "E8F1A2B3-C4D5-4E6F-9012-ABCDEF010103/UIImage",
                                 label = "47563C6B-497E-4D65-BA86-17F69EFD0D6D/UIText",
                                 normalTexture = "Assets/UI/GuildSlate/btn_primary_normal.png",

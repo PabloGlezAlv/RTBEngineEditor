@@ -52,6 +52,12 @@ function CreateScene()
                         faceCamera = false
                     },
                     {
+                        type = "AudioSourceComponent",
+                        clip = "Assets/Audio/UI/button_click.mp3",
+                        volume = 0.85,
+                        playOnStart = false
+                    },
+                    {
                         type = "CursorUnlocker"
                     },
                     {
@@ -241,6 +247,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "ButtonStyle",
+                                        clickAudio = "1B12E0D8-20EE-4B4F-9014-5D6A0D694001/AudioSourceComponent",
                                         backgroundImage = "B2F4E3D2-6C5B-4B4F-AF9E-8E7D6C5B4001/UIImage",
                                         label = "91675087-65CA-4A28-958F-E8F7C7214001/UIText",
                                         normalTexture = "Assets/UI/GuildSlate/btn_secondary_normal.png",
@@ -408,6 +415,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "ButtonStyle",
+                                        clickAudio = "1B12E0D8-20EE-4B4F-9014-5D6A0D694001/AudioSourceComponent",
                                         backgroundImage = "C3F5E4D3-7D6C-4C5A-BFA0-9F8E7D6C5001/UIImage",
                                         label = "235D9940-2514-42BC-B668-6D3848084001/UIText",
                                         normalTexture = "Assets/UI/GuildSlate/btn_primary_normal.png",
@@ -506,6 +514,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "ButtonStyle",
+                                        clickAudio = "1B12E0D8-20EE-4B4F-9014-5D6A0D694001/AudioSourceComponent",
                                         backgroundImage = "D4F6E5D4-8E7D-4D6B-CFB1-A0AF9F8E6001/UIImage",
                                         label = "7B43110F-D650-42B2-AE35-B79214844001/UIText",
                                         normalTexture = "Assets/UI/GuildSlate/btn_secondary_normal.png",
@@ -604,6 +613,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "ButtonStyle",
+                                        clickAudio = "1B12E0D8-20EE-4B4F-9014-5D6A0D694001/AudioSourceComponent",
                                         backgroundImage = "E5F7E6D5-9F8E-4E7C-DFC2-B1B0AFAF7001/UIImage",
                                         label = "CC6F3E5A-B403-4FA7-82C4-D0222F4E4001/UIText",
                                         normalTexture = "Assets/UI/GuildSlate/btn_danger_normal.png",
@@ -702,6 +712,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "ButtonStyle",
+                                        clickAudio = "1B12E0D8-20EE-4B4F-9014-5D6A0D694001/AudioSourceComponent",
                                         backgroundImage = "F6F8E7D6-0A9F-4F8D-EFD3-C2C1B0B08001/UIImage",
                                         label = "CB8F00A0-9E25-414F-8DC5-5052840B4001/UIText",
                                         normalTexture = "Assets/UI/GuildSlate/btn_accent_normal.png",
@@ -800,6 +811,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "ButtonStyle",
+                                        clickAudio = "1B12E0D8-20EE-4B4F-9014-5D6A0D694001/AudioSourceComponent",
                                         backgroundImage = "07F9E8D7-1B0A-4A9E-FFE4-D3D2C1C19001/UIImage",
                                         label = "B0AA3EF1-92B3-4DD5-97C9-B7BD88954001/UIText",
                                         normalTexture = "Assets/UI/GuildSlate/btn_secondary_normal.png",
