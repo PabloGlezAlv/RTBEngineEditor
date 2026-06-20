@@ -12,6 +12,7 @@ namespace RTBEngine {
     namespace ECS {
         class AudioSourceComponent;
         class GameObject;
+        class TrailRenderer;
     }
 
     namespace Physics {
@@ -71,10 +72,14 @@ private:
     int appliedHitCount = 0;
     bool initialized = false;
     bool pendingDestroy = false;
+    RTBEngine::ECS::TrailRenderer* flightTrail = nullptr;
     std::vector<HealthComponent*> hitTargets;
 
     void ClampSettings();
     void InitializeFromOwnerTransform();
+    void EnsureFlightTrail();
+    void UpdateFlightTrail(const RTBEngine::Math::Vector3& position);
+    void ReleaseTrailForFadeout();
     RTBEngine::Physics::PhysicsWorld* ResolvePhysicsWorld() const;
     HealthComponent* ResolveHitHealth(RTBEngine::ECS::GameObject* hitObject) const;
     bool HasAlreadyHit(HealthComponent* target) const;

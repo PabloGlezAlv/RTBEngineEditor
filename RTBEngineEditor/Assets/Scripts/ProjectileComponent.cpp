@@ -8,8 +8,11 @@
 #include <RTBEngine/Scene/GameObject.h>
 #include <RTBEngine/Scene/NetworkIdentity.h>
 #include <RTBEngine/Scene/RigidBodyComponent.h>
+#include "ProjectileTrailFadeLifetime.h"
+
 #include <RTBEngine/Scene/Scene.h>
 #include <RTBEngine/Scene/SceneManager.h>
+#include <RTBEngine/Scene/TrailRenderer.h>
 #include <RTBEngine/Physics/PhysicsWorld.h>
 
 #include <algorithm>
@@ -20,6 +23,10 @@ using ThisClass = ProjectileComponent;
 namespace {
     constexpr float kDirectionEpsilon = 0.0001f;
     constexpr float kDistanceEpsilon = 0.0001f;
+    constexpr float kMinTrailPointDistance = 0.04f;
+    constexpr float kMinTrailPointDistanceSq = kMinTrailPointDistance * kMinTrailPointDistance;
+    constexpr std::size_t kMaxTrailPoints = 48;
+    constexpr float kProjectileTrailWidth = 0.10f;
 
     bool HasPlanarDirection(const RTBEngine::Math::Vector3& value)
     {
@@ -173,6 +180,7 @@ void ProjectileComponent::OnUpdate(float deltaTime)
     RTBEngine::Math::Vector3 resolvedPosition = shouldStop ? hitPosition : nextPosition;
     resolvedPosition.y = fixedHeight;
     owner->GetTransform().SetPosition(resolvedPosition);
+    UpdateFlightTrail(resolvedPosition);
 
     distanceTravelled = std::min(maxDistance, distanceTravelled + stepDistance);
 
@@ -188,6 +196,12 @@ void ProjectileComponent::OnValidate()
 
 void ProjectileComponent::OnDestroy()
 {
+    if (flightTrail) {
+        flightTrail->SetVisible(false);
+        flightTrail->ClearPoints();
+        flightTrail = nullptr;
+    }
+
     instigator = nullptr;
     physicsWorld = nullptr;
     hitTargets.clear();
@@ -231,6 +245,9 @@ void ProjectileComponent::Initialize(const ProjectileConfig& config)
     if (owner) {
         owner->GetTransform().SetPosition(config.origin);
     }
+
+    EnsureFlightTrail();
+    UpdateFlightTrail(config.origin);
 }
 
 void ProjectileComponent::ClampSettings()
@@ -240,6 +257,99 @@ void ProjectileComponent::ClampSettings()
     radius = std::max(0.05f, radius);
     damage = std::max(0.0f, damage);
     maxHits = std::max(0, maxHits);
+}
+
+void ProjectileComponent::EnsureFlightTrail()
+{
+    if (!owner || flightTrail) {
+        return;
+    }
+
+    flightTrail = owner->GetComponent<RTBEngine::ECS::TrailRenderer>();
+    if (!flightTrail) {
+        flightTrail = new RTBEngine::ECS::TrailRenderer();
+        owner->AddComponent(flightTrail);
+    }
+
+    flightTrail->width = kProjectileTrailWidth;
+    flightTrail->color = RTBEngine::Math::Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+    flightTrail->fadeAlphaAlongLength = true;
+    flightTrail->SetGlobalAlphaScale(1.0f);
+    flightTrail->SetVisible(true);
+    flightTrail->ClearPoints();
+}
+
+void ProjectileComponent::UpdateFlightTrail(const RTBEngine::Math::Vector3& position)
+{
+    if (!flightTrail) {
+        return;
+    }
+
+    RTBEngine::Math::Vector3 trailPoint = position;
+    trailPoint.y = fixedHeight;
+
+    const std::vector<RTBEngine::Math::Vector3>& points = flightTrail->GetPoints();
+    if (!points.empty()) {
+        RTBEngine::Math::Vector3 delta = trailPoint - points.back();
+        delta.y = 0.0f;
+        if (delta.LengthSquared() <= kMinTrailPointDistanceSq) {
+            return;
+        }
+    }
+
+    flightTrail->AddPoint(trailPoint);
+
+    while (flightTrail->GetPointCount() > kMaxTrailPoints) {
+        const std::vector<RTBEngine::Math::Vector3>& allPoints = flightTrail->GetPoints();
+        flightTrail->SetPoints(
+            std::vector<RTBEngine::Math::Vector3>(allPoints.begin() + 1, allPoints.end()));
+    }
+}
+
+void ProjectileComponent::ReleaseTrailForFadeout()
+{
+    if (!flightTrail || flightTrail->GetPointCount() < 2) {
+        flightTrail = nullptr;
+        return;
+    }
+
+    RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
+    if (!scene) {
+        return;
+    }
+
+    const std::vector<RTBEngine::Math::Vector3> trailPoints = flightTrail->GetPoints();
+    const float trailWidth = flightTrail->width;
+
+    RTBEngine::ECS::GameObject* trailGhost =
+        RTBEngine::ECS::SceneManager::GetInstance().Instantiate("Projectile Trail Fade");
+    if (!trailGhost) {
+        return;
+    }
+
+    trailGhost->SetTransient(true);
+
+    auto* ghostTrail = new RTBEngine::ECS::TrailRenderer();
+    ghostTrail->width = trailWidth;
+    ghostTrail->color = RTBEngine::Math::Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+    ghostTrail->fadeAlphaAlongLength = true;
+    ghostTrail->SetGlobalAlphaScale(1.0f);
+    ghostTrail->SetPoints(trailPoints);
+    ghostTrail->SetVisible(true);
+    trailGhost->AddComponent(ghostTrail);
+
+    auto* fadeLifetime = new ProjectileTrailFadeLifetime();
+    trailGhost->AddComponent(fadeLifetime);
+
+    for (const auto& component : trailGhost->GetComponents()) {
+        if (component) {
+            component->TryInvokeStart();
+        }
+    }
+
+    flightTrail->SetVisible(false);
+    flightTrail->ClearPoints();
+    flightTrail = nullptr;
 }
 
 void ProjectileComponent::InitializeFromOwnerTransform()
@@ -401,6 +511,7 @@ void ProjectileComponent::DestroyProjectile()
 
     pendingDestroy = true;
     SetEnabled(false);
+    ReleaseTrailForFadeout();
 
     RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
     if (scene && owner) {
