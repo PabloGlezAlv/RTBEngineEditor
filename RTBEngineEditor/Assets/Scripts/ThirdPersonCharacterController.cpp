@@ -129,6 +129,7 @@ RTB_END_REGISTER(ThirdPersonCharacterController)
 void ThirdPersonCharacterController::OnStart()
 {
     hasReplicatedMotionSample = false;
+    replicatedAnimatorReady = false;
     ClampSettings();
     ResolveHealth();
     ResolveAnimator();
@@ -229,6 +230,7 @@ void ThirdPersonCharacterController::OnFixedUpdate(float fixedDeltaTime)
         HideAttackAimTrail();
         SetAimArrowVisible(false);
         UpdateAttackFacingLock(fixedDeltaTime);
+        PollAttackCompletion();
         return;
     }
 
@@ -255,47 +257,57 @@ void ThirdPersonCharacterController::OnLateUpdate(float deltaTime)
         HideAttackAimTrail();
         // Runs after NetworkTransform when that component is listed earlier on the pawn.
         if (UsesReplicatedAnimator()) {
-            ResolveAnimator();
-            RegisterAnimationSlots();
+            if (!replicatedAnimatorReady) {
+                ResolveAnimator();
+                RegisterAnimationSlots();
+                replicatedAnimatorReady = true;
+            }
             UpdateAnimatorFromReplicatedMotion(deltaTime);
         }
-        return;
-    }
+    } else {
+        DisableCompetingCameraController();
 
-    DisableCompetingCameraController();
-
-    if (state == State::Dead && deathCameraFrozen) {
-        if (cameraObject) {
-            cameraObject->GetTransform().SetPosition(frozenCameraWorldPosition);
-            cameraObject->GetTransform().SetRotation(frozenCameraWorldRotation);
-        }
-        return;
-    }
-
-    ApplyCameraFollowTransform();
-
-    const bool dragging = attackJoystick && attackJoystick->IsDragging();
-
-    if (state == State::Locomotion && dragging && !wasDraggingJoystick && CanStartAiming()) {
-        TryBeginAiming();
-    }
-
-    if (state == State::Aiming) {
-        UpdateAimingState(deltaTime);
-        wasDraggingJoystick = dragging;
-        if (state == State::Attacking) {
-            // Release during this frame transitioned to attack; finish attack polling below.
+        if (state == State::Dead && deathCameraFrozen) {
+            if (cameraObject) {
+                cameraObject->GetTransform().SetPosition(frozenCameraWorldPosition);
+                cameraObject->GetTransform().SetRotation(frozenCameraWorldRotation);
+            }
         } else {
-            return;
+            ApplyCameraFollowTransform();
+
+            const bool dragging = attackJoystick && attackJoystick->IsDragging();
+
+            if (state == State::Locomotion && dragging && !wasDraggingJoystick && CanStartAiming()) {
+                TryBeginAiming();
+            }
+
+            if (state == State::Aiming) {
+                UpdateAimingState(deltaTime);
+                wasDraggingJoystick = dragging;
+                if (state == State::Attacking) {
+                    // Release during this frame transitioned to attack; finish attack polling below.
+                } else {
+                    return;
+                }
+            }
+
+            wasDraggingJoystick = dragging;
+
+            if (state == State::Locomotion) {
+                return;
+            }
+
+            if (state != State::Attacking) {
+                return;
+            }
+
+            PollAttackCompletion();
         }
     }
+}
 
-    wasDraggingJoystick = dragging;
-
-    if (state == State::Locomotion) {
-        return;
-    }
-
+void ThirdPersonCharacterController::PollAttackCompletion()
+{
     if (state != State::Attacking) {
         return;
     }
@@ -629,6 +641,16 @@ void ThirdPersonCharacterController::HandleJoystickAttackReleased(const RTBEngin
 
     if (RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby() &&
         !RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
+        if (state == State::Attacking) {
+            PollAttackCompletion();
+            if (state == State::Attacking) {
+                if (wasAiming) {
+                    FinishAiming();
+                }
+                return;
+            }
+        }
+
         if (PlayerAmmoSystem* ammoSystem = owner->GetComponent<PlayerAmmoSystem>()) {
             ammoSystem->ConsumeShot();
         }
@@ -972,6 +994,7 @@ void ThirdPersonCharacterController::UpdateAnimatorFromReplicatedMotion(float de
     if (!hasReplicatedMotionSample) {
         lastReplicatedWorldPosition = currentPosition;
         hasReplicatedMotionSample = true;
+        replicatedPlanarSpeed = 0.0f;
         UpdateAnimatorLocomotion(false, false);
         return;
     }
@@ -981,13 +1004,26 @@ void ThirdPersonCharacterController::UpdateAnimatorFromReplicatedMotion(float de
     lastReplicatedWorldPosition = currentPosition;
 
     const float timestep = std::max(deltaTime, 0.0001f);
-    const float planarSpeed = delta.Length() / timestep;
-    const float walkThreshold = std::max(0.05f, moveSpeed * 0.12f);
-    const float runThreshold = std::max(walkThreshold + 0.05f, moveSpeed * sprintMultiplier * 0.55f);
+    const float instantPlanarSpeed = delta.Length() / timestep;
+    constexpr float kSpeedSmoothing = 10.0f;
+    const float blend = 1.0f - std::exp(-kSpeedSmoothing * timestep);
+    replicatedPlanarSpeed += (instantPlanarSpeed - replicatedPlanarSpeed) * blend;
 
-    const bool hasMovementInput = planarSpeed >= walkThreshold;
-    const bool isRunning = planarSpeed >= runThreshold;
+    const float walkThreshold = std::max(0.02f, moveSpeed * 0.08f);
+    const float runThreshold = std::max(walkThreshold + 0.05f, moveSpeed * sprintMultiplier * 0.45f);
+
+    const bool hasMovementInput = replicatedPlanarSpeed >= walkThreshold;
+    const bool isRunning = replicatedPlanarSpeed >= runThreshold;
     UpdateAnimatorLocomotion(hasMovementInput, isRunning);
+}
+
+void ThirdPersonCharacterController::PlayReplicatedAttackVisual(const RTBEngine::Math::Vector3& attackDirection)
+{
+    if (IsLocallyControlled() || HasSimulationAuthority()) {
+        return;
+    }
+
+    PlayPredictedAttackVisual(attackDirection);
 }
 
 void ThirdPersonCharacterController::UpdateAnimatorLocomotion(bool hasMovementInput, bool isRunning)
@@ -1439,18 +1475,5 @@ void ThirdPersonCharacterController::UpdatePredictedAttackVisual(float /*deltaTi
         return;
     }
 
-    const bool hasAttackAnimation =
-        animator && attackSlotState.ready && animator->GetClip(kAttackAlias);
-
-    if (!hasAttackAnimation) {
-        FinishAttack();
-        return;
-    }
-
-    if (animator->GetCurrentClipName() == kAttackAlias && animator->IsPlaying()) {
-        return;
-    }
-
-    FinishAttack();
+    PollAttackCompletion();
 }
-

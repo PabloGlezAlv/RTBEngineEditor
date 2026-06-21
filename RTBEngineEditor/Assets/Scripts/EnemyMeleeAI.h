@@ -23,6 +23,7 @@ class EnemyAnimationDriver;
 class EnemyLocomotionController;
 class EnemyTargetTracker;
 class MeleeSphereAttackAbility;
+class RoundManager;
 
 class EnemyMeleeAI : public AICharacterController
 {
@@ -52,6 +53,7 @@ public:
 
     void PlayReplicatedAttack(std::uint32_t attackSequence);
     void FinalizeSpawnSetup();
+    void SetRoundManager(RoundManager* manager);
 
     RTB_COMPONENT(EnemyMeleeAI)
 
@@ -79,6 +81,8 @@ private:
     std::uint32_t lastProcessedReplicatedAttackSequence = 0;
     bool hasRepositionDestination = false;
     RTBEngine::Math::Vector3 repositionDestination = RTBEngine::Math::Vector3::Zero(); // Set once in EnterRepositioning
+    float targetRefreshRemaining = 0.0f;
+    RoundManager* roundManager = nullptr;
     HealthComponent* subscribedHealth = nullptr;
     RTBEngine::Core::EventSubscription damageTakenSubscription;
     RTBEngine::Core::EventSubscription deathSubscription;
@@ -88,6 +92,7 @@ private:
     void ResolveMeleeAttack();
     void RebindHealthSubscriptions();
     void UnsubscribeFromHealth();
+    void RefreshClosestTarget();
     void UpdateState();
     void UpdateHitReact(float deltaTime);
     void UpdateDying(float deltaTime);

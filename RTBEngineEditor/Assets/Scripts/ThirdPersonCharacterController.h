@@ -50,6 +50,7 @@ public:
     void ForceDeathState();
     void ReviveFromDeath();
     void AddPlanarKnockback(const RTBEngine::Math::Vector3& direction, float strength);
+    void PlayReplicatedAttackVisual(const RTBEngine::Math::Vector3& attackDirection);
 
     RTBEngine::ECS::GameObject* cameraObject = nullptr;
     HealthComponent* health = nullptr;
@@ -161,6 +162,7 @@ private:
     void TryProcessRemoteAttackInput();
     void PlayPredictedAttackVisual(const RTBEngine::Math::Vector3& attackDirection);
     void UpdatePredictedAttackVisual(float deltaTime);
+    void PollAttackCompletion();
     void ApplyDynamicPlanarMotion(RTBEngine::Physics::RigidBody* rigidBody,
                                   const RTBEngine::Math::Vector3& moveDirection,
                                   const RTBEngine::Math::Vector3& facingDirection,
@@ -177,6 +179,8 @@ private:
     RTBEngine::Math::Vector3 pendingNetworkAttackDirection = RTBEngine::Math::Vector3::Zero();
     RTBEngine::Math::Vector3 lastReplicatedWorldPosition = RTBEngine::Math::Vector3::Zero();
     bool hasReplicatedMotionSample = false;
+    float replicatedPlanarSpeed = 0.0f;
+    bool replicatedAnimatorReady = false;
     bool deathCameraFrozen = false;
     RTBEngine::Math::Vector3 frozenCameraWorldPosition = RTBEngine::Math::Vector3::Zero();
     RTBEngine::Math::Quaternion frozenCameraWorldRotation = RTBEngine::Math::Quaternion::Identity();

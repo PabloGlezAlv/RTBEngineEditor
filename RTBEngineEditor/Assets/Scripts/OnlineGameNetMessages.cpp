@@ -33,6 +33,7 @@ namespace GameNet {
         std::deque<ProjectileSpawnSnapshot> pendingProjectileSpawns;
         std::deque<EnemySpawnSnapshot> pendingEnemySpawns;
         std::deque<RoundStartSnapshot> pendingRoundStarts;
+        std::deque<RoundCountdownSnapshot> pendingRoundCountdowns;
         std::deque<PlayerNetworkBindSnapshot> pendingPlayerNetworkBinds;
         std::unordered_map<int, float> lastBroadcastPlayerHealth;
         std::string pendingMainMenuMessage;
@@ -233,6 +234,14 @@ namespace GameNet {
             std::vector<std::uint8_t> bytes;
             RTBEngine::Online::OnlineMessageCodec::AppendValue(bytes, snapshot.roundNumber);
             RTBEngine::Online::OnlineMessageCodec::AppendValue(bytes, snapshot.enemyCount);
+            return bytes;
+        }
+
+        std::vector<std::uint8_t> BuildRoundCountdownPayload(const RoundCountdownSnapshot& snapshot)
+        {
+            std::vector<std::uint8_t> bytes;
+            RTBEngine::Online::OnlineMessageCodec::AppendValue(bytes, snapshot.roundNumber);
+            RTBEngine::Online::OnlineMessageCodec::AppendValue(bytes, snapshot.duration);
             return bytes;
         }
 
@@ -495,6 +504,62 @@ namespace GameNet {
             pendingRoundStarts.push_back(snapshot);
         }
 
+        void HandleRoundCountdown(const RTBEngine::Online::OnlineMessageContext& context)
+        {
+            if (RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
+                return;
+            }
+
+            std::size_t offset = 0;
+            RoundCountdownSnapshot snapshot;
+            if (!RTBEngine::Online::OnlineMessageCodec::ReadValue(
+                    context.payload,
+                    context.payloadSize,
+                    offset,
+                    snapshot.roundNumber) ||
+                !RTBEngine::Online::OnlineMessageCodec::ReadValue(
+                    context.payload,
+                    context.payloadSize,
+                    offset,
+                    snapshot.duration) ||
+                snapshot.roundNumber < 1) {
+                return;
+            }
+
+            pendingRoundCountdowns.push_back(snapshot);
+        }
+
+        void HandlePlayerSessionReport(const RTBEngine::Online::OnlineMessageContext& context)
+        {
+            if (!RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
+                return;
+            }
+
+            std::size_t offset = 0;
+            std::string displayName;
+            if (!RTBEngine::Online::OnlineMessageCodec::ReadString(
+                    context.payload,
+                    context.payloadSize,
+                    offset,
+                    displayName) ||
+                displayName.empty()) {
+                return;
+            }
+
+            const int playerSlot = ResolvePlayerSlotForUser(context.senderUserId);
+            if (playerSlot < 0) {
+                return;
+            }
+
+            PlayerSessionSnapshot snapshot;
+            snapshot.playerSlot = playerSlot;
+            snapshot.ownerUserIdKey = context.senderUserId.ToString();
+            snapshot.displayName = displayName;
+            OnlineGameNetSubsystem::HostMergePlayerSessionProfile(snapshot);
+            OnlineGameNetSubsystem::ApplyPlayerSessionSnapshot(snapshot);
+            OnlineGameNetSubsystem::BroadcastPlayerSessionSnapshot(snapshot);
+        }
+
         void HandleEnemyDeathState(const RTBEngine::Online::OnlineMessageContext& context)
         {
             if (RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
@@ -649,11 +714,13 @@ namespace GameNet {
         RTBEngine::Online::OnlineMessageBus::RegisterHandler(kPlayerReviveRequest, &HandlePlayerReviveRequest);
         RTBEngine::Online::OnlineMessageBus::RegisterHandler(kEnemySpawn, &HandleEnemySpawn);
         RTBEngine::Online::OnlineMessageBus::RegisterHandler(kRoundStart, &HandleRoundStart);
+        RTBEngine::Online::OnlineMessageBus::RegisterHandler(kRoundCountdown, &HandleRoundCountdown);
         RTBEngine::Online::OnlineMessageBus::RegisterHandler(kEnemyDeathState, &HandleEnemyDeathState);
         RTBEngine::Online::OnlineMessageBus::RegisterHandler(kPlayerNetworkBind, &HandlePlayerNetworkBind);
         RTBEngine::Online::OnlineMessageBus::RegisterHandler(kEnemyAttack, &HandleEnemyAttack);
         RTBEngine::Online::OnlineMessageBus::RegisterHandler(kPlayerHealthState, &HandlePlayerHealthState);
         RTBEngine::Online::OnlineMessageBus::RegisterHandler(kPlayerSessionSnapshot, &HandlePlayerSessionSnapshot);
+        RTBEngine::Online::OnlineMessageBus::RegisterHandler(kPlayerSessionReport, &HandlePlayerSessionReport);
         RTBEngine::Online::OnlineMessageBus::RegisterHandler(kMatchPlayerLeaveNotice, &HandlePlayerLeaveNotice);
         RTBEngine::Online::OnlineMessageBus::RegisterHandler(kMatchPlayerLeft, &HandlePlayerLeft);
         RTBEngine::Online::OnlineMessageBus::RegisterHandler(kMatchHostAbandoned, &HandleHostAbandoned);
@@ -673,11 +740,13 @@ namespace GameNet {
         RTBEngine::Online::OnlineMessageBus::UnregisterHandler(kPlayerReviveRequest);
         RTBEngine::Online::OnlineMessageBus::UnregisterHandler(kEnemySpawn);
         RTBEngine::Online::OnlineMessageBus::UnregisterHandler(kRoundStart);
+        RTBEngine::Online::OnlineMessageBus::UnregisterHandler(kRoundCountdown);
         RTBEngine::Online::OnlineMessageBus::UnregisterHandler(kEnemyDeathState);
         RTBEngine::Online::OnlineMessageBus::UnregisterHandler(kPlayerNetworkBind);
         RTBEngine::Online::OnlineMessageBus::UnregisterHandler(kEnemyAttack);
         RTBEngine::Online::OnlineMessageBus::UnregisterHandler(kPlayerHealthState);
         RTBEngine::Online::OnlineMessageBus::UnregisterHandler(kPlayerSessionSnapshot);
+        RTBEngine::Online::OnlineMessageBus::UnregisterHandler(kPlayerSessionReport);
         RTBEngine::Online::OnlineMessageBus::UnregisterHandler(kMatchPlayerLeaveNotice);
         RTBEngine::Online::OnlineMessageBus::UnregisterHandler(kMatchPlayerLeft);
         RTBEngine::Online::OnlineMessageBus::UnregisterHandler(kMatchHostAbandoned);
@@ -688,6 +757,7 @@ namespace GameNet {
         pendingProjectileSpawns.clear();
         pendingEnemySpawns.clear();
         pendingRoundStarts.clear();
+        pendingRoundCountdowns.clear();
         pendingPlayerNetworkBinds.clear();
         lastBroadcastPlayerHealth.clear();
         RTBEngine::Online::OnlineSystem::GetInstance().ClearPlayerSessionProfiles();
@@ -897,6 +967,52 @@ namespace GameNet {
         RTBEngine::Online::OnlineSystem::GetInstance().SetPlayerSessionProfile(profile);
     }
 
+    bool OnlineGameNetSubsystem::SendPlayerSessionProfileToHost(const std::string& displayName)
+    {
+        if (RTBEngine::Online::OnlineGameplayNet::IsLobbyHost() ||
+            !RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby() ||
+            displayName.empty()) {
+            return false;
+        }
+
+        Init();
+        std::vector<std::uint8_t> payload;
+        RTBEngine::Online::OnlineMessageCodec::AppendString(payload, displayName);
+        return RTBEngine::Online::OnlineMessageBus::SendToHost(
+            kPlayerSessionReport,
+            payload,
+            kPlayerSessionChannel,
+            RTBEngine::Online::OnlinePacketReliability::Reliable);
+    }
+
+    void OnlineGameNetSubsystem::HostMergePlayerSessionProfile(const PlayerSessionSnapshot& snapshot)
+    {
+        if (!RTBEngine::Online::OnlineGameplayNet::IsLobbyHost() ||
+            snapshot.playerSlot < 0 ||
+            snapshot.displayName.empty()) {
+            return;
+        }
+
+        RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
+        if (!scene) {
+            return;
+        }
+
+        for (const auto& gameObject : scene->GetGameObjects()) {
+            if (!gameObject) {
+                continue;
+            }
+
+            OnlinePlayerManager* manager = gameObject->GetComponent<OnlinePlayerManager>();
+            if (!manager) {
+                continue;
+            }
+
+            manager->MergeAuthoritativeSessionProfile(snapshot);
+            return;
+        }
+    }
+
     bool OnlineGameNetSubsystem::TryConsumePlayerNetworkBind(PlayerNetworkBindSnapshot& outSnapshot)
     {
         if (pendingPlayerNetworkBinds.empty()) {
@@ -908,24 +1024,29 @@ namespace GameNet {
         return true;
     }
 
-    void OnlineGameNetSubsystem::ApplyPlayerNetworkBind(int playerSlot, std::uint32_t networkId)
+    void OnlineGameNetSubsystem::RequeuePlayerNetworkBind(const PlayerNetworkBindSnapshot& snapshot)
+    {
+        pendingPlayerNetworkBinds.push_front(snapshot);
+    }
+
+    bool OnlineGameNetSubsystem::ApplyPlayerNetworkBind(int playerSlot, std::uint32_t networkId)
     {
         PlayerNetworkBindSnapshot snapshot;
         snapshot.playerSlot = playerSlot;
         snapshot.networkId = networkId;
-        ApplyPlayerNetworkBind(snapshot);
+        return ApplyPlayerNetworkBind(snapshot);
     }
 
-    void OnlineGameNetSubsystem::ApplyPlayerNetworkBind(const PlayerNetworkBindSnapshot& snapshot)
+    bool OnlineGameNetSubsystem::ApplyPlayerNetworkBind(const PlayerNetworkBindSnapshot& snapshot)
     {
         RTBEngine::ECS::GameObject* pawn = FindPawnByPlayerSlot(snapshot.playerSlot);
         if (!pawn || snapshot.networkId == RTBEngine::Online::OnlineGameplayNet::kInvalidNetworkObjectId) {
-            return;
+            return false;
         }
 
         RTBEngine::ECS::NetworkIdentity* identity = pawn->GetComponent<RTBEngine::ECS::NetworkIdentity>();
         if (!identity) {
-            return;
+            return false;
         }
 
         identity->SetNetworkId(snapshot.networkId);
@@ -934,6 +1055,8 @@ namespace GameNet {
                 pawn->GetComponent<RTBEngine::ECS::NetworkTransform>()) {
             networkTransform->OnValidate();
         }
+
+        return true;
     }
 
     void OnlineGameNetSubsystem::TrySyncPlayerHealthFromComponent(
@@ -1031,6 +1154,33 @@ namespace GameNet {
 
         outSnapshot = pendingRoundStarts.front();
         pendingRoundStarts.pop_front();
+        return true;
+    }
+
+    bool OnlineGameNetSubsystem::BroadcastRoundCountdown(const RoundCountdownSnapshot& snapshot)
+    {
+        if (!RTBEngine::Online::OnlineGameplayNet::IsLobbyHost() ||
+            snapshot.roundNumber < 1 ||
+            snapshot.duration < 0.0f) {
+            return false;
+        }
+
+        Init();
+        return RTBEngine::Online::OnlineMessageBus::BroadcastToClients(
+            kRoundCountdown,
+            BuildRoundCountdownPayload(snapshot),
+            kRoundCountdownChannel,
+            RTBEngine::Online::OnlinePacketReliability::Reliable);
+    }
+
+    bool OnlineGameNetSubsystem::TryConsumeRoundCountdown(RoundCountdownSnapshot& outSnapshot)
+    {
+        if (pendingRoundCountdowns.empty()) {
+            return false;
+        }
+
+        outSnapshot = pendingRoundCountdowns.front();
+        pendingRoundCountdowns.pop_front();
         return true;
     }
 

@@ -959,7 +959,7 @@ function CreateScene()
                                         canvasSize = Vector2(200.00, 24.00),
                                         pixelsPerUnit = 100.00,
                                         sortOrder = 25,
-                                        faceCamera = true
+                                        faceCamera = false
                                     },
                                     {
                                         type = "PlayerNameplateUI",

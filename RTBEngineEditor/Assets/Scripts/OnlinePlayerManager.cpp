@@ -1,7 +1,9 @@
 #include "OnlinePlayerManager.h"
 #include "PlayerAmmoSystem.h"
 
+#include "OnlineDisplayNameHelper.h"
 #include "OnlineGameNetMessages.h"
+#include "PlayerNameplateUI.h"
 #include "ProjectileAttackAbility.h"
 #include "RoundManager.h"
 #include "ThirdPersonCharacterController.h"
@@ -28,6 +30,17 @@ using ThisClass = OnlinePlayerManager;
 
 namespace {
 
+    void RefreshNameplatesForPawn(RTBEngine::ECS::GameObject* pawn)
+    {
+        if (!pawn) {
+            return;
+        }
+
+        if (PlayerNameplateUI* nameplate = pawn->GetComponentInChildren<PlayerNameplateUI>()) {
+            nameplate->ForceRefreshDisplayName();
+        }
+    }
+
     void ProcessPlayerNetworkBinds()
     {
         if (RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
@@ -36,7 +49,13 @@ namespace {
 
         GameNet::PlayerNetworkBindSnapshot bind;
         while (GameNet::OnlineGameNetSubsystem::TryConsumePlayerNetworkBind(bind)) {
-            GameNet::OnlineGameNetSubsystem::ApplyPlayerNetworkBind(bind);
+            if (GameNet::OnlineGameNetSubsystem::ApplyPlayerNetworkBind(bind)) {
+                continue;
+            }
+
+            // Remote pawn may not exist yet; keep the bind until ConfigureOnlinePlayers finishes.
+            GameNet::OnlineGameNetSubsystem::RequeuePlayerNetworkBind(bind);
+            break;
         }
     }
 
@@ -49,6 +68,13 @@ namespace {
         RoundManager* roundManager = onlinePlayerManager ? onlinePlayerManager->roundManager : nullptr;
         if (!roundManager) {
             return;
+        }
+
+        GameNet::RoundCountdownSnapshot roundCountdown;
+        while (GameNet::OnlineGameNetSubsystem::TryConsumeRoundCountdown(roundCountdown)) {
+            roundManager->ApplyNetworkRoundCountdown(
+                roundCountdown.roundNumber,
+                roundCountdown.duration);
         }
 
         GameNet::RoundStartSnapshot roundStart;
@@ -106,8 +132,6 @@ void OnlinePlayerManager::OnStart()
     RTBEngine::Online::OnlineSystem::GetInstance().ClearPlayerSessionProfiles();
     authoritativePlayerBinds.clear();
     authoritativePlayerSessionProfiles.clear();
-    bindRebroadcastTimer = 0.0f;
-    bindRebroadcastElapsed = 0.0f;
     ConfigureOnlinePlayers();
 }
 
@@ -120,31 +144,6 @@ void OnlinePlayerManager::OnUpdate(float deltaTime)
     ProcessPlayerNetworkBinds();
     ProcessNetworkRoundEvents(this);
     GameNet::OnlineGameNetSubsystem::DetectAndDespawnDisconnectedPlayers();
-
-    if (!RTBEngine::Online::OnlineGameplayNet::IsLobbyHost() ||
-        (authoritativePlayerBinds.empty() && authoritativePlayerSessionProfiles.empty())) {
-        return;
-    }
-
-    constexpr float kBindRebroadcastInterval = 1.0f;
-    constexpr float kBindRebroadcastDuration = 12.0f;
-    if (bindRebroadcastElapsed >= kBindRebroadcastDuration) {
-        return;
-    }
-
-    bindRebroadcastElapsed += std::max(0.0f, deltaTime);
-    bindRebroadcastTimer += std::max(0.0f, deltaTime);
-    if (bindRebroadcastTimer < kBindRebroadcastInterval) {
-        return;
-    }
-
-    bindRebroadcastTimer = 0.0f;
-    for (const GameNet::PlayerSessionSnapshot& profile : authoritativePlayerSessionProfiles) {
-        GameNet::OnlineGameNetSubsystem::BroadcastPlayerSessionSnapshot(profile);
-    }
-    for (const GameNet::PlayerNetworkBindSnapshot& bind : authoritativePlayerBinds) {
-        GameNet::OnlineGameNetSubsystem::BroadcastPlayerNetworkBind(bind);
-    }
 }
 
 void OnlinePlayerManager::OnDestroy()
@@ -183,6 +182,7 @@ void OnlinePlayerManager::ConfigureOnlinePlayers()
     const RTBEngine::Online::OnlineUserId localUserId = RTBEngine::Online::OnlineGameplayNet::GetLocalUserId();
     const std::size_t localPlayerIndex = RTBEngine::Online::OnlineGameplayNet::GetLocalPlayerIndex();
     ConfigurePawn(localPlayerObject, members[localPlayerIndex], static_cast<int>(localPlayerIndex));
+    SendLocalPlayerSessionProfile();
 
     for (std::size_t memberIndex = 0; memberIndex < members.size(); ++memberIndex) {
         const RTBEngine::Online::OnlineUserId& member = members[memberIndex];
@@ -199,8 +199,20 @@ void OnlinePlayerManager::ConfigureOnlinePlayers()
         }
     }
 
+    if (roundManager) {
+        roundManager->RefreshTrackedPlayers();
+    }
+
     if (PlayerAmmoSystem* localAmmo = localPlayerObject->GetComponent<PlayerAmmoSystem>()) {
         localAmmo->RefreshNetworkState();
+    }
+
+    if (RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
+        for (const GameNet::PlayerNetworkBindSnapshot& bind : authoritativePlayerBinds) {
+            GameNet::OnlineGameNetSubsystem::BroadcastPlayerNetworkBind(bind);
+        }
+    } else {
+        ProcessPlayerNetworkBinds();
     }
 }
 
@@ -231,6 +243,50 @@ void OnlinePlayerManager::RegisterPlayerSessionProfiles(
         authoritativePlayerSessionProfiles.push_back(snapshot);
         GameNet::OnlineGameNetSubsystem::BroadcastPlayerSessionSnapshot(snapshot);
     }
+}
+
+void OnlinePlayerManager::SendLocalPlayerSessionProfile()
+{
+    if (!RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby() ||
+        RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
+        return;
+    }
+
+    const int playerSlot = static_cast<int>(RTBEngine::Online::OnlineGameplayNet::GetLocalPlayerIndex());
+    if (playerSlot < 0) {
+        return;
+    }
+
+    const std::string displayName = GameNet::ResolveLocalDisplayName();
+    if (displayName.empty()) {
+        return;
+    }
+
+    RTBEngine::Online::OnlineSystem& online = RTBEngine::Online::OnlineSystem::GetInstance();
+    RTBEngine::Online::OnlinePlayerProfile profile;
+    profile.userId = online.GetLocalUserId();
+    profile.playerSlot = playerSlot;
+    profile.displayName = displayName;
+    online.SetPlayerSessionProfile(profile);
+
+    GameNet::OnlineGameNetSubsystem::SendPlayerSessionProfileToHost(displayName);
+}
+
+void OnlinePlayerManager::MergeAuthoritativeSessionProfile(
+    const GameNet::PlayerSessionSnapshot& snapshot)
+{
+    if (snapshot.playerSlot < 0 || snapshot.displayName.empty()) {
+        return;
+    }
+
+    for (GameNet::PlayerSessionSnapshot& profile : authoritativePlayerSessionProfiles) {
+        if (profile.playerSlot == snapshot.playerSlot) {
+            profile = snapshot;
+            return;
+        }
+    }
+
+    authoritativePlayerSessionProfiles.push_back(snapshot);
 }
 
 void OnlinePlayerManager::ConfigurePawn(
@@ -270,19 +326,11 @@ void OnlinePlayerManager::ConfigurePawn(
         }
     }
 
-    if (ThirdPersonCharacterController* controller = pawn->GetComponent<ThirdPersonCharacterController>()) {
-        if (!identity->IsLocallyControlled()) {
-            if (RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
-                // Host only needs FixedUpdate for remote simulation; skip Update/LateUpdate camera logic.
-                controller->SetUpdateTickEnabled(false);
-            }
-            // Clients keep Update/LateUpdate enabled so animator can run after NetworkTransform in LateUpdate.
-        }
-    }
-
     if (PlayerAmmoSystem* ammoSystem = pawn->GetComponent<PlayerAmmoSystem>()) {
         ammoSystem->RefreshNetworkState();
     }
+
+    RefreshNameplatesForPawn(pawn);
 
     auto* rigidBodyComponent = pawn->GetComponent<RTBEngine::ECS::RigidBodyComponent>();
     if (!rigidBodyComponent) {

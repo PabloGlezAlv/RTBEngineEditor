@@ -151,6 +151,25 @@ namespace {
         }
     }
 
+    bool IsLikelyDebugEngineDll(const fs::path& dllPath)
+    {
+        std::error_code error;
+        const auto fileSize = fs::file_size(dllPath, error);
+        if (error) {
+            return false;
+        }
+
+        // Release RTBEngine.dll is ~2 MB; Debug is ~9 MB. RTBPlayer links Release only.
+        return fileSize > 5'000'000;
+    }
+
+    std::string FormatProcessExitCode(unsigned long exitCode)
+    {
+        std::ostringstream stream;
+        stream << "0x" << std::hex << std::uppercase << exitCode;
+        return stream.str();
+    }
+
 }
 
 namespace RTBEditor {
@@ -420,8 +439,21 @@ namespace RTBEditor {
         const fs::path sdkPath = project->GetSDKPath();
         const fs::path sdkBinPath = sdkPath / "Bin";
         const fs::path playerSourcePath = sdkBinPath / "RTBPlayer.exe";
+        const fs::path engineDllSourcePath = sdkBinPath / "RTBEngine.dll";
         if (!fs::exists(playerSourcePath)) {
-            SetResult(false, "RTBPlayer.exe not found in SDK Bin. Build RTBPlayer first.");
+            SetResult(false, "RTBPlayer.exe not found in SDK Bin. Build RTBPlayer Release first.");
+            return false;
+        }
+
+        if (!fs::exists(engineDllSourcePath)) {
+            SetResult(false, "RTBEngine.dll not found in SDK Bin. Build RTBEngine Release first.");
+            return false;
+        }
+
+        if (IsLikelyDebugEngineDll(engineDllSourcePath)) {
+            SetResult(false,
+                "SDK Bin contains a Debug RTBEngine.dll. RTBPlayer requires Release. "
+                "Build RTBEngine Release and RTBPlayer Release, then Prepare again.");
             return false;
         }
 
@@ -517,6 +549,37 @@ namespace RTBEditor {
         }
 
         CloseHandle(processInfo.hThread);
+
+        DWORD earlyExitCode = STILL_ACTIVE;
+        const DWORD waitResult = WaitForSingleObject(processInfo.hProcess, 1500);
+        if (waitResult == WAIT_OBJECT_0) {
+            GetExitCodeProcess(processInfo.hProcess, &earlyExitCode);
+            CloseHandle(processInfo.hProcess);
+
+            auto instanceIt = std::find_if(instances.begin(), instances.end(),
+                [playerIndex](const PlayerInstance& instance) {
+                    return instance.playerIndex == playerIndex;
+                });
+
+            if (instanceIt != instances.end()) {
+                instanceIt->processId = 0;
+                instanceIt->processHandle = nullptr;
+                instanceIt->running = false;
+                instanceIt->exitCode = earlyExitCode;
+            }
+
+            std::string message =
+                "Player" + std::to_string(playerIndex) +
+                " exited immediately with code " + FormatProcessExitCode(earlyExitCode) + ".";
+            if (earlyExitCode == 0xC0000005UL) {
+                message +=
+                    " RTBEngine.dll likely mismatches RTBPlayer.exe. "
+                    "Build RTBEngine Release and RTBPlayer Release.";
+            }
+
+            SetResult(false, message);
+            return false;
+        }
 
         auto instanceIt = std::find_if(instances.begin(), instances.end(),
             [playerIndex](const PlayerInstance& instance) {

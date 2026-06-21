@@ -19,6 +19,8 @@ namespace GameNet {
     constexpr std::uint16_t kMatchPlayerLeaveNotice = 76;
     constexpr std::uint16_t kMatchPlayerLeft = 77;
     constexpr std::uint16_t kMatchHostAbandoned = 78;
+    constexpr std::uint16_t kRoundCountdown = 79;
+    constexpr std::uint16_t kPlayerSessionReport = 80;
 
     constexpr std::uint8_t kCombatInputChannel = 4;
     constexpr std::uint8_t kProjectileChannel = 5;
@@ -32,5 +34,6 @@ namespace GameNet {
     constexpr std::uint8_t kPlayerHealthChannel = 13;
     constexpr std::uint8_t kPlayerSessionChannel = 14;
     constexpr std::uint8_t kMatchExitChannel = 15;
+    constexpr std::uint8_t kRoundCountdownChannel = 16;
 
 }

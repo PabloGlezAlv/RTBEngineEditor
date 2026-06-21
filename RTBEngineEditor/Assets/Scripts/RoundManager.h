@@ -48,12 +48,15 @@ public:
     std::vector<RTBEngine::ECS::GameObject*> spawnPoints;
 
     void ApplyNetworkRoundStart(int roundNumber, int enemyCount);
+    void ApplyNetworkRoundCountdown(int roundNumber, float duration);
     void ApplyNetworkEnemySpawn(
         int roundNumber,
         int spawnPointIndex,
         int spawnIndex,
         std::uint32_t networkId);
     bool CanSpawnEnemies() const;
+    RTBEngine::ECS::GameObject* FindClosestPlayerTarget(RTBEngine::ECS::GameObject* requester);
+    void RefreshTrackedPlayers();
 
     size_t GetSpawnPointCount() const { return spawnPoints.size(); }
 
@@ -74,6 +77,7 @@ private:
 
     std::vector<RTBEngine::ECS::GameObject*> spawnedEnemies;
     std::vector<TrackedPlayer> trackedPlayers;
+    float trackedPlayersRefreshTimer = 0.0f;
 
     RTBEngine::ECS::Prefab* enemySpawnPrefab = nullptr;
     HealthComponent* playerHealth = nullptr;
@@ -105,8 +109,9 @@ private:
         std::uint32_t networkId = 0);
     void RebindSpawnedEnemy(RTBEngine::ECS::GameObject* spawnedEnemy);
     void ConfigureOnlineEnemy(RTBEngine::ECS::GameObject* spawnedEnemy, std::uint32_t networkId);
-    RTBEngine::ECS::GameObject* FindBestEnemyTarget(RTBEngine::ECS::GameObject* requester = nullptr) const;
+    RTBEngine::ECS::GameObject* FindBestEnemyTarget(RTBEngine::ECS::GameObject* requester);
     void CleanupSpawnedEnemies();
+    void DespawnAllRoundEnemies();
     int GetEnemyCountForRound(int roundNumber) const;
     void UpdateCountdownText();
     void HandleAnyPlayerDeath(HealthComponent* deadHealth);

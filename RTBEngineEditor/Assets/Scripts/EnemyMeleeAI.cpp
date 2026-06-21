@@ -6,6 +6,7 @@
 #include "EnemyTargetTracker.h"
 #include "MeleeSphereAttackAbility.h"
 #include "OnlineGameNetMessages.h"
+#include "RoundManager.h"
 
 #include <RTBEngine/Core/Logger.h>
 #include <RTBEngine/Core/Time.h>
@@ -13,6 +14,8 @@
 #include <RTBEngine/Scene/NavAgentComponent.h>
 #include <RTBEngine/Scene/NetworkIdentity.h>
 #include <RTBEngine/Scene/RigidBodyComponent.h>
+#include <RTBEngine/Scene/Scene.h>
+#include <RTBEngine/Scene/SceneManager.h>
 #include <RTBEngine/Math/Math.h>
 #include <RTBEngine/Online/OnlineGameplayNet.h>
 #include <RTBEngine/Physics/PhysicsWorld.h>
@@ -20,6 +23,32 @@
 #include <algorithm>
 
 using ThisClass = EnemyMeleeAI;
+
+namespace {
+
+    constexpr float kTargetRefreshInterval = 0.5f;
+
+    RoundManager* FindRoundManagerInScene()
+    {
+        RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
+        if (!scene) {
+            return nullptr;
+        }
+
+        for (const auto& gameObject : scene->GetGameObjects()) {
+            if (!gameObject) {
+                continue;
+            }
+
+            if (RoundManager* roundManager = gameObject->GetComponent<RoundManager>()) {
+                return roundManager;
+            }
+        }
+
+        return nullptr;
+    }
+
+}
 
 RTB_REGISTER_COMPONENT(EnemyMeleeAI)
     RTB_PROPERTY_COMPONENT(health, HealthComponent)
@@ -41,6 +70,7 @@ void EnemyMeleeAI::OnStart()
     ClampSettings();
     ResolveDependencies();
     RebindHealthSubscriptions();
+    roundManager = FindRoundManagerInScene();
 
     if (owner) {
         initialScale = owner->GetTransform().GetScale();
@@ -69,6 +99,11 @@ void EnemyMeleeAI::FinalizeSpawnSetup()
     }
 
     UpdateState();
+}
+
+void EnemyMeleeAI::SetRoundManager(RoundManager* manager)
+{
+    roundManager = manager;
 }
 
 void EnemyMeleeAI::OnUpdate(float deltaTime)
@@ -332,8 +367,43 @@ void EnemyMeleeAI::UnsubscribeFromHealth()
     subscribedHealth = nullptr;
 }
 
+void EnemyMeleeAI::RefreshClosestTarget()
+{
+    if (!owner || !targetTracker || !HasSimulationAuthority()) {
+        return;
+    }
+
+    targetRefreshRemaining = std::max(0.0f, targetRefreshRemaining - RTBEngine::Core::Time::GetDeltaTime());
+    if (targetRefreshRemaining > 0.0f) {
+        return;
+    }
+
+    targetRefreshRemaining = kTargetRefreshInterval;
+
+    if (!roundManager) {
+        return;
+    }
+
+    RTBEngine::ECS::GameObject* closestTarget = roundManager->FindClosestPlayerTarget(owner);
+    if (!closestTarget) {
+        return;
+    }
+
+    if (closestTarget == targetTracker->targetObject) {
+        return;
+    }
+
+    targetTracker->SetTarget(closestTarget);
+    if (navAgent) {
+        navAgent->SetDestination(closestTarget->GetWorldPosition());
+        navAgent->EnsurePathReady();
+    }
+}
+
 void EnemyMeleeAI::UpdateState()
 {
+    RefreshClosestTarget();
+
     constexpr float kAttackDistanceTolerance = 0.15f;
 
     if (!HasValidCombatSetup()) {

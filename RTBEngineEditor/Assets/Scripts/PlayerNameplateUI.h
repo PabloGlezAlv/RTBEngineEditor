@@ -1,30 +1,72 @@
 #pragma once
 
+
+
+#include <RTBEngine/Core/Event.h>
+
 #include <RTBEngine/Scene/Component.h>
+
 #include <RTBEngine/Reflection/PropertyMacros.h>
+
 #include <RTBEngine/UI/Elements/UIText.h>
+
+
 
 class HealthBarUI;
 
+
+
 class PlayerNameplateUI : public RTBEngine::ECS::Component
+
 {
+
 public:
+
     PlayerNameplateUI() = default;
+
     ~PlayerNameplateUI() override = default;
 
+
+
     RTBEngine::UI::UIText* displayNameText = nullptr;
+
     HealthBarUI* healthBarUI = nullptr;
+
+
 
     RTB_COMPONENT(PlayerNameplateUI)
 
+
+
+public:
+
     void OnStart() override;
-    void OnUpdate(float deltaTime) override;
+
+    void OnLateUpdate(float deltaTime) override;
+
+    void OnDestroy() override;
+
     void OnValidate() override;
 
+
+
+    void ForceRefreshDisplayName();
+
+    void ApplyFixedWorldOrientation() const;
+
+
+
 private:
-    float refreshTimer = 0.0f;
+
+    RTBEngine::Core::EventSubscription profileChangedSubscription;
+
+
 
     void RefreshDisplayName() const;
+
     void BindHealthBar();
-    bool ShouldStopRefreshing() const;
+
+    int ResolveOwnerPlayerSlot() const;
+
 };
+

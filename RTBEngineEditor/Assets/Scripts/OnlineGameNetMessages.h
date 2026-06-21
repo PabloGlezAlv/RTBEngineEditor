@@ -49,6 +49,11 @@ namespace GameNet {
         int enemyCount = 0;
     };
 
+    struct RoundCountdownSnapshot {
+        int roundNumber = 0;
+        float duration = 0.0f;
+    };
+
     struct PlayerNetworkBindSnapshot {
         int playerSlot = -1;
         std::uint32_t networkId = 0;
@@ -92,11 +97,14 @@ namespace GameNet {
 
         static bool BroadcastPlayerNetworkBind(const PlayerNetworkBindSnapshot& snapshot);
         static bool TryConsumePlayerNetworkBind(PlayerNetworkBindSnapshot& outSnapshot);
-        static void ApplyPlayerNetworkBind(int playerSlot, std::uint32_t networkId);
-        static void ApplyPlayerNetworkBind(const PlayerNetworkBindSnapshot& snapshot);
+        static void RequeuePlayerNetworkBind(const PlayerNetworkBindSnapshot& snapshot);
+        static bool ApplyPlayerNetworkBind(int playerSlot, std::uint32_t networkId);
+        static bool ApplyPlayerNetworkBind(const PlayerNetworkBindSnapshot& snapshot);
 
         static bool BroadcastPlayerSessionSnapshot(const PlayerSessionSnapshot& snapshot);
         static void ApplyPlayerSessionSnapshot(const PlayerSessionSnapshot& snapshot);
+        static bool SendPlayerSessionProfileToHost(const std::string& displayName);
+        static void HostMergePlayerSessionProfile(const PlayerSessionSnapshot& snapshot);
 
         static void TrySyncPlayerHealthFromComponent(::HealthComponent* health, float normalizedHealth);
 
@@ -105,6 +113,9 @@ namespace GameNet {
 
         static bool BroadcastRoundStart(const RoundStartSnapshot& snapshot);
         static bool TryConsumeRoundStart(RoundStartSnapshot& outSnapshot);
+
+        static bool BroadcastRoundCountdown(const RoundCountdownSnapshot& snapshot);
+        static bool TryConsumeRoundCountdown(RoundCountdownSnapshot& outSnapshot);
 
         static bool BroadcastEnemyDeath(std::uint32_t networkId);
         static void ApplyEnemyDeath(std::uint32_t networkId);

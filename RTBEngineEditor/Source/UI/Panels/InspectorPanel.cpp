@@ -751,7 +751,7 @@ namespace RTBEditor {
                 // Local position — offset relative to parent
                 RTBEngine::Math::Vector3 localPos = transform.GetPosition();
                 BeginInspectorRow("Position");
-                if (ImGui::DragFloat3("##value", (float*)&localPos, 0.1f)) {
+                if (ImGui::DragFloat3("##transformPosition", (float*)&localPos, 0.1f)) {
                     transform.SetPosition(localPos);
                     RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
                 }
@@ -765,7 +765,7 @@ namespace RTBEditor {
                 }
 
                 BeginInspectorRow("Rotation");
-                if (ImGui::DragFloat3("##value", (float*)&cachedRotationDeg, 0.5f)) {
+                if (ImGui::DragFloat3("##transformRotation", (float*)&cachedRotationDeg, 0.5f)) {
                     ApplyInspectorRotationDegrees(transform, cachedRotationDeg);
                     cachedRotationDeg = RotationDegreesFromQuaternion(transform.GetRotation());
                     cachedRotationSource = transform.GetRotation().Normalized();
@@ -783,7 +783,7 @@ namespace RTBEditor {
                 // Local scale — real world scale = localScale * parent.worldScale (handled by engine)
                 RTBEngine::Math::Vector3 localScale = transform.GetScale();
                 BeginInspectorRow("Scale");
-                if (ImGui::DragFloat3("##value", (float*)&localScale, 0.01f)) {
+                if (ImGui::DragFloat3("##transformScale", (float*)&localScale, 0.01f)) {
                     transform.SetScale(localScale);
                     RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
                 }

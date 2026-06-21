@@ -1,5 +1,6 @@
 #include "ProjectileAttackAbility.h"
 
+#include "ThirdPersonCharacterController.h"
 #include "CharacterBase.h"
 #include "CharacterCombatOrigins.h"
 #include "PlayerAmmoSystem.h"
@@ -120,13 +121,22 @@ bool ProjectileAttackAbility::SpawnFromNetworkSnapshot(
     }
 
     RTBEngine::Math::Vector3 origin = snapshot.origin;
-    return ability->SpawnProjectile(
+    const bool spawned = ability->SpawnProjectile(
         instigator,
         direction,
         ability->ResolvePhysicsWorld(instigator),
         false,
         &origin,
         &snapshot);
+
+    if (spawned) {
+        if (ThirdPersonCharacterController* controller =
+                instigator->GetComponent<ThirdPersonCharacterController>()) {
+            controller->PlayReplicatedAttackVisual(direction);
+        }
+    }
+
+    return spawned;
 }
 
 bool ProjectileAttackAbility::SpawnProjectile(RTBEngine::ECS::GameObject* instigator,

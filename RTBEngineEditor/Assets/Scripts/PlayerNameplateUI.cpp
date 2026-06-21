@@ -5,9 +5,11 @@
 
 #include "HealthComponent.h"
 
+#include <RTBEngine/Math/Quaternions/Quaternion.h>
+#include <RTBEngine/Online/OnlineSystem.h>
 #include <RTBEngine/Scene/GameObject.h>
 #include <RTBEngine/Scene/NetworkIdentity.h>
-#include <RTBEngine/Online/OnlineSystem.h>
+#include <RTBEngine/UI/Canvas.h>
 
 using ThisClass = PlayerNameplateUI;
 
@@ -17,6 +19,11 @@ RTB_REGISTER_COMPONENT(PlayerNameplateUI)
 RTB_END_REGISTER(PlayerNameplateUI)
 
 namespace {
+
+    constexpr float kDegToRad = 3.14159265358979323846f / 180.0f;
+    constexpr float kPi = 3.14159265358979323846f;
+    constexpr float kFixedNameplatePitchDegrees = 50.0f;
+    constexpr float kFixedNameplateYawDegrees = 0.0f;
 
     RTBEngine::ECS::GameObject* FindPlayerRoot(RTBEngine::ECS::GameObject* from)
     {
@@ -29,40 +36,119 @@ namespace {
         return nullptr;
     }
 
+    RTBEngine::ECS::GameObject* FindNameplateRoot(RTBEngine::ECS::GameObject* from)
+    {
+        RTBEngine::ECS::GameObject* playerRoot = FindPlayerRoot(from);
+        if (!playerRoot || !from) {
+            return nullptr;
+        }
+
+        for (RTBEngine::ECS::GameObject* current = from; current; current = current->GetParent()) {
+            if (current->GetParent() == playerRoot) {
+                return current;
+            }
+        }
+
+        return nullptr;
+    }
+
+    RTBEngine::Math::Quaternion GetFixedNameplateWorldRotation()
+    {
+        const RTBEngine::Math::Quaternion cameraFacingRotation =
+            RTBEngine::Math::Quaternion::FromEulerAngles(
+                kFixedNameplatePitchDegrees * kDegToRad,
+                kFixedNameplateYawDegrees * kDegToRad,
+                0.0f);
+        const RTBEngine::Math::Quaternion readableFlip =
+            RTBEngine::Math::Quaternion::FromEulerAngles(0.0f, kPi, 0.0f);
+        return cameraFacingRotation * readableFlip;
+    }
+
+    void DisableCanvasBillboard(RTBEngine::UI::Canvas* canvas)
+    {
+        if (!canvas) {
+            return;
+        }
+
+        if (canvas->GetFaceCamera()) {
+            canvas->SetFaceCamera(false);
+            canvas->SetFaceCameraLockY(false);
+            canvas->MarkHierarchyDirty();
+        }
+    }
+
 }
 
 void PlayerNameplateUI::OnStart()
 {
-    refreshTimer = 0.0f;
-    SetUpdateTickEnabled(true);
+    DisableCanvasBillboard(owner ? owner->GetComponent<RTBEngine::UI::Canvas>() : nullptr);
+    ApplyFixedWorldOrientation();
+
     RefreshDisplayName();
     BindHealthBar();
 
-    if (ShouldStopRefreshing()) {
-        SetUpdateTickEnabled(false);
-    }
+    profileChangedSubscription =
+        RTBEngine::Online::OnlineSystem::GetInstance().SubscribeToPlayerSessionProfileChanged(
+            [this](const RTBEngine::Online::PlayerSessionProfileChangedEvent& eventData) {
+                const int ownerSlot = ResolveOwnerPlayerSlot();
+                if (ownerSlot < 0 || eventData.playerSlot != ownerSlot) {
+                    return;
+                }
+
+                RefreshDisplayName();
+            });
 }
 
-void PlayerNameplateUI::OnUpdate(float deltaTime)
+void PlayerNameplateUI::OnLateUpdate(float /*deltaTime*/)
 {
-    refreshTimer += deltaTime;
-    if (refreshTimer < 0.35f) {
-        return;
-    }
+    ApplyFixedWorldOrientation();
+}
 
-    refreshTimer = 0.0f;
-    RefreshDisplayName();
-    BindHealthBar();
-
-    if (ShouldStopRefreshing()) {
-        SetUpdateTickEnabled(false);
-    }
+void PlayerNameplateUI::OnDestroy()
+{
+    profileChangedSubscription.Reset();
 }
 
 void PlayerNameplateUI::OnValidate()
 {
+    DisableCanvasBillboard(owner ? owner->GetComponent<RTBEngine::UI::Canvas>() : nullptr);
+    ApplyFixedWorldOrientation();
     RefreshDisplayName();
     BindHealthBar();
+}
+
+void PlayerNameplateUI::ForceRefreshDisplayName()
+{
+    RefreshDisplayName();
+    BindHealthBar();
+}
+
+void PlayerNameplateUI::ApplyFixedWorldOrientation() const
+{
+    RTBEngine::ECS::GameObject* playerRoot = FindPlayerRoot(owner);
+    RTBEngine::ECS::GameObject* nameplateRoot = FindNameplateRoot(owner);
+    if (!playerRoot || !nameplateRoot) {
+        return;
+    }
+
+    const RTBEngine::Math::Quaternion fixedWorld = GetFixedNameplateWorldRotation();
+    nameplateRoot->GetTransform().SetRotation(
+        playerRoot->GetWorldRotation().Inverse() * fixedWorld);
+}
+
+int PlayerNameplateUI::ResolveOwnerPlayerSlot() const
+{
+    RTBEngine::ECS::GameObject* playerRoot = FindPlayerRoot(owner);
+    if (!playerRoot) {
+        return -1;
+    }
+
+    if (const RTBEngine::ECS::NetworkIdentity* identity =
+            playerRoot->GetComponent<RTBEngine::ECS::NetworkIdentity>()) {
+        return identity->networkPlayerSlot;
+    }
+
+    return -1;
 }
 
 void PlayerNameplateUI::RefreshDisplayName() const
@@ -77,8 +163,10 @@ void PlayerNameplateUI::RefreshDisplayName() const
         return;
     }
 
-    displayNameText->SetText(
-        GameNet::ResolvePlayerDisplayName(playerRoot->GetComponent<RTBEngine::ECS::NetworkIdentity>()));
+    const RTBEngine::ECS::NetworkIdentity* identity =
+        playerRoot->GetComponent<RTBEngine::ECS::NetworkIdentity>();
+    const std::string resolvedName = GameNet::ResolvePlayerDisplayName(identity);
+    displayNameText->SetText(resolvedName);
 }
 
 void PlayerNameplateUI::BindHealthBar()
@@ -99,33 +187,4 @@ void PlayerNameplateUI::BindHealthBar()
 
     healthBarUI->health = health;
     healthBarUI->RefreshBinding();
-}
-
-bool PlayerNameplateUI::ShouldStopRefreshing() const
-{
-    RTBEngine::ECS::GameObject* playerRoot = FindPlayerRoot(owner);
-    if (!playerRoot) {
-        return false;
-    }
-
-    const RTBEngine::ECS::NetworkIdentity* identity =
-        playerRoot->GetComponent<RTBEngine::ECS::NetworkIdentity>();
-    if (!identity) {
-        return true;
-    }
-
-    RTBEngine::Online::OnlineSystem& online = RTBEngine::Online::OnlineSystem::GetInstance();
-    if (!online.IsInLobby()) {
-        return true;
-    }
-
-    if (identity->networkPlayerSlot < 0) {
-        return false;
-    }
-
-    if (identity->IsLocallyControlled()) {
-        return true;
-    }
-
-    return online.HasPlayerSessionProfile(identity->networkPlayerSlot);
 }

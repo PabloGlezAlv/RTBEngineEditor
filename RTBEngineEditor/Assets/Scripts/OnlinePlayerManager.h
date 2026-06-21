@@ -31,17 +31,17 @@ public:
     void OnFixedUpdate(float fixedDeltaTime) override;
 
     void RemovePawnFromTracking(RTBEngine::ECS::GameObject* pawn, int playerSlot);
+    void MergeAuthoritativeSessionProfile(const GameNet::PlayerSessionSnapshot& snapshot);
 
 private:
     std::unique_ptr<RTBEngine::ECS::Prefab> playerPrefab;
     std::vector<RTBEngine::ECS::GameObject*> spawnedRemotePawns;
     std::vector<GameNet::PlayerNetworkBindSnapshot> authoritativePlayerBinds;
     std::vector<GameNet::PlayerSessionSnapshot> authoritativePlayerSessionProfiles;
-    float bindRebroadcastTimer = 0.0f;
-    float bindRebroadcastElapsed = 0.0f;
 
     void RegisterPlayerSessionProfiles(
         const std::vector<RTBEngine::Online::OnlineUserId>& members);
+    void SendLocalPlayerSessionProfile();
 
     void ConfigureOnlinePlayers();
     void ConfigurePawn(

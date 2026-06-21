@@ -12,6 +12,7 @@
 
 #include <RTBEngine/Core/ResourceManager.h>
 #include <RTBEngine/Math/Quaternions/Quaternion.h>
+#include <RTBEngine/Online/OnlineGameplayNet.h>
 #include <RTBEngine/Scene/PrefabRegistry.h>
 #include <RTBEngine/Scene/Scene.h>
 #include <RTBEngine/Scene/SceneManager.h>
