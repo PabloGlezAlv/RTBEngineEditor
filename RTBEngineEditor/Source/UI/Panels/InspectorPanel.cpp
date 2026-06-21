@@ -26,6 +26,7 @@
 #include "../Modals/AssetBrowserModal.h"
 #include "../../Project/Project.h"
 #include <RTBEngine/Reflection/ListPropertyAccess.h>
+#include <RTBEngine/Reflection/NameFormatting.h>
 #include <fstream>
 #include <sstream>
 #include <filesystem>
@@ -381,6 +382,82 @@ namespace RTBEditor {
                 ShellExecuteA(nullptr, "open", fileToOpen.string().c_str(), nullptr, nullptr, SW_SHOW);
             }
         }
+
+        std::string GetPathDisplayName(const std::string& path, const char* emptyLabel = "[None]")
+        {
+            if (path.empty()) {
+                return emptyLabel;
+            }
+
+            const std::filesystem::path filePath(path);
+            const std::string fileName = filePath.filename().string();
+            return fileName.empty() ? path : fileName;
+        }
+
+        ImVec2 InspectorPickerButtonSize(int trailingSmallButtons = 2)
+        {
+            const ImGuiStyle& style = ImGui::GetStyle();
+            const float spacing = style.ItemInnerSpacing.x;
+            const float smallButtonWidth = ImGui::CalcTextSize("...").x + style.FramePadding.x * 2.0f;
+            const float trailingWidth = trailingSmallButtons > 0
+                ? static_cast<float>(trailingSmallButtons) * smallButtonWidth
+                    + static_cast<float>(trailingSmallButtons - 1) * spacing
+                    + spacing
+                : 0.0f;
+            const float width = ImGui::GetContentRegionAvail().x - trailingWidth;
+            return ImVec2(width > 48.0f ? width : 48.0f, 0.0f);
+        }
+
+        constexpr float kInspectorLabelWidthRatio = 0.42f;
+
+        void BeginInspectorRow(const char* label)
+        {
+            const float contentWidth = ImGui::GetContentRegionAvail().x;
+            const float computedWidth = contentWidth * kInspectorLabelWidthRatio;
+            const float labelWidth = computedWidth > 120.0f ? computedWidth : 120.0f;
+
+            ImGui::Columns(2, nullptr, false);
+            ImGui::SetColumnWidth(0, labelWidth);
+
+            ImGui::AlignTextToFramePadding();
+            ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + labelWidth - 4.0f);
+            ImGui::TextUnformatted(label);
+            ImGui::PopTextWrapPos();
+
+            ImGui::NextColumn();
+            ImGui::SetNextItemWidth(-FLT_MIN);
+        }
+
+        void EndInspectorRow()
+        {
+            ImGui::NextColumn();
+            ImGui::Columns(1);
+        }
+
+        std::string FormatComponentRefLabel(const RTBEngine::Reflection::PropertyInfo& prop)
+        {
+            std::string rowLabel = prop.GetInspectorLabel();
+            if (!prop.componentTypeName.empty()) {
+                rowLabel += " (";
+                rowLabel += RTBEngine::Reflection::FormatPropertyName(prop.componentTypeName);
+                rowLabel += ")";
+            }
+            return rowLabel;
+        }
+
+        bool BeginInspectorListFoldout(const char* label)
+        {
+            return ImGui::TreeNodeEx(
+                label,
+                ImGuiTreeNodeFlags_DefaultOpen |
+                ImGuiTreeNodeFlags_SpanAvailWidth |
+                ImGuiTreeNodeFlags_OpenOnArrow);
+        }
+
+        void EndInspectorListFoldout()
+        {
+            ImGui::TreePop();
+        }
     }
 
     InspectorPanel::InspectorPanel() {
@@ -454,8 +531,8 @@ namespace RTBEditor {
                 const int currentLayer = context.selectedGameObject->GetCollisionLayer();
                 const char* preview = layerSettings.GetLayerName(currentLayer).c_str();
 
-                ImGui::SetNextItemWidth(180.0f);
-                if (ImGui::BeginCombo("Collision layer", preview)) {
+                BeginInspectorRow("Collision Layer");
+                if (ImGui::BeginCombo("##value", preview)) {
                     for (int layerIndex = 0; layerIndex < layerCount; ++layerIndex) {
                         const bool selected = layerIndex == currentLayer;
                         const std::string& layerName = layerSettings.GetLayerName(layerIndex);
@@ -471,6 +548,7 @@ namespace RTBEditor {
                     }
                     ImGui::EndCombo();
                 }
+                EndInspectorRow();
             }
 
             if (context.selectedGameObject->IsPrefabInstance()) {
@@ -602,53 +680,67 @@ namespace RTBEditor {
             // Rect Transform (replaces Transform for UI objects)
             if (ImGui::CollapsingHeader("Rect Transform", ImGuiTreeNodeFlags_DefaultOpen)) {
                 RTBEngine::Math::Vector2 pos = uiElement->GetAnchoredPosition();
-                if (ImGui::DragFloat2("Position", (float*)&pos, 1.0f)) {
+                BeginInspectorRow("Position");
+                if (ImGui::DragFloat2("##value", (float*)&pos, 1.0f)) {
                     uiElement->SetAnchoredPosition(pos);
                     RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
                 }
+                EndInspectorRow();
 
                 RTBEngine::Math::Vector2 anchorMin = uiElement->GetAnchorMin();
-                if (ImGui::DragFloat2("Anchor Min", (float*)&anchorMin, 0.01f, 0.0f, 1.0f)) {
+                BeginInspectorRow("Anchor Min");
+                if (ImGui::DragFloat2("##value", (float*)&anchorMin, 0.01f, 0.0f, 1.0f)) {
                     uiElement->SetAnchorMin(anchorMin);
                     RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
                 }
+                EndInspectorRow();
 
                 RTBEngine::Math::Vector2 anchorMax = uiElement->GetAnchorMax();
-                if (ImGui::DragFloat2("Anchor Max", (float*)&anchorMax, 0.01f, 0.0f, 1.0f)) {
+                BeginInspectorRow("Anchor Max");
+                if (ImGui::DragFloat2("##value", (float*)&anchorMax, 0.01f, 0.0f, 1.0f)) {
                     uiElement->SetAnchorMax(anchorMax);
                     RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
                 }
+                EndInspectorRow();
 
                 const bool isStretched =
                     anchorMin.x != anchorMax.x || anchorMin.y != anchorMax.y;
 
                 RTBEngine::Math::Vector2 size = uiElement->GetSizeDelta();
-                if (ImGui::DragFloat2(isStretched ? "Size Delta" : "Size", (float*)&size, 1.0f)) {
+                BeginInspectorRow(isStretched ? "Size Delta" : "Size");
+                if (ImGui::DragFloat2("##value", (float*)&size, 1.0f)) {
                     uiElement->SetSizeDelta(size);
                     RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
                 }
+                EndInspectorRow();
 
                 if (isStretched) {
                     ImGui::TextDisabled("Stretch: el tamano final viene de anchors + size delta.");
                 }
 
                 RTBEngine::Math::Vector2 pivot = uiElement->GetPivot();
-                if (ImGui::DragFloat2("Pivot", (float*)&pivot, 0.01f, 0.0f, 1.0f)) {
+                BeginInspectorRow("Pivot");
+                if (ImGui::DragFloat2("##value", (float*)&pivot, 0.01f, 0.0f, 1.0f)) {
                     uiElement->SetPivot(pivot);
                     RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
                 }
+                EndInspectorRow();
 
                 float rot = uiElement->GetRotation();
-                if (ImGui::DragFloat("Rotation", &rot, 0.5f)) {
+                BeginInspectorRow("Rotation");
+                if (ImGui::DragFloat("##value", &rot, 0.5f)) {
                     uiElement->SetRotation(rot);
                     RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
                 }
+                EndInspectorRow();
 
                 RTBEngine::Math::Vector2 scl = uiElement->GetScale();
-                if (ImGui::DragFloat2("Scale", (float*)&scl, 0.01f)) {
+                BeginInspectorRow("Scale");
+                if (ImGui::DragFloat2("##value", (float*)&scl, 0.01f)) {
                     uiElement->SetScale(scl);
                     RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
                 }
+                EndInspectorRow();
 
             }
         } else {
@@ -658,10 +750,12 @@ namespace RTBEditor {
 
                 // Local position — offset relative to parent
                 RTBEngine::Math::Vector3 localPos = transform.GetPosition();
-                if (ImGui::DragFloat3("Position", (float*)&localPos, 0.1f)) {
+                BeginInspectorRow("Position");
+                if (ImGui::DragFloat3("##value", (float*)&localPos, 0.1f)) {
                     transform.SetPosition(localPos);
                     RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
                 }
+                EndInspectorRow();
 
                 // Local rotation — cached euler degrees; resync when selection or gizmo changes it.
                 if (cachedRotationTarget != gameObject) {
@@ -670,12 +764,14 @@ namespace RTBEditor {
                     cachedRotationSource = transform.GetRotation().Normalized();
                 }
 
-                if (ImGui::DragFloat3("Rotation", (float*)&cachedRotationDeg, 0.5f)) {
+                BeginInspectorRow("Rotation");
+                if (ImGui::DragFloat3("##value", (float*)&cachedRotationDeg, 0.5f)) {
                     ApplyInspectorRotationDegrees(transform, cachedRotationDeg);
                     cachedRotationDeg = RotationDegreesFromQuaternion(transform.GetRotation());
                     cachedRotationSource = transform.GetRotation().Normalized();
                     RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
                 }
+                EndInspectorRow();
 
                 const bool rotationFieldActive = ImGui::IsItemActive() || ImGui::IsItemFocused();
                 if (!rotationFieldActive &&
@@ -686,10 +782,12 @@ namespace RTBEditor {
 
                 // Local scale — real world scale = localScale * parent.worldScale (handled by engine)
                 RTBEngine::Math::Vector3 localScale = transform.GetScale();
-                if (ImGui::DragFloat3("Scale", (float*)&localScale, 0.01f)) {
+                BeginInspectorRow("Scale");
+                if (ImGui::DragFloat3("##value", (float*)&localScale, 0.01f)) {
                     transform.SetScale(localScale);
                     RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
                 }
+                EndInspectorRow();
             }
         }
 
@@ -762,11 +860,10 @@ namespace RTBEditor {
 
         bool changed = false;
 
-        const char* labelName = prop.displayName == "scenePath"
+        const std::string label = prop.name == "scenePath"
             ? "Scene"
-            : prop.displayName.c_str();
-        ImGui::Text("%s:", labelName);
-        ImGui::SameLine();
+            : prop.GetInspectorLabel();
+        BeginInspectorRow(label.c_str());
 
         const bool hasScene = !value->empty();
         ImGui::PushStyleColor(
@@ -776,8 +873,8 @@ namespace RTBEditor {
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.2f, 0.5f, 0.8f, 0.3f));
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.2f, 0.5f, 0.8f, 0.5f));
 
-        const std::string label = (hasScene ? *value : std::string("[None]")) + "##SceneDropArea";
-        ImGui::Button(label.c_str(), ImVec2(220, 0));
+        const std::string buttonLabel = GetPathDisplayName(hasScene ? *value : std::string(), "[None]") + "##SceneDropArea";
+        ImGui::Button(buttonLabel.c_str(), InspectorPickerButtonSize(2));
 
         ImGui::PopStyleColor(4);
 
@@ -816,12 +913,16 @@ namespace RTBEditor {
             changed = true;
         }
 
+        EndInspectorRow();
+
         return changed;
     }
 
     bool InspectorPanel::DrawAssetRefProperty(RTBEngine::ECS::Component* component,
                                               const RTBEngine::Reflection::PropertyInfo& prop,
-                                              std::string* value) {
+                                              std::string* value,
+                                              bool& changed,
+                                              bool wrapInRow) {
         if (!component || !value) {
             return false;
         }
@@ -833,10 +934,9 @@ namespace RTBEditor {
             return false;
         }
 
-        bool changed = false;
-
-        ImGui::Text("%s:", prop.displayName.c_str());
-        ImGui::SameLine();
+        if (wrapInRow) {
+            BeginInspectorRow(prop.GetInspectorLabel().c_str());
+        }
 
         const bool hasAsset = !value->empty();
         ImGui::PushStyleColor(
@@ -847,8 +947,8 @@ namespace RTBEditor {
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.2f, 0.5f, 0.8f, 0.5f));
 
         const std::string dropAreaId = isPrefabAsset ? "##PrefabRefDropArea" : "##AssetRefDropArea";
-        const std::string label = (hasAsset ? *value : std::string("[None]")) + dropAreaId;
-        ImGui::Button(label.c_str(), ImVec2(220, 0));
+        const std::string buttonLabel = GetPathDisplayName(hasAsset ? *value : std::string(), "[None]") + dropAreaId;
+        ImGui::Button(buttonLabel.c_str(), InspectorPickerButtonSize(2));
 
         ImGui::PopStyleColor(4);
 
@@ -893,23 +993,11 @@ namespace RTBEditor {
             changed = true;
         }
 
-        return changed;
-    }
-
-    namespace {
-        bool BeginInspectorListFoldout(const char* label)
-        {
-            return ImGui::TreeNodeEx(
-                label,
-                ImGuiTreeNodeFlags_DefaultOpen |
-                ImGuiTreeNodeFlags_SpanAvailWidth |
-                ImGuiTreeNodeFlags_OpenOnArrow);
+        if (wrapInRow) {
+            EndInspectorRow();
         }
 
-        void EndInspectorListFoldout()
-        {
-            ImGui::TreePop();
-        }
+        return true;
     }
 
     bool InspectorPanel::DrawListProperty(RTBEngine::ECS::Component* component,
@@ -928,7 +1016,7 @@ namespace RTBEditor {
                 }
                 elementCount = values->size();
 
-                const std::string header = prop.displayName + " (" + std::to_string(elementCount) + ")";
+                const std::string header = prop.GetInspectorLabel() + " (" + std::to_string(elementCount) + ")";
                 if (!BeginInspectorListFoldout(header.c_str())) {
                     break;
                 }
@@ -986,7 +1074,7 @@ namespace RTBEditor {
                 }
                 elementCount = values->size();
 
-                const std::string header = prop.displayName + " (" + std::to_string(elementCount) + ")";
+                const std::string header = prop.GetInspectorLabel() + " (" + std::to_string(elementCount) + ")";
                 if (!BeginInspectorListFoldout(header.c_str())) {
                     break;
                 }
@@ -997,9 +1085,7 @@ namespace RTBEditor {
                     ImGui::Text("Element %zu", index);
                     ImGui::SameLine();
 
-                    if (DrawAssetRefProperty(component, prop, &(*values)[index])) {
-                        changed = true;
-                    }
+                    DrawAssetRefProperty(component, prop, &(*values)[index], changed, false);
 
                     ImGui::SameLine();
                     if (index > 0 && ImGui::SmallButton("^")) {
@@ -1040,7 +1126,7 @@ namespace RTBEditor {
                 }
                 elementCount = values->size();
 
-                const std::string header = prop.displayName + " (" + std::to_string(elementCount) + ")";
+                const std::string header = prop.GetInspectorLabel() + " (" + std::to_string(elementCount) + ")";
                 if (!BeginInspectorListFoldout(header.c_str())) {
                     break;
                 }
@@ -1129,7 +1215,7 @@ namespace RTBEditor {
                 }
                 elementCount = values->size();
 
-                const std::string header = prop.displayName + " (" + std::to_string(elementCount) + ")";
+                const std::string header = prop.GetInspectorLabel() + " (" + std::to_string(elementCount) + ")";
                 if (!BeginInspectorListFoldout(header.c_str())) {
                     break;
                 }
@@ -1227,7 +1313,7 @@ namespace RTBEditor {
                 break;
             }
             default:
-                ImGui::Text("%s: [Unsupported List Element Type]", prop.displayName.c_str());
+                ImGui::Text("%s: [Unsupported List Element Type]", prop.GetInspectorLabel().c_str());
                 break;
         }
 
@@ -1246,48 +1332,64 @@ namespace RTBEditor {
         
         if (prop.IsReadOnly()) ImGui::BeginDisabled();
 
+        const std::string inspectorLabel = prop.GetInspectorLabel();
+
         switch (prop.type) {
             case RTBEngine::Reflection::PropertyType::Float: {
                 float* val = (float*)data;
+                BeginInspectorRow(inspectorLabel.c_str());
                 if (prop.range) {
-                    changed |= ImGui::SliderFloat(prop.displayName.c_str(), val, prop.range->minValue, prop.range->maxValue);
+                    changed |= ImGui::SliderFloat("##value", val, prop.range->minValue, prop.range->maxValue);
                 } else {
-                    changed |= ImGui::DragFloat(prop.displayName.c_str(), val, 0.1f);
+                    changed |= ImGui::DragFloat("##value", val, 0.1f);
                 }
+                EndInspectorRow();
                 break;
             }
             case RTBEngine::Reflection::PropertyType::Int: {
                 int* val = (int*)data;
-                changed |= ImGui::DragInt(prop.displayName.c_str(), val, 1);
+                BeginInspectorRow(inspectorLabel.c_str());
+                changed |= ImGui::DragInt("##value", val, 1);
+                EndInspectorRow();
                 break;
             }
             case RTBEngine::Reflection::PropertyType::Bool: {
                 bool* val = (bool*)data;
-                changed |= ImGui::Checkbox(prop.displayName.c_str(), val);
+                BeginInspectorRow(inspectorLabel.c_str());
+                changed |= ImGui::Checkbox("##value", val);
+                EndInspectorRow();
                 break;
             }
             case RTBEngine::Reflection::PropertyType::Vector2: {
                 float* val = (float*)data;
-                changed |= ImGui::DragFloat2(prop.displayName.c_str(), val, 0.1f);
+                BeginInspectorRow(inspectorLabel.c_str());
+                changed |= ImGui::DragFloat2("##value", val, 0.1f);
+                EndInspectorRow();
                 break;
             }
             case RTBEngine::Reflection::PropertyType::Vector3: {
                 float* val = (float*)data;
-                changed |= ImGui::DragFloat3(prop.displayName.c_str(), val, 0.1f);
+                BeginInspectorRow(inspectorLabel.c_str());
+                changed |= ImGui::DragFloat3("##value", val, 0.1f);
+                EndInspectorRow();
                 break;
             }
             case RTBEngine::Reflection::PropertyType::Vector4: {
                 float* val = (float*)data;
-                changed |= ImGui::DragFloat4(prop.displayName.c_str(), val, 0.1f);
+                BeginInspectorRow(inspectorLabel.c_str());
+                changed |= ImGui::DragFloat4("##value", val, 0.1f);
+                EndInspectorRow();
                 break;
             }
             case RTBEngine::Reflection::PropertyType::Color: {
                 float* val = (float*)data;
+                BeginInspectorRow(inspectorLabel.c_str());
                 if (prop.size == sizeof(float) * 3) {
-                    changed |= ImGui::ColorEdit3(prop.displayName.c_str(), val);
+                    changed |= ImGui::ColorEdit3("##value", val);
                 } else {
-                    changed |= ImGui::ColorEdit4(prop.displayName.c_str(), val);
+                    changed |= ImGui::ColorEdit4("##value", val);
                 }
+                EndInspectorRow();
                 break;
             }
             case RTBEngine::Reflection::PropertyType::String: {
@@ -1298,33 +1400,35 @@ namespace RTBEditor {
                     char buffer[1024];
                     memset(buffer, 0, sizeof(buffer));
                     strncpy_s(buffer, sizeof(buffer), val->c_str(), _TRUNCATE);
-                    if (ImGui::InputText(prop.displayName.c_str(), buffer, sizeof(buffer))) {
+                    BeginInspectorRow(inspectorLabel.c_str());
+                    if (ImGui::InputText("##value", buffer, sizeof(buffer))) {
                         *val = buffer;
                         changed = true;
                     }
+                    EndInspectorRow();
                 }
                 break;
             }
             case RTBEngine::Reflection::PropertyType::AssetRef: {
                 std::string* val = (std::string*)data;
-                if (DrawAssetRefProperty(component, prop, val)) {
-                    changed = true;
-                } else {
+                if (!DrawAssetRefProperty(component, prop, val, changed)) {
                     char buffer[1024];
                     memset(buffer, 0, sizeof(buffer));
                     strncpy_s(buffer, sizeof(buffer), val->c_str(), _TRUNCATE);
-                    if (ImGui::InputText(prop.displayName.c_str(), buffer, sizeof(buffer))) {
+                    BeginInspectorRow(inspectorLabel.c_str());
+                    if (ImGui::InputText("##value", buffer, sizeof(buffer))) {
                         *val = buffer;
                         changed = true;
                     }
+                    EndInspectorRow();
                 }
                 break;
             }
             case RTBEngine::Reflection::PropertyType::Enum: {
-                // Simple combo for enums
                 int* val = (int*)data;
                 const char* previewValue = (size_t)*val < prop.enumNames.size() ? prop.enumNames[*val].c_str() : "Unknown";
-                if (ImGui::BeginCombo(prop.displayName.c_str(), previewValue)) {
+                BeginInspectorRow(inspectorLabel.c_str());
+                if (ImGui::BeginCombo("##value", previewValue)) {
                     for (int i = 0; i < (int)prop.enumNames.size(); i++) {
                         bool isSelected = (*val == i);
                         if (ImGui::Selectable(prop.enumNames[i].c_str(), isSelected)) {
@@ -1335,6 +1439,7 @@ namespace RTBEditor {
                     }
                     ImGui::EndCombo();
                 }
+                EndInspectorRow();
                 break;
             }
             case RTBEngine::Reflection::PropertyType::TextureRef: {
@@ -1347,8 +1452,7 @@ namespace RTBEditor {
                     }
                     return useModelTexture ? rm.LoadModelTexture(path) : rm.LoadTexture(path);
                 };
-                ImGui::Text("%s:", prop.displayName.c_str());
-                ImGui::SameLine();
+                BeginInspectorRow(inspectorLabel.c_str());
 
                 // Color del texto seg�n el estado
                 if (*texPtr) {
@@ -1366,11 +1470,14 @@ namespace RTBEditor {
                 if (*texPtr) {
                     auto& rm = RTBEngine::Core::ResourceManager::GetInstance();
                     std::string path = rm.GetTexturePath((RTBEngine::Rendering::Texture*)*texPtr);
-                    std::string label = (path.empty() ? "[Texture Set]" : path) + "##TextureDropArea";
-                    ImGui::Button(label.c_str(), ImVec2(150, 0));
+                    const std::string display = path.empty()
+                        ? "[Texture Set]"
+                        : GetPathDisplayName(path, "[Texture Set]");
+                    std::string label = display + "##TextureDropArea";
+                    ImGui::Button(label.c_str(), InspectorPickerButtonSize(2));
                 }
                 else {
-                    ImGui::Button("[None]##TextureDropArea", ImVec2(150, 0));
+                    ImGui::Button("[None]##TextureDropArea", InspectorPickerButtonSize(2));
                 }
 
                 ImGui::PopStyleColor(4); // Pop text color + button colors
@@ -1416,13 +1523,13 @@ namespace RTBEditor {
                     *texPtr = nullptr;
                     changed = true;
                 }
+                EndInspectorRow();
                 break;
             }
 
             case RTBEngine::Reflection::PropertyType::AudioClipRef: {
                 void** clipPtr = (void**)data;
-                ImGui::Text("%s:", prop.displayName.c_str());
-                ImGui::SameLine();
+                BeginInspectorRow(inspectorLabel.c_str());
 
                 // Color del texto seg�n el estado
                 if (*clipPtr) {
@@ -1440,11 +1547,14 @@ namespace RTBEditor {
                 if (*clipPtr) {
                     auto& rm = RTBEngine::Core::ResourceManager::GetInstance();
                     std::string path = rm.GetAudioClipPath((RTBEngine::Audio::AudioClip*)*clipPtr);
-                    std::string label = (path.empty() ? "[AudioClip Set]" : path) + "##AudioDropArea";
-                    ImGui::Button(label.c_str(), ImVec2(150, 0));
+                    const std::string display = path.empty()
+                        ? "[AudioClip Set]"
+                        : GetPathDisplayName(path, "[AudioClip Set]");
+                    std::string label = display + "##AudioDropArea";
+                    ImGui::Button(label.c_str(), InspectorPickerButtonSize(2));
                 }
                 else {
-                    ImGui::Button("[None]##AudioDropArea", ImVec2(150, 0));
+                    ImGui::Button("[None]##AudioDropArea", InspectorPickerButtonSize(2));
                 }
 
                 ImGui::PopStyleColor(4); // Pop text color + button colors
@@ -1479,13 +1589,13 @@ namespace RTBEditor {
                     *clipPtr = nullptr;
                     changed = true;
                 }
+                EndInspectorRow();
                 break;
             }
 
             case RTBEngine::Reflection::PropertyType::MeshRef: {
                 void** meshPtr = (void**)data;
-                ImGui::Text("%s:", prop.displayName.c_str());
-                ImGui::SameLine();
+                BeginInspectorRow(inspectorLabel.c_str());
 
                 // Color del texto seg�n el estado
                 if (*meshPtr) {
@@ -1503,11 +1613,14 @@ namespace RTBEditor {
                 if (*meshPtr) {
                     auto& rm = RTBEngine::Core::ResourceManager::GetInstance();
                     std::string path = rm.GetMeshPath((RTBEngine::Rendering::Mesh*)*meshPtr);
-                    std::string label = (path.empty() ? "[Mesh Set]" : path) + "##MeshDropArea";
-                    ImGui::Button(label.c_str(), ImVec2(150, 0));
+                    const std::string display = path.empty()
+                        ? "[Mesh Set]"
+                        : GetPathDisplayName(path, "[Mesh Set]");
+                    std::string label = display + "##MeshDropArea";
+                    ImGui::Button(label.c_str(), InspectorPickerButtonSize(2));
                 }
                 else {
-                    ImGui::Button("[None]##MeshDropArea", ImVec2(150, 0));
+                    ImGui::Button("[None]##MeshDropArea", InspectorPickerButtonSize(2));
                 }
 
                 ImGui::PopStyleColor(4); // Pop text color + button colors
@@ -1545,13 +1658,13 @@ namespace RTBEditor {
                     *meshPtr = nullptr;
                     changed = true;
                 }
+                EndInspectorRow();
                 break;
             }
 
             case RTBEngine::Reflection::PropertyType::FontRef: {
                 void** fontPtr = (void**)data;
-                ImGui::Text("%s:", prop.displayName.c_str());
-                ImGui::SameLine();
+                BeginInspectorRow(inspectorLabel.c_str());
 
                 // Text color based on state
                 if (*fontPtr) {
@@ -1568,10 +1681,13 @@ namespace RTBEditor {
                 if (*fontPtr) {
                     auto& rm = RTBEngine::Core::ResourceManager::GetInstance();
                     std::string path = rm.GetFontPath((RTBEngine::Rendering::Font*)*fontPtr);
-                    std::string label = (path.empty() ? "[Font Set]" : path) + "##FontDropArea";
-                    ImGui::Button(label.c_str(), ImVec2(150, 0));
+                    const std::string display = path.empty()
+                        ? "[Font Set]"
+                        : GetPathDisplayName(path, "[Font Set]");
+                    std::string label = display + "##FontDropArea";
+                    ImGui::Button(label.c_str(), InspectorPickerButtonSize(2));
                 } else {
-                    ImGui::Button("[None]##FontDropArea", ImVec2(150, 0));
+                    ImGui::Button("[None]##FontDropArea", InspectorPickerButtonSize(2));
                 }
 
                 ImGui::PopStyleColor(4); // Pop text color + button colors
@@ -1614,14 +1730,14 @@ namespace RTBEditor {
                     *fontPtr = nullptr;
                     changed = true;
                 }
+                EndInspectorRow();
                 break;
             }
             case RTBEngine::Reflection::PropertyType::GameObjectRef: {
                 RTBEngine::ECS::GameObject** goPtr = (RTBEngine::ECS::GameObject**)data;
                 RTBEngine::ECS::Scene* activeScene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
                 const bool hasLiveGameObject = *goPtr && IsGameObjectInScene(activeScene, *goPtr);
-                ImGui::Text("%s:", prop.displayName.c_str());
-                ImGui::SameLine();
+                BeginInspectorRow(inspectorLabel.c_str());
 
                 // Text color based on state
                 if (hasLiveGameObject) {
@@ -1638,11 +1754,11 @@ namespace RTBEditor {
                 ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.3f, 0.5f, 0.8f, 0.5f));
 
                 if (hasLiveGameObject) {
-                    ImGui::Button((*goPtr)->GetName().c_str(), ImVec2(150, 0));
+                    ImGui::Button((*goPtr)->GetName().c_str(), InspectorPickerButtonSize(1));
                 } else if (*goPtr) {
-                    ImGui::Button("[Missing]##GODropArea", ImVec2(150, 0));
+                    ImGui::Button("[Missing]##GODropArea", InspectorPickerButtonSize(1));
                 } else {
-                    ImGui::Button("[None]##GODropArea", ImVec2(150, 0));
+                    ImGui::Button("[None]##GODropArea", InspectorPickerButtonSize(1));
                 }
 
                 ImGui::PopStyleColor(4); // Pop text color + button colors
@@ -1665,14 +1781,15 @@ namespace RTBEditor {
                     *goPtr = nullptr;
                     changed = true;
                 }
+                EndInspectorRow();
                 break;
             }
             case RTBEngine::Reflection::PropertyType::ComponentRef: {
                 RTBEngine::ECS::Component** compPtr = (RTBEngine::ECS::Component**)data;
                 RTBEngine::ECS::Scene* activeScene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
                 const bool hasLiveComponent = *compPtr && IsComponentInScene(activeScene, *compPtr);
-                ImGui::Text("%s (%s):", prop.displayName.c_str(), prop.componentTypeName.c_str());
-                ImGui::SameLine();
+                const std::string componentRefLabel = FormatComponentRefLabel(prop);
+                BeginInspectorRow(componentRefLabel.c_str());
 
                 // Text color based on state
                 if (hasLiveComponent) {
@@ -1690,11 +1807,11 @@ namespace RTBEditor {
 
                 if (hasLiveComponent) {
                     std::string label = std::string("[") + (*compPtr)->GetTypeName() + "]##CompDropArea";
-                    ImGui::Button(label.c_str(), ImVec2(150, 0));
+                    ImGui::Button(label.c_str(), InspectorPickerButtonSize(1));
                 } else if (*compPtr) {
-                    ImGui::Button("[Missing]##CompDropArea", ImVec2(150, 0));
+                    ImGui::Button("[Missing]##CompDropArea", InspectorPickerButtonSize(1));
                 } else {
-                    ImGui::Button("[None]##CompDropArea", ImVec2(150, 0));
+                    ImGui::Button("[None]##CompDropArea", InspectorPickerButtonSize(1));
                 }
 
                 ImGui::PopStyleColor(4); // Pop text color + button colors
@@ -1740,6 +1857,7 @@ namespace RTBEditor {
                     ImGui::SetTooltip("Drag a GameObject with a %s component", prop.componentTypeName.c_str());
                 }
 
+                EndInspectorRow();
                 break;
             }
             case RTBEngine::Reflection::PropertyType::List: {
@@ -1747,7 +1865,9 @@ namespace RTBEditor {
                 break;
             }
             default:
-                ImGui::Text("%s: [Unsupported Type]", prop.displayName.c_str());
+                BeginInspectorRow(inspectorLabel.c_str());
+                ImGui::TextUnformatted("[Unsupported Type]");
+                EndInspectorRow();
                 break;
         }
 
@@ -1777,13 +1897,14 @@ namespace RTBEditor {
 
         //Model path
         {
-            char buf[1024];
-            memset(buf, 0, sizeof(buf));
-            strncpy_s(buf, sizeof(buf), animator->modelRef.c_str(), _TRUNCATE);
-            if (ImGui::InputText("Model", buf, sizeof(buf))) {
-                animator->modelRef = buf;
+            const std::string previousModel = animator->modelRef;
+            RTBEngine::Reflection::PropertyInfo modelProp;
+            modelProp.name = "modelRef";
+            modelProp.displayName = "Model";
+            modelProp.assetType = "fbx";
+            DrawAssetRefProperty(animator, modelProp, &animator->modelRef, changed);
+            if (animator->modelRef != previousModel) {
                 animatorScanStatus.clear();
-                changed = true;
             }
         }
 
@@ -1816,7 +1937,8 @@ namespace RTBEditor {
             std::vector<std::string> clipNames = animator->GetClipNames();
             std::string currentDefault = animator->defaultClip;
             const char* previewValue = currentDefault.empty() ? "(none)" : currentDefault.c_str();
-            if (ImGui::BeginCombo("Default Clip", previewValue)) {
+            BeginInspectorRow("Default Clip");
+            if (ImGui::BeginCombo("##value", previewValue)) {
                 if (ImGui::Selectable("(none)", currentDefault.empty())) {
                     animator->defaultClip.clear();
                     changed = true;
@@ -1831,26 +1953,34 @@ namespace RTBEditor {
                 }
                 ImGui::EndCombo();
             }
+            EndInspectorRow();
         }
 
         //Speed slider
-        if (ImGui::SliderFloat("Speed", &animator->speed, 0.0f, 3.0f)) {
+        BeginInspectorRow("Speed");
+        if (ImGui::SliderFloat("##value", &animator->speed, 0.0f, 3.0f)) {
             animator->SetSpeed(animator->speed);
             changed = true;
         }
+        EndInspectorRow();
 
         //Playing and looping checkboxes
         {
             const bool wasPlaying = animator->playing;
-            if (ImGui::Checkbox("Playing", &animator->playing)) {
+            BeginInspectorRow("Playing");
+            if (ImGui::Checkbox("##value", &animator->playing)) {
                 if (wasPlaying && !animator->playing) {
                     animator->Stop();
                 }
                 changed = true;
             }
+            EndInspectorRow();
         }
-        ImGui::SameLine();
-        if (ImGui::Checkbox("Looping", &animator->looping)) changed = true;
+        BeginInspectorRow("Looping");
+        if (ImGui::Checkbox("##value", &animator->looping)) {
+            changed = true;
+        }
+        EndInspectorRow();
 
         //Playback buttons
         ImGui::Spacing();
@@ -2022,14 +2152,7 @@ namespace RTBEditor {
     }
 
     std::string InspectorPanel::FormatTypeName(const char* typeName) {
-        std::string result;
-        for (int i = 0; typeName[i] != '\0'; i++) {
-            if (i > 0 && std::isupper((unsigned char)typeName[i]) && std::islower((unsigned char)typeName[i - 1])) {
-                result += ' ';
-            }
-            result += typeName[i];
-        }
-        return result;
+        return RTBEngine::Reflection::FormatPropertyName(typeName);
     }
 
     void InspectorPanel::DrawCubemapAssetInspector(const std::filesystem::path& cubemapPath) {
