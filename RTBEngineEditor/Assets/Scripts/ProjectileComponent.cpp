@@ -158,6 +158,7 @@ namespace {
 
 RTB_REGISTER_COMPONENT(ProjectileComponent)
     RTB_PROPERTY_RANGE(speed, 0.01f, 50.0f)
+    RTB_PROPERTY_RANGE(lifetime, 0.01f, 30.0f)
     RTB_PROPERTY_RANGE(maxDistance, 0.05f, 50.0f)
     RTB_PROPERTY_RANGE(radius, 0.05f, 5.0f)
     RTB_PROPERTY_RANGE(damage, 0.0f, 1000.0f)
@@ -165,6 +166,7 @@ RTB_REGISTER_COMPONENT(ProjectileComponent)
     RTB_PROPERTY(ignoreSameTeam)
     RTB_PROPERTY(destroyOnHit)
     RTB_PROPERTY_RANGE(maxHits, 0, 100)
+    RTB_PROPERTY_ASSET_PATH(impactParticlePrefabRef, "prefab")
 RTB_END_REGISTER(ProjectileComponent)
 
 void ProjectileComponent::OnStart()
@@ -238,25 +240,18 @@ void ProjectileComponent::OnDestroy()
     pendingDestroy = true;
 }
 
-void ProjectileComponent::Initialize(const ProjectileConfig& config)
+void ProjectileComponent::BeginFlight(const ProjectileRuntimeContext& context)
 {
-    instigator = config.instigator;
-    hitAudio = config.hitAudio;
-    physicsWorld = config.physicsWorld;
-    speed = config.speed;
-    maxDistance = config.maxDistance;
-    radius = config.radius;
-    damage = config.damage;
-    instigatorTeam = config.instigatorTeam;
+    instigator = context.instigator;
+    hitAudio = context.hitAudio;
+    physicsWorld = context.physicsWorld;
+    instigatorTeam = context.instigatorTeam;
     if (instigatorTeam == static_cast<int>(CharacterTeam::Neutral)) {
         instigatorTeam = ResolveCharacterTeam(instigator);
     }
-    ignoreSameTeam = config.ignoreSameTeam;
-    destroyOnHit = config.destroyOnHit;
-    maxHits = config.maxHits;
-    applyDamage = config.applyDamage;
-    impactParticlePrefabRef = config.impactParticlePrefabRef;
-    direction = config.direction;
+    applyDamage = context.applyDamage;
+
+    direction = context.direction;
     direction.y = 0.0f;
     if (!HasPlanarDirection(direction)) {
         direction = RTBEngine::Math::Vector3::Forward();
@@ -266,7 +261,7 @@ void ProjectileComponent::Initialize(const ProjectileConfig& config)
 
     ClampSettings();
 
-    fixedHeight = config.origin.y;
+    fixedHeight = context.origin.y;
     distanceTravelled = 0.0f;
     appliedHitCount = 0;
     pendingDestroy = false;
@@ -274,17 +269,46 @@ void ProjectileComponent::Initialize(const ProjectileConfig& config)
     hitTargets.clear();
 
     if (owner) {
-        owner->GetTransform().SetPosition(config.origin);
+        owner->GetTransform().SetPosition(context.origin);
     }
 
     EnsureFlightTrail();
-    UpdateFlightTrail(config.origin);
+    UpdateFlightTrail(context.origin);
+}
+
+void ProjectileComponent::Initialize(const ProjectileConfig& config)
+{
+    speed = config.speed;
+    maxDistance = config.maxDistance;
+    radius = config.radius;
+    damage = config.damage;
+    ignoreSameTeam = config.ignoreSameTeam;
+    destroyOnHit = config.destroyOnHit;
+    maxHits = config.maxHits;
+    if (!config.impactParticlePrefabRef.empty()) {
+        impactParticlePrefabRef = config.impactParticlePrefabRef;
+    }
+
+    ProjectileRuntimeContext context;
+    context.instigator = config.instigator;
+    context.hitAudio = config.hitAudio;
+    context.physicsWorld = config.physicsWorld;
+    context.origin = config.origin;
+    context.direction = config.direction;
+    context.instigatorTeam = config.instigatorTeam;
+    context.applyDamage = config.applyDamage;
+    BeginFlight(context);
 }
 
 void ProjectileComponent::ClampSettings()
 {
     speed = std::max(0.01f, speed);
-    maxDistance = std::max(0.05f, maxDistance);
+    lifetime = std::max(0.01f, lifetime);
+    if (lifetime > 0.0f) {
+        maxDistance = std::max(0.05f, speed * lifetime);
+    } else {
+        maxDistance = std::max(0.05f, maxDistance);
+    }
     radius = std::max(0.05f, radius);
     damage = std::max(0.0f, damage);
     maxHits = std::max(0, maxHits);
@@ -434,6 +458,7 @@ void ProjectileComponent::InitializeFromOwnerTransform()
     config.ignoreSameTeam = ignoreSameTeam;
     config.destroyOnHit = destroyOnHit;
     config.maxHits = maxHits;
+    config.impactParticlePrefabRef = impactParticlePrefabRef;
 
     if (owner) {
         config.origin = owner->GetWorldPosition();

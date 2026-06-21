@@ -802,6 +802,7 @@ function CreateScene()
                         projectileAttack = "E8682E33-50ED-45D8-BC76-B31113639F9E/ProjectileAttackAbility",
                         attackJoystick = "B4C7E92D-5F22-43A9-8E3B-2A6D7D1A8C10/UIJoystick",
                         attackAimTrail = "7C57C988-6629-4FE8-AFF1-8D4D39C84D1B/TrailRenderer",
+                        aimTrailForwardOffset = 0.40,
                         aimTrailHeightOffset = 0.00,
                         aimArrowVisual = "R4NG3R00-ARRO-4000-8000-000000000001",
                         idleAnimationFbx = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_General.fbx|Idle_A",
@@ -845,23 +846,11 @@ function CreateScene()
                     },
                     {
                         type = "ProjectileAttackAbility",
-                        attackOriginOffset = Vector3(0.20, 1.00, 0.40),
-                        launchOriginObject = "109DAEF5-4736-4BB3-B63F-DD6B5B44855E",
+                        projectilePrefabRef = "Assets/Prefabs/Arrow Projectile.prefab",
+                        attackOriginHeightOffset = 0.50,
                         launchForwardOffset = 0.35,
-                        projectileModel = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/arrow_bow.obj",
-                        projectileTexture = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/ranger_texture.png",
-                        damage = 25.00,
-                        hitDelay = 0.30,
-                        recoveryDuration = 0.45,
-                        projectileSpeed = 14.00,
-                        projectileLifetime = 0.85,
-                        projectileRadius = 0.06,
-                        destroyOnHit = true,
-                        maxHits = 1,
-                        ignoreSameTeam = true,
                         fireAudio = "C0MBAT-F1RE-4001-8000-000000000001/AudioSourceComponent",
-                        hitAudio = "C0MBAT-H1T0-4001-8000-000000000001/AudioSourceComponent",
-                        impactParticlePrefabRef = "Assets/Prefabs/Arrow Impact Sparks.prefab"
+                        hitAudio = "C0MBAT-H1T0-4001-8000-000000000001/AudioSourceComponent"
                     },
                     {
                         type = "RigidBodyComponent",
@@ -1425,7 +1414,7 @@ function CreateScene()
                                                                                                     {
                                                                                                         name = "Ranger_Bow",
                                                                                                         uuid = "109DAEF5-4736-4BB3-B63F-DD6B5B44855E",
-                                                                                                        rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
+                                                                                                        rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
                                                                                                         components = {
                                                                                                             {
                                                                                                                 type = "MeshRenderer",
@@ -3150,7 +3139,7 @@ function CreateScene()
                                 name = "wall_corner_ne",
                                 uuid = "2511373C-D1A9-4183-AE10-3CC6C9A44409",
                                 position = Vector3(14.00, 0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
@@ -3391,7 +3380,7 @@ function CreateScene()
                                 name = "wall_n_-12",
                                 uuid = "56BF061A-D1D6-441B-B6E6-26165AEED521",
                                 position = Vector3(-12.00, 0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
@@ -3422,7 +3411,7 @@ function CreateScene()
                                 name = "wall_n_-8",
                                 uuid = "0475162D-E451-45F6-90B0-551038025002",
                                 position = Vector3(-8.00, 0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
@@ -3453,7 +3442,7 @@ function CreateScene()
                                 name = "wall_n_-4",
                                 uuid = "8987FEDF-75C9-4809-90E3-782CB9278901",
                                 position = Vector3(-4.00, 0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
@@ -3484,7 +3473,7 @@ function CreateScene()
                                 name = "wall_n_0",
                                 uuid = "013C2A45-B1B5-4645-A8AC-EE5824F94914",
                                 position = Vector3(0.00, 0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
@@ -3515,7 +3504,7 @@ function CreateScene()
                                 name = "wall_n_4",
                                 uuid = "06B97D68-350C-4301-8DE6-C714191DBF3D",
                                 position = Vector3(4.00, 0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
@@ -3546,7 +3535,7 @@ function CreateScene()
                                 name = "wall_n_8",
                                 uuid = "03EA9125-FCEF-4F65-A817-7C2697593C83",
                                 position = Vector3(8.00, 0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
@@ -3577,7 +3566,7 @@ function CreateScene()
                                 name = "wall_n_12",
                                 uuid = "677F63A1-66E1-4D54-9A76-C7F8BC485349",
                                 position = Vector3(12.00, 0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
@@ -4442,7 +4431,7 @@ function CreateScene()
                                 name = "torch_n",
                                 uuid = "31C7F376-69C7-4C51-B45C-57D2EBB9EA73",
                                 position = Vector3(0.00, 0.00, 13.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
@@ -4504,7 +4493,7 @@ function CreateScene()
                                 name = "banner_1",
                                 uuid = "60FDC273-65AE-491F-A7EC-4B6E0DB54C3F",
                                 position = Vector3(0.00, 0.00, 13.50),
-                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",

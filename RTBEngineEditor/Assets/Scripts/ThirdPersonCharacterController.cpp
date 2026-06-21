@@ -9,6 +9,7 @@
 #include "PauseMenuController.h"
 #include "PlayerAmmoSystem.h"
 #include "ProjectileAttackAbility.h"
+#include "CharacterCombatOrigins.h"
 
 #include <RTBEngine/Animation/Animator.h>
 #include <RTBEngine/Core/Logger.h>
@@ -113,6 +114,7 @@ RTB_REGISTER_COMPONENT(ThirdPersonCharacterController)
     RTB_PROPERTY_COMPONENT(projectileAttack, ProjectileAttackAbility)
     RTB_PROPERTY_COMPONENT(attackJoystick, UIJoystick)
     RTB_PROPERTY_COMPONENT(attackAimTrail, TrailRenderer)
+    RTB_PROPERTY_RANGE(aimTrailForwardOffset, 0.0f, 3.0f)
     RTB_PROPERTY_RANGE(aimTrailHeightOffset, -2.0f, 3.0f)
     RTB_PROPERTY_GAMEOBJECT(aimArrowVisual)
     RTB_PROPERTY_FBX(idleAnimationFbx)
@@ -600,7 +602,7 @@ void ThirdPersonCharacterController::HandleJoystickAttackReleased(const RTBEngin
     }
 
     if (!projectileAttack ||
-        projectileAttack->GetDamageAmount() <= 0.0f ||
+        !projectileAttack->HasValidProjectilePrefab() ||
         PauseMenuController::IsAnyMenuOpen()) {
         if (wasAiming) {
             FinishAiming();
@@ -644,7 +646,7 @@ bool ThirdPersonCharacterController::CanStartAiming() const
 {
     return attackJoystick &&
         projectileAttack &&
-        projectileAttack->GetDamageAmount() > 0.0f &&
+        projectileAttack->HasValidProjectilePrefab() &&
         !PauseMenuController::IsAnyMenuOpen() &&
         state == State::Locomotion;
 }
@@ -811,7 +813,7 @@ void ThirdPersonCharacterController::UpdateAttackAimTrail()
     if (!attackJoystick ||
         !attackJoystick->IsDragging() ||
         !projectileAttack ||
-        projectileAttack->GetDamageAmount() <= 0.0f ||
+        !projectileAttack->HasValidProjectilePrefab() ||
         state != State::Aiming ||
         PauseMenuController::IsAnyMenuOpen()) {
         HideAttackAimTrail();
@@ -825,10 +827,7 @@ void ThirdPersonCharacterController::UpdateAttackAimTrail()
         return;
     }
 
-    RTBEngine::Math::Vector3 start =
-        (projectileAttack && owner)
-            ? projectileAttack->GetLaunchOrigin(owner, attackDirection)
-            : GetAimTrailOrigin();
+    RTBEngine::Math::Vector3 start = GetAimTrailWorldOrigin(attackDirection);
     start.y += aimTrailHeightOffset;
 
     const RTBEngine::Math::Vector3 end = start + attackDirection * GetProjectileTravelDistance();
@@ -1292,27 +1291,18 @@ RTBEngine::Math::Vector3 ThirdPersonCharacterController::GetDesiredMoveDirection
     return desiredMove;
 }
 
-RTBEngine::Math::Vector3 ThirdPersonCharacterController::GetAimTrailOrigin() const
+RTBEngine::Math::Vector3 ThirdPersonCharacterController::GetAimTrailWorldOrigin(
+    const RTBEngine::Math::Vector3& attackDirection) const
 {
     if (!owner) {
         return RTBEngine::Math::Vector3::Zero();
     }
 
-    if (!attackAimTrail || !attackAimTrail->GetOwner()) {
-        return owner->GetWorldPosition();
-    }
-
-    RTBEngine::ECS::GameObject* trailObject = attackAimTrail->GetOwner();
-    const RTBEngine::Math::Vector3 localTrailPosition = trailObject->GetTransform().GetPosition();
-    const RTBEngine::Math::Vector3 planarOffset =
-        owner->GetWorldRotation() *
-        RTBEngine::Math::Vector3(localTrailPosition.x, 0.0f, localTrailPosition.z);
-
-    const RTBEngine::Math::Vector3 ownerPosition = owner->GetWorldPosition();
-    return RTBEngine::Math::Vector3(
-        ownerPosition.x + planarOffset.x,
-        ownerPosition.y + localTrailPosition.y,
-        ownerPosition.z + planarOffset.z);
+    RTBEngine::Math::Vector3 origin = CharacterCombatOrigins::GetFeetWorld(owner);
+    return CharacterCombatOrigins::ApplyPlanarDirectionOffset(
+        origin,
+        attackDirection,
+        aimTrailForwardOffset);
 }
 
 float ThirdPersonCharacterController::GetProjectileTravelDistance() const
@@ -1441,24 +1431,26 @@ void ThirdPersonCharacterController::PlayPredictedAttackVisual(const RTBEngine::
     if (animator && attackSlotState.ready && animator->GetClip(kAttackAlias)) {
         animator->Play(kAttackAlias, false);
     }
-
-    predictedAttackVisualTimeRemaining =
-        projectileAttack->GetHitDelaySeconds() + projectileAttack->GetRecoverySeconds();
 }
 
-void ThirdPersonCharacterController::UpdatePredictedAttackVisual(float deltaTime)
+void ThirdPersonCharacterController::UpdatePredictedAttackVisual(float /*deltaTime*/)
 {
-    if (predictedAttackVisualTimeRemaining <= 0.0f || state != State::Attacking) {
+    if (state != State::Attacking) {
         return;
     }
 
-    if (projectileAttack && projectileAttack->IsAbilityActive()) {
-        return;
-    }
+    const bool hasAttackAnimation =
+        animator && attackSlotState.ready && animator->GetClip(kAttackAlias);
 
-    predictedAttackVisualTimeRemaining = std::max(0.0f, predictedAttackVisualTimeRemaining - deltaTime);
-    if (predictedAttackVisualTimeRemaining <= 0.0f) {
+    if (!hasAttackAnimation) {
         FinishAttack();
+        return;
     }
+
+    if (animator->GetCurrentClipName() == kAttackAlias && animator->IsPlaying()) {
+        return;
+    }
+
+    FinishAttack();
 }
 

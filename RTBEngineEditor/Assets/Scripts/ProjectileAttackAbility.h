@@ -5,6 +5,8 @@
 #include <RTBEngine/Math/Vectors/Vector3.h>
 #include <RTBEngine/Reflection/PropertyMacros.h>
 
+#include <string>
+
 namespace GameNet {
     struct ProjectileSpawnSnapshot;
 }
@@ -13,6 +15,7 @@ namespace RTBEngine {
     namespace ECS {
         class AudioSourceComponent;
         class GameObject;
+        class Prefab;
     }
 
     namespace Physics {
@@ -26,25 +29,14 @@ public:
     ProjectileAttackAbility() = default;
     ~ProjectileAttackAbility() override = default;
 
+    void OnStart() override;
     void OnValidate() override;
 
-    RTBEngine::Math::Vector3 attackOriginOffset = RTBEngine::Math::Vector3(0.0f, 0.55f, 0.0f);
-    RTBEngine::ECS::GameObject* launchOriginObject = nullptr;
+    std::string projectilePrefabRef = "Assets/Prefabs/Arrow Projectile.prefab";
+    float attackOriginHeightOffset = 0.55f;
     float launchForwardOffset = 0.35f;
-    std::string projectileModel;
-    std::string projectileTexture;
-    float damage = 25.0f;
-    float hitDelay = 0.35f;
-    float recoveryDuration = 0.5f;
-    float projectileSpeed = 8.0f;
-    float projectileLifetime = 0.65f;
-    float projectileRadius = 0.275f;
-    bool destroyOnHit = true;
-    int maxHits = 1;
-    bool ignoreSameTeam = true;
     RTBEngine::ECS::AudioSourceComponent* fireAudio = nullptr;
     RTBEngine::ECS::AudioSourceComponent* hitAudio = nullptr;
-    std::string impactParticlePrefabRef;
 
     RTB_COMPONENT(ProjectileAttackAbility)
 
@@ -56,27 +48,32 @@ public:
     RTBEngine::Math::Vector3 GetLaunchOrigin(RTBEngine::ECS::GameObject* instigator,
                                              const RTBEngine::Math::Vector3& attackDirection) const;
     float GetTravelDistance() const;
-    float GetLaunchClearance(RTBEngine::ECS::GameObject* instigator) const;
-    float GetHitDelaySeconds() const { return hitDelay; }
-    float GetRecoverySeconds() const { return recoveryDuration; }
-    float GetDamageAmount() const { return damage; }
-    float GetProjectileRadius() const { return projectileRadius; }
+    float GetDamageAmount() const { return cachedDamage; }
+    bool HasValidProjectilePrefab() const { return projectileSpawnPrefab != nullptr && cachedDamage > 0.0f; }
 
 protected:
     float GetCooldownDuration() const override { return 0.0f; }
-    float GetHitDelayDuration() const override { return hitDelay; }
-    float GetRecoveryDuration() const override { return recoveryDuration; }
+    float GetHitDelayDuration() const override { return 0.0f; }
+    float GetRecoveryDuration() const override { return 0.0f; }
     bool CanActivateAbility(RTBEngine::ECS::GameObject* instigator,
                             const RTBEngine::Math::Vector3& direction) const override;
     void ExecuteAbilityHit() override;
 
 private:
+    RTBEngine::ECS::Prefab* projectileSpawnPrefab = nullptr;
+    float cachedTravelDistance = 0.0f;
+    float cachedProjectileRadius = 0.05f;
+    float cachedDamage = 0.0f;
+
     void ClampSettings();
+    void ResolveProjectilePrefab();
+    void RefreshCachedProjectileStats();
     bool SpawnProjectile(RTBEngine::ECS::GameObject* instigator,
                          const RTBEngine::Math::Vector3& attackDirection,
                          RTBEngine::Physics::PhysicsWorld* physicsWorld,
                          bool broadcastOnlineSpawn,
-                         const RTBEngine::Math::Vector3* spawnOriginOverride = nullptr);
+                         const RTBEngine::Math::Vector3* spawnOriginOverride = nullptr,
+                         const GameNet::ProjectileSpawnSnapshot* networkSnapshot = nullptr);
     RTBEngine::Physics::PhysicsWorld* ResolvePhysicsWorld(RTBEngine::ECS::GameObject* instigator) const;
     static RTBEngine::ECS::GameObject* FindPawnByPlayerSlot(int playerSlot);
 };

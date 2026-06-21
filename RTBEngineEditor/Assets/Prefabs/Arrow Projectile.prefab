@@ -1,0 +1,32 @@
+return {
+    name = "Arrow Projectile",
+    collisionLayer = "Projectiles",
+    position = Vector3(0.00, 0.00, 0.00),
+    components = {
+        {
+            type = "MeshRenderer",
+            meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/arrow_bow.obj",
+            textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/ranger_texture.png",
+            colorRef = Color(1.00, 1.00, 1.00, 1.00),
+            meshIndex = 0,
+            multiMesh = false
+        },
+        {
+            type = "SphereColliderComponent",
+            radius = 0.06,
+            centerOffset = Vector3(0.00, 0.00, 0.00),
+            isTrigger = true
+        },
+        {
+            type = "ProjectileComponent",
+            speed = 14.00,
+            lifetime = 0.85,
+            radius = 0.06,
+            damage = 25.00,
+            ignoreSameTeam = true,
+            destroyOnHit = true,
+            maxHits = 1,
+            impactParticlePrefabRef = "Assets/Prefabs/Arrow Impact Sparks.prefab"
+        },
+    }
+}

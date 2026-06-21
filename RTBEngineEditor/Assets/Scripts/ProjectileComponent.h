@@ -24,6 +24,16 @@ namespace RTBEngine {
 class ProjectileComponent : public RTBEngine::ECS::Component
 {
 public:
+    struct ProjectileRuntimeContext {
+        RTBEngine::ECS::GameObject* instigator = nullptr;
+        RTBEngine::ECS::AudioSourceComponent* hitAudio = nullptr;
+        RTBEngine::Physics::PhysicsWorld* physicsWorld = nullptr;
+        RTBEngine::Math::Vector3 origin = RTBEngine::Math::Vector3::Zero();
+        RTBEngine::Math::Vector3 direction = RTBEngine::Math::Vector3::Forward();
+        int instigatorTeam = 0;
+        bool applyDamage = true;
+    };
+
     struct ProjectileConfig {
         RTBEngine::ECS::GameObject* instigator = nullptr;
         RTBEngine::ECS::AudioSourceComponent* hitAudio = nullptr;
@@ -50,9 +60,13 @@ public:
     void OnValidate() override;
     void OnDestroy() override;
 
+    void BeginFlight(const ProjectileRuntimeContext& context);
     void Initialize(const ProjectileConfig& config);
 
+    float GetTravelDistance() const { return maxDistance; }
+
     float speed = 8.0f;
+    float lifetime = 0.85f;
     float maxDistance = 1.15f;
     float radius = 0.55f;
     float damage = 25.0f;
@@ -61,6 +75,7 @@ public:
     bool destroyOnHit = true;
     int maxHits = 1;
     bool applyDamage = true;
+    std::string impactParticlePrefabRef;
 
     RTB_COMPONENT(ProjectileComponent)
 
@@ -75,7 +90,6 @@ private:
     bool initialized = false;
     bool pendingDestroy = false;
     RTBEngine::ECS::TrailRenderer* flightTrail = nullptr;
-    std::string impactParticlePrefabRef;
     std::vector<HealthComponent*> hitTargets;
 
     void ClampSettings();

@@ -63,6 +63,7 @@ public:
     ProjectileAttackAbility* projectileAttack = nullptr;
     RTBEngine::UI::UIJoystick* attackJoystick = nullptr;
     RTBEngine::ECS::TrailRenderer* attackAimTrail = nullptr;
+    float aimTrailForwardOffset = 0.40f;
     float aimTrailHeightOffset = 0.0f;
     RTBEngine::ECS::GameObject* aimArrowVisual = nullptr;
     std::string idleAnimationFbx;
@@ -152,7 +153,7 @@ private:
     void FaceAttackDirection(const RTBEngine::Math::Vector3& attackDirection);
     void StopPlanarMotion() const;
     RTBEngine::Math::Vector3 GetDesiredMoveDirection(bool& outIsRunning) const;
-    RTBEngine::Math::Vector3 GetAimTrailOrigin() const;
+    RTBEngine::Math::Vector3 GetAimTrailWorldOrigin(const RTBEngine::Math::Vector3& attackDirection) const;
     float GetProjectileTravelDistance() const;
     RTBEngine::Math::Vector3 GetAttackDirectionFromJoystick(const RTBEngine::Math::Vector2& joystickValue) const;
     RTBEngine::Math::Vector3 GetActiveAttackDirection() const;
@@ -174,7 +175,6 @@ private:
     std::uint32_t networkAttackSequence = 0;
     std::uint32_t lastProcessedRemoteAttackSequence = 0;
     RTBEngine::Math::Vector3 pendingNetworkAttackDirection = RTBEngine::Math::Vector3::Zero();
-    float predictedAttackVisualTimeRemaining = 0.0f;
     RTBEngine::Math::Vector3 lastReplicatedWorldPosition = RTBEngine::Math::Vector3::Zero();
     bool hasReplicatedMotionSample = false;
     bool deathCameraFrozen = false;
