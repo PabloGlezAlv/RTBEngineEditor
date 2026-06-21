@@ -10,6 +10,9 @@
 #include <RTBEngine/Scene/RigidBodyComponent.h>
 #include "ProjectileTrailFadeLifetime.h"
 
+#include <RTBEngine/Core/ResourceManager.h>
+#include <RTBEngine/Math/Quaternions/Quaternion.h>
+#include <RTBEngine/Scene/PrefabRegistry.h>
 #include <RTBEngine/Scene/Scene.h>
 #include <RTBEngine/Scene/SceneManager.h>
 #include <RTBEngine/Scene/TrailRenderer.h>
@@ -27,10 +30,37 @@ namespace {
     constexpr float kMinTrailPointDistanceSq = kMinTrailPointDistance * kMinTrailPointDistance;
     constexpr std::size_t kMaxTrailPoints = 48;
     constexpr float kProjectileTrailWidth = 0.10f;
+    constexpr float kPi = 3.14159265358979323846f;
 
     bool HasPlanarDirection(const RTBEngine::Math::Vector3& value)
     {
         return std::abs(value.x) > kDirectionEpsilon || std::abs(value.z) > kDirectionEpsilon;
+    }
+
+    RTBEngine::Math::Quaternion BuildSplashRotation(const RTBEngine::Math::Vector3& flightDirection)
+    {
+        RTBEngine::Math::Vector3 splashAxis = flightDirection;
+        splashAxis.y = 0.0f;
+        if (!HasPlanarDirection(splashAxis)) {
+            return RTBEngine::Math::Quaternion::Identity();
+        }
+
+        splashAxis.Normalize();
+        splashAxis = splashAxis * -1.0f;
+
+        const RTBEngine::Math::Vector3 localUp(0.0f, 1.0f, 0.0f);
+        const float dot = std::clamp(localUp.Dot(splashAxis), -1.0f, 1.0f);
+        if (dot > 1.0f - 1e-5f) {
+            return RTBEngine::Math::Quaternion::Identity();
+        }
+
+        if (dot < -1.0f + 1e-5f) {
+            return RTBEngine::Math::Quaternion(RTBEngine::Math::Vector3(0.0f, 0.0f, 1.0f), kPi);
+        }
+
+        RTBEngine::Math::Vector3 axis = localUp.Cross(splashAxis);
+        axis.Normalize();
+        return RTBEngine::Math::Quaternion(axis, std::acos(dot));
     }
 
     bool IsSameOrDescendant(const RTBEngine::ECS::GameObject* candidate,
@@ -225,6 +255,7 @@ void ProjectileComponent::Initialize(const ProjectileConfig& config)
     destroyOnHit = config.destroyOnHit;
     maxHits = config.maxHits;
     applyDamage = config.applyDamage;
+    impactParticlePrefabRef = config.impactParticlePrefabRef;
     direction = config.direction;
     direction.y = 0.0f;
     if (!HasPlanarDirection(direction)) {
@@ -350,6 +381,44 @@ void ProjectileComponent::ReleaseTrailForFadeout()
     flightTrail->SetVisible(false);
     flightTrail->ClearPoints();
     flightTrail = nullptr;
+}
+
+void ProjectileComponent::SpawnImpactParticles()
+{
+    if (impactParticlePrefabRef.empty() || !owner) {
+        return;
+    }
+
+    const std::string resolvedPath =
+        RTBEngine::Core::ResourceManager::GetInstance().ResolvePathForRead(impactParticlePrefabRef);
+    const RTBEngine::ECS::Prefab* prefab =
+        RTBEngine::ECS::PrefabRegistry::GetInstance().GetByPath(resolvedPath);
+    if (!prefab) {
+        prefab = RTBEngine::ECS::PrefabRegistry::GetInstance().Get("Arrow Impact Sparks");
+    }
+    if (!prefab) {
+        return;
+    }
+
+    RTBEngine::Math::Vector3 impactPosition = owner->GetWorldPosition();
+    impactPosition.y = fixedHeight;
+
+    RTBEngine::ECS::GameObject* impactEffect =
+        RTBEngine::ECS::SceneManager::GetInstance().Instantiate(
+            *prefab,
+            impactPosition,
+            BuildSplashRotation(direction));
+    if (!impactEffect) {
+        return;
+    }
+
+    impactEffect->SetTransient(true);
+
+    for (const auto& component : impactEffect->GetComponents()) {
+        if (component) {
+            component->TryInvokeStart();
+        }
+    }
 }
 
 void ProjectileComponent::InitializeFromOwnerTransform()
@@ -512,6 +581,7 @@ void ProjectileComponent::DestroyProjectile()
     pendingDestroy = true;
     SetEnabled(false);
     ReleaseTrailForFadeout();
+    SpawnImpactParticles();
 
     RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
     if (scene && owner) {

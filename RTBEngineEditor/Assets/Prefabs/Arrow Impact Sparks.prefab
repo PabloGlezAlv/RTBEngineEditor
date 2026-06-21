@@ -1,0 +1,31 @@
+return {
+    name = "Arrow Impact Sparks",
+    uuid = "1MP4CT-SPARK-4000-8000-000000000001",
+    position = Vector3(0.00, 0.00, 0.00),
+    components = {
+        {
+            type = "ParticleSystem",
+            maxParticles = 48,
+            emissionRate = 0.00,
+            emitterShape = "Cone",
+            shapeRadius = 0.08,
+            coneAngle = 65.00,
+            boxSize = Vector3(1.00, 1.00, 1.00),
+            startLifetime = 0.45,
+            startSpeed = 5.00,
+            startSize = 0.32,
+            endSize = 0.05,
+            startColor = Color(1.00, 1.00, 0.55, 1.00),
+            endColor = Color(1.00, 0.35, 0.00, 0.00),
+            gravity = Vector3(0.00, -3.50, 0.00),
+            worldSimulation = true,
+            textureRef = "Assets/VFX/spark_soft.png",
+            visible = true,
+            loop = false,
+            playOnAwake = true,
+            simulateInEditMode = true,
+            destroyOwnerWhenFinished = true,
+            burstCount = 28
+        },
+    }
+}

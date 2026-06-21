@@ -86,6 +86,7 @@ RTB_REGISTER_COMPONENT(ProjectileAttackAbility)
     RTB_PROPERTY(ignoreSameTeam)
     RTB_PROPERTY_COMPONENT(fireAudio, AudioSourceComponent)
     RTB_PROPERTY_COMPONENT(hitAudio, AudioSourceComponent)
+    RTB_PROPERTY_ASSET_PATH(impactParticlePrefabRef, "prefab")
 RTB_END_REGISTER(ProjectileAttackAbility)
 
 void ProjectileAttackAbility::OnValidate()
@@ -255,6 +256,7 @@ bool ProjectileAttackAbility::SpawnProjectile(RTBEngine::ECS::GameObject* instig
     config.maxHits = maxHits;
     config.applyDamage = !RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby() ||
         RTBEngine::Online::OnlineGameplayNet::IsLobbyHost();
+    config.impactParticlePrefabRef = impactParticlePrefabRef;
     projectile->Initialize(config);
 
     if (IsLocallyControlledInstigator(instigator) && fireAudio) {

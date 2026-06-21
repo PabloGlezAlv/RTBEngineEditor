@@ -1913,6 +1913,10 @@ namespace RTBEditor {
 
         if (ImGui::Button("Play")) {
             particleSystem->Play();
+            if (particleSystem->emissionRate <= 0.0f) {
+                particleSystem->Emit(particleSystem->burstCount);
+                particleSystem->Tick(0.001f);
+            }
             changed = true;
         }
         ImGui::SameLine();
@@ -1929,6 +1933,7 @@ namespace RTBEditor {
         ImGui::Spacing();
         if (ImGui::Button("Burst")) {
             particleSystem->Emit(particleSystem->burstCount);
+            particleSystem->Tick(0.001f);
             changed = true;
         }
         ImGui::SameLine();

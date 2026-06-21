@@ -35,9 +35,11 @@ function CreateScene()
                     },
                     {
                         type = "AudioSourceComponent",
-                        clip = "Assets/Audio/UI/button_click.mp3",
                         volume = 0.85,
-                        playOnStart = false
+                        pitch = 1.00,
+                        loop = false,
+                        playOnStart = false,
+                        audioClip = "Assets/Audio/UI/button_click.mp3"
                     },
                     {
                         type = "RoundUIHandler",
@@ -300,7 +302,6 @@ function CreateScene()
                                             },
                                             {
                                                 type = "ButtonStyle",
-                                                clickAudio = "62E6AE07-7DC2-42B3-8F0E-AA7CA40264F0/AudioSourceComponent",
                                                 backgroundImage = "F1A2B3C4-D5E6-4789-A012-3456789AB201/UIImage",
                                                 label = "5DE3585B-3426-421D-8F36-DBAF43123F50/UIText",
                                                 normalTexture = "Assets/UI/GuildSlate/btn_accent_normal.png",
@@ -320,7 +321,9 @@ function CreateScene()
                                                 hoverInTimeSec = 0.12,
                                                 hoverOutTimeSec = 0.18,
                                                 pressInTimeSec = 0.08,
-                                                pressOutTimeSec = 0.12
+                                                pressOutTimeSec = 0.12,
+                                                playClickSound = true,
+                                                clickAudio = "62E6AE07-7DC2-42B3-8F0E-AA7CA40264F0/AudioSourceComponent"
                                             },
                                             {
                                                 type = "ResumeGameButton",
@@ -405,7 +408,6 @@ function CreateScene()
                                             },
                                             {
                                                 type = "ButtonStyle",
-                                                clickAudio = "62E6AE07-7DC2-42B3-8F0E-AA7CA40264F0/AudioSourceComponent",
                                                 backgroundImage = "F1A2B3C4-D5E6-4789-A012-3456789AB202/UIImage",
                                                 label = "2F7C83F3-A334-41DA-BF4C-A4FDDE59BA6C/UIText",
                                                 normalTexture = "Assets/UI/GuildSlate/btn_secondary_normal.png",
@@ -425,7 +427,9 @@ function CreateScene()
                                                 hoverInTimeSec = 0.12,
                                                 hoverOutTimeSec = 0.18,
                                                 pressInTimeSec = 0.08,
-                                                pressOutTimeSec = 0.12
+                                                pressOutTimeSec = 0.12,
+                                                playClickSound = true,
+                                                clickAudio = "62E6AE07-7DC2-42B3-8F0E-AA7CA40264F0/AudioSourceComponent"
                                             },
                                             {
                                                 type = "SceneChangeButton",
@@ -505,8 +509,7 @@ function CreateScene()
                         spawnPoints = {
                             "74B6BC8E-5892-4C38-A4B6-8AAAF7B1F001",
                             "74B6BC8E-5892-4C38-A4B6-8AAAF7B1F002",
-                            "74B6BC8E-5892-4C38-A4B6-8AAAF7B1F003",
-                        }
+                            "74B6BC8E-5892-4C38-A4B6-8AAAF7B1F003"                        }
                     },
                 },
                 children = {
@@ -567,13 +570,21 @@ function CreateScene()
                             navAgent = "753770D2-B00E-4859-B7D3-5ABF1249B014/NavAgentComponent",
                             meleeAttack = "753770D2-B00E-4859-B7D3-5ABF1249B014/MeleeSphereAttackAbility",
                         },
+                        { type = "MeleeSphereAttackAbility",
+                            hitAudio = "C0MBAT-M1LE-4001-8000-000000000001/AudioSourceComponent",
+                        },
                         { type = "ComicOuchSpawner",
                             health = nil,
                             bubbleTextures = {
                                 "Assets/UI/Comic/Ouch/ouch_01.png",
                                 "Assets/UI/Comic/Ouch/ow_01.png",
-                                "Assets/UI/Comic/Ouch/ugh_01.png",
-                            },
+                                "Assets/UI/Comic/Ouch/ugh_01.png"                            },
+                        },
+                        { type = "HitFlashComponent",
+                            health = nil,
+                        },
+                        { type = "FloatingDamageNumberSpawner",
+                            health = nil,
                         },
                     },
                 },
@@ -594,8 +605,7 @@ function CreateScene()
                                 additionalModels = {
                                     "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_MovementBasic.fbx",
                                     "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_General.fbx",
-                                    "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_CombatMelee.fbx",
-                                }
+                                    "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_CombatMelee.fbx"                                }
                             },
                         },
                         children = {
@@ -792,6 +802,7 @@ function CreateScene()
                         projectileAttack = "E8682E33-50ED-45D8-BC76-B31113639F9E/ProjectileAttackAbility",
                         attackJoystick = "B4C7E92D-5F22-43A9-8E3B-2A6D7D1A8C10/UIJoystick",
                         attackAimTrail = "7C57C988-6629-4FE8-AFF1-8D4D39C84D1B/TrailRenderer",
+                        aimTrailHeightOffset = 0.00,
                         aimArrowVisual = "R4NG3R00-ARRO-4000-8000-000000000001",
                         idleAnimationFbx = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_General.fbx|Idle_A",
                         walkAnimationFbx = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_MovementBasic.fbx|Walking_A",
@@ -811,9 +822,11 @@ function CreateScene()
                     },
                     {
                         type = "AudioSourceComponent",
-                        clip = "Assets/Audio/Combat/player_grunt.mp3",
                         volume = 0.85,
-                        playOnStart = false
+                        pitch = 1.00,
+                        loop = false,
+                        playOnStart = false,
+                        audioClip = "Assets/Audio/Combat/player_grunt.mp3"
                     },
                     {
                         type = "PlayerDamageFeedback",
@@ -835,8 +848,6 @@ function CreateScene()
                         attackOriginOffset = Vector3(0.20, 1.00, 0.40),
                         launchOriginObject = "109DAEF5-4736-4BB3-B63F-DD6B5B44855E",
                         launchForwardOffset = 0.35,
-                        fireAudio = "C0MBAT-F1RE-4001-8000-000000000001/AudioSourceComponent",
-                        hitAudio = "C0MBAT-H1T0-4001-8000-000000000001/AudioSourceComponent",
                         projectileModel = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/arrow_bow.obj",
                         projectileTexture = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/ranger_texture.png",
                         damage = 25.00,
@@ -847,7 +858,10 @@ function CreateScene()
                         projectileRadius = 0.06,
                         destroyOnHit = true,
                         maxHits = 1,
-                        ignoreSameTeam = true
+                        ignoreSameTeam = true,
+                        fireAudio = "C0MBAT-F1RE-4001-8000-000000000001/AudioSourceComponent",
+                        hitAudio = "C0MBAT-H1T0-4001-8000-000000000001/AudioSourceComponent",
+                        impactParticlePrefabRef = "Assets/Prefabs/Arrow Impact Sparks.prefab"
                     },
                     {
                         type = "RigidBodyComponent",
@@ -874,9 +888,11 @@ function CreateScene()
                         components = {
                             {
                                 type = "AudioSourceComponent",
-                                clip = "Assets/Audio/Combat/bow_release.mp3",
                                 volume = 0.85,
-                                playOnStart = false
+                                pitch = 1.00,
+                                loop = false,
+                                playOnStart = false,
+                                audioClip = "Assets/Audio/Combat/bow_release.mp3"
                             },
                         }
                     },
@@ -886,9 +902,56 @@ function CreateScene()
                         components = {
                             {
                                 type = "AudioSourceComponent",
-                                clip = "Assets/Audio/Combat/hit_projectile.mp3",
                                 volume = 0.85,
-                                playOnStart = false
+                                pitch = 1.00,
+                                loop = false,
+                                playOnStart = false,
+                                audioClip = "Assets/Audio/Combat/hit_projectile.mp3"
+                            },
+                        }
+                    },
+                    {
+                        name = "FootCircle",
+                        uuid = "F00T-C1RC-4000-8000-000000000001",
+                        position = Vector3(0.00, 0.03, 0.00),
+                        rotation = Quaternion.FromEulerAngles(-90.00, 0.00, 0.00),
+                        children = {
+                            {
+                                name = "FootCircleCanvas",
+                                uuid = "F00T-C1RC-4000-8000-000000000002",
+                                components = {
+                                    {
+                                        type = "Canvas",
+                                        renderMode = "WorldSpace",
+                                        canvasSize = Vector2(128.00, 128.00),
+                                        pixelsPerUnit = 100.00,
+                                        sortOrder = 4,
+                                        faceCamera = false
+                                    },
+                                },
+                                children = {
+                                    {
+                                        name = "CircleImage",
+                                        uuid = "F00T-C1RC-4000-8000-000000000003",
+                                        components = {
+                                            {
+                                                type = "UIImage",
+                                                texture = "Assets/UI/player_foot_ring.png",
+                                                tintColor = Color(1.00, 1.00, 1.00, 0.72),
+                                                preserveAspect = true,
+                                                isVisible = true,
+                                                raycastTarget = false,
+                                                anchorMin = Vector2(0.50, 0.50),
+                                                anchorMax = Vector2(0.50, 0.50),
+                                                pivot = Vector2(0.50, 0.50),
+                                                anchoredPosition = Vector2(0.00, 0.00),
+                                                sizeDelta = Vector2(118.00, 118.00),
+                                                rotation = 0.00,
+                                                scale = Vector2(1.00, 1.00)
+                                            },
+                                        }
+                                    },
+                                }
                             },
                         }
                     },
@@ -1183,6 +1246,7 @@ function CreateScene()
                                 type = "TrailRenderer",
                                 width = 0.35,
                                 color = Color(1.00, 1.00, 1.00, 0.54),
+                                fadeAlphaAlongLength = false,
                                 visible = false
                             },
                         }
@@ -1203,8 +1267,7 @@ function CreateScene()
                                 additionalModels = {
                                     "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_MovementBasic.fbx",
                                     "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_General.fbx",
-                                    "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_CombatRanged.fbx",
-                                }
+                                    "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_CombatRanged.fbx"                                }
                             },
                         },
                         children = {
@@ -1362,7 +1425,7 @@ function CreateScene()
                                                                                                     {
                                                                                                         name = "Ranger_Bow",
                                                                                                         uuid = "109DAEF5-4736-4BB3-B63F-DD6B5B44855E",
-                                                                                                        rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                                                                                        rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
                                                                                                         components = {
                                                                                                             {
                                                                                                                 type = "MeshRenderer",
@@ -3087,7 +3150,7 @@ function CreateScene()
                                 name = "wall_corner_ne",
                                 uuid = "2511373C-D1A9-4183-AE10-3CC6C9A44409",
                                 position = Vector3(14.00, 0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
@@ -3328,7 +3391,7 @@ function CreateScene()
                                 name = "wall_n_-12",
                                 uuid = "56BF061A-D1D6-441B-B6E6-26165AEED521",
                                 position = Vector3(-12.00, 0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
@@ -3359,7 +3422,7 @@ function CreateScene()
                                 name = "wall_n_-8",
                                 uuid = "0475162D-E451-45F6-90B0-551038025002",
                                 position = Vector3(-8.00, 0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
@@ -3390,7 +3453,7 @@ function CreateScene()
                                 name = "wall_n_-4",
                                 uuid = "8987FEDF-75C9-4809-90E3-782CB9278901",
                                 position = Vector3(-4.00, 0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
@@ -3421,7 +3484,7 @@ function CreateScene()
                                 name = "wall_n_0",
                                 uuid = "013C2A45-B1B5-4645-A8AC-EE5824F94914",
                                 position = Vector3(0.00, 0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
@@ -3452,7 +3515,7 @@ function CreateScene()
                                 name = "wall_n_4",
                                 uuid = "06B97D68-350C-4301-8DE6-C714191DBF3D",
                                 position = Vector3(4.00, 0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
@@ -3483,7 +3546,7 @@ function CreateScene()
                                 name = "wall_n_8",
                                 uuid = "03EA9125-FCEF-4F65-A817-7C2697593C83",
                                 position = Vector3(8.00, 0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
@@ -3514,7 +3577,7 @@ function CreateScene()
                                 name = "wall_n_12",
                                 uuid = "677F63A1-66E1-4D54-9A76-C7F8BC485349",
                                 position = Vector3(12.00, 0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
@@ -4379,7 +4442,7 @@ function CreateScene()
                                 name = "torch_n",
                                 uuid = "31C7F376-69C7-4C51-B45C-57D2EBB9EA73",
                                 position = Vector3(0.00, 0.00, 13.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
@@ -4441,7 +4504,7 @@ function CreateScene()
                                 name = "banner_1",
                                 uuid = "60FDC273-65AE-491F-A7EC-4B6E0DB54C3F",
                                 position = Vector3(0.00, 0.00, 13.50),
-                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",

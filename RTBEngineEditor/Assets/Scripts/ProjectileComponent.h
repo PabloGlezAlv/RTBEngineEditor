@@ -6,6 +6,7 @@
 #include <RTBEngine/Math/Vectors/Vector3.h>
 #include <RTBEngine/Reflection/PropertyMacros.h>
 
+#include <string>
 #include <vector>
 
 namespace RTBEngine {
@@ -38,6 +39,7 @@ public:
         bool destroyOnHit = true;
         int maxHits = 1;
         bool applyDamage = true;
+        std::string impactParticlePrefabRef;
     };
 
     ProjectileComponent() = default;
@@ -73,6 +75,7 @@ private:
     bool initialized = false;
     bool pendingDestroy = false;
     RTBEngine::ECS::TrailRenderer* flightTrail = nullptr;
+    std::string impactParticlePrefabRef;
     std::vector<HealthComponent*> hitTargets;
 
     void ClampSettings();
@@ -80,6 +83,7 @@ private:
     void EnsureFlightTrail();
     void UpdateFlightTrail(const RTBEngine::Math::Vector3& position);
     void ReleaseTrailForFadeout();
+    void SpawnImpactParticles();
     RTBEngine::Physics::PhysicsWorld* ResolvePhysicsWorld() const;
     HealthComponent* ResolveHitHealth(RTBEngine::ECS::GameObject* hitObject) const;
     bool HasAlreadyHit(HealthComponent* target) const;

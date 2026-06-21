@@ -44,6 +44,7 @@ public:
     bool ignoreSameTeam = true;
     RTBEngine::ECS::AudioSourceComponent* fireAudio = nullptr;
     RTBEngine::ECS::AudioSourceComponent* hitAudio = nullptr;
+    std::string impactParticlePrefabRef;
 
     RTB_COMPONENT(ProjectileAttackAbility)
 
