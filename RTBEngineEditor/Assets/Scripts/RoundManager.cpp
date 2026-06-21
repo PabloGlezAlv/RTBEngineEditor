@@ -52,9 +52,6 @@ RTB_END_REGISTER(RoundManager)
 
 void RoundManager::OnStart()
 {
-    RTB_INFO("[RoundManager] OnStart (countdown=" + std::to_string(roundCountdownDuration) +
-        "s, enemyPrefabRef='" + enemyPrefabRef + "').");
-
     GameSession::GetInstance().Reset();
     hasRequestedEndScene = false;
     finalSceneLoadRequested = false;
@@ -339,9 +336,6 @@ void RoundManager::StartRound()
 
     const int enemyCount = GetEnemyCountForRound(currentRound);
 
-    RTB_INFO("[RoundManager] Starting round " + std::to_string(currentRound) +
-        " with " + std::to_string(enemyCount) + " enemies from prefab '" + enemyPrefabRef + "'.");
-
     if (RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby() &&
         RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
         GameNet::RoundStartSnapshot roundStart;
@@ -459,17 +453,6 @@ RTBEngine::ECS::GameObject* RoundManager::SpawnEnemyAt(
 
     ConfigureOnlineEnemy(spawnedEnemy, networkId);
     RebindSpawnedEnemy(spawnedEnemy);
-
-    auto* navAgent = spawnedEnemy->GetComponent<RTBEngine::ECS::NavAgentComponent>();
-    auto* meleeAI = spawnedEnemy->GetComponent<EnemyMeleeAI>();
-    auto* targetTracker = spawnedEnemy->GetComponent<EnemyTargetTracker>();
-    const bool hasTarget = targetTracker && targetTracker->targetObject;
-    RTB_INFO("[RoundManager] Spawned '" + spawnedEnemy->GetName() + "' at spawn point '" +
-        spawnPoint->GetName() + "' | prefab='" + enemyPrefabRef +
-        "' NavAgentComponent=" + (navAgent ? "yes" : "NO") +
-        " EnemyMeleeAI=" + (meleeAI ? "yes" : "NO") +
-        " navAgentLinked=" + (meleeAI && meleeAI->navAgent ? "yes" : "NO") +
-        " target=" + (hasTarget ? targetTracker->targetObject->GetName() : "none") + ".");
 
     return spawnedEnemy;
 }
