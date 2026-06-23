@@ -71,6 +71,52 @@ namespace {
         return std::abs(value.x) > kDirectionEpsilon || std::abs(value.z) > kDirectionEpsilon;
     }
 
+    RTBEngine::ECS::GameObject* FindNextAliveTeammatePawn(const RTBEngine::ECS::GameObject* localOwner, int localPlayerSlot)
+    {
+        RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
+        if (!scene || localPlayerSlot < 0) {
+            return nullptr;
+        }
+
+        const std::vector<RTBEngine::Online::OnlineUserId> members =
+            RTBEngine::Online::OnlineGameplayNet::GetOrderedLobbyMembers();
+        if (members.size() < 2) {
+            return nullptr;
+        }
+
+        const std::size_t memberCount = members.size();
+        for (std::size_t offset = 1; offset < memberCount; ++offset) {
+            const int candidateSlot = static_cast<int>((static_cast<std::size_t>(localPlayerSlot) + offset) % memberCount);
+            for (const auto& gameObject : scene->GetGameObjects()) {
+                if (!gameObject || gameObject.get() == localOwner) {
+                    continue;
+                }
+
+                const RTBEngine::ECS::NetworkIdentity* identity =
+                    gameObject->GetComponent<RTBEngine::ECS::NetworkIdentity>();
+                if (!identity || identity->networkPlayerSlot != candidateSlot) {
+                    continue;
+                }
+
+                ThirdPersonCharacterController* controller = gameObject->GetComponent<ThirdPersonCharacterController>();
+                if (!controller || controller->team != static_cast<int>(CharacterTeam::Player)) {
+                    continue;
+                }
+
+                HealthComponent* health = gameObject->GetComponent<HealthComponent>();
+                if (!health) {
+                    health = gameObject->GetComponentInChildren<HealthComponent>();
+                }
+
+                if (health && !health->IsDead()) {
+                    return gameObject.get();
+                }
+            }
+        }
+
+        return nullptr;
+    }
+
     void GetPlanarMovementBasis(const RTBEngine::ECS::GameObject* referenceObject,
                                 RTBEngine::Math::Vector3& outForward,
                                 RTBEngine::Math::Vector3& outRight)
@@ -267,12 +313,26 @@ void ThirdPersonCharacterController::OnLateUpdate(float deltaTime)
     } else {
         DisableCompetingCameraController();
 
-        if (state == State::Dead && deathCameraFrozen) {
-            if (cameraObject) {
+        if (state == State::Dead) {
+            RTBEngine::ECS::GameObject* spectateTarget = nullptr;
+            if (RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby() && owner) {
+                const RTBEngine::ECS::NetworkIdentity* identity =
+                    owner->GetComponent<RTBEngine::ECS::NetworkIdentity>();
+                const int localSlot = identity ? identity->networkPlayerSlot : -1;
+                spectateTarget = FindNextAliveTeammatePawn(owner, localSlot);
+            }
+
+            if (spectateTarget) {
+                ApplySpectateCameraFollow(spectateTarget);
+            } else if (deathCameraFrozen && cameraObject) {
                 cameraObject->GetTransform().SetPosition(frozenCameraWorldPosition);
                 cameraObject->GetTransform().SetRotation(frozenCameraWorldRotation);
             }
-        } else {
+
+            return;
+        }
+
+        {
             ApplyCameraFollowTransform();
 
             const bool dragging = attackJoystick && attackJoystick->IsDragging();
@@ -504,6 +564,40 @@ void ThirdPersonCharacterController::ApplyCameraFollowTransform()
     const RTBEngine::Math::Vector3 cameraPosition = focusPoint - forward * cameraDistance;
 
     cameraObject->GetTransform().SetPosition(cameraPosition);
+    cameraObject->GetTransform().SetRotation(orbitRotation);
+}
+
+void ThirdPersonCharacterController::ApplySpectateCameraFollow(RTBEngine::ECS::GameObject* targetPawn)
+{
+    if (!owner || !cameraObject || !targetPawn) {
+        return;
+    }
+
+    const RTBEngine::Math::Quaternion orbitRotation =
+        RTBEngine::Math::Quaternion::FromEulerAngles(
+            kFixedCameraPitchDegrees * kDegToRad,
+            kFixedCameraYawDegrees * kDegToRad,
+            0.0f);
+    const RTBEngine::Math::Quaternion targetWorldRotation = targetPawn->GetWorldRotation();
+    const RTBEngine::Math::Vector3 worldFocusOffset = targetWorldRotation * cameraFocusOffset;
+    const RTBEngine::Math::Vector3 worldFocusPoint = targetPawn->GetWorldPosition() + worldFocusOffset;
+    const RTBEngine::Math::Vector3 worldForward = orbitRotation * RTBEngine::Math::Vector3::Forward();
+    const RTBEngine::Math::Vector3 worldCameraPosition = worldFocusPoint - worldForward * cameraDistance;
+    const bool cameraIsChildOfOwner = (cameraObject->GetParent() == owner);
+
+    if (cameraIsChildOfOwner) {
+        const RTBEngine::Math::Vector3 ownerWorldPosition = owner->GetWorldPosition();
+        const RTBEngine::Math::Quaternion ownerWorldRotation = owner->GetWorldRotation();
+        const RTBEngine::Math::Vector3 localCameraPosition =
+            ownerWorldRotation.Inverse() * (worldCameraPosition - ownerWorldPosition);
+        const RTBEngine::Math::Quaternion localOrbitRotation = ownerWorldRotation.Inverse() * orbitRotation;
+
+        cameraObject->GetTransform().SetPosition(localCameraPosition);
+        cameraObject->GetTransform().SetRotation(localOrbitRotation);
+        return;
+    }
+
+    cameraObject->GetTransform().SetPosition(worldCameraPosition);
     cameraObject->GetTransform().SetRotation(orbitRotation);
 }
 
@@ -1117,9 +1211,17 @@ void ThirdPersonCharacterController::HandleDeath(const HealthComponent::DeathEve
 
     ResolveCameraObject();
     if (IsLocallyControlled() && cameraObject) {
-        deathCameraFrozen = true;
-        frozenCameraWorldPosition = cameraObject->GetWorldPosition();
-        frozenCameraWorldRotation = cameraObject->GetWorldRotation();
+        const bool isOnline = RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby();
+        const RTBEngine::ECS::NetworkIdentity* identity =
+            owner ? owner->GetComponent<RTBEngine::ECS::NetworkIdentity>() : nullptr;
+        const int localSlot = identity ? identity->networkPlayerSlot : -1;
+        const bool canSpectate = isOnline && FindNextAliveTeammatePawn(owner, localSlot) != nullptr;
+
+        deathCameraFrozen = !canSpectate;
+        if (deathCameraFrozen) {
+            frozenCameraWorldPosition = cameraObject->GetWorldPosition();
+            frozenCameraWorldRotation = cameraObject->GetWorldRotation();
+        }
     }
 
     if (animator && deathSlotState.ready && animator->GetClip(kDeathAlias)) {

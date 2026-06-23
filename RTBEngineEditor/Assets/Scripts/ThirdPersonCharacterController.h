@@ -119,6 +119,7 @@ private:
     void ResolveAttackAimTrail();
     void DisableCompetingCameraController() const;
     void ApplyCameraFollowTransform();
+    void ApplySpectateCameraFollow(RTBEngine::ECS::GameObject* targetPawn);
     void RegisterAnimationSlots();
     void RegisterAnimationSlot(const char* slotLabel,
                                const std::string& sourceFbx,
