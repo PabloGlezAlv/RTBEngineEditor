@@ -53,6 +53,15 @@ namespace RTBEditor {
                 atRoot = false;
             }
         }
+
+        if (filterType == AssetType::DataAsset) {
+            const std::filesystem::path dataDirectory = assetsDirectory / "Data";
+            if (std::filesystem::exists(dataDirectory) &&
+                std::filesystem::is_directory(dataDirectory)) {
+                currentDirectory = dataDirectory;
+                atRoot = false;
+            }
+        }
     }
 
 
@@ -72,6 +81,8 @@ namespace RTBEditor {
             return { ".lua" };
         case AssetType::Prefab:
             return { ".prefab" };
+        case AssetType::DataAsset:
+            return { ".rtbasset" };
         case AssetType::Any:
         default:
             return {};
@@ -126,6 +137,7 @@ namespace RTBEditor {
                 filterType == AssetType::AudioClip ? "Audio Clips" :
                 filterType == AssetType::Scene ? "Scenes" :
                 filterType == AssetType::Prefab ? "Prefabs" :
+                filterType == AssetType::DataAsset ? "Data Assets" :
                 filterType == AssetType::Font ? "Fonts" : "All Files");
             ImGui::Separator();
 

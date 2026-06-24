@@ -9,6 +9,9 @@
 #include <filesystem>
 
 namespace RTBEngine {
+    namespace Data {
+        class DataAsset;
+    }
     namespace ECS {
         class GameObject;
         class Component;
@@ -59,6 +62,11 @@ namespace RTBEditor {
         void DrawFbxAssetInspector(const std::filesystem::path& fbxPath);
         void DrawTextureAssetInspector(const std::filesystem::path& texturePath);
         void SaveTextureAsset(const std::filesystem::path& texturePath);
+        void DrawDataAssetInspector(const std::filesystem::path& dataAssetPath);
+        void SaveDataAssetInspector();
+        void DrawDataAssetProperty(RTBEngine::Data::DataAsset* asset,
+                                   const RTBEngine::Reflection::PropertyInfo& prop,
+                                   bool& changed);
 
         std::vector<RTBEngine::ECS::Component*> componentsToRemove;
         std::unique_ptr<AssetBrowserModal> assetBrowserModal;
@@ -81,6 +89,10 @@ namespace RTBEditor {
         std::filesystem::path textureEditorPath;
         std::string textureAssetImage;
         bool textureAssetFlip = true;
+
+        std::filesystem::path dataAssetEditorPath;
+        RTBEngine::Data::DataAsset* dataAssetEditorInstance = nullptr;
+        bool dataAssetEditorDirty = false;
 
         // Cached state for animator compatibility scans
         RTBEngine::Animation::Animator* animatorScanTarget = nullptr;

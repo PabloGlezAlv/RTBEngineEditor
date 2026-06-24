@@ -14,6 +14,7 @@ namespace RTBEditor {
         Font,
         Scene,
         Prefab,
+        DataAsset,
         Any
     };
 

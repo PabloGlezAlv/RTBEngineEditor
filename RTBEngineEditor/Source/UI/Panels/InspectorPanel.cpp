@@ -20,6 +20,8 @@
 #include <RTBEngine/Scene/BoxColliderComponent.h>
 #include <RTBEngine/Reflection/TypeInfo.h>
 #include <RTBEngine/Core/ResourceManager.h>
+#include <RTBEngine/Data/DataAsset.h>
+#include <RTBEngine/Scripting/DataAssetSaver.h>
 #include <RTBEngine/UI/UIElement.h>
 #include <RTBEngine/Rendering/ModelLoader.h>
 #include "../DragDropPayloads.h"
@@ -362,7 +364,36 @@ namespace RTBEditor {
             if (assetType == "prefab") {
                 return "Drop a .prefab asset here.";
             }
+            if (assetType == "rtbasset") {
+                return "Drop a .rtbasset data asset here.";
+            }
+            if (assetType == "texture") {
+                return "Drop a texture asset here.";
+            }
             return "Drop a compatible asset here.";
+        }
+
+        AssetType ResolveAssetBrowserType(const std::string& assetType)
+        {
+            if (assetType == "fbx") {
+                return AssetType::Fbx;
+            }
+            if (assetType == "prefab") {
+                return AssetType::Prefab;
+            }
+            if (assetType == "rtbasset") {
+                return AssetType::DataAsset;
+            }
+            if (assetType == "texture") {
+                return AssetType::Texture;
+            }
+            if (assetType == "lua") {
+                return AssetType::Scene;
+            }
+            if (assetType == "audio") {
+                return AssetType::AudioClip;
+            }
+            return AssetType::Any;
         }
 
         void OpenGameScriptsProjectOrFile(const std::filesystem::path& fileToOpen) {
@@ -616,6 +647,12 @@ namespace RTBEditor {
                                 continue;
                             }
 
+                            const RTBEngine::Reflection::TypeInfo* typeInfo =
+                                RTBEngine::Reflection::TypeRegistry::GetInstance().GetTypeInfo(type);
+                            if (typeInfo && typeInfo->IsDataAsset()) {
+                                continue;
+                            }
+
                             if (ImGui::Selectable(type.c_str())) {
                                 auto* newComp =
                                     RTBEngine::Reflection::TypeRegistry::GetInstance().CreateComponent(type);
@@ -659,6 +696,8 @@ namespace RTBEditor {
                 DrawScriptPreview(context.selectedAssetPath);
             } else if (ext == ".fbx" || ext == ".obj" || ext == ".gltf" || ext == ".glb") {
                 DrawFbxAssetInspector(context.selectedAssetPath);
+            } else if (ext == ".rtbasset") {
+                DrawDataAssetInspector(context.selectedAssetPath);
             }
         } else {
             ImGui::Text("Select a GameObject to see its properties.");
@@ -930,7 +969,11 @@ namespace RTBEditor {
         const std::string assetType = ToLowerCopy(prop.assetType);
         const bool isFbxAsset = (assetType == "fbx");
         const bool isPrefabAsset = (assetType == "prefab");
-        if (!isFbxAsset && !isPrefabAsset) {
+        const bool isDataAssetRef = (assetType == "rtbasset");
+        const bool isTextureAsset = (assetType == "texture");
+        const bool isSceneAsset = (assetType == "lua");
+        const bool isAudioAsset = (assetType == "audio");
+        if (!isFbxAsset && !isPrefabAsset && !isDataAssetRef && !isTextureAsset && !isSceneAsset && !isAudioAsset) {
             return false;
         }
 
@@ -946,7 +989,9 @@ namespace RTBEditor {
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.2f, 0.5f, 0.8f, 0.3f));
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.2f, 0.5f, 0.8f, 0.5f));
 
-        const std::string dropAreaId = isPrefabAsset ? "##PrefabRefDropArea" : "##AssetRefDropArea";
+        const std::string dropAreaId = isPrefabAsset ? "##PrefabRefDropArea"
+            : isDataAssetRef ? "##DataAssetRefDropArea"
+            : "##AssetRefDropArea";
         const std::string buttonLabel = GetPathDisplayName(hasAsset ? *value : std::string(), "[None]") + dropAreaId;
         ImGui::Button(buttonLabel.c_str(), InspectorPickerButtonSize(2));
 
@@ -977,13 +1022,17 @@ namespace RTBEditor {
         }
 
         ImGui::SameLine();
-        if (ImGui::SmallButton(isPrefabAsset ? "...##SelectPrefabRef" : "...##SelectAssetRef")) {
+        if (ImGui::SmallButton(isPrefabAsset ? "...##SelectPrefabRef"
+            : isDataAssetRef ? "...##SelectDataAssetRef"
+            : "...##SelectAssetRef")) {
             assetBrowserModal->Open(
-                isPrefabAsset ? AssetType::Prefab : AssetType::Fbx,
+                ResolveAssetBrowserType(assetType),
                 [component, value](const std::string& path) {
                     *value = MakeAssetReference(path);
-                    component->OnValidate();
-                    RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                    if (component) {
+                        component->OnValidate();
+                        RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                    }
                 });
         }
 
@@ -2447,5 +2496,164 @@ namespace RTBEditor {
         ImGui::Spacing();
         ImGui::TextDisabled("Click the model in the Content Browser");
         ImGui::TextDisabled("to expand and drag its textures.");
+    }
+
+    void InspectorPanel::DrawDataAssetProperty(
+        RTBEngine::Data::DataAsset* asset,
+        const RTBEngine::Reflection::PropertyInfo& prop,
+        bool& changed)
+    {
+        if (!asset) {
+            return;
+        }
+
+        void* data = prop.GetMutableData(asset->GetActualObject());
+        if (!data) {
+            return;
+        }
+
+        ImGui::PushID(prop.name.c_str());
+        const std::string inspectorLabel = prop.GetInspectorLabel();
+
+        switch (prop.type) {
+        case RTBEngine::Reflection::PropertyType::Float: {
+            float* val = static_cast<float*>(data);
+            BeginInspectorRow(inspectorLabel.c_str());
+            if (prop.range) {
+                changed |= ImGui::SliderFloat("##value", val, prop.range->minValue, prop.range->maxValue);
+            }
+            else {
+                changed |= ImGui::DragFloat("##value", val, 0.1f);
+            }
+            EndInspectorRow();
+            break;
+        }
+        case RTBEngine::Reflection::PropertyType::Int: {
+            int* val = static_cast<int*>(data);
+            BeginInspectorRow(inspectorLabel.c_str());
+            changed |= ImGui::DragInt("##value", val, 1);
+            EndInspectorRow();
+            break;
+        }
+        case RTBEngine::Reflection::PropertyType::Bool: {
+            bool* val = static_cast<bool*>(data);
+            BeginInspectorRow(inspectorLabel.c_str());
+            changed |= ImGui::Checkbox("##value", val);
+            EndInspectorRow();
+            break;
+        }
+        case RTBEngine::Reflection::PropertyType::String: {
+            std::string* val = static_cast<std::string*>(data);
+            char buffer[1024] = {};
+            strncpy_s(buffer, sizeof(buffer), val->c_str(), _TRUNCATE);
+            BeginInspectorRow(inspectorLabel.c_str());
+            if (ImGui::InputText("##value", buffer, sizeof(buffer))) {
+                *val = buffer;
+                changed = true;
+            }
+            EndInspectorRow();
+            break;
+        }
+        case RTBEngine::Reflection::PropertyType::AssetRef: {
+            std::string* val = static_cast<std::string*>(data);
+            if (!DrawAssetRefProperty(nullptr, prop, val, changed)) {
+                char buffer[1024] = {};
+                strncpy_s(buffer, sizeof(buffer), val->c_str(), _TRUNCATE);
+                BeginInspectorRow(inspectorLabel.c_str());
+                if (ImGui::InputText("##value", buffer, sizeof(buffer))) {
+                    *val = buffer;
+                    changed = true;
+                }
+                EndInspectorRow();
+            }
+            break;
+        }
+        default:
+            BeginInspectorRow(inspectorLabel.c_str());
+            ImGui::TextDisabled("(unsupported in data asset inspector)");
+            EndInspectorRow();
+            break;
+        }
+
+        ImGui::PopID();
+    }
+
+    void InspectorPanel::DrawDataAssetInspector(const std::filesystem::path& dataAssetPath)
+    {
+        if (dataAssetEditorPath != dataAssetPath) {
+            dataAssetEditorPath = dataAssetPath;
+            dataAssetEditorDirty = false;
+
+            Project* project = Project::GetActiveProject();
+            const std::string assetRef = project
+                ? project->GetAssetReferencePath(dataAssetPath)
+                : dataAssetPath.generic_string();
+
+            dataAssetEditorInstance =
+                RTBEngine::Core::ResourceManager::GetInstance().LoadDataAsset(assetRef);
+        }
+
+        ImGui::Text("Data Asset");
+        ImGui::Text("%s", dataAssetPath.filename().string().c_str());
+        ImGui::Separator();
+
+        if (!dataAssetEditorInstance) {
+            ImGui::TextColored(ImVec4(1.0f, 0.45f, 0.45f, 1.0f),
+                "Failed to load data asset. Rebuild GameScripts if the type is new.");
+            return;
+        }
+
+        ImGui::Text("Type: %s", dataAssetEditorInstance->GetTypeName());
+        if (dataAssetEditorDirty) {
+            ImGui::SameLine();
+            ImGui::TextColored(ImVec4(1.0f, 0.82f, 0.35f, 1.0f), "*");
+        }
+
+        ImGui::Spacing();
+
+        const RTBEngine::Reflection::TypeInfo* typeInfo = dataAssetEditorInstance->GetTypeInfo();
+        if (!typeInfo) {
+            ImGui::TextDisabled("No reflection metadata available.");
+            return;
+        }
+
+        bool changed = false;
+        for (const RTBEngine::Reflection::PropertyInfo* prop : typeInfo->GetInspectorProperties()) {
+            if (!prop || prop->name == "type") {
+                continue;
+            }
+            DrawDataAssetProperty(dataAssetEditorInstance, *prop, changed);
+        }
+
+        if (changed) {
+            dataAssetEditorDirty = true;
+        }
+
+        ImGui::Spacing();
+        ImGui::Separator();
+        if (ImGui::Button("Save Asset", ImVec2(140.0f, 0.0f))) {
+            SaveDataAssetInspector();
+        }
+    }
+
+    void InspectorPanel::SaveDataAssetInspector()
+    {
+        if (!dataAssetEditorInstance || dataAssetEditorPath.empty()) {
+            return;
+        }
+
+        Project* project = Project::GetActiveProject();
+        const std::string assetRef = project
+            ? project->GetAssetReferencePath(dataAssetEditorPath)
+            : dataAssetEditorPath.generic_string();
+
+        if (!RTBEngine::Scripting::DataAssetSaver::Save(assetRef, *dataAssetEditorInstance)) {
+            return;
+        }
+
+        RTBEngine::Core::ResourceManager::GetInstance().EvictDataAsset(assetRef);
+        dataAssetEditorInstance =
+            RTBEngine::Core::ResourceManager::GetInstance().LoadDataAsset(assetRef);
+        dataAssetEditorDirty = false;
     }
 }
