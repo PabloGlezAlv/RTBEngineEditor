@@ -51,6 +51,8 @@ public:
     float GetDamageAmount() const { return cachedDamage; }
     bool HasValidProjectilePrefab() const { return projectileSpawnPrefab != nullptr && cachedDamage > 0.0f; }
 
+    void SetProjectileCombatOverrides(float damage, float speed);
+
 protected:
     float GetCooldownDuration() const override { return 0.0f; }
     float GetHitDelayDuration() const override { return 0.0f; }
@@ -64,6 +66,8 @@ private:
     float cachedTravelDistance = 0.0f;
     float cachedProjectileRadius = 0.05f;
     float cachedDamage = 0.0f;
+    float projectileDamageOverride = 0.0f;
+    float projectileSpeedOverride = 0.0f;
 
     void ClampSettings();
     void ResolveProjectilePrefab();

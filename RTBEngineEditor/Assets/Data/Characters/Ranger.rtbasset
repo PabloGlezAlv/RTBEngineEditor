@@ -1,0 +1,15 @@
+return {
+    type = "CharacterDefinition",
+    characterId = "ranger",
+    displayName = "Ranger",
+    description = "Arquero equilibrado. Buen balance entre movilidad, daño y supervivencia.",
+    maxHealth = 100.00,
+    moveSpeed = 4.00,
+    sprintMultiplier = 1.75,
+    turnSpeed = 720.00,
+    maxShots = 3,
+    fullReloadDuration = 10.00,
+    projectileDamage = 25.00,
+    projectileSpeed = 14.00,
+    modelRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Ranger.fbx",
+}

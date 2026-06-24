@@ -1,0 +1,15 @@
+return {
+    type = "CharacterDefinition",
+    characterId = "arcanist",
+    displayName = "Arcanist",
+    description = "Artillero rápido. Recarga veloz y más disparos, pero cada flecha hace menos daño.",
+    maxHealth = 85.00,
+    moveSpeed = 4.00,
+    sprintMultiplier = 1.60,
+    turnSpeed = 720.00,
+    maxShots = 5,
+    fullReloadDuration = 5.50,
+    projectileDamage = 13.00,
+    projectileSpeed = 17.00,
+    modelRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Ranger.fbx",
+}

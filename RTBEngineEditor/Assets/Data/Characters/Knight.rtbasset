@@ -1,0 +1,15 @@
+return {
+    type = "CharacterDefinition",
+    characterId = "knight",
+    displayName = "Knight",
+    description = "Tanque resistente. Mucha vida y aguante, pero disparos más débiles.",
+    maxHealth = 165.00,
+    moveSpeed = 3.40,
+    sprintMultiplier = 1.45,
+    turnSpeed = 600.00,
+    maxShots = 3,
+    fullReloadDuration = 11.00,
+    projectileDamage = 16.00,
+    projectileSpeed = 12.00,
+    modelRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Ranger.fbx",
+}

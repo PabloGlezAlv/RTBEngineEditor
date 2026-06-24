@@ -80,6 +80,13 @@ void ProjectileAttackAbility::OnStart()
     RefreshCachedProjectileStats();
 }
 
+void ProjectileAttackAbility::SetProjectileCombatOverrides(float damage, float speed)
+{
+    projectileDamageOverride = std::max(0.0f, damage);
+    projectileSpeedOverride = std::max(0.0f, speed);
+    RefreshCachedProjectileStats();
+}
+
 void ProjectileAttackAbility::OnValidate()
 {
     ClampSettings();
@@ -189,6 +196,13 @@ bool ProjectileAttackAbility::SpawnProjectile(RTBEngine::ECS::GameObject* instig
 
     const bool applyDamage = !RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby() ||
         RTBEngine::Online::OnlineGameplayNet::IsLobbyHost();
+
+    if (projectileSpeedOverride > 0.0f) {
+        projectile->speed = projectileSpeedOverride;
+    }
+    if (projectileDamageOverride > 0.0f) {
+        projectile->damage = projectileDamageOverride;
+    }
 
     if (networkSnapshot) {
         ProjectileComponent::ProjectileConfig config;
@@ -396,6 +410,10 @@ void ProjectileAttackAbility::RefreshCachedProjectileStats()
     }
 
     scene->RemoveGameObject(templateObject);
+
+    if (projectileDamageOverride > 0.0f) {
+        cachedDamage = projectileDamageOverride;
+    }
 }
 
 RTBEngine::Physics::PhysicsWorld* ProjectileAttackAbility::ResolvePhysicsWorld(

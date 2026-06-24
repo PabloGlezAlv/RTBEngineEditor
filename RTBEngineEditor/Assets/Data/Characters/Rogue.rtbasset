@@ -1,0 +1,15 @@
+return {
+    type = "CharacterDefinition",
+    characterId = "rogue",
+    displayName = "Rogue",
+    description = "Explorador veloz. Se mueve más rápido que nadie, pero aguanta pocos golpes.",
+    maxHealth = 72.00,
+    moveSpeed = 5.60,
+    sprintMultiplier = 2.05,
+    turnSpeed = 840.00,
+    maxShots = 3,
+    fullReloadDuration = 8.50,
+    projectileDamage = 21.00,
+    projectileSpeed = 16.00,
+    modelRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Ranger.fbx",
+}

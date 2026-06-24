@@ -447,7 +447,7 @@ namespace RTBEditor {
             const float computedWidth = contentWidth * kInspectorLabelWidthRatio;
             const float labelWidth = computedWidth > 120.0f ? computedWidth : 120.0f;
 
-            ImGui::Columns(2, nullptr, false);
+            ImGui::Columns(2, label, false);
             ImGui::SetColumnWidth(0, labelWidth);
 
             ImGui::AlignTextToFramePadding();
@@ -563,7 +563,7 @@ namespace RTBEditor {
                 const char* preview = layerSettings.GetLayerName(currentLayer).c_str();
 
                 BeginInspectorRow("Collision Layer");
-                if (ImGui::BeginCombo("##value", preview)) {
+                if (ImGui::BeginCombo("##collisionLayer", preview)) {
                     for (int layerIndex = 0; layerIndex < layerCount; ++layerIndex) {
                         const bool selected = layerIndex == currentLayer;
                         const std::string& layerName = layerSettings.GetLayerName(layerIndex);
@@ -720,7 +720,7 @@ namespace RTBEditor {
             if (ImGui::CollapsingHeader("Rect Transform", ImGuiTreeNodeFlags_DefaultOpen)) {
                 RTBEngine::Math::Vector2 pos = uiElement->GetAnchoredPosition();
                 BeginInspectorRow("Position");
-                if (ImGui::DragFloat2("##value", (float*)&pos, 1.0f)) {
+                if (ImGui::DragFloat2("##rectPosition", (float*)&pos, 1.0f)) {
                     uiElement->SetAnchoredPosition(pos);
                     RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
                 }
@@ -728,7 +728,7 @@ namespace RTBEditor {
 
                 RTBEngine::Math::Vector2 anchorMin = uiElement->GetAnchorMin();
                 BeginInspectorRow("Anchor Min");
-                if (ImGui::DragFloat2("##value", (float*)&anchorMin, 0.01f, 0.0f, 1.0f)) {
+                if (ImGui::DragFloat2("##rectAnchorMin", (float*)&anchorMin, 0.01f, 0.0f, 1.0f)) {
                     uiElement->SetAnchorMin(anchorMin);
                     RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
                 }
@@ -736,7 +736,7 @@ namespace RTBEditor {
 
                 RTBEngine::Math::Vector2 anchorMax = uiElement->GetAnchorMax();
                 BeginInspectorRow("Anchor Max");
-                if (ImGui::DragFloat2("##value", (float*)&anchorMax, 0.01f, 0.0f, 1.0f)) {
+                if (ImGui::DragFloat2("##rectAnchorMax", (float*)&anchorMax, 0.01f, 0.0f, 1.0f)) {
                     uiElement->SetAnchorMax(anchorMax);
                     RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
                 }
@@ -747,7 +747,7 @@ namespace RTBEditor {
 
                 RTBEngine::Math::Vector2 size = uiElement->GetSizeDelta();
                 BeginInspectorRow(isStretched ? "Size Delta" : "Size");
-                if (ImGui::DragFloat2("##value", (float*)&size, 1.0f)) {
+                if (ImGui::DragFloat2("##rectSize", (float*)&size, 1.0f)) {
                     uiElement->SetSizeDelta(size);
                     RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
                 }
@@ -759,7 +759,7 @@ namespace RTBEditor {
 
                 RTBEngine::Math::Vector2 pivot = uiElement->GetPivot();
                 BeginInspectorRow("Pivot");
-                if (ImGui::DragFloat2("##value", (float*)&pivot, 0.01f, 0.0f, 1.0f)) {
+                if (ImGui::DragFloat2("##rectPivot", (float*)&pivot, 0.01f, 0.0f, 1.0f)) {
                     uiElement->SetPivot(pivot);
                     RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
                 }
@@ -767,7 +767,7 @@ namespace RTBEditor {
 
                 float rot = uiElement->GetRotation();
                 BeginInspectorRow("Rotation");
-                if (ImGui::DragFloat("##value", &rot, 0.5f)) {
+                if (ImGui::DragFloat("##rectRotation", &rot, 0.5f)) {
                     uiElement->SetRotation(rot);
                     RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
                 }
@@ -775,7 +775,7 @@ namespace RTBEditor {
 
                 RTBEngine::Math::Vector2 scl = uiElement->GetScale();
                 BeginInspectorRow("Scale");
-                if (ImGui::DragFloat2("##value", (float*)&scl, 0.01f)) {
+                if (ImGui::DragFloat2("##rectScale", (float*)&scl, 0.01f)) {
                     uiElement->SetScale(scl);
                     RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
                 }
@@ -1085,19 +1085,19 @@ namespace RTBEditor {
                     }
 
                     ImGui::SameLine();
-                    if (index > 0 && ImGui::SmallButton("^")) {
+                    if (index > 0 && ImGui::SmallButton("^##ListUp")) {
                         std::swap((*values)[index], (*values)[index - 1]);
                         changed = true;
                     }
 
                     ImGui::SameLine();
-                    if (index + 1 < values->size() && ImGui::SmallButton("v")) {
+                    if (index + 1 < values->size() && ImGui::SmallButton("v##ListDown")) {
                         std::swap((*values)[index], (*values)[index + 1]);
                         changed = true;
                     }
 
                     ImGui::SameLine();
-                    if (ImGui::SmallButton("x")) {
+                    if (ImGui::SmallButton("x##ListRemove")) {
                         indicesToRemove.push_back(index);
                         changed = true;
                     }
@@ -1109,7 +1109,7 @@ namespace RTBEditor {
                     values->erase(values->begin() + static_cast<std::ptrdiff_t>(*it));
                 }
 
-                if (ImGui::Button("+ Add")) {
+                if (ImGui::Button("+ Add##ListString")) {
                     values->push_back("");
                     changed = true;
                 }
@@ -1137,19 +1137,19 @@ namespace RTBEditor {
                     DrawAssetRefProperty(component, prop, &(*values)[index], changed, false);
 
                     ImGui::SameLine();
-                    if (index > 0 && ImGui::SmallButton("^")) {
+                    if (index > 0 && ImGui::SmallButton("^##ListUp")) {
                         std::swap((*values)[index], (*values)[index - 1]);
                         changed = true;
                     }
 
                     ImGui::SameLine();
-                    if (index + 1 < values->size() && ImGui::SmallButton("v")) {
+                    if (index + 1 < values->size() && ImGui::SmallButton("v##ListDown")) {
                         std::swap((*values)[index], (*values)[index + 1]);
                         changed = true;
                     }
 
                     ImGui::SameLine();
-                    if (ImGui::SmallButton("x")) {
+                    if (ImGui::SmallButton("x##ListRemove")) {
                         indicesToRemove.push_back(index);
                         changed = true;
                     }
@@ -1161,7 +1161,7 @@ namespace RTBEditor {
                     values->erase(values->begin() + static_cast<std::ptrdiff_t>(*it));
                 }
 
-                if (ImGui::Button("+ Add")) {
+                if (ImGui::Button("+ Add##ListAssetRef")) {
                     values->push_back("");
                     changed = true;
                 }
@@ -1226,19 +1226,19 @@ namespace RTBEditor {
                     }
 
                     ImGui::SameLine();
-                    if (index > 0 && ImGui::SmallButton("^")) {
+                    if (index > 0 && ImGui::SmallButton("^##ListUp")) {
                         std::swap((*values)[index], (*values)[index - 1]);
                         changed = true;
                     }
 
                     ImGui::SameLine();
-                    if (index + 1 < values->size() && ImGui::SmallButton("v")) {
+                    if (index + 1 < values->size() && ImGui::SmallButton("v##ListDown")) {
                         std::swap((*values)[index], (*values)[index + 1]);
                         changed = true;
                     }
 
                     ImGui::SameLine();
-                    if (ImGui::SmallButton("x")) {
+                    if (ImGui::SmallButton("x##ListRemove")) {
                         indicesToRemove.push_back(index);
                         changed = true;
                     }
@@ -1250,7 +1250,7 @@ namespace RTBEditor {
                     values->erase(values->begin() + static_cast<std::ptrdiff_t>(*it));
                 }
 
-                if (ImGui::Button("+ Add")) {
+                if (ImGui::Button("+ Add##ListGameObjectRef")) {
                     values->push_back(nullptr);
                     changed = true;
                 }
@@ -1330,19 +1330,19 @@ namespace RTBEditor {
                     }
 
                     ImGui::SameLine();
-                    if (index > 0 && ImGui::SmallButton("^")) {
+                    if (index > 0 && ImGui::SmallButton("^##ListUp")) {
                         std::swap((*values)[index], (*values)[index - 1]);
                         changed = true;
                     }
 
                     ImGui::SameLine();
-                    if (index + 1 < values->size() && ImGui::SmallButton("v")) {
+                    if (index + 1 < values->size() && ImGui::SmallButton("v##ListDown")) {
                         std::swap((*values)[index], (*values)[index + 1]);
                         changed = true;
                     }
 
                     ImGui::SameLine();
-                    if (ImGui::SmallButton("x")) {
+                    if (ImGui::SmallButton("x##ListRemove")) {
                         indicesToRemove.push_back(index);
                         changed = true;
                     }
@@ -1354,7 +1354,7 @@ namespace RTBEditor {
                     values->erase(values->begin() + static_cast<std::ptrdiff_t>(*it));
                 }
 
-                if (ImGui::Button("+ Add")) {
+                if (ImGui::Button("+ Add##ListComponentRef")) {
                     values->push_back(nullptr);
                     changed = true;
                 }
@@ -1803,7 +1803,8 @@ namespace RTBEditor {
                 ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.3f, 0.5f, 0.8f, 0.5f));
 
                 if (hasLiveGameObject) {
-                    ImGui::Button((*goPtr)->GetName().c_str(), InspectorPickerButtonSize(1));
+                    const std::string buttonLabel = (*goPtr)->GetName() + "##GODrop_" + prop.name;
+                    ImGui::Button(buttonLabel.c_str(), InspectorPickerButtonSize(1));
                 } else if (*goPtr) {
                     ImGui::Button("[Missing]##GODropArea", InspectorPickerButtonSize(1));
                 } else {
@@ -1855,7 +1856,7 @@ namespace RTBEditor {
                 ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.5f, 0.3f, 0.8f, 0.5f));
 
                 if (hasLiveComponent) {
-                    std::string label = std::string("[") + (*compPtr)->GetTypeName() + "]##CompDropArea";
+                    std::string label = std::string("[") + (*compPtr)->GetTypeName() + "]##CompDrop_" + prop.name;
                     ImGui::Button(label.c_str(), InspectorPickerButtonSize(1));
                 } else if (*compPtr) {
                     ImGui::Button("[Missing]##CompDropArea", InspectorPickerButtonSize(1));
@@ -1987,7 +1988,7 @@ namespace RTBEditor {
             std::string currentDefault = animator->defaultClip;
             const char* previewValue = currentDefault.empty() ? "(none)" : currentDefault.c_str();
             BeginInspectorRow("Default Clip");
-            if (ImGui::BeginCombo("##value", previewValue)) {
+            if (ImGui::BeginCombo("##animDefaultClip", previewValue)) {
                 if (ImGui::Selectable("(none)", currentDefault.empty())) {
                     animator->defaultClip.clear();
                     changed = true;
@@ -2007,7 +2008,7 @@ namespace RTBEditor {
 
         //Speed slider
         BeginInspectorRow("Speed");
-        if (ImGui::SliderFloat("##value", &animator->speed, 0.0f, 3.0f)) {
+        if (ImGui::SliderFloat("##animSpeed", &animator->speed, 0.0f, 3.0f)) {
             animator->SetSpeed(animator->speed);
             changed = true;
         }
@@ -2017,7 +2018,7 @@ namespace RTBEditor {
         {
             const bool wasPlaying = animator->playing;
             BeginInspectorRow("Playing");
-            if (ImGui::Checkbox("##value", &animator->playing)) {
+            if (ImGui::Checkbox("##animPlaying", &animator->playing)) {
                 if (wasPlaying && !animator->playing) {
                     animator->Stop();
                 }
@@ -2026,7 +2027,7 @@ namespace RTBEditor {
             EndInspectorRow();
         }
         BeginInspectorRow("Looping");
-        if (ImGui::Checkbox("##value", &animator->looping)) {
+        if (ImGui::Checkbox("##animLooping", &animator->looping)) {
             changed = true;
         }
         EndInspectorRow();
@@ -2246,6 +2247,7 @@ namespace RTBEditor {
 
         bool changed = false;
         for (int i = 0; i < 6; ++i) {
+            ImGui::PushID(i);
             ImGui::Text("%s", faceLabels[i]);
             ImGui::SameLine();
 
@@ -2275,10 +2277,7 @@ namespace RTBEditor {
             }
 
             ImGui::SameLine();
-            ImGui::PushID(i);
-
-            // Browse button — opens asset browser modal
-            if (ImGui::SmallButton("...")) {
+            if (ImGui::SmallButton("...##BrowseFace")) {
                 int capturedIndex = i;
                 assetBrowserModal->Open(
                     AssetType::Texture,
@@ -2297,7 +2296,7 @@ namespace RTBEditor {
             }
 
             ImGui::SameLine();
-            if (ImGui::SmallButton("X")) {
+            if (ImGui::SmallButton("X##ClearFace")) {
                 cubemapFaces[i].clear();
                 changed = true;
             }

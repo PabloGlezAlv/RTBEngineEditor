@@ -779,6 +779,12 @@ function CreateScene()
                 position = Vector3(0.90, 0.10, 0.00),
                 components = {
                     {
+                        type = "CharacterStatsApplier",
+                        usePlayerSelection = true,
+                        characterDefinitionRef = "",
+                        fallbackCharacterId = "ranger"
+                    },
+                    {
                         type = "OcclusionTarget",
                         targetEnabled = true,
                         focusOffset = Vector3(0.00, 1.05, 0.00)

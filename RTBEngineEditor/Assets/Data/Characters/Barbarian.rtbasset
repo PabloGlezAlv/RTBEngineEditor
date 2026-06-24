@@ -1,0 +1,15 @@
+return {
+    type = "CharacterDefinition",
+    characterId = "barbarian",
+    displayName = "Barbarian",
+    description = "Demoledor. Flechas muy potentes y buena vida, pero menos disparos y más lento.",
+    maxHealth = 115.00,
+    moveSpeed = 3.70,
+    sprintMultiplier = 1.60,
+    turnSpeed = 660.00,
+    maxShots = 2,
+    fullReloadDuration = 7.50,
+    projectileDamage = 38.00,
+    projectileSpeed = 12.50,
+    modelRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Ranger.fbx",
+}
