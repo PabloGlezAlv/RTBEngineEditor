@@ -244,6 +244,128 @@ return {
                         },
                     }
                 },
+                {
+                    name = "root",
+                    children = {
+                        {
+                            name = "hips",
+                            children = {
+                                {
+                                    name = "spine",
+                                    children = {
+                                        {
+                                            name = "chest",
+                                            children = {
+                                                {
+                                                    name = "upperarm.l",
+                                                    children = {
+                                                        {
+                                                            name = "lowerarm.l",
+                                                            children = {
+                                                                {
+                                                                    name = "wrist.l",
+                                                                    children = {
+                                                                        {
+                                                                            name = "hand.l",
+                                                                            children = {
+                                                                                {
+                                                                                    name = "handslot.l",
+                                                                                },
+                                                                            }
+                                                                        },
+                                                                    }
+                                                                },
+                                                            }
+                                                        },
+                                                    }
+                                                },
+                                                {
+                                                    name = "upperarm.r",
+                                                    children = {
+                                                        {
+                                                            name = "lowerarm.r",
+                                                            children = {
+                                                                {
+                                                                    name = "wrist.r",
+                                                                    children = {
+                                                                        {
+                                                                            name = "hand.r",
+                                                                            children = {
+                                                                                {
+                                                                                    name = "handslot.r",
+                                                                                    children = {
+                                                                                        {
+                                                                                            name = "Barbarian_Axe",
+                                                                                            position = Vector3(0.00, 0.10, -0.06),
+                                                                                            rotation = Quaternion.FromEulerAngles(0.00, 0.00, 90.00),
+                                                                                            components = {
+                                                                                                {
+                                                                                                    type = "MeshRenderer",
+                                                                                                    meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/axe_2handed.obj",
+                                                                                                    textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/barbarian_texture.png",
+                                                                                                    colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                                                                                    meshIndex = 0,
+                                                                                                    multiMesh = false
+                                                                                                },
+                                                                                            }
+                                                                                        },
+                                                                                    }
+                                                                                },
+                                                                            }
+                                                                        },
+                                                                    }
+                                                                },
+                                                            }
+                                                        },
+                                                    }
+                                                },
+                                                {
+                                                    name = "head",
+                                                },
+                                            }
+                                        },
+                                    }
+                                },
+                                {
+                                    name = "upperleg.l",
+                                    children = {
+                                        {
+                                            name = "lowerleg.l",
+                                            children = {
+                                                {
+                                                    name = "foot.l",
+                                                    children = {
+                                                        {
+                                                            name = "toes.l",
+                                                        },
+                                                    }
+                                                },
+                                            }
+                                        },
+                                    }
+                                },
+                                {
+                                    name = "upperleg.r",
+                                    children = {
+                                        {
+                                            name = "lowerleg.r",
+                                            children = {
+                                                {
+                                                    name = "foot.r",
+                                                    children = {
+                                                        {
+                                                            name = "toes.r",
+                                                        },
+                                                    }
+                                                },
+                                            }
+                                        },
+                                    }
+                                },
+                            }
+                        },
+                    }
+                },
             },
         },
     },

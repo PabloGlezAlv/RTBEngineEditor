@@ -678,6 +678,7 @@ function CreateScene()
                                                                                                         name = "Barbarian_Axe",
                                                                                                         uuid = "C50212F0-226D-456B-A058-A747589E732E",
                                                                                                         position = Vector3(0.00, 0.10, -0.06),
+                                                                                                        rotation = Quaternion.FromEulerAngles(0.00, 0.00, 90.00),
                                                                                                         components = {
                                                                                                             {
                                                                                                                 type = "MeshRenderer",
