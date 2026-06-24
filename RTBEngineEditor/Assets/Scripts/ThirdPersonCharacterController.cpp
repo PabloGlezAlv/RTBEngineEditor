@@ -22,6 +22,7 @@
 #include <RTBEngine/Scene/SceneManager.h>
 #include <RTBEngine/Scene/SphereColliderComponent.h>
 #include <RTBEngine/Scene/TrailRenderer.h>
+#include <RTBEngine/Scene/OcclusionTarget.h>
 #include <RTBEngine/Input/InputManager.h>
 #include <RTBEngine/Input/KeyCode.h>
 #include <RTBEngine/Math/Quaternions/Quaternion.h>
@@ -69,6 +70,17 @@ namespace {
     bool HasMovementInput(const RTBEngine::Math::Vector3& value)
     {
         return std::abs(value.x) > kDirectionEpsilon || std::abs(value.z) > kDirectionEpsilon;
+    }
+
+    void SetOcclusionTargetEnabled(RTBEngine::ECS::GameObject* gameObject, bool enabled)
+    {
+        if (!gameObject) {
+            return;
+        }
+
+        if (RTBEngine::ECS::OcclusionTarget* target = gameObject->GetComponent<RTBEngine::ECS::OcclusionTarget>()) {
+            target->targetEnabled = enabled;
+        }
     }
 
     RTBEngine::ECS::GameObject* FindNextAliveTeammatePawn(const RTBEngine::ECS::GameObject* localOwner, int localPlayerSlot)
@@ -524,6 +536,7 @@ void ThirdPersonCharacterController::ReviveFromDeath()
     activeAttackDirection = RTBEngine::Math::Vector3::Zero();
     HideAttackAimTrail();
     SetAimArrowVisible(false);
+    SetOcclusionTargetEnabled(owner, true);
 
     ResolveAnimator();
     RegisterAnimationSlots();
@@ -1208,6 +1221,7 @@ void ThirdPersonCharacterController::HandleDeath(const HealthComponent::DeathEve
     HideAttackAimTrail();
     SetAimArrowVisible(false);
     StopPlanarMotion();
+    SetOcclusionTargetEnabled(owner, false);
 
     ResolveCameraObject();
     if (IsLocallyControlled() && cameraObject) {

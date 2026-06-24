@@ -31,7 +31,8 @@ function CreateScene()
                         canvasSize = Vector2(1920.00, 1080.00),
                         pixelsPerUnit = 100.00,
                         sortOrder = 0,
-                        faceCamera = false
+                        faceCamera = false,
+                        faceCameraLockY = false
                     },
                     {
                         type = "AudioSourceComponent",
@@ -777,6 +778,11 @@ function CreateScene()
                 position = Vector3(0.90, 0.10, 0.00),
                 components = {
                     {
+                        type = "OcclusionTarget",
+                        targetEnabled = true,
+                        focusOffset = Vector3(0.00, 1.05, 0.00)
+                    },
+                    {
                         type = "NetworkIdentity",
                         networkOwnerUserId = "",
                         networkPlayerSlot = -1
@@ -915,7 +921,8 @@ function CreateScene()
                                         canvasSize = Vector2(128.00, 128.00),
                                         pixelsPerUnit = 100.00,
                                         sortOrder = 4,
-                                        faceCamera = false
+                                        faceCamera = false,
+                                        faceCameraLockY = false
                                     },
                                 },
                                 children = {
@@ -948,6 +955,7 @@ function CreateScene()
                         name = "PlayerNameplate",
                         uuid = "A1000001-0001-4000-8000-000000000001",
                         position = Vector3(0.00, 2.20, 0.00),
+                        rotation = Quaternion.FromEulerAngles(50.00, -180.00, 0.00),
                         children = {
                             {
                                 name = "NameplateCanvas",
@@ -959,7 +967,8 @@ function CreateScene()
                                         canvasSize = Vector2(200.00, 24.00),
                                         pixelsPerUnit = 100.00,
                                         sortOrder = 25,
-                                        faceCamera = false
+                                        faceCamera = false,
+                                        faceCameraLockY = false
                                     },
                                     {
                                         type = "PlayerNameplateUI",
@@ -1414,7 +1423,7 @@ function CreateScene()
                                                                                                     {
                                                                                                         name = "Ranger_Bow",
                                                                                                         uuid = "109DAEF5-4736-4BB3-B63F-DD6B5B44855E",
-                                                                                                        rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                                                                                        rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
                                                                                                         components = {
                                                                                                             {
                                                                                                                 type = "MeshRenderer",
@@ -3042,12 +3051,25 @@ function CreateScene()
                     {
                         name = "Walls",
                         uuid = "EA5242DA-466B-40E8-B0BA-B73784275D6B",
+                        components = {
+                            {
+                                type = "OcclusionFadeController",
+                                occludedAlpha = 0.35,
+                                fadeSpeed = 12.00,
+                                boundsPadding = 0.15,
+                                controllerEnabled = true
+                            },
+                        },
                         children = {
                             {
                                 name = "wall_corner_sw",
                                 uuid = "51456D84-CFC9-4403-ADFD-991F162D8A55",
                                 position = Vector3(-14.00, 0.00, -14.00),
                                 components = {
+                                    {
+                                        type = "Occludable",
+                                        occluderEnabled = true
+                                    },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall_corner.obj",
@@ -3080,6 +3102,10 @@ function CreateScene()
                                 rotation = Quaternion.FromEulerAngles(0.00, -90.00, 0.00),
                                 components = {
                                     {
+                                        type = "Occludable",
+                                        occluderEnabled = true
+                                    },
+                                    {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall_corner.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
@@ -3111,6 +3137,10 @@ function CreateScene()
                                 rotation = Quaternion.FromEulerAngles(0.00, 90.00, 0.00),
                                 components = {
                                     {
+                                        type = "Occludable",
+                                        occluderEnabled = true
+                                    },
+                                    {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall_corner.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
@@ -3138,9 +3168,13 @@ function CreateScene()
                             {
                                 name = "wall_corner_ne",
                                 uuid = "2511373C-D1A9-4183-AE10-3CC6C9A44409",
-                                position = Vector3(14.00, 0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                position = Vector3(14.00, -0.00, 14.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
                                 components = {
+                                    {
+                                        type = "Occludable",
+                                        occluderEnabled = true
+                                    },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall_corner.obj",
@@ -3172,6 +3206,10 @@ function CreateScene()
                                 position = Vector3(-12.00, 0.00, -14.00),
                                 components = {
                                     {
+                                        type = "Occludable",
+                                        occluderEnabled = true
+                                    },
+                                    {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
@@ -3201,6 +3239,10 @@ function CreateScene()
                                 uuid = "B148B637-C7CE-4600-B272-CAE4B69B2828",
                                 position = Vector3(-8.00, 0.00, -14.00),
                                 components = {
+                                    {
+                                        type = "Occludable",
+                                        occluderEnabled = true
+                                    },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
@@ -3232,6 +3274,10 @@ function CreateScene()
                                 position = Vector3(-4.00, 0.00, -14.00),
                                 components = {
                                     {
+                                        type = "Occludable",
+                                        occluderEnabled = true
+                                    },
+                                    {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
@@ -3261,6 +3307,10 @@ function CreateScene()
                                 uuid = "1B342F65-A7DB-48CC-A901-737C6F707183",
                                 position = Vector3(0.00, 0.00, -14.00),
                                 components = {
+                                    {
+                                        type = "Occludable",
+                                        occluderEnabled = true
+                                    },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
@@ -3292,6 +3342,10 @@ function CreateScene()
                                 position = Vector3(4.00, 0.00, -14.00),
                                 components = {
                                     {
+                                        type = "Occludable",
+                                        occluderEnabled = true
+                                    },
+                                    {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
@@ -3321,6 +3375,10 @@ function CreateScene()
                                 uuid = "5A358223-286C-494D-96BE-C920CE050101",
                                 position = Vector3(8.00, 0.00, -14.00),
                                 components = {
+                                    {
+                                        type = "Occludable",
+                                        occluderEnabled = true
+                                    },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
@@ -3352,6 +3410,10 @@ function CreateScene()
                                 position = Vector3(12.00, 0.00, -14.00),
                                 components = {
                                     {
+                                        type = "Occludable",
+                                        occluderEnabled = true
+                                    },
+                                    {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
@@ -3380,8 +3442,12 @@ function CreateScene()
                                 name = "wall_n_-12",
                                 uuid = "56BF061A-D1D6-441B-B6E6-26165AEED521",
                                 position = Vector3(-12.00, 0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
                                 components = {
+                                    {
+                                        type = "Occludable",
+                                        occluderEnabled = true
+                                    },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
@@ -3392,7 +3458,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(4.00, 4.00, 1.00),
+                                        size = Vector3(4.00, 8.00, 1.00),
                                         isTrigger = false
                                     },
                                     {
@@ -3411,8 +3477,12 @@ function CreateScene()
                                 name = "wall_n_-8",
                                 uuid = "0475162D-E451-45F6-90B0-551038025002",
                                 position = Vector3(-8.00, 0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
                                 components = {
+                                    {
+                                        type = "Occludable",
+                                        occluderEnabled = true
+                                    },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
@@ -3423,7 +3493,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(4.00, 4.00, 1.00),
+                                        size = Vector3(4.00, 8.00, 1.00),
                                         isTrigger = false
                                     },
                                     {
@@ -3442,8 +3512,12 @@ function CreateScene()
                                 name = "wall_n_-4",
                                 uuid = "8987FEDF-75C9-4809-90E3-782CB9278901",
                                 position = Vector3(-4.00, 0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
                                 components = {
+                                    {
+                                        type = "Occludable",
+                                        occluderEnabled = true
+                                    },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
@@ -3454,7 +3528,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(4.00, 4.00, 1.00),
+                                        size = Vector3(4.00, 8.00, 1.00),
                                         isTrigger = false
                                     },
                                     {
@@ -3473,8 +3547,12 @@ function CreateScene()
                                 name = "wall_n_0",
                                 uuid = "013C2A45-B1B5-4645-A8AC-EE5824F94914",
                                 position = Vector3(0.00, 0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
                                 components = {
+                                    {
+                                        type = "Occludable",
+                                        occluderEnabled = true
+                                    },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
@@ -3485,7 +3563,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(4.00, 4.00, 1.00),
+                                        size = Vector3(4.00, 8.00, 1.00),
                                         isTrigger = false
                                     },
                                     {
@@ -3504,8 +3582,12 @@ function CreateScene()
                                 name = "wall_n_4",
                                 uuid = "06B97D68-350C-4301-8DE6-C714191DBF3D",
                                 position = Vector3(4.00, 0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
                                 components = {
+                                    {
+                                        type = "Occludable",
+                                        occluderEnabled = true
+                                    },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
@@ -3516,7 +3598,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(4.00, 4.00, 1.00),
+                                        size = Vector3(4.00, 8.00, 1.00),
                                         isTrigger = false
                                     },
                                     {
@@ -3535,8 +3617,12 @@ function CreateScene()
                                 name = "wall_n_8",
                                 uuid = "03EA9125-FCEF-4F65-A817-7C2697593C83",
                                 position = Vector3(8.00, 0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
                                 components = {
+                                    {
+                                        type = "Occludable",
+                                        occluderEnabled = true
+                                    },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
@@ -3547,7 +3633,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(4.00, 4.00, 1.00),
+                                        size = Vector3(4.00, 8.00, 1.00),
                                         isTrigger = false
                                     },
                                     {
@@ -3566,8 +3652,12 @@ function CreateScene()
                                 name = "wall_n_12",
                                 uuid = "677F63A1-66E1-4D54-9A76-C7F8BC485349",
                                 position = Vector3(12.00, 0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
                                 components = {
+                                    {
+                                        type = "Occludable",
+                                        occluderEnabled = true
+                                    },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
@@ -3578,7 +3668,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(4.00, 4.00, 1.00),
+                                        size = Vector3(4.00, 8.00, 1.00),
                                         isTrigger = false
                                     },
                                     {
@@ -3599,6 +3689,10 @@ function CreateScene()
                                 position = Vector3(-14.00, 0.00, -12.00),
                                 rotation = Quaternion.FromEulerAngles(0.00, 90.00, 0.00),
                                 components = {
+                                    {
+                                        type = "Occludable",
+                                        occluderEnabled = true
+                                    },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
@@ -3631,6 +3725,10 @@ function CreateScene()
                                 rotation = Quaternion.FromEulerAngles(0.00, 90.00, 0.00),
                                 components = {
                                     {
+                                        type = "Occludable",
+                                        occluderEnabled = true
+                                    },
+                                    {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
@@ -3661,6 +3759,10 @@ function CreateScene()
                                 position = Vector3(-14.00, 0.00, -4.00),
                                 rotation = Quaternion.FromEulerAngles(0.00, 90.00, 0.00),
                                 components = {
+                                    {
+                                        type = "Occludable",
+                                        occluderEnabled = true
+                                    },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
@@ -3693,6 +3795,10 @@ function CreateScene()
                                 rotation = Quaternion.FromEulerAngles(0.00, 90.00, 0.00),
                                 components = {
                                     {
+                                        type = "Occludable",
+                                        occluderEnabled = true
+                                    },
+                                    {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
@@ -3723,6 +3829,10 @@ function CreateScene()
                                 position = Vector3(-14.00, 0.00, 4.00),
                                 rotation = Quaternion.FromEulerAngles(0.00, 90.00, 0.00),
                                 components = {
+                                    {
+                                        type = "Occludable",
+                                        occluderEnabled = true
+                                    },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
@@ -3755,6 +3865,10 @@ function CreateScene()
                                 rotation = Quaternion.FromEulerAngles(0.00, 90.00, 0.00),
                                 components = {
                                     {
+                                        type = "Occludable",
+                                        occluderEnabled = true
+                                    },
+                                    {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
@@ -3785,6 +3899,10 @@ function CreateScene()
                                 position = Vector3(-14.00, 0.00, 12.00),
                                 rotation = Quaternion.FromEulerAngles(0.00, 90.00, 0.00),
                                 components = {
+                                    {
+                                        type = "Occludable",
+                                        occluderEnabled = true
+                                    },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
@@ -3817,6 +3935,10 @@ function CreateScene()
                                 rotation = Quaternion.FromEulerAngles(0.00, -90.00, 0.00),
                                 components = {
                                     {
+                                        type = "Occludable",
+                                        occluderEnabled = true
+                                    },
+                                    {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
@@ -3847,6 +3969,10 @@ function CreateScene()
                                 position = Vector3(14.00, 0.00, -8.00),
                                 rotation = Quaternion.FromEulerAngles(0.00, -90.00, 0.00),
                                 components = {
+                                    {
+                                        type = "Occludable",
+                                        occluderEnabled = true
+                                    },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
@@ -3879,6 +4005,10 @@ function CreateScene()
                                 rotation = Quaternion.FromEulerAngles(0.00, -90.00, 0.00),
                                 components = {
                                     {
+                                        type = "Occludable",
+                                        occluderEnabled = true
+                                    },
+                                    {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
@@ -3909,6 +4039,10 @@ function CreateScene()
                                 position = Vector3(14.00, 0.00, 0.00),
                                 rotation = Quaternion.FromEulerAngles(0.00, -90.00, 0.00),
                                 components = {
+                                    {
+                                        type = "Occludable",
+                                        occluderEnabled = true
+                                    },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
@@ -3941,6 +4075,10 @@ function CreateScene()
                                 rotation = Quaternion.FromEulerAngles(0.00, -90.00, 0.00),
                                 components = {
                                     {
+                                        type = "Occludable",
+                                        occluderEnabled = true
+                                    },
+                                    {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
@@ -3971,6 +4109,10 @@ function CreateScene()
                                 position = Vector3(14.00, 0.00, 8.00),
                                 rotation = Quaternion.FromEulerAngles(0.00, -90.00, 0.00),
                                 components = {
+                                    {
+                                        type = "Occludable",
+                                        occluderEnabled = true
+                                    },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
@@ -4003,6 +4145,10 @@ function CreateScene()
                                 rotation = Quaternion.FromEulerAngles(0.00, -90.00, 0.00),
                                 components = {
                                     {
+                                        type = "Occludable",
+                                        occluderEnabled = true
+                                    },
+                                    {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
@@ -4030,8 +4176,12 @@ function CreateScene()
                             {
                                 name = "wall_cross_x_-8",
                                 uuid = "4CA2B8F1-6241-4078-8808-79AC0EE84EFF",
-                                position = Vector3(-8.00, 0.00, 0.00),
+                                position = Vector3(-8.00, -0.00, 0.00),
                                 components = {
+                                    {
+                                        type = "Occludable",
+                                        occluderEnabled = true
+                                    },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
@@ -4042,7 +4192,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(4.00, 4.00, 1.00),
+                                        size = Vector3(4.00, 8.00, 1.00),
                                         isTrigger = false
                                     },
                                     {
@@ -4063,6 +4213,10 @@ function CreateScene()
                                 position = Vector3(-4.00, 0.00, 0.00),
                                 components = {
                                     {
+                                        type = "Occludable",
+                                        occluderEnabled = true
+                                    },
+                                    {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
@@ -4072,7 +4226,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(4.00, 4.00, 1.00),
+                                        size = Vector3(4.00, 8.00, 1.00),
                                         isTrigger = false
                                     },
                                     {
@@ -4093,6 +4247,10 @@ function CreateScene()
                                 position = Vector3(4.00, 0.00, 0.00),
                                 components = {
                                     {
+                                        type = "Occludable",
+                                        occluderEnabled = true
+                                    },
+                                    {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
@@ -4102,7 +4260,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(4.00, 4.00, 1.00),
+                                        size = Vector3(4.00, 8.00, 1.00),
                                         isTrigger = false
                                     },
                                     {
@@ -4123,6 +4281,10 @@ function CreateScene()
                                 position = Vector3(8.00, 0.00, 0.00),
                                 components = {
                                     {
+                                        type = "Occludable",
+                                        occluderEnabled = true
+                                    },
+                                    {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
@@ -4132,7 +4294,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "BoxColliderComponent",
-                                        size = Vector3(4.00, 4.00, 1.00),
+                                        size = Vector3(4.00, 8.00, 1.00),
                                         isTrigger = false
                                     },
                                     {
@@ -4153,6 +4315,10 @@ function CreateScene()
                                 position = Vector3(0.00, 0.00, -8.00),
                                 rotation = Quaternion.FromEulerAngles(0.00, 90.00, 0.00),
                                 components = {
+                                    {
+                                        type = "Occludable",
+                                        occluderEnabled = true
+                                    },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
@@ -4185,6 +4351,10 @@ function CreateScene()
                                 rotation = Quaternion.FromEulerAngles(0.00, 90.00, 0.00),
                                 components = {
                                     {
+                                        type = "Occludable",
+                                        occluderEnabled = true
+                                    },
+                                    {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
@@ -4216,6 +4386,10 @@ function CreateScene()
                                 rotation = Quaternion.FromEulerAngles(0.00, 90.00, 0.00),
                                 components = {
                                     {
+                                        type = "Occludable",
+                                        occluderEnabled = true
+                                    },
+                                    {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
@@ -4246,6 +4420,10 @@ function CreateScene()
                                 position = Vector3(0.00, 0.00, 8.00),
                                 rotation = Quaternion.FromEulerAngles(0.00, 90.00, 0.00),
                                 components = {
+                                    {
+                                        type = "Occludable",
+                                        occluderEnabled = true
+                                    },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
@@ -4283,6 +4461,10 @@ function CreateScene()
                                 position = Vector3(8.00, 0.00, 8.00),
                                 components = {
                                     {
+                                        type = "Occludable",
+                                        occluderEnabled = true
+                                    },
+                                    {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/pillar_decorated.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
@@ -4312,6 +4494,10 @@ function CreateScene()
                                 uuid = "D9A58998-3BE6-4521-9F0D-1B5C12B560C0",
                                 position = Vector3(-8.00, 0.00, 8.00),
                                 components = {
+                                    {
+                                        type = "Occludable",
+                                        occluderEnabled = true
+                                    },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/pillar_decorated.obj",
@@ -4343,6 +4529,10 @@ function CreateScene()
                                 position = Vector3(8.00, 0.00, -8.00),
                                 components = {
                                     {
+                                        type = "Occludable",
+                                        occluderEnabled = true
+                                    },
+                                    {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/pillar_decorated.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
@@ -4372,6 +4562,10 @@ function CreateScene()
                                 uuid = "8B3D94E4-C295-46FF-B9C2-19FD7C1594C5",
                                 position = Vector3(-8.00, 0.00, -8.00),
                                 components = {
+                                    {
+                                        type = "Occludable",
+                                        occluderEnabled = true
+                                    },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/pillar_decorated.obj",
@@ -4431,7 +4625,7 @@ function CreateScene()
                                 name = "torch_n",
                                 uuid = "31C7F376-69C7-4C51-B45C-57D2EBB9EA73",
                                 position = Vector3(0.00, 0.00, 13.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
@@ -4493,7 +4687,7 @@ function CreateScene()
                                 name = "banner_1",
                                 uuid = "60FDC273-65AE-491F-A7EC-4B6E0DB54C3F",
                                 position = Vector3(0.00, 0.00, 13.50),
-                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
