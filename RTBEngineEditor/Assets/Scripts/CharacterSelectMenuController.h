@@ -10,6 +10,9 @@
 #include <vector>
 
 namespace RTBEngine {
+    namespace ECS {
+        class AudioSourceComponent;
+    }
     namespace UI {
         class UIButton;
         class UIPanel;
@@ -48,6 +51,7 @@ public:
     RTBEngine::UI::UIButton* quickSelectButton4 = nullptr;
 
     MainMenuCharacterPreview* characterPreview = nullptr;
+    RTBEngine::ECS::AudioSourceComponent* clickAudio = nullptr;
 
     RTB_COMPONENT(CharacterSelectMenuController)
 
@@ -89,6 +93,7 @@ private:
     std::string BuildSummaryBody(const CharacterDefinition& definition) const;
     void StyleCardFrame(CharacterCardWidgets& card, bool selected);
     void StyleQuickSelectButton(QuickSelectWidgets& quickSelect, bool selected);
+    void PlayClickSound() const;
     CharacterDefinition* FindDefinitionById(const std::string& characterId) const;
     RTBEngine::UI::UIText* FindLabelText(RTBEngine::ECS::GameObject* cardRoot) const;
 };

@@ -2,7 +2,7 @@ return {
     type = "CharacterDefinition",
     characterId = "knight",
     displayName = "Knight",
-    description = "Tanque resistente. Mucha vida y aguante, pero disparos más débiles.",
+    description = "Sturdy tank. High health and durability, but weaker shots.",
     maxHealth = 165.00,
     moveSpeed = 3.40,
     sprintMultiplier = 1.45,

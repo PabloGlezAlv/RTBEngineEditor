@@ -962,7 +962,7 @@ namespace RTBEditor {
                                               std::string* value,
                                               bool& changed,
                                               bool wrapInRow) {
-        if (!component || !value) {
+        if (!value) {
             return false;
         }
 

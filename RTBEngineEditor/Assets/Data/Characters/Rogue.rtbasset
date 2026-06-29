@@ -2,7 +2,7 @@ return {
     type = "CharacterDefinition",
     characterId = "rogue",
     displayName = "Rogue",
-    description = "Explorador veloz. Se mueve más rápido que nadie, pero aguanta pocos golpes.",
+    description = "Swift scout. Faster than anyone, but can't take many hits.",
     maxHealth = 72.00,
     moveSpeed = 5.60,
     sprintMultiplier = 2.05,

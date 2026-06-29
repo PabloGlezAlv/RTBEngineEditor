@@ -2,7 +2,7 @@ return {
     type = "CharacterDefinition",
     characterId = "barbarian",
     displayName = "Barbarian",
-    description = "Demoledor. Flechas muy potentes y buena vida, pero menos disparos y más lento.",
+    description = "Heavy hitter. Very powerful arrows and solid health, but fewer shots and slower movement.",
     maxHealth = 115.00,
     moveSpeed = 3.70,
     sprintMultiplier = 1.60,

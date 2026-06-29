@@ -106,6 +106,7 @@ namespace RTBEditor {
         if (ext == ".glsl" || ext == ".vert" || ext == ".frag") return icons[IconType::Shader];
         if (ext == ".prefab") return icons[IconType::Prefab];
         if (ext == ".texture") return icons[IconType::Image];
+        if (ext == ".rtbasset") return icons[IconType::Lua];
 
         return icons[IconType::File];
     }
@@ -266,7 +267,8 @@ namespace RTBEditor {
                     std::string clickedExt = path.extension().string();
                     for (auto& c : clickedExt) c = std::tolower(c);
                     if (clickedExt == ".cubemap" || clickedExt == ".texture" || clickedExt == ".h" || clickedExt == ".cpp" ||
-                        clickedExt == ".fbx" || clickedExt == ".obj" || clickedExt == ".gltf" || clickedExt == ".glb") {
+                        clickedExt == ".fbx" || clickedExt == ".obj" || clickedExt == ".gltf" || clickedExt == ".glb" ||
+                        clickedExt == ".rtbasset") {
                         context.selectedAssetPath = path;
                         context.selectedGameObject = nullptr;
                         // Toggle FBX texture expansion

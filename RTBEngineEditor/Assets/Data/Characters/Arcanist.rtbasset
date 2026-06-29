@@ -2,7 +2,7 @@ return {
     type = "CharacterDefinition",
     characterId = "arcanist",
     displayName = "Arcanist",
-    description = "Artillero rápido. Recarga veloz y más disparos, pero cada flecha hace menos daño.",
+    description = "Swift artillery. Fast reload and more shots, but each arrow deals less damage.",
     maxHealth = 85.00,
     moveSpeed = 4.00,
     sprintMultiplier = 1.60,

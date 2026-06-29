@@ -2,7 +2,7 @@ return {
     type = "CharacterDefinition",
     characterId = "ranger",
     displayName = "Ranger",
-    description = "Arquero equilibrado. Buen balance entre movilidad, daño y supervivencia.",
+    description = "Balanced archer. Good mix of mobility, damage and survival.",
     maxHealth = 100.00,
     moveSpeed = 4.00,
     sprintMultiplier = 1.75,

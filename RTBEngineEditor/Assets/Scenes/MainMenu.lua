@@ -8,7 +8,7 @@ function CreateScene()
                 name = "Main Camera",
                 uuid = "198966E8-23E3-4EC4-9F05-BEB0810D1A43",
                 position = Vector3(-6.40, 1.35, 0.55),
-                rotation = Quaternion.FromEulerAngles(-7.83, 84.00, 1.65),
+                rotation = Quaternion.FromEulerAngles(-2.46, 84.05, -7.62),
                 components = {
                     {
                         type = "CameraComponent",
@@ -40,7 +40,7 @@ function CreateScene()
             {
                 name = "Directional Light",
                 uuid = "48103FD7-E1F1-4AAB-8127-C0C2ED5B4111",
-                rotation = Quaternion.FromEulerAngles(-17.44, -50.06, -42.16),
+                rotation = Quaternion.FromEulerAngles(-41.09, -35.64, -20.23),
                 components = {
                     {
                         type = "LightComponent",
@@ -107,7 +107,8 @@ function CreateScene()
                         quickSelectButton2 = "CSEL-QBTN-0003-4000-8000-000000000003/UIButton",
                         quickSelectButton3 = "CSEL-QBTN-0004-4000-8000-000000000004/UIButton",
                         quickSelectButton4 = "CSEL-QBTN-0005-4000-8000-000000000005/UIButton",
-                        characterPreview = "CSEL-PRVW-0001-4000-8000-000000000001/MainMenuCharacterPreview"
+                        characterPreview = "CSEL-PRVW-0001-4000-8000-000000000001/MainMenuCharacterPreview",
+                        clickAudio = "073830E4-5E61-4968-B33A-433B8A60D77C/AudioSourceComponent"
                     },
                 },
                 children = {
@@ -183,13 +184,7 @@ function CreateScene()
                                 components = {
                                     {
                                         type = "UIText",
-                                        text = "Health: 100
-Damage: 25
-Speed: 4.0
-Sprint: x1.75
-Shots: 3
-Reload: 10.0 s
-Arrow speed: 14",
+                                        text = "Health: 100\nDamage: 25\nSpeed: 4.0\nSprint: x1.75\nShots: 3\nReload: 10.0 s\nArrow speed: 14",
                                         color = Color(0.78, 0.80, 0.86, 1.00),
                                         fontSize = 34.00,
                                         alignment = "Left",
@@ -1132,16 +1127,7 @@ Arrow speed: 14",
                                         components = {
                                             {
                                                 type = "UIText",
-                                                text = "Ranger
-Balanced archer. Good mix of mobility, damage and survival.
-
-Health: 100
-Speed: 4.0
-Sprint: x1.75
-Shots: 3
-Reload: 10.0 s
-Damage: 25
-Arrow speed: 14",
+                                                text = "Ranger\nBalanced archer. Good mix of mobility, damage and survival.\n\nHealth: 100\nSpeed: 4.0\nSprint: x1.75\nShots: 3\nReload: 10.0 s\nDamage: 25\nArrow speed: 14",
                                                 color = Color(0.78, 0.80, 0.86, 1.00),
                                                 fontSize = 28.00,
                                                 alignment = "Left",

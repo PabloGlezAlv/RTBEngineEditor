@@ -6,6 +6,7 @@
 #include "PlayerCharacterSelection.h"
 
 #include <RTBEngine/Core/Logger.h>
+#include <RTBEngine/Scene/AudioSourceComponent.h>
 #include <RTBEngine/Scene/GameObject.h>
 #include <RTBEngine/UI/Elements/UIButton.h>
 #include <RTBEngine/UI/Elements/UIPanel.h>
@@ -52,6 +53,7 @@ RTB_REGISTER_COMPONENT(CharacterSelectMenuController)
     RTB_PROPERTY_COMPONENT(quickSelectButton3, UIButton)
     RTB_PROPERTY_COMPONENT(quickSelectButton4, UIButton)
     RTB_PROPERTY_COMPONENT(characterPreview, MainMenuCharacterPreview)
+    RTB_PROPERTY_COMPONENT(clickAudio, AudioSourceComponent)
 RTB_END_REGISTER(CharacterSelectMenuController)
 
 void CharacterSelectMenuController::OnStart()
@@ -268,6 +270,7 @@ void CharacterSelectMenuController::SelectPendingCharacter(const std::string& ch
     }
 
     pendingCharacterId = characterId;
+    PlayClickSound();
     RefreshSelectionVisuals();
 }
 
@@ -295,6 +298,7 @@ void CharacterSelectMenuController::ConfirmCharacterSelection(const std::string&
 
     pendingCharacterId = characterId;
     PlayerCharacterSelection::GetInstance().SetSelectedCharacterId(characterId);
+    PlayClickSound();
     RefreshSelectionVisuals();
     ApplySummaryFromSelection();
     UpdateCharacterPreview();
@@ -419,6 +423,13 @@ void CharacterSelectMenuController::RefreshStatsTexts()
     const std::string statsBody = BuildStatsBody(*definition);
     if (overlayStatsText) {
         overlayStatsText->SetText(statsBody);
+    }
+}
+
+void CharacterSelectMenuController::PlayClickSound() const
+{
+    if (clickAudio) {
+        clickAudio->PlayOneShot();
     }
 }
 
