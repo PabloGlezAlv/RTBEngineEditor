@@ -7,8 +7,8 @@ function CreateScene()
             {
                 name = "Main Camera",
                 uuid = "198966E8-23E3-4EC4-9F05-BEB0810D1A43",
-                position = Vector3(-6.40, 1.35, 0.55),
-                rotation = Quaternion.FromEulerAngles(-2.46, 84.05, -7.62),
+                position = Vector3(-7.19, 1.09, 1.75),
+                rotation = Quaternion.FromEulerAngles(0.00, -90.00, 0.00),
                 components = {
                     {
                         type = "CameraComponent",
@@ -35,12 +35,176 @@ function CreateScene()
                         previewScale = 0.90,
                         idleAnimationFbx = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_General.fbx|Idle_A"
                     },
+                },
+                children = {
+                    {
+                        name = "Character Preview Ranger",
+                        uuid = "MM-PRVW-RANGER-4000-8000-000000000001",
+                        prefab = "Character Preview Ranger",
+                        scale = Vector3(0.90, 0.90, 0.90),
+                        overrides = {
+                            components = {
+                                { type = "Animator",
+                                    additionalModels = {
+                                    },
+                                },
+                            },
+                        },
+                        children = {
+                            {
+                                name = "root",
+                                uuid = "C5AD6486-1C69-44C8-8FA5-1631DCC3890A",
+                                children = {
+                                    {
+                                        name = "hips",
+                                        uuid = "69657A7D-CE8E-42BB-AE35-5AC07910643C",
+                                        children = {
+                                            {
+                                                name = "spine",
+                                                uuid = "5C4C8BA9-6DC6-4D34-B001-841D4E3DCA8B",
+                                                children = {
+                                                    {
+                                                        name = "chest",
+                                                        uuid = "C02222AD-8A4A-44A9-9568-713639DFE8FE",
+                                                        children = {
+                                                            {
+                                                                name = "upperarm.l",
+                                                                uuid = "EC6C2857-949D-4DA2-BDF4-ED2450B6C5E5",
+                                                                children = {
+                                                                    {
+                                                                        name = "lowerarm.l",
+                                                                        uuid = "4DB13D0A-4290-419D-A32D-54B0C4E831A5",
+                                                                        children = {
+                                                                            {
+                                                                                name = "wrist.l",
+                                                                                uuid = "2F5ABDB7-48FE-4ADC-B568-EEC24DC4B0A1",
+                                                                                children = {
+                                                                                    {
+                                                                                        name = "hand.l",
+                                                                                        uuid = "B2E987EF-3736-4B47-93F3-D0C2A9364C95",
+                                                                                        children = {
+                                                                                            {
+                                                                                                name = "handslot.l",
+                                                                                                uuid = "08964EA4-D7F7-4A0C-BF39-2A6FE9D938B9",
+                                                                                                children = {
+                                                                                                    {
+                                                                                                        name = "Ranger_Bow",
+                                                                                                        uuid = "109DAEF5-4736-4BB3-B63F-DD6B5B44855E",
+                                                                                                        components = {
+                                                                                                            {
+                                                                                                                type = "MeshRenderer",
+                                                                                                                meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/bow_withString.obj",
+                                                                                                                textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/ranger_texture.png",
+                                                                                                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                                                                                                meshIndex = 0,
+                                                                                                                multiMesh = false
+                                                                                                            },
+                                                                                                        }
+                                                                                                    },
+                                                                                                }
+                                                                                            },
+                                                                                        }
+                                                                                    },
+                                                                                }
+                                                                            },
+                                                                        }
+                                                                    },
+                                                                }
+                                                            },
+                                                            {
+                                                                name = "upperarm.r",
+                                                                uuid = "0E0C67B4-D021-47E3-8F72-A485BFC87DC6",
+                                                                children = {
+                                                                    {
+                                                                        name = "lowerarm.r",
+                                                                        uuid = "E5B6B75F-147D-4477-8084-1D15986F517E",
+                                                                        children = {
+                                                                            {
+                                                                                name = "wrist.r",
+                                                                                uuid = "3AC8ADA2-B039-4438-92D1-4FA79F1F2F0F",
+                                                                                children = {
+                                                                                    {
+                                                                                        name = "hand.r",
+                                                                                        uuid = "0BFBA09A-04BA-4516-AA49-8F07C2032614",
+                                                                                        children = {
+                                                                                            {
+                                                                                                name = "handslot.r",
+                                                                                                uuid = "5F01E38D-E9AC-46EF-81CB-2F439BD1306F",
+                                                                                                children = {
+                                                                                                }
+                                                                                            },
+                                                                                        }
+                                                                                    },
+                                                                                }
+                                                                            },
+                                                                        }
+                                                                    },
+                                                                }
+                                                            },
+                                                            {
+                                                                name = "head",
+                                                                uuid = "C733BE2F-9D91-40B5-B63D-6EF9A02D5257",
+                                                            },
+                                                        }
+                                                    },
+                                                }
+                                            },
+                                            {
+                                                name = "upperleg.l",
+                                                uuid = "99A671E3-FA32-4222-BEEC-7C9757774FF2",
+                                                children = {
+                                                    {
+                                                        name = "lowerleg.l",
+                                                        uuid = "922E0DA8-D636-4982-A610-6C56CC401DB5",
+                                                        children = {
+                                                            {
+                                                                name = "foot.l",
+                                                                uuid = "110886C1-A83F-40FE-8B68-FC24F2E8C303",
+                                                                children = {
+                                                                    {
+                                                                        name = "toes.l",
+                                                                        uuid = "2DC5DA98-335A-479A-8B30-CBED96801F0A",
+                                                                    },
+                                                                }
+                                                            },
+                                                        }
+                                                    },
+                                                }
+                                            },
+                                            {
+                                                name = "upperleg.r",
+                                                uuid = "0E2ECE82-9C85-4ABF-8BB7-B404F5285237",
+                                                children = {
+                                                    {
+                                                        name = "lowerleg.r",
+                                                        uuid = "FD5B45FE-6637-4772-8CE9-8B3F54F5EA60",
+                                                        children = {
+                                                            {
+                                                                name = "foot.r",
+                                                                uuid = "CF8BCD2B-2AE5-4426-A71C-25377ECCEECC",
+                                                                children = {
+                                                                    {
+                                                                        name = "toes.r",
+                                                                        uuid = "6F30C2FE-29EF-469A-B98B-C948563D6B7B",
+                                                                    },
+                                                                }
+                                                            },
+                                                        }
+                                                    },
+                                                }
+                                            },
+                                        }
+                                    },
+                                }
+                            },
+                        }
+                    },
                 }
             },
             {
                 name = "Directional Light",
                 uuid = "48103FD7-E1F1-4AAB-8127-C0C2ED5B4111",
-                rotation = Quaternion.FromEulerAngles(-41.09, -35.64, -20.23),
+                rotation = Quaternion.FromEulerAngles(-33.04, -43.06, 32.48),
                 components = {
                     {
                         type = "LightComponent",
@@ -52,6 +216,474 @@ function CreateScene()
                         spotInnerAngle = 30.00,
                         syncPosition = true,
                         syncDirection = true
+                    },
+                }
+            },
+            {
+                name = "Fill Light",
+                uuid = "MM-FILL-0001-4000-8000-000000000001",
+                rotation = Quaternion.FromEulerAngles(-6.14, 136.67, 27.37),
+                components = {
+                    {
+                        type = "LightComponent",
+                        lightType = "Directional",
+                        color = Color(0.78, 0.84, 1.00, 1.00),
+                        intensity = 0.40,
+                        range = 10.00,
+                        spotAngle = 45.00,
+                        spotInnerAngle = 30.00,
+                        syncPosition = true,
+                        syncDirection = true
+                    },
+                }
+            },
+            {
+                name = "MenuEnvironment",
+                uuid = "MM-ENV0-0001-4000-8000-000000000001",
+                children = {
+                    {
+                        name = "Floor",
+                        uuid = "MM-ENV-FLR-0001-4000-8000-000000000001",
+                        children = {
+                            {
+                                name = "floor_nw",
+                                uuid = "MM-ENV-FLR-0002-4000-8000-000000000001",
+                                position = Vector3(-7.80, 0.00, -4.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                }
+                            },
+                            {
+                                name = "floor_n",
+                                uuid = "MM-ENV-FLR-0003-4000-8000-000000000001",
+                                position = Vector3(-3.80, 0.00, -4.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                }
+                            },
+                            {
+                                name = "floor_ne",
+                                uuid = "MM-ENV-FLR-0004-4000-8000-000000000001",
+                                position = Vector3(0.20, 0.00, -4.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                }
+                            },
+                            {
+                                name = "floor_w",
+                                uuid = "MM-ENV-FLR-0005-4000-8000-000000000001",
+                                position = Vector3(-7.80, 0.00, 0.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                }
+                            },
+                            {
+                                name = "floor_c",
+                                uuid = "MM-ENV-FLR-0006-4000-8000-000000000001",
+                                position = Vector3(-3.80, 0.00, 0.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                }
+                            },
+                            {
+                                name = "floor_e",
+                                uuid = "MM-ENV-FLR-0007-4000-8000-000000000001",
+                                position = Vector3(0.20, 0.00, 0.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                }
+                            },
+                            {
+                                name = "floor_sw",
+                                uuid = "MM-ENV-FLR-0008-4000-8000-000000000001",
+                                position = Vector3(-7.80, 0.00, 4.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                }
+                            },
+                            {
+                                name = "floor_s",
+                                uuid = "MM-ENV-FLR-0009-4000-8000-000000000001",
+                                position = Vector3(-3.80, 0.00, 4.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                }
+                            },
+                            {
+                                name = "floor_se",
+                                uuid = "MM-ENV-FLR-0010-4000-8000-000000000001",
+                                position = Vector3(0.20, 0.00, 4.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                }
+                            },
+                        }
+                    },
+                    {
+                        name = "Walls",
+                        uuid = "MM-ENV-WAL-0001-4000-8000-000000000001",
+                        children = {
+                            {
+                                name = "wall_corner_sw",
+                                uuid = "MM-ENV-WAL-0002-4000-8000-000000000001",
+                                position = Vector3(-9.80, 0.00, -6.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall_corner.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                }
+                            },
+                            {
+                                name = "wall_corner_se",
+                                uuid = "MM-ENV-WAL-0003-4000-8000-000000000001",
+                                position = Vector3(2.20, 0.00, -6.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -90.00, 0.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall_corner.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                }
+                            },
+                            {
+                                name = "wall_corner_nw",
+                                uuid = "MM-ENV-WAL-0004-4000-8000-000000000001",
+                                position = Vector3(-9.80, 0.00, 6.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 90.00, 0.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall_corner.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                }
+                            },
+                            {
+                                name = "wall_corner_ne",
+                                uuid = "MM-ENV-WAL-0005-4000-8000-000000000001",
+                                position = Vector3(2.20, 0.00, 6.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall_corner.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                }
+                            },
+                            {
+                                name = "wall_s_w",
+                                uuid = "MM-ENV-WAL-0006-4000-8000-000000000001",
+                                position = Vector3(-7.80, 0.00, -6.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                }
+                            },
+                            {
+                                name = "wall_s_c",
+                                uuid = "MM-ENV-WAL-0007-4000-8000-000000000001",
+                                position = Vector3(-3.80, 0.00, -6.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                }
+                            },
+                            {
+                                name = "wall_s_e",
+                                uuid = "MM-ENV-WAL-0008-4000-8000-000000000001",
+                                position = Vector3(0.20, 0.00, -6.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                }
+                            },
+                            {
+                                name = "wall_n_w",
+                                uuid = "MM-ENV-WAL-0009-4000-8000-000000000001",
+                                position = Vector3(-7.80, 0.00, 6.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                }
+                            },
+                            {
+                                name = "wall_n_c",
+                                uuid = "MM-ENV-WAL-0010-4000-8000-000000000001",
+                                position = Vector3(-3.80, 0.00, 6.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                }
+                            },
+                            {
+                                name = "wall_n_e",
+                                uuid = "MM-ENV-WAL-0011-4000-8000-000000000001",
+                                position = Vector3(0.20, 0.00, 6.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                }
+                            },
+                            {
+                                name = "wall_w_n",
+                                uuid = "MM-ENV-WAL-0012-4000-8000-000000000001",
+                                position = Vector3(-9.80, 0.00, -4.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 90.00, 0.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                }
+                            },
+                            {
+                                name = "wall_w_c",
+                                uuid = "MM-ENV-WAL-0013-4000-8000-000000000001",
+                                position = Vector3(-9.80, 0.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 90.00, 0.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                }
+                            },
+                            {
+                                name = "wall_w_s",
+                                uuid = "MM-ENV-WAL-0014-4000-8000-000000000001",
+                                position = Vector3(-9.80, 0.00, 4.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 90.00, 0.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                }
+                            },
+                            {
+                                name = "wall_e_n",
+                                uuid = "MM-ENV-WAL-0015-4000-8000-000000000001",
+                                position = Vector3(2.20, 0.00, -4.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -90.00, 0.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                }
+                            },
+                            {
+                                name = "wall_e_c",
+                                uuid = "MM-ENV-WAL-0016-4000-8000-000000000001",
+                                position = Vector3(2.20, 0.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -90.00, 0.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall_archedwindow_open.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                }
+                            },
+                            {
+                                name = "wall_e_s",
+                                uuid = "MM-ENV-WAL-0017-4000-8000-000000000001",
+                                position = Vector3(2.20, 0.00, 4.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -90.00, 0.00),
+                                components = {
+                                    {
+                                        type = "MeshRenderer",
+                                        meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
+                                        textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                        meshIndex = 0,
+                                        multiMesh = false
+                                    },
+                                }
+                            },
+                        }
+                    },
+                    {
+                        name = "ColumnLeft",
+                        uuid = "MM-ENV-COL-0001-4000-8000-000000000001",
+                        position = Vector3(-1.20, 0.00, -2.60),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/column.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                meshIndex = 0,
+                                multiMesh = false
+                            },
+                        }
+                    },
+                    {
+                        name = "ColumnRight",
+                        uuid = "MM-ENV-COL-0002-4000-8000-000000000001",
+                        position = Vector3(-1.20, 0.00, 2.60),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/column.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                meshIndex = 0,
+                                multiMesh = false
+                            },
+                        }
+                    },
+                    {
+                        name = "Torch",
+                        uuid = "MM-ENV-TOR-0001-4000-8000-000000000001",
+                        position = Vector3(-2.10, 0.00, -2.20),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/torch_lit.obj",
+                                textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                meshIndex = 0,
+                                multiMesh = false
+                            },
+                        }
                     },
                 }
             },
@@ -119,9 +751,9 @@ function CreateScene()
                             {
                                 type = "UIImage",
                                 texture = "Assets/UI/GuildSlate/bg_main_menu.png",
-                                tintColor = Color(1.00, 1.00, 1.00, 1.00),
+                                tintColor = Color(1.00, 1.00, 1.00, 0.00),
                                 preserveAspect = false,
-                                isVisible = true,
+                                isVisible = false,
                                 raycastTarget = false,
                                 anchorMin = Vector2(0.00, 0.00),
                                 anchorMax = Vector2(1.00, 1.00),
@@ -139,7 +771,7 @@ function CreateScene()
                         components = {
                             {
                                 type = "UIPanel",
-                                backgroundColor = Color(0.10, 0.12, 0.16, 0.88),
+                                backgroundColor = Color(0.10, 0.12, 0.16, 0.72),
                                 borderColor = Color(0.91, 0.66, 0.29, 0.55),
                                 borderThickness = 1.50,
                                 hasBorder = true,
@@ -161,7 +793,7 @@ function CreateScene()
                                 components = {
                                     {
                                         type = "UIText",
-                                        text = "Character: Ranger",
+                                        text = "Character: Arcanist",
                                         color = Color(0.96, 0.94, 0.88, 1.00),
                                         fontSize = 51.60,
                                         alignment = "Left",
@@ -184,7 +816,7 @@ function CreateScene()
                                 components = {
                                     {
                                         type = "UIText",
-                                        text = "Health: 100\nDamage: 25\nSpeed: 4.0\nSprint: x1.75\nShots: 3\nReload: 10.0 s\nArrow speed: 14",
+                                        text = "Health: 85\nDamage: 13\nSpeed: 4.0\nSprint: x1.60\nShots: 5\nReload: 5.5 s\nArrow speed: 17",
                                         color = Color(0.78, 0.80, 0.86, 1.00),
                                         fontSize = 34.00,
                                         alignment = "Left",
@@ -235,7 +867,7 @@ function CreateScene()
                                         components = {
                                             {
                                                 type = "UIPanel",
-                                                backgroundColor = Color(0.14, 0.16, 0.20, 0.95),
+                                                backgroundColor = Color(0.12, 0.14, 0.18, 0.92),
                                                 borderColor = Color(0.42, 0.44, 0.50, 0.85),
                                                 borderThickness = 1.50,
                                                 hasBorder = true,
@@ -291,7 +923,7 @@ function CreateScene()
                                         components = {
                                             {
                                                 type = "UIPanel",
-                                                backgroundColor = Color(0.14, 0.16, 0.20, 0.95),
+                                                backgroundColor = Color(0.12, 0.14, 0.18, 0.92),
                                                 borderColor = Color(0.42, 0.44, 0.50, 0.85),
                                                 borderThickness = 1.50,
                                                 hasBorder = true,
@@ -347,9 +979,9 @@ function CreateScene()
                                         components = {
                                             {
                                                 type = "UIPanel",
-                                                backgroundColor = Color(0.14, 0.16, 0.20, 0.95),
-                                                borderColor = Color(0.42, 0.44, 0.50, 0.85),
-                                                borderThickness = 1.50,
+                                                backgroundColor = Color(0.18, 0.20, 0.28, 0.98),
+                                                borderColor = Color(0.91, 0.66, 0.29, 1.00),
+                                                borderThickness = 2.50,
                                                 hasBorder = true,
                                                 isVisible = true,
                                                 raycastTarget = true,
@@ -379,7 +1011,7 @@ function CreateScene()
                                                     {
                                                         type = "UIText",
                                                         text = "Arcanist",
-                                                        color = Color(0.96, 0.94, 0.88, 1.00),
+                                                        color = Color(1.00, 0.84, 0.47, 1.00),
                                                         fontSize = 13.00,
                                                         alignment = "Center",
                                                         font = nil,
@@ -403,7 +1035,7 @@ function CreateScene()
                                         components = {
                                             {
                                                 type = "UIPanel",
-                                                backgroundColor = Color(0.14, 0.16, 0.20, 0.95),
+                                                backgroundColor = Color(0.12, 0.14, 0.18, 0.92),
                                                 borderColor = Color(0.42, 0.44, 0.50, 0.85),
                                                 borderThickness = 1.50,
                                                 hasBorder = true,
@@ -459,7 +1091,7 @@ function CreateScene()
                                         components = {
                                             {
                                                 type = "UIPanel",
-                                                backgroundColor = Color(0.14, 0.16, 0.20, 0.95),
+                                                backgroundColor = Color(0.12, 0.14, 0.18, 0.92),
                                                 borderColor = Color(0.42, 0.44, 0.50, 0.85),
                                                 borderThickness = 1.50,
                                                 hasBorder = true,
@@ -1060,7 +1692,7 @@ function CreateScene()
                                 components = {
                                     {
                                         type = "UIPanel",
-                                        backgroundColor = Color(0.04, 0.05, 0.08, 0.82),
+                                        backgroundColor = Color(0.04, 0.05, 0.08, 0.48),
                                         borderColor = Color(0.00, 0.00, 0.00, 0.00),
                                         borderThickness = 0.00,
                                         hasBorder = false,
@@ -1127,7 +1759,7 @@ function CreateScene()
                                         components = {
                                             {
                                                 type = "UIText",
-                                                text = "Ranger\nBalanced archer. Good mix of mobility, damage and survival.\n\nHealth: 100\nSpeed: 4.0\nSprint: x1.75\nShots: 3\nReload: 10.0 s\nDamage: 25\nArrow speed: 14",
+                                                text = "Arcanist\nSwift artillery. Fast reload and more shots, but each arrow deals less damage.\n\nHealth: 85\nSpeed: 4.0\nSprint: x1.60\nShots: 5\nReload: 5.5 s\nDamage: 13\nArrow speed: 17",
                                                 color = Color(0.78, 0.80, 0.86, 1.00),
                                                 fontSize = 28.00,
                                                 alignment = "Left",
@@ -1578,9 +2210,9 @@ function CreateScene()
                                         components = {
                                             {
                                                 type = "UIPanel",
-                                                backgroundColor = Color(0.12, 0.14, 0.18, 0.92),
-                                                borderColor = Color(0.42, 0.44, 0.50, 0.85),
-                                                borderThickness = 1.50,
+                                                backgroundColor = Color(0.18, 0.20, 0.28, 0.98),
+                                                borderColor = Color(0.91, 0.66, 0.29, 1.00),
+                                                borderThickness = 3.00,
                                                 hasBorder = true,
                                                 isVisible = true,
                                                 raycastTarget = true,
@@ -1631,7 +2263,7 @@ function CreateScene()
                                                     {
                                                         type = "UIText",
                                                         text = "Arcanist",
-                                                        color = Color(0.96, 0.94, 0.88, 1.00),
+                                                        color = Color(1.00, 0.84, 0.47, 1.00),
                                                         fontSize = 18.00,
                                                         alignment = "Center",
                                                         font = nil,

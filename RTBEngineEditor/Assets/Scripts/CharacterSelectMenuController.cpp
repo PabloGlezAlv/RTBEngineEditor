@@ -280,14 +280,15 @@ void CharacterSelectMenuController::UpdateCharacterPreview()
         return;
     }
 
-    const bool overlayOpen = characterSelectRoot && characterSelectRoot->IsActiveInHierarchy();
-    if (overlayOpen) {
-        characterPreview->ShowCharacterById(pendingCharacterId);
-        return;
+    std::string previewId = PlayerCharacterSelection::GetInstance().GetSelectedCharacterId();
+    if (previewId.empty()) {
+        previewId = pendingCharacterId;
+    }
+    if (previewId.empty() && !characterDefinitions.empty() && characterDefinitions[0]) {
+        previewId = characterDefinitions[0]->characterId;
     }
 
-    characterPreview->ShowCharacterById(
-        PlayerCharacterSelection::GetInstance().GetSelectedCharacterId());
+    characterPreview->ShowCharacterById(previewId);
 }
 
 void CharacterSelectMenuController::ConfirmCharacterSelection(const std::string& characterId)

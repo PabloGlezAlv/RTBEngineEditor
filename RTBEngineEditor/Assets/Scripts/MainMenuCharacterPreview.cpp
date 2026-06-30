@@ -6,17 +6,12 @@
 
 #include <RTBEngine/Animation/Animator.h>
 #include <RTBEngine/Core/Logger.h>
-#include <RTBEngine/Core/ResourceManager.h>
 #include <RTBEngine/Math/Quaternions/Quaternion.h>
-#include <RTBEngine/Rendering/FbxBinding.h>
-#include <RTBEngine/Rendering/ModelLoader.h>
-#include <RTBEngine/Scene/Scene.h>
-#include <RTBEngine/Scene/SceneManager.h>
 
 using ThisClass = MainMenuCharacterPreview;
 
 namespace {
-    constexpr const char* kPreviewIdleAlias = "MainMenuPreview.Idle";
+    constexpr const char* kPreviewIdleAlias = "MenuPreviewIdle";
 }
 
 RTB_REGISTER_COMPONENT(MainMenuCharacterPreview)
@@ -29,132 +24,87 @@ RTB_END_REGISTER(MainMenuCharacterPreview)
 void MainMenuCharacterPreview::OnStart()
 {
     const std::string selectedId = PlayerCharacterSelection::GetInstance().GetSelectedCharacterId();
-    if (!selectedId.empty()) {
-        ShowCharacterById(selectedId);
-    }
+    ShowCharacterById(selectedId.empty() ? "ranger" : selectedId);
 }
 
-void MainMenuCharacterPreview::OnDestroy()
+void MainMenuCharacterPreview::ResolvePreviewInstance()
 {
-    ClearPreview();
-}
-
-void MainMenuCharacterPreview::ClearPreview()
-{
-    if (!spawnedPreview) {
-        loadedModelRef.clear();
+    if (previewInstance || !owner) {
         return;
     }
 
-    RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
-    if (scene) {
-        scene->RemoveGameObject(spawnedPreview);
+    for (RTBEngine::ECS::GameObject* child : owner->GetChildren()) {
+        if (!child) {
+            continue;
+        }
+
+        if (child->GetComponent<RTBEngine::Animation::Animator>()) {
+            previewInstance = child;
+            return;
+        }
     }
 
-    spawnedPreview = nullptr;
-    loadedModelRef.clear();
+    RTB_WARN("MainMenuCharacterPreview: No character preview prefab found under CharacterPreviewStage.");
 }
 
 void MainMenuCharacterPreview::ApplyPreviewTransform()
 {
-    if (!spawnedPreview || !owner) {
+    if (!previewInstance || !owner) {
         return;
     }
 
-    spawnedPreview->SetParent(owner);
-    spawnedPreview->GetTransform().SetPosition(previewOffset);
-    spawnedPreview->GetTransform().SetRotation(
+    previewInstance->GetTransform().SetPosition(previewOffset);
+    previewInstance->GetTransform().SetRotation(
         RTBEngine::Math::Quaternion::FromEulerAngles(0.0f, previewYawDegrees, 0.0f));
-    spawnedPreview->GetTransform().SetScale(
+    previewInstance->GetTransform().SetScale(
         RTBEngine::Math::Vector3(previewScale, previewScale, previewScale));
 }
 
 void MainMenuCharacterPreview::PlayIdleAnimation()
 {
-    if (!spawnedPreview) {
+    if (!previewInstance) {
         return;
     }
 
-    auto* animator = spawnedPreview->GetComponent<RTBEngine::Animation::Animator>();
+    auto* animator = previewInstance->GetComponent<RTBEngine::Animation::Animator>();
     if (!animator) {
         return;
     }
 
+    bool clipReady = false;
     if (!idleAnimationFbx.empty()) {
-        animator->LoadClipFromFbx(kPreviewIdleAlias, idleAnimationFbx);
-    }
-
-    if (animator->GetClip(kPreviewIdleAlias)) {
-        animator->Play(kPreviewIdleAlias, true);
-        return;
-    }
-
-    const auto clipNames = animator->GetClipNames();
-    for (const std::string& clipName : clipNames) {
-        if (clipName.find("Idle") != std::string::npos) {
-            animator->Play(clipName, true);
-            return;
+        // Load the clip only once; PlayIdleAnimation may run again (e.g. on character
+        // switches) and re-loading would overwrite the clip and log a collision warning.
+        clipReady = animator->GetClip(kPreviewIdleAlias) != nullptr
+            || animator->LoadClipFromFbx(kPreviewIdleAlias, idleAnimationFbx);
+        if (clipReady) {
+            animator->Play(kPreviewIdleAlias, true);
         }
     }
 
-    if (!clipNames.empty()) {
-        animator->Play(clipNames.front(), true);
+    if (!clipReady) {
+        animator->Stop();
     }
-}
-
-void MainMenuCharacterPreview::ShowDefinition(const CharacterDefinition& definition)
-{
-    if (definition.modelRef.empty()) {
-        ClearPreview();
-        return;
-    }
-
-    if (spawnedPreview && loadedModelRef == definition.modelRef) {
-        ApplyPreviewTransform();
-        PlayIdleAnimation();
-        return;
-    }
-
-    ClearPreview();
-
-    RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
-    if (!scene || !owner) {
-        RTB_WARN("MainMenuCharacterPreview: No active scene to spawn preview.");
-        return;
-    }
-
-    auto& resources = RTBEngine::Core::ResourceManager::GetInstance();
-    const RTBEngine::Rendering::ModelData modelData =
-        RTBEngine::Rendering::ModelLoader::LoadModelWithAnimations(definition.modelRef);
-    if (modelData.meshes.empty()) {
-        RTB_WARN("MainMenuCharacterPreview: Model has no meshes: " + definition.modelRef);
-        return;
-    }
-
-    spawnedPreview = RTBEngine::Rendering::BuildFbxHierarchy(
-        scene, modelData, definition.modelRef, resources);
-    if (!spawnedPreview) {
-        return;
-    }
-
-    loadedModelRef = definition.modelRef;
-    scene->BringGameObjectToLife(spawnedPreview);
-    ApplyPreviewTransform();
-    PlayIdleAnimation();
 }
 
 void MainMenuCharacterPreview::ShowCharacterById(const std::string& characterId)
 {
     if (characterId.empty()) {
-        ClearPreview();
         return;
     }
 
     CharacterDefinition* definition = CharacterCatalog::GetInstance().GetById(characterId);
     if (!definition) {
-        ClearPreview();
+        RTB_WARN("MainMenuCharacterPreview: Unknown character id '" + characterId + "'.");
         return;
     }
 
-    ShowDefinition(*definition);
+    ResolvePreviewInstance();
+    if (!previewInstance) {
+        return;
+    }
+
+    previewInstance->SetActive(true);
+    ApplyPreviewTransform();
+    PlayIdleAnimation();
 }
