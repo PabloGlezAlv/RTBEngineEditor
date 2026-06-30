@@ -18,11 +18,26 @@ void PlayerCharacterSelection::SetSelectedCharacterId(const std::string& charact
     selectedCharacterId = characterId;
 }
 
-CharacterDefinition* PlayerCharacterSelection::GetSelectedDefinition() const
+void PlayerCharacterSelection::EnsureSelectionFromCatalog()
 {
-    if (CharacterDefinition* selected = CharacterCatalog::GetInstance().GetById(selectedCharacterId)) {
-        return selected;
+    CharacterCatalog& catalog = CharacterCatalog::GetInstance();
+    if (!selectedCharacterId.empty() && catalog.GetById(selectedCharacterId)) {
+        return;
     }
 
-    return CharacterCatalog::GetInstance().GetDefault();
+    if (CharacterDefinition* defaultDefinition = catalog.GetDefault()) {
+        selectedCharacterId = defaultDefinition->characterId;
+    }
+}
+
+CharacterDefinition* PlayerCharacterSelection::GetSelectedDefinition() const
+{
+    CharacterCatalog& catalog = CharacterCatalog::GetInstance();
+    if (!selectedCharacterId.empty()) {
+        if (CharacterDefinition* selected = catalog.GetById(selectedCharacterId)) {
+            return selected;
+        }
+    }
+
+    return catalog.GetDefault();
 }

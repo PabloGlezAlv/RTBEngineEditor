@@ -63,14 +63,12 @@ void CharacterSelectMenuController::OnStart()
     ResolveQuickSelectButtons();
     BindButtons();
 
+    PlayerCharacterSelection::GetInstance().EnsureSelectionFromCatalog();
     pendingCharacterId = PlayerCharacterSelection::GetInstance().GetSelectedCharacterId();
-    if (pendingCharacterId.empty() && !characterDefinitions.empty() && characterDefinitions[0]) {
-        pendingCharacterId = characterDefinitions[0]->characterId;
-    }
 
     SetOverlayVisible(false);
     RefreshSelectionVisuals();
-    UpdateCharacterPreview();
+    ApplySummaryFromSelection();
 }
 
 void CharacterSelectMenuController::OnDestroy()
@@ -174,10 +172,8 @@ void CharacterSelectMenuController::BindButtons()
 
     if (openSelectButton) {
         openSelectButton->SetOnClick([this]() {
+            PlayerCharacterSelection::GetInstance().EnsureSelectionFromCatalog();
             pendingCharacterId = PlayerCharacterSelection::GetInstance().GetSelectedCharacterId();
-            if (pendingCharacterId.empty() && !characterDefinitions.empty() && characterDefinitions[0]) {
-                pendingCharacterId = characterDefinitions[0]->characterId;
-            }
             SetOverlayVisible(true);
             RefreshSelectionVisuals();
         });
@@ -280,12 +276,11 @@ void CharacterSelectMenuController::UpdateCharacterPreview()
         return;
     }
 
-    std::string previewId = PlayerCharacterSelection::GetInstance().GetSelectedCharacterId();
+    std::string previewId = pendingCharacterId;
     if (previewId.empty()) {
-        previewId = pendingCharacterId;
-    }
-    if (previewId.empty() && !characterDefinitions.empty() && characterDefinitions[0]) {
-        previewId = characterDefinitions[0]->characterId;
+        PlayerCharacterSelection& selection = PlayerCharacterSelection::GetInstance();
+        selection.EnsureSelectionFromCatalog();
+        previewId = selection.GetSelectedCharacterId();
     }
 
     characterPreview->ShowCharacterById(previewId);
@@ -302,7 +297,6 @@ void CharacterSelectMenuController::ConfirmCharacterSelection(const std::string&
     PlayClickSound();
     RefreshSelectionVisuals();
     ApplySummaryFromSelection();
-    UpdateCharacterPreview();
 }
 
 void CharacterSelectMenuController::StyleCardFrame(CharacterCardWidgets& card, bool selected)
@@ -436,7 +430,9 @@ void CharacterSelectMenuController::PlayClickSound() const
 
 void CharacterSelectMenuController::ApplySummaryFromSelection()
 {
-    CharacterDefinition* definition = PlayerCharacterSelection::GetInstance().GetSelectedDefinition();
+    PlayerCharacterSelection& selection = PlayerCharacterSelection::GetInstance();
+    selection.EnsureSelectionFromCatalog();
+    CharacterDefinition* definition = selection.GetSelectedDefinition();
     if (!definition) {
         return;
     }

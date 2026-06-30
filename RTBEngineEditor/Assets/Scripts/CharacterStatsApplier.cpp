@@ -49,12 +49,18 @@ CharacterDefinition* CharacterStatsApplier::ResolveDefinition() const
     }
 
     if (usePlayerSelection) {
-        if (CharacterDefinition* selected = PlayerCharacterSelection::GetInstance().GetSelectedDefinition()) {
+        PlayerCharacterSelection& selection = PlayerCharacterSelection::GetInstance();
+        selection.EnsureSelectionFromCatalog();
+        if (CharacterDefinition* selected = selection.GetSelectedDefinition()) {
             return selected;
         }
     }
 
-    return CharacterCatalog::GetInstance().GetById(fallbackCharacterId);
+    if (!fallbackCharacterId.empty()) {
+        return CharacterCatalog::GetInstance().GetById(fallbackCharacterId);
+    }
+
+    return CharacterCatalog::GetInstance().GetDefault();
 }
 
 bool CharacterStatsApplier::ApplyDefinition(

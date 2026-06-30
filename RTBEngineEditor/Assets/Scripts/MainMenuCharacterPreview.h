@@ -23,13 +23,14 @@ public:
     RTB_COMPONENT(MainMenuCharacterPreview)
 
 public:
-    void OnStart() override;
+    void OnDestroy() override;
     void ShowCharacterById(const std::string& characterId);
 
 private:
     RTBEngine::ECS::GameObject* previewInstance = nullptr;
+    std::string currentCharacterId;
 
-    void ResolvePreviewInstance();
+    void ClearPreviewInstance();
     void ApplyPreviewTransform();
     void PlayIdleAnimation();
 };

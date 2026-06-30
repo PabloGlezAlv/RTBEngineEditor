@@ -1,0 +1,311 @@
+return {
+    name = "Character Preview Knight",
+    components = {
+        {
+            type = "Animator",
+            modelRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Knight.fbx",
+            currentClipName = "MainMenuPreview.Idle",
+            defaultClip = "",
+            speed = 1.00,
+            playing = false,
+            looping = true,
+            additionalModels = {
+            }
+        },
+    },
+    children = {        {
+                        name = "Knight_Head",
+                        uuid = "BA7146DB-9009-4AE9-BD6E-BAFB3A898353",
+                        position = Vector3(0.00, 1.22, -0.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Knight.fbx",
+                                textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/knight_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                meshIndex = 0,
+                                multiMesh = false
+                            },
+                        }
+                    },
+                    {
+                        name = "Knight_Helmet",
+                        uuid = "ADDBF3A7-EC08-44EF-8503-97F7DE340FDA",
+                        position = Vector3(0.00, 1.22, -0.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Knight.fbx",
+                                textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/knight_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                meshIndex = 1,
+                                multiMesh = false
+                            },
+                        }
+                    },
+                    {
+                        name = "Knight_HelmetVisor",
+                        uuid = "60070E92-5190-4099-8EC6-B7305AF7811B",
+                        position = Vector3(0.00, 1.75, 0.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Knight.fbx",
+                                textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/knight_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                meshIndex = 2,
+                                multiMesh = false
+                            },
+                        }
+                    },
+                    {
+                        name = "Knight_Body",
+                        uuid = "3DB20872-F5B2-4D24-A264-02401C15687C",
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Knight.fbx",
+                                textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/knight_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                meshIndex = 3,
+                                multiMesh = false
+                            },
+                        }
+                    },
+                    {
+                        name = "Knight_ArmLeft",
+                        uuid = "B33316E6-284A-4DB9-9FA6-A8937BBAB4EC",
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Knight.fbx",
+                                textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/knight_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                meshIndex = 4,
+                                multiMesh = false
+                            },
+                        }
+                    },
+                    {
+                        name = "Knight_LegLeft",
+                        uuid = "52A87923-66BF-44EB-9D52-B1A1C2E932C9",
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Knight.fbx",
+                                textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/knight_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                meshIndex = 5,
+                                multiMesh = false
+                            },
+                        }
+                    },
+                    {
+                        name = "Knight_LegRight",
+                        uuid = "9CE39988-2059-4595-AE7A-E12584C41489",
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Knight.fbx",
+                                textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/knight_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                meshIndex = 6,
+                                multiMesh = false
+                            },
+                        }
+                    },
+                    {
+                        name = "Knight_ArmRight",
+                        uuid = "F0E281D0-E8A1-4678-83C3-295741387FA6",
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Knight.fbx",
+                                textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/knight_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                meshIndex = 7,
+                                multiMesh = false
+                            },
+                        }
+                    },
+                    {
+                        name = "Knight_Cape",
+                        uuid = "15F6AD15-615F-403F-A881-65AC8BB3708E",
+                        position = Vector3(0.00, 1.22, -0.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Knight.fbx",
+                                textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/knight_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                meshIndex = 8,
+                                multiMesh = false
+                            },
+                        }
+                    },
+                    {
+                        name = "Rig_Medium",
+                        uuid = "C655A4AF-C715-4137-90FB-E73FDB3170A3",
+                    },
+                    {
+                        name = "root",
+                        uuid = "2444A1A0-040B-4D06-A8C5-558DE7518C06",
+                        children = {
+                            {
+                                name = "hips",
+                                uuid = "D98ED918-9305-4374-9B20-F915EFA18530",
+                                children = {
+                                    {
+                                        name = "spine",
+                                        uuid = "57C88A11-D7A8-4AFE-956A-A736F81CF9AD",
+                                        children = {
+                                            {
+                                                name = "chest",
+                                                uuid = "AA2E9030-2046-4992-B5E7-B252207E1074",
+                                                children = {
+                                                    {
+                                                        name = "upperarm.l",
+                                                        uuid = "2EAD8102-8D21-4FE0-AFA8-68B58D2C3E9E",
+                                                        children = {
+                                                            {
+                                                                name = "lowerarm.l",
+                                                                uuid = "A89B67CD-BD7C-457A-A4A0-B7CA5DB110A8",
+                                                                children = {
+                                                                    {
+                                                                        name = "wrist.l",
+                                                                        uuid = "C7CA8759-3493-482B-83A8-9408DD048465",
+                                                                        children = {
+                                                                            {
+                                                                                name = "hand.l",
+                                                                                uuid = "F1090621-C795-4B86-8BBF-223CA1314379",
+                                                                                children = {
+                                                                                    {
+                                                                                        name = "handslot.l",
+                                                                                        uuid = "DF555AFD-00AF-4D03-B8A5-0C4332B5B3F7",
+                                                                                        children = {
+                                                                                            {
+                                                                                                name = "Knight_Shield",
+                                                                                                uuid = "DE0E24BE-F412-4DF1-AF63-035427C06A6F",
+                                                                                                components = {
+                                                                                                    {
+                                                                                                        type = "MeshRenderer",
+                                                                                                        meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/fbx(unity)/shield_square.fbx",
+                                                                                                        textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/knight_texture.png",
+                                                                                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                                                                                        meshIndex = 0,
+                                                                                                        multiMesh = false
+                                                                                                    },
+                                                                                                }
+                                                                                            },
+                                                                                        }
+                                                                                    },
+                                                                                }
+                                                                            },
+                                                                        }
+                                                                    },
+                                                                }
+                                                            },
+                                                        }
+                                                    },
+                                                    {
+                                                        name = "upperarm.r",
+                                                        uuid = "DC55FD24-DDAE-4CAB-A39E-ADC265C7A885",
+                                                        children = {
+                                                            {
+                                                                name = "lowerarm.r",
+                                                                uuid = "ECAB2189-412B-41FB-85E2-CAAD265E01B0",
+                                                                children = {
+                                                                    {
+                                                                        name = "wrist.r",
+                                                                        uuid = "EA3EFC06-9B7B-407A-A898-5AAD59D7B1D1",
+                                                                        children = {
+                                                                            {
+                                                                                name = "hand.r",
+                                                                                uuid = "DFA07C87-73B0-4107-828F-F60485955882",
+                                                                                children = {
+                                                                                    {
+                                                                                        name = "handslot.r",
+                                                                                        uuid = "248FFEC0-15B2-4A1F-BE8A-BA66B738A18A",
+                                                                                        children = {
+                                                                                            {
+                                                                                                name = "Knight_Sword",
+                                                                                                uuid = "B7DB9463-CD71-4C6A-87B2-D9299F7FEA1A",
+                                                                                                components = {
+                                                                                                    {
+                                                                                                        type = "MeshRenderer",
+                                                                                                        meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/fbx(unity)/sword_1handed.fbx",
+                                                                                                        textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/knight_texture.png",
+                                                                                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                                                                                        meshIndex = 0,
+                                                                                                        multiMesh = false
+                                                                                                    },
+                                                                                                }
+                                                                                            },
+                                                                                        }
+                                                                                    },
+                                                                                }
+                                                                            },
+                                                                        }
+                                                                    },
+                                                                }
+                                                            },
+                                                        }
+                                                    },
+                                                    {
+                                                        name = "head",
+                                                        uuid = "5663156A-E15C-4749-BB3B-352490821851",
+                                                    },
+                                                }
+                                            },
+                                        }
+                                    },
+                                    {
+                                        name = "upperleg.l",
+                                        uuid = "BD5BB1C6-ADE9-4DFE-8BA2-7C062EFD6376",
+                                        children = {
+                                            {
+                                                name = "lowerleg.l",
+                                                uuid = "DDEFC779-C160-4296-9FEF-05A95C232F94",
+                                                children = {
+                                                    {
+                                                        name = "foot.l",
+                                                        uuid = "96F6D0F4-713A-4317-98D2-724D715AD9D5",
+                                                        children = {
+                                                            {
+                                                                name = "toes.l",
+                                                                uuid = "7BEA2AB2-9B95-470D-96EE-6C14C9FCC7F4",
+                                                            },
+                                                        }
+                                                    },
+                                                }
+                                            },
+                                        }
+                                    },
+                                    {
+                                        name = "upperleg.r",
+                                        uuid = "229AA610-4338-4E48-B140-00223E9C5F25",
+                                        children = {
+                                            {
+                                                name = "lowerleg.r",
+                                                uuid = "2EACD0E9-5809-4008-98D7-CABAA209302C",
+                                                children = {
+                                                    {
+                                                        name = "foot.r",
+                                                        uuid = "03B1A0C5-E9E9-4604-98DF-9778EA07B3D6",
+                                                        children = {
+                                                            {
+                                                                name = "toes.r",
+                                                                uuid = "C325E49B-855C-4F17-97FE-E299CF4ED607",
+                                                            },
+                                                        }
+                                                    },
+                                                }
+                                            },
+                                        }
+                                    },
+                                }
+                            },
+                        }
+                    },
+    }
+}

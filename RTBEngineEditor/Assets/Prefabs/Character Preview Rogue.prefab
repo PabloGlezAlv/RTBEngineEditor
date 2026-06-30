@@ -1,0 +1,297 @@
+return {
+    name = "Character Preview Rogue",
+    components = {
+        {
+            type = "Animator",
+            modelRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Rogue.fbx",
+            currentClipName = "MainMenuPreview.Idle",
+            defaultClip = "",
+            speed = 1.00,
+            playing = false,
+            looping = true,
+            additionalModels = {
+            }
+        },
+    },
+    children = {        {
+                        name = "Rogue_Head",
+                        uuid = "7DE8CEFE-5231-4FEE-9182-D0C465A34C7D",
+                        position = Vector3(-0.00, 1.22, 0.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Rogue.fbx",
+                                textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/rogue_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                meshIndex = 0,
+                                multiMesh = false
+                            },
+                        }
+                    },
+                    {
+                        name = "Rig_Medium",
+                        uuid = "D9C43027-8CD2-4FE6-BB4A-1211F55C1F01",
+                    },
+                    {
+                        name = "Rogue_LegLeft",
+                        uuid = "604040FA-B522-4F93-938E-CBD253281732",
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Rogue.fbx",
+                                textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/rogue_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                meshIndex = 1,
+                                multiMesh = false
+                            },
+                        }
+                    },
+                    {
+                        name = "Rogue_LegRight",
+                        uuid = "25C431BD-AB47-4DE3-942B-B70CC05C5D0E",
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Rogue.fbx",
+                                textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/rogue_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                meshIndex = 2,
+                                multiMesh = false
+                            },
+                        }
+                    },
+                    {
+                        name = "Rogue_ArmLeft",
+                        uuid = "DFBE986B-2CBA-4EA1-809B-324ABA2E527A",
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Rogue.fbx",
+                                textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/rogue_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                meshIndex = 3,
+                                multiMesh = false
+                            },
+                        }
+                    },
+                    {
+                        name = "Rogue_ArmRight",
+                        uuid = "71DB810B-F69E-469B-86A0-A1EE4C587075",
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Rogue.fbx",
+                                textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/rogue_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                meshIndex = 4,
+                                multiMesh = false
+                            },
+                        }
+                    },
+                    {
+                        name = "Rogue_Body",
+                        uuid = "EA213FC0-4ADF-48DB-A79B-0CCDD73BD85C",
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Rogue.fbx",
+                                textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/rogue_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                meshIndex = 5,
+                                multiMesh = false
+                            },
+                        }
+                    },
+                    {
+                        name = "Rogue_Cape",
+                        uuid = "9D229296-E501-4F0C-B370-7B4461AAD599",
+                        position = Vector3(-0.00, 1.22, 0.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Rogue.fbx",
+                                textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/rogue_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                meshIndex = 6,
+                                multiMesh = false
+                            },
+                        }
+                    },
+                    {
+                        name = "root",
+                        uuid = "AED578F8-4615-4B55-8071-89AD8E9B140F",
+                        children = {
+                            {
+                                name = "hips",
+                                uuid = "7E04A8AB-CE92-4C23-8998-54FC7ADDEA79",
+                                children = {
+                                    {
+                                        name = "spine",
+                                        uuid = "1AD128FF-9250-47E5-80FA-70B763862261",
+                                        children = {
+                                            {
+                                                name = "chest",
+                                                uuid = "1AEE9925-0F5D-434D-A6B3-C6152905EF6D",
+                                                children = {
+                                                    {
+                                                        name = "Rogue_Crossbow",
+                                                        uuid = "A9F5BD98-E35E-4002-A0DD-AF5483E14A08",
+                                                        position = Vector3(0.00, 0.10, -0.18),
+                                                        rotation = Quaternion.FromEulerAngles(-70.00, 0.00, 0.00),
+                                                        components = {
+                                                            {
+                                                                type = "MeshRenderer",
+                                                                meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/fbx(unity)/crossbow_2handed.fbx",
+                                                                textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/rogue_texture.png",
+                                                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                                                meshIndex = 0,
+                                                                multiMesh = false
+                                                            },
+                                                        }
+                                                    },
+                                                    {
+                                                        name = "upperarm.l",
+                                                        uuid = "DCB7813D-CC4D-452F-B095-5C21FE0D6220",
+                                                        children = {
+                                                            {
+                                                                name = "lowerarm.l",
+                                                                uuid = "4AD7FC37-BDA7-4DC0-B330-2B92317BFEA8",
+                                                                children = {
+                                                                    {
+                                                                        name = "wrist.l",
+                                                                        uuid = "51C6C0E1-D5FC-4D8C-98A3-F5E0472B8A56",
+                                                                        children = {
+                                                                            {
+                                                                                name = "hand.l",
+                                                                                uuid = "E0A76D6E-1003-4219-BAC5-64516FBC05D7",
+                                                                                children = {
+                                                                                    {
+                                                                                        name = "handslot.l",
+                                                                                        uuid = "E0C3877C-7262-4D38-A107-5A385EBAB621",
+                                                                                        children = {
+                                                                                            {
+                                                                                                name = "Rogue_Smokebomb",
+                                                                                                uuid = "B0EF893A-9220-42E4-8177-699F9583B6B1",
+                                                                                                components = {
+                                                                                                    {
+                                                                                                        type = "MeshRenderer",
+                                                                                                        meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/fbx(unity)/smokebomb.fbx",
+                                                                                                        textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/rogue_texture.png",
+                                                                                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                                                                                        meshIndex = 0,
+                                                                                                        multiMesh = false
+                                                                                                    },
+                                                                                                }
+                                                                                            },
+                                                                                        }
+                                                                                    },
+                                                                                }
+                                                                            },
+                                                                        }
+                                                                    },
+                                                                }
+                                                            },
+                                                        }
+                                                    },
+                                                    {
+                                                        name = "upperarm.r",
+                                                        uuid = "9F84E3BA-7896-4C15-A1C8-EB966898BE3F",
+                                                        children = {
+                                                            {
+                                                                name = "lowerarm.r",
+                                                                uuid = "F9870941-FE30-4E1C-9DAA-6FDCCED79596",
+                                                                children = {
+                                                                    {
+                                                                        name = "wrist.r",
+                                                                        uuid = "CEA2CB5C-301A-4CF2-B982-641E044D8038",
+                                                                        children = {
+                                                                            {
+                                                                                name = "hand.r",
+                                                                                uuid = "ECFCE6D5-E6FE-4D79-AFF3-91D7C9954F8C",
+                                                                                children = {
+                                                                                    {
+                                                                                        name = "handslot.r",
+                                                                                        uuid = "032CE981-3E1B-4825-8D05-E06FFC35A4FB",
+                                                                                        children = {
+                                                                                            {
+                                                                                                name = "Rogue_Dagger",
+                                                                                                uuid = "3169CDB4-A81F-404E-B449-5E86B8F4FF45",
+                                                                                                components = {
+                                                                                                    {
+                                                                                                        type = "MeshRenderer",
+                                                                                                        meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/fbx(unity)/dagger.fbx",
+                                                                                                        textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/rogue_texture.png",
+                                                                                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                                                                                        meshIndex = 0,
+                                                                                                        multiMesh = false
+                                                                                                    },
+                                                                                                }
+                                                                                            },
+                                                                                        }
+                                                                                    },
+                                                                                }
+                                                                            },
+                                                                        }
+                                                                    },
+                                                                }
+                                                            },
+                                                        }
+                                                    },
+                                                    {
+                                                        name = "head",
+                                                        uuid = "FA20EDB1-D6EE-44B5-93E7-EA1B3F887C1E",
+                                                    },
+                                                }
+                                            },
+                                        }
+                                    },
+                                    {
+                                        name = "upperleg.l",
+                                        uuid = "9C6B8CB2-088A-4C3C-932E-9B14DB4DA1F0",
+                                        children = {
+                                            {
+                                                name = "lowerleg.l",
+                                                uuid = "E1C0A255-E13C-4565-9D92-31A721D77A99",
+                                                children = {
+                                                    {
+                                                        name = "foot.l",
+                                                        uuid = "09C1EE86-304A-4A36-A576-951601130EEF",
+                                                        children = {
+                                                            {
+                                                                name = "toes.l",
+                                                                uuid = "82358F2E-9B43-444E-9543-0ED67AEF47A9",
+                                                            },
+                                                        }
+                                                    },
+                                                }
+                                            },
+                                        }
+                                    },
+                                    {
+                                        name = "upperleg.r",
+                                        uuid = "FAB34B04-2584-475C-A35B-0D0001ECD776",
+                                        children = {
+                                            {
+                                                name = "lowerleg.r",
+                                                uuid = "27938078-D909-43F1-B564-C6B3962E2430",
+                                                children = {
+                                                    {
+                                                        name = "foot.r",
+                                                        uuid = "D8EEC920-7883-425B-8857-CF895F82D9F1",
+                                                        children = {
+                                                            {
+                                                                name = "toes.r",
+                                                                uuid = "FEAA3E1C-0151-41BC-9D65-5C1D40D397BA",
+                                                            },
+                                                        }
+                                                    },
+                                                }
+                                            },
+                                        }
+                                    },
+                                }
+                            },
+                        }
+                    },
+    }
+}

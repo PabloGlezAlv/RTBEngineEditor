@@ -12,10 +12,11 @@ public:
     void SetSelectedCharacterId(const std::string& characterId);
     const std::string& GetSelectedCharacterId() const { return selectedCharacterId; }
 
+    void EnsureSelectionFromCatalog();
     CharacterDefinition* GetSelectedDefinition() const;
 
 private:
     PlayerCharacterSelection() = default;
 
-    std::string selectedCharacterId = "ranger";
+    std::string selectedCharacterId;
 };

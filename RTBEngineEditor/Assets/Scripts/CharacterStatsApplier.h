@@ -11,7 +11,7 @@ class CharacterStatsApplier : public RTBEngine::ECS::Component {
 public:
     bool usePlayerSelection = true;
     std::string characterDefinitionRef;
-    std::string fallbackCharacterId = "ranger";
+    std::string fallbackCharacterId;
 
     RTB_COMPONENT(CharacterStatsApplier)
 

@@ -7,8 +7,8 @@
 
 class CharacterDefinition : public RTBEngine::Data::DataAsset {
 public:
-    std::string characterId = "ranger";
-    std::string displayName = "Ranger";
+    std::string characterId;
+    std::string displayName;
     std::string description;
 
     float maxHealth = 100.0f;
@@ -23,8 +23,8 @@ public:
     float projectileDamage = 25.0f;
     float projectileSpeed = 14.0f;
 
-    std::string modelRef =
-        "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Ranger.fbx";
+    std::string modelRef;
+    std::string previewPrefabRef;
 
     RTB_DATA_ASSET(CharacterDefinition)
 };

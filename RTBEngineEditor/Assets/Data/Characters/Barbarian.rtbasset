@@ -11,5 +11,6 @@ return {
     fullReloadDuration = 7.50,
     projectileDamage = 38.00,
     projectileSpeed = 12.50,
-    modelRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Ranger.fbx",
+    modelRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Barbarian.fbx",
+    previewPrefabRef = "Assets/Prefabs/Character Preview Barbarian.prefab",
 }

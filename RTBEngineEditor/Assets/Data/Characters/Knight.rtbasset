@@ -11,5 +11,6 @@ return {
     fullReloadDuration = 11.00,
     projectileDamage = 16.00,
     projectileSpeed = 12.00,
-    modelRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Ranger.fbx",
+    modelRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Knight.fbx",
+    previewPrefabRef = "Assets/Prefabs/Character Preview Knight.prefab",
 }

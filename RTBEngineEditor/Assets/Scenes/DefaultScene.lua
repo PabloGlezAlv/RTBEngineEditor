@@ -782,7 +782,6 @@ function CreateScene()
                         type = "CharacterStatsApplier",
                         usePlayerSelection = true,
                         characterDefinitionRef = "",
-                        fallbackCharacterId = "ranger"
                     },
                     {
                         type = "OcclusionTarget",

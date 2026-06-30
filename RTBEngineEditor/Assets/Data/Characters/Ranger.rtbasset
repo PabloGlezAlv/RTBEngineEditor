@@ -12,4 +12,5 @@ return {
     projectileDamage = 25.00,
     projectileSpeed = 14.00,
     modelRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Ranger.fbx",
+    previewPrefabRef = "Assets/Prefabs/Character Preview Ranger.prefab",
 }

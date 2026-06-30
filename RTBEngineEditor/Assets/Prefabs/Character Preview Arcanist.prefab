@@ -1,0 +1,296 @@
+return {
+    name = "Character Preview Arcanist",
+    components = {
+        {
+            type = "Animator",
+            modelRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Mage.fbx",
+            currentClipName = "MainMenuPreview.Idle",
+            defaultClip = "",
+            speed = 1.00,
+            playing = false,
+            looping = true,
+            additionalModels = {
+            }
+        },
+    },
+    children = {        {
+                        name = "Mage_LegLeft",
+                        uuid = "10CC6DC7-AA61-4877-AF3B-4171FEB7C0D9",
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Mage.fbx",
+                                textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/mage_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                meshIndex = 0,
+                                multiMesh = false
+                            },
+                        }
+                    },
+                    {
+                        name = "Mage_ArmLeft",
+                        uuid = "94F74518-2C0E-41C9-98AC-71F2A1BA8051",
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Mage.fbx",
+                                textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/mage_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                meshIndex = 1,
+                                multiMesh = false
+                            },
+                        }
+                    },
+                    {
+                        name = "Mage_ArmRight",
+                        uuid = "FBAECBC5-2BDF-4C13-A570-DA2F365B2427",
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Mage.fbx",
+                                textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/mage_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                meshIndex = 2,
+                                multiMesh = false
+                            },
+                        }
+                    },
+                    {
+                        name = "Mage_Cape",
+                        uuid = "BABD5E6C-D928-4053-9F06-826312E7DB9F",
+                        position = Vector3(0.00, 1.22, -0.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Mage.fbx",
+                                textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/mage_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                meshIndex = 3,
+                                multiMesh = false
+                            },
+                        }
+                    },
+                    {
+                        name = "Mage_Head",
+                        uuid = "C7CEF0D9-2C34-4425-9926-E875E0AEA46B",
+                        position = Vector3(0.00, 1.22, -0.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Mage.fbx",
+                                textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/mage_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                meshIndex = 4,
+                                multiMesh = false
+                            },
+                        }
+                    },
+                    {
+                        name = "Mage_LegRight",
+                        uuid = "50DF6EE9-F859-43CB-9920-1038C12DAF11",
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Mage.fbx",
+                                textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/mage_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                meshIndex = 5,
+                                multiMesh = false
+                            },
+                        }
+                    },
+                    {
+                        name = "Mage_Hat",
+                        uuid = "4905FF7E-8E68-4379-B589-EFE06C2E183D",
+                        position = Vector3(0.00, 1.22, -0.00),
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Mage.fbx",
+                                textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/mage_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                meshIndex = 6,
+                                multiMesh = false
+                            },
+                        }
+                    },
+                    {
+                        name = "Mage_Body",
+                        uuid = "A6EB2B03-3822-4DDF-AAE4-E91E0433DB39",
+                        components = {
+                            {
+                                type = "MeshRenderer",
+                                meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Mage.fbx",
+                                textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/mage_texture.png",
+                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                meshIndex = 7,
+                                multiMesh = false
+                            },
+                        }
+                    },
+                    {
+                        name = "Rig_Medium",
+                        uuid = "88F6CF7D-3A48-4518-BBE8-6BF5EEE6A39F",
+                    },
+                    {
+                        name = "root",
+                        uuid = "7BD6D9AC-6D1E-4BB4-BDA6-61432173859F",
+                        children = {
+                            {
+                                name = "hips",
+                                uuid = "D29D3385-D09C-470A-ACDD-3F9CBA5FEC85",
+                                children = {
+                                    {
+                                        name = "spine",
+                                        uuid = "FBBB3E8C-D912-4E88-946A-98278935A008",
+                                        children = {
+                                            {
+                                                name = "chest",
+                                                uuid = "95468F1C-74E7-4A49-94F8-2858DF8CD276",
+                                                children = {
+                                                    {
+                                                        name = "upperarm.l",
+                                                        uuid = "59347BA7-70FA-461E-A112-7C699DF997EE",
+                                                        children = {
+                                                            {
+                                                                name = "lowerarm.l",
+                                                                uuid = "C01D3F70-5EDF-4A2A-A5CA-00913F391453",
+                                                                children = {
+                                                                    {
+                                                                        name = "wrist.l",
+                                                                        uuid = "743E122E-F991-4DD3-9C56-74CF4B5D03BA",
+                                                                        children = {
+                                                                            {
+                                                                                name = "hand.l",
+                                                                                uuid = "97B3A052-78F7-467A-B02E-FD279F851529",
+                                                                                children = {
+                                                                                    {
+                                                                                        name = "handslot.l",
+                                                                                        uuid = "D4D03F2F-C0E5-4A73-BA78-7F2EFBDD295D",
+                                                                                        children = {
+                                                                                            {
+                                                                                                name = "Mage_Spellbook",
+                                                                                                uuid = "ABB05A37-CEF6-4F87-AF3A-F6825A717BD2",
+                                                                                                components = {
+                                                                                                    {
+                                                                                                        type = "MeshRenderer",
+                                                                                                        meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/fbx(unity)/spellbook_open.fbx",
+                                                                                                        textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/mage_texture.png",
+                                                                                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                                                                                        meshIndex = 0,
+                                                                                                        multiMesh = false
+                                                                                                    },
+                                                                                                }
+                                                                                            },
+                                                                                        }
+                                                                                    },
+                                                                                }
+                                                                            },
+                                                                        }
+                                                                    },
+                                                                }
+                                                            },
+                                                        }
+                                                    },
+                                                    {
+                                                        name = "upperarm.r",
+                                                        uuid = "38CEE13F-6A82-4C5B-B981-2F084B9C172A",
+                                                        children = {
+                                                            {
+                                                                name = "lowerarm.r",
+                                                                uuid = "2FED6737-76D4-4359-909C-EA0705EFDEDC",
+                                                                children = {
+                                                                    {
+                                                                        name = "wrist.r",
+                                                                        uuid = "1665C12A-065A-49A0-8B86-A0419E8C2BB2",
+                                                                        children = {
+                                                                            {
+                                                                                name = "hand.r",
+                                                                                uuid = "31CFFDAC-16DE-4EA1-8087-A4471B20A856",
+                                                                                children = {
+                                                                                    {
+                                                                                        name = "handslot.r",
+                                                                                        uuid = "916A9099-94D8-45A2-BA15-A2D292CDB206",
+                                                                                        children = {
+                                                                                            {
+                                                                                                name = "Mage_Staff",
+                                                                                                uuid = "0D2A76CF-0673-44F5-8EC7-A8E35C4403C8",
+                                                                                                components = {
+                                                                                                    {
+                                                                                                        type = "MeshRenderer",
+                                                                                                        meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/fbx(unity)/staff.fbx",
+                                                                                                        textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/mage_texture.png",
+                                                                                                        colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                                                                                        meshIndex = 0,
+                                                                                                        multiMesh = false
+                                                                                                    },
+                                                                                                }
+                                                                                            },
+                                                                                        }
+                                                                                    },
+                                                                                }
+                                                                            },
+                                                                        }
+                                                                    },
+                                                                }
+                                                            },
+                                                        }
+                                                    },
+                                                    {
+                                                        name = "head",
+                                                        uuid = "6840B17C-E20A-4069-AADB-7E46D74149BA",
+                                                    },
+                                                }
+                                            },
+                                        }
+                                    },
+                                    {
+                                        name = "upperleg.l",
+                                        uuid = "BA9B352E-7393-464A-8BBF-8F6D9E23470E",
+                                        children = {
+                                            {
+                                                name = "lowerleg.l",
+                                                uuid = "712C49FC-FF36-434A-AF73-342329B105F8",
+                                                children = {
+                                                    {
+                                                        name = "foot.l",
+                                                        uuid = "3E6EF9C4-DEAA-4317-BBE7-7F21D0F7EC3C",
+                                                        children = {
+                                                            {
+                                                                name = "toes.l",
+                                                                uuid = "D080703E-5EF1-4EA8-B06F-A319ADFD9120",
+                                                            },
+                                                        }
+                                                    },
+                                                }
+                                            },
+                                        }
+                                    },
+                                    {
+                                        name = "upperleg.r",
+                                        uuid = "F40C664E-D342-4346-9D7B-089C70857AA9",
+                                        children = {
+                                            {
+                                                name = "lowerleg.r",
+                                                uuid = "4A23FE6B-8312-4EAB-B8C4-C0D1788126F4",
+                                                children = {
+                                                    {
+                                                        name = "foot.r",
+                                                        uuid = "8F894E65-99F9-4E67-A7CB-A9F6D8441353",
+                                                        children = {
+                                                            {
+                                                                name = "toes.r",
+                                                                uuid = "D5BA142F-1A06-46C4-AB9D-5B5A3B1E7C98",
+                                                            },
+                                                        }
+                                                    },
+                                                }
+                                            },
+                                        }
+                                    },
+                                }
+                            },
+                        }
+                    },
+    }
+}

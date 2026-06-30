@@ -2,11 +2,14 @@
 
 #include "CharacterCatalog.h"
 #include "CharacterDefinition.h"
-#include "PlayerCharacterSelection.h"
 
 #include <RTBEngine/Animation/Animator.h>
 #include <RTBEngine/Core/Logger.h>
+#include <RTBEngine/Core/ResourceManager.h>
 #include <RTBEngine/Math/Quaternions/Quaternion.h>
+#include <RTBEngine/Scene/PrefabRegistry.h>
+#include <RTBEngine/Scene/Scene.h>
+#include <RTBEngine/Scene/SceneManager.h>
 
 using ThisClass = MainMenuCharacterPreview;
 
@@ -21,30 +24,25 @@ RTB_REGISTER_COMPONENT(MainMenuCharacterPreview)
     RTB_PROPERTY_FBX(idleAnimationFbx)
 RTB_END_REGISTER(MainMenuCharacterPreview)
 
-void MainMenuCharacterPreview::OnStart()
+void MainMenuCharacterPreview::OnDestroy()
 {
-    const std::string selectedId = PlayerCharacterSelection::GetInstance().GetSelectedCharacterId();
-    ShowCharacterById(selectedId.empty() ? "ranger" : selectedId);
+    ClearPreviewInstance();
 }
 
-void MainMenuCharacterPreview::ResolvePreviewInstance()
+void MainMenuCharacterPreview::ClearPreviewInstance()
 {
-    if (previewInstance || !owner) {
+    if (!previewInstance) {
+        currentCharacterId.clear();
         return;
     }
 
-    for (RTBEngine::ECS::GameObject* child : owner->GetChildren()) {
-        if (!child) {
-            continue;
-        }
-
-        if (child->GetComponent<RTBEngine::Animation::Animator>()) {
-            previewInstance = child;
-            return;
-        }
+    RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
+    if (scene) {
+        scene->RemoveGameObject(previewInstance);
     }
 
-    RTB_WARN("MainMenuCharacterPreview: No character preview prefab found under CharacterPreviewStage.");
+    previewInstance = nullptr;
+    currentCharacterId.clear();
 }
 
 void MainMenuCharacterPreview::ApplyPreviewTransform()
@@ -73,8 +71,6 @@ void MainMenuCharacterPreview::PlayIdleAnimation()
 
     bool clipReady = false;
     if (!idleAnimationFbx.empty()) {
-        // Load the clip only once; PlayIdleAnimation may run again (e.g. on character
-        // switches) and re-loading would overwrite the clip and log a collision warning.
         clipReady = animator->GetClip(kPreviewIdleAlias) != nullptr
             || animator->LoadClipFromFbx(kPreviewIdleAlias, idleAnimationFbx);
         if (clipReady) {
@@ -93,17 +89,45 @@ void MainMenuCharacterPreview::ShowCharacterById(const std::string& characterId)
         return;
     }
 
+    if (characterId == currentCharacterId && previewInstance) {
+        ApplyPreviewTransform();
+        PlayIdleAnimation();
+        return;
+    }
+
     CharacterDefinition* definition = CharacterCatalog::GetInstance().GetById(characterId);
     if (!definition) {
         RTB_WARN("MainMenuCharacterPreview: Unknown character id '" + characterId + "'.");
         return;
     }
 
-    ResolvePreviewInstance();
-    if (!previewInstance) {
+    if (definition->previewPrefabRef.empty()) {
+        RTB_WARN("MainMenuCharacterPreview: No preview prefab for character '" + characterId + "'.");
         return;
     }
 
+    if (!owner) {
+        return;
+    }
+
+    RTBEngine::Core::ResourceManager& resources = RTBEngine::Core::ResourceManager::GetInstance();
+    const std::string resolvedPath = resources.ResolvePathForRead(definition->previewPrefabRef);
+    RTBEngine::ECS::Prefab* prefab =
+        RTBEngine::ECS::PrefabRegistry::GetInstance().GetByPath(resolvedPath);
+    if (!prefab) {
+        RTB_WARN("MainMenuCharacterPreview: Preview prefab not found: '" + definition->previewPrefabRef + "'.");
+        return;
+    }
+
+    ClearPreviewInstance();
+
+    previewInstance = RTBEngine::ECS::SceneManager::GetInstance().Instantiate(*prefab, owner, true);
+    if (!previewInstance) {
+        RTB_WARN("MainMenuCharacterPreview: Failed to instantiate preview for '" + characterId + "'.");
+        return;
+    }
+
+    currentCharacterId = characterId;
     previewInstance->SetActive(true);
     ApplyPreviewTransform();
     PlayIdleAnimation();

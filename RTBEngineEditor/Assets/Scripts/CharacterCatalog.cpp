@@ -31,7 +31,8 @@ CharacterDefinition* CharacterCatalog::GetById(const std::string& characterId) c
 
 CharacterDefinition* CharacterCatalog::GetDefault() const
 {
-    return GetById("ranger");
+    const std::vector<CharacterDefinition*> definitions = GetAllDefinitions();
+    return definitions.empty() ? nullptr : definitions.front();
 }
 
 std::vector<std::string> CharacterCatalog::GetAllCharacterIds() const
