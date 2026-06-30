@@ -368,7 +368,6 @@ namespace RTBEditor {
         RTBEngine::ECS::Scene* scene = sm.GetActiveScene();
         if (scene) {
             scene->PrepareForPlayMode();
-            RTB_INFO("EditorApplication: Entering Play mode (OnStart will run this session).");
         }
         if (scene && engineApp) {
             engineApp->RebuildPhysicsForScene(scene);

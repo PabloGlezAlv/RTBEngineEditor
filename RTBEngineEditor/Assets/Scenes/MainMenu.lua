@@ -715,7 +715,7 @@ function CreateScene()
                         type = "MainMenuController",
                         playerNameInput = "8A6DDA41-9A67-4B95-A2B6-E2159C420101/UIInputField",
                         playButton = "2E0ED540-A92F-40A9-B2E7-4906659B3E6E/UIButton",
-                        multiplayerButton = "A1B2C3D4-E5F6-4789-A012-3456789ABCDE/UIButton",
+                        multiplayerButton = "MM-MENU-MPBTN-4000-8000-000000000001/UIButton",
                         statusMessageText = "MM-STATUS-0001-4000-8000-000000000001/UIText",
                         gameScenePath = "Assets/Scenes/DefaultScene.lua",
                         multiplayerMenuScenePath = "Assets/Scenes/MultiplayerMenu.lua"
@@ -1356,7 +1356,7 @@ function CreateScene()
                     },
                     {
                         name = "MultiplayerButton",
-                        uuid = "A1B2C3D4-E5F6-4789-A012-3456789ABCDE",
+                        uuid = "MM-MENU-MPBTN-4000-8000-000000000001",
                         components = {
                             {
                                 type = "UIPanel",
