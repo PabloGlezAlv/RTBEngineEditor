@@ -13,4 +13,9 @@ return {
     projectileSpeed = 16.00,
     modelRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Rogue.fbx",
     previewPrefabRef = "Assets/Prefabs/Character Preview Rogue.prefab",
+    gameplayPrefabRef = "Assets/Prefabs/Player Rogue.prefab",
+    projectilePrefabRef = "Assets/Prefabs/Sphere Projectile.prefab",
+    aimDrawAnimationFbx = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_CombatRanged.fbx|Ranged_Bow_Draw",
+    aimLoopAnimationFbx = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_CombatRanged.fbx|Ranged_Bow_Aiming_Idle",
+    attackAnimationFbx = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_CombatRanged.fbx|Ranged_Bow_Release",
 }

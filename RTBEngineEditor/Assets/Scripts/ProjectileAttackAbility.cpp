@@ -1,5 +1,6 @@
 #include "ProjectileAttackAbility.h"
 
+#include "CharacterCombatUtils.h"
 #include "ThirdPersonCharacterController.h"
 #include "CharacterBase.h"
 #include "CharacterCombatOrigins.h"
@@ -52,17 +53,7 @@ namespace {
 
     int ResolveCharacterTeam(RTBEngine::ECS::GameObject* gameObject)
     {
-        if (!gameObject) {
-            return static_cast<int>(CharacterTeam::Neutral);
-        }
-
-        for (RTBEngine::ECS::GameObject* current = gameObject; current; current = current->GetParent()) {
-            if (auto* character = current->GetComponent<CharacterBase>()) {
-                return character->GetTeam();
-            }
-        }
-
-        return static_cast<int>(CharacterTeam::Neutral);
+        return CharacterCombatUtils::ResolveCharacterTeam(gameObject);
     }
 }
 
@@ -84,6 +75,17 @@ void ProjectileAttackAbility::SetProjectileCombatOverrides(float damage, float s
 {
     projectileDamageOverride = std::max(0.0f, damage);
     projectileSpeedOverride = std::max(0.0f, speed);
+    RefreshCachedProjectileStats();
+}
+
+void ProjectileAttackAbility::SetProjectilePrefabRef(const std::string& prefabRef)
+{
+    if (prefabRef.empty()) {
+        return;
+    }
+
+    projectilePrefabRef = prefabRef;
+    ResolveProjectilePrefab();
     RefreshCachedProjectileStats();
 }
 

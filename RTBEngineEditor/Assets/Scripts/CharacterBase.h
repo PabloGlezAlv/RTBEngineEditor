@@ -28,7 +28,7 @@ public:
     bool IsCharacterDead() const;
 
 protected:
-    void ResolveCharacterHealth();
+    void ValidateCharacterHealth();
     void RebindCharacterDeathSubscription();
     void UnsubscribeCharacterDeath();
     bool HasSimulationAuthority() const;

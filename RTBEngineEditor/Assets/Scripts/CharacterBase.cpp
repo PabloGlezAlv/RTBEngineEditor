@@ -1,5 +1,6 @@
 #include "CharacterBase.h"
 
+#include <RTBEngine/Core/Logger.h>
 #include <RTBEngine/Scene/NetworkIdentity.h>
 
 #include <RTBEngine/Scene/GameObject.h>
@@ -10,14 +11,13 @@ bool CharacterBase::IsCharacterDead() const
     return health && health->IsDead();
 }
 
-void CharacterBase::ResolveCharacterHealth()
+void CharacterBase::ValidateCharacterHealth()
 {
-    HealthComponent*& health = AccessHealthSlot();
-    if (health || !owner) {
+    if (PeekHealthSlot() || !owner) {
         return;
     }
 
-    health = owner->GetComponent<HealthComponent>();
+    RTB_WARN("[CharacterBase] health is not assigned on '" + owner->GetName() + "'.");
 }
 
 void CharacterBase::RebindCharacterDeathSubscription()

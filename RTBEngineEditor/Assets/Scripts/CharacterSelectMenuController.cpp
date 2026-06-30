@@ -47,11 +47,36 @@ RTB_REGISTER_COMPONENT(CharacterSelectMenuController)
     RTB_PROPERTY_GAMEOBJECT(characterCard2)
     RTB_PROPERTY_GAMEOBJECT(characterCard3)
     RTB_PROPERTY_GAMEOBJECT(characterCard4)
+    RTB_PROPERTY_COMPONENT(characterCardFrame0, UIPanel)
+    RTB_PROPERTY_COMPONENT(characterCardFrame1, UIPanel)
+    RTB_PROPERTY_COMPONENT(characterCardFrame2, UIPanel)
+    RTB_PROPERTY_COMPONENT(characterCardFrame3, UIPanel)
+    RTB_PROPERTY_COMPONENT(characterCardFrame4, UIPanel)
+    RTB_PROPERTY_COMPONENT(characterCardButton0, UIButton)
+    RTB_PROPERTY_COMPONENT(characterCardButton1, UIButton)
+    RTB_PROPERTY_COMPONENT(characterCardButton2, UIButton)
+    RTB_PROPERTY_COMPONENT(characterCardButton3, UIButton)
+    RTB_PROPERTY_COMPONENT(characterCardButton4, UIButton)
+    RTB_PROPERTY_COMPONENT(characterCardNameText0, UIText)
+    RTB_PROPERTY_COMPONENT(characterCardNameText1, UIText)
+    RTB_PROPERTY_COMPONENT(characterCardNameText2, UIText)
+    RTB_PROPERTY_COMPONENT(characterCardNameText3, UIText)
+    RTB_PROPERTY_COMPONENT(characterCardNameText4, UIText)
     RTB_PROPERTY_COMPONENT(quickSelectButton0, UIButton)
     RTB_PROPERTY_COMPONENT(quickSelectButton1, UIButton)
     RTB_PROPERTY_COMPONENT(quickSelectButton2, UIButton)
     RTB_PROPERTY_COMPONENT(quickSelectButton3, UIButton)
     RTB_PROPERTY_COMPONENT(quickSelectButton4, UIButton)
+    RTB_PROPERTY_COMPONENT(quickSelectFrame0, UIPanel)
+    RTB_PROPERTY_COMPONENT(quickSelectFrame1, UIPanel)
+    RTB_PROPERTY_COMPONENT(quickSelectFrame2, UIPanel)
+    RTB_PROPERTY_COMPONENT(quickSelectFrame3, UIPanel)
+    RTB_PROPERTY_COMPONENT(quickSelectFrame4, UIPanel)
+    RTB_PROPERTY_COMPONENT(quickSelectLabel0, UIText)
+    RTB_PROPERTY_COMPONENT(quickSelectLabel1, UIText)
+    RTB_PROPERTY_COMPONENT(quickSelectLabel2, UIText)
+    RTB_PROPERTY_COMPONENT(quickSelectLabel3, UIText)
+    RTB_PROPERTY_COMPONENT(quickSelectLabel4, UIText)
     RTB_PROPERTY_COMPONENT(characterPreview, MainMenuCharacterPreview)
     RTB_PROPERTY_COMPONENT(clickAudio, AudioSourceComponent)
 RTB_END_REGISTER(CharacterSelectMenuController)
@@ -59,8 +84,8 @@ RTB_END_REGISTER(CharacterSelectMenuController)
 void CharacterSelectMenuController::OnStart()
 {
     LoadCharacterDefinitions();
-    ResolveCharacterCards();
-    ResolveQuickSelectButtons();
+    BindCharacterCardWidgets();
+    BindQuickSelectWidgets();
     BindButtons();
 
     PlayerCharacterSelection::GetInstance().EnsureSelectionFromCatalog();
@@ -82,7 +107,7 @@ void CharacterSelectMenuController::LoadCharacterDefinitions()
     characterDefinitions = CharacterCatalog::GetInstance().GetAllDefinitions();
 }
 
-void CharacterSelectMenuController::ResolveCharacterCards()
+void CharacterSelectMenuController::BindCharacterCardWidgets()
 {
     RTBEngine::ECS::GameObject* cardRoots[kMaxCharacterCards] = {
         characterCard0,
@@ -91,54 +116,38 @@ void CharacterSelectMenuController::ResolveCharacterCards()
         characterCard3,
         characterCard4,
     };
+    RTBEngine::UI::UIPanel* cardFrames[kMaxCharacterCards] = {
+        characterCardFrame0,
+        characterCardFrame1,
+        characterCardFrame2,
+        characterCardFrame3,
+        characterCardFrame4,
+    };
+    RTBEngine::UI::UIButton* cardButtons[kMaxCharacterCards] = {
+        characterCardButton0,
+        characterCardButton1,
+        characterCardButton2,
+        characterCardButton3,
+        characterCardButton4,
+    };
+    RTBEngine::UI::UIText* cardNameTexts[kMaxCharacterCards] = {
+        characterCardNameText0,
+        characterCardNameText1,
+        characterCardNameText2,
+        characterCardNameText3,
+        characterCardNameText4,
+    };
 
     for (int index = 0; index < kMaxCharacterCards; ++index) {
         CharacterCardWidgets& card = characterCards[static_cast<size_t>(index)];
         card.root = cardRoots[index];
-        card.frame = nullptr;
-        card.button = nullptr;
-        card.nameText = nullptr;
-
-        if (!card.root) {
-            continue;
-        }
-
-        card.frame = card.root->GetComponent<RTBEngine::UI::UIPanel>();
-        if (!card.frame) {
-            card.frame = card.root->GetComponentInChildren<RTBEngine::UI::UIPanel>();
-        }
-
-        card.button = card.root->GetComponent<RTBEngine::UI::UIButton>();
-        if (!card.button) {
-            card.button = card.root->GetComponentInChildren<RTBEngine::UI::UIButton>();
-        }
-
-        card.nameText = FindLabelText(card.root);
+        card.frame = cardFrames[index];
+        card.button = cardButtons[index];
+        card.nameText = cardNameTexts[index];
     }
 }
 
-RTBEngine::UI::UIText* CharacterSelectMenuController::FindLabelText(RTBEngine::ECS::GameObject* cardRoot) const
-{
-    if (!cardRoot) {
-        return nullptr;
-    }
-
-    for (RTBEngine::ECS::GameObject* child : cardRoot->GetChildren()) {
-        if (!child) {
-            continue;
-        }
-
-        if (child->GetName() == "NameLabel") {
-            if (auto* text = child->GetComponent<RTBEngine::UI::UIText>()) {
-                return text;
-            }
-        }
-    }
-
-    return cardRoot->GetComponentInChildren<RTBEngine::UI::UIText>();
-}
-
-void CharacterSelectMenuController::ResolveQuickSelectButtons()
+void CharacterSelectMenuController::BindQuickSelectWidgets()
 {
     RTBEngine::UI::UIButton* buttonRoots[kMaxCharacterCards] = {
         quickSelectButton0,
@@ -147,20 +156,26 @@ void CharacterSelectMenuController::ResolveQuickSelectButtons()
         quickSelectButton3,
         quickSelectButton4,
     };
+    RTBEngine::UI::UIPanel* buttonFrames[kMaxCharacterCards] = {
+        quickSelectFrame0,
+        quickSelectFrame1,
+        quickSelectFrame2,
+        quickSelectFrame3,
+        quickSelectFrame4,
+    };
+    RTBEngine::UI::UIText* buttonLabels[kMaxCharacterCards] = {
+        quickSelectLabel0,
+        quickSelectLabel1,
+        quickSelectLabel2,
+        quickSelectLabel3,
+        quickSelectLabel4,
+    };
 
     for (int index = 0; index < kMaxCharacterCards; ++index) {
         QuickSelectWidgets& quickSelect = quickSelectButtons[static_cast<size_t>(index)];
         quickSelect.button = buttonRoots[index];
-        quickSelect.frame = nullptr;
-        quickSelect.label = nullptr;
-
-        if (!quickSelect.button || !quickSelect.button->GetOwner()) {
-            continue;
-        }
-
-        RTBEngine::ECS::GameObject* root = quickSelect.button->GetOwner();
-        quickSelect.frame = root->GetComponent<RTBEngine::UI::UIPanel>();
-        quickSelect.label = root->GetComponentInChildren<RTBEngine::UI::UIText>();
+        quickSelect.frame = buttonFrames[index];
+        quickSelect.label = buttonLabels[index];
     }
 }
 
@@ -376,6 +391,8 @@ CharacterDefinition* CharacterSelectMenuController::FindDefinitionById(const std
 
 std::string CharacterSelectMenuController::BuildStatsBody(const CharacterDefinition& definition) const
 {
+    const bool isMelee = definition.meleeRange > 0.0f;
+
     std::ostringstream stream;
     stream << definition.displayName << "\n";
     if (!definition.description.empty()) {
@@ -385,23 +402,35 @@ std::string CharacterSelectMenuController::BuildStatsBody(const CharacterDefinit
     stream << "Health: " << FormatFloat(definition.maxHealth, 0) << "\n";
     stream << "Speed: " << FormatFloat(definition.moveSpeed) << "\n";
     stream << "Sprint: x" << FormatFloat(definition.sprintMultiplier, 2) << "\n";
-    stream << "Shots: " << definition.maxShots << "\n";
+    stream << (isMelee ? "Charges: " : "Shots: ") << definition.maxShots << "\n";
     stream << "Reload: " << FormatFloat(definition.fullReloadDuration, 1) << " s\n";
-    stream << "Damage: " << FormatFloat(definition.projectileDamage, 0) << "\n";
-    stream << "Arrow speed: " << FormatFloat(definition.projectileSpeed, 0);
+    stream << (isMelee ? "Damage (per tick): " : "Damage: ")
+           << FormatFloat(definition.projectileDamage, 0);
+    if (isMelee) {
+        stream << "\nRange: " << FormatFloat(definition.meleeRange, 1);
+    } else if (!definition.projectilePrefabRef.empty()) {
+        stream << "\nProjectile speed: " << FormatFloat(definition.projectileSpeed, 0);
+    }
     return stream.str();
 }
 
 std::string CharacterSelectMenuController::BuildSummaryBody(const CharacterDefinition& definition) const
 {
+    const bool isMelee = definition.meleeRange > 0.0f;
+
     std::ostringstream stream;
     stream << "Health: " << FormatFloat(definition.maxHealth, 0) << "\n";
-    stream << "Damage: " << FormatFloat(definition.projectileDamage, 0) << "\n";
+    stream << (isMelee ? "Damage (per tick): " : "Damage: ")
+           << FormatFloat(definition.projectileDamage, 0) << "\n";
     stream << "Speed: " << FormatFloat(definition.moveSpeed) << "\n";
     stream << "Sprint: x" << FormatFloat(definition.sprintMultiplier, 2) << "\n";
-    stream << "Shots: " << definition.maxShots << "\n";
-    stream << "Reload: " << FormatFloat(definition.fullReloadDuration, 1) << " s\n";
-    stream << "Arrow speed: " << FormatFloat(definition.projectileSpeed, 0);
+    stream << (isMelee ? "Charges: " : "Shots: ") << definition.maxShots << "\n";
+    stream << "Reload: " << FormatFloat(definition.fullReloadDuration, 1) << " s";
+    if (isMelee) {
+        stream << "\nRange: " << FormatFloat(definition.meleeRange, 1);
+    } else if (!definition.projectilePrefabRef.empty()) {
+        stream << "\nProjectile speed: " << FormatFloat(definition.projectileSpeed, 0);
+    }
     return stream.str();
 }
 

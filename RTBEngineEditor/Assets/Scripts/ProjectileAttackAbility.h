@@ -51,7 +51,13 @@ public:
     float GetDamageAmount() const { return cachedDamage; }
     bool HasValidProjectilePrefab() const { return projectileSpawnPrefab != nullptr && cachedDamage > 0.0f; }
 
+    bool HasValidAttack() const override { return HasValidProjectilePrefab(); }
+    bool ConsumesAmmo() const override { return true; }
+    AimVisualKind GetAimVisualKind() const override { return AimVisualKind::RangedProjectile; }
+    float GetAimRangeForVisual() const override { return GetTravelDistance(); }
+
     void SetProjectileCombatOverrides(float damage, float speed);
+    void SetProjectilePrefabRef(const std::string& prefabRef);
 
 protected:
     float GetCooldownDuration() const override { return 0.0f; }

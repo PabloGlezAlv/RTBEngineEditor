@@ -25,6 +25,21 @@ public:
 
     std::string modelRef;
     std::string previewPrefabRef;
+    std::string gameplayPrefabRef;
+
+    // Ranged-only: projectile prefab (Arrow or Sphere).
+    std::string projectilePrefabRef;
+
+    // Melee-only: sweep hitbox and tick cadence (projectileDamage = damage per tick).
+    float meleeRange = 0.0f;
+    float meleeRadius = 0.0f;
+    float meleeTickInterval = 0.0f;
+    float meleeKnockback = 0.0f;
+
+    // Combat animation clips (fbx path|clip name), applied to ThirdPersonCharacterController.
+    std::string aimDrawAnimationFbx;
+    std::string aimLoopAnimationFbx;
+    std::string attackAnimationFbx;
 
     RTB_DATA_ASSET(CharacterDefinition)
 };

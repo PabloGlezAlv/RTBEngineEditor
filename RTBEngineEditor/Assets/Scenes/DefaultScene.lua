@@ -811,7 +811,7 @@ function CreateScene()
                         cameraDistance = 11.00,
                         cameraFocusOffset = Vector3(0.00, 1.05, 0.00),
                         animator = "5200AC9B-039A-416E-82AE-FD5FE1754C95/Animator",
-                        projectileAttack = "E8682E33-50ED-45D8-BC76-B31113639F9E/ProjectileAttackAbility",
+                        attackAbility = "E8682E33-50ED-45D8-BC76-B31113639F9E/ProjectileAttackAbility",
                         attackJoystick = "B4C7E92D-5F22-43A9-8E3B-2A6D7D1A8C10/UIJoystick",
                         attackAimTrail = "7C57C988-6629-4FE8-AFF1-8D4D39C84D1B/TrailRenderer",
                         aimTrailForwardOffset = 0.40,

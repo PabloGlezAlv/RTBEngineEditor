@@ -5,6 +5,7 @@
 #include "HealthComponent.h"
 #include "PlayerAmmoSystem.h"
 #include "PlayerCharacterSelection.h"
+#include "PlayerMeleeSweepAttackAbility.h"
 #include "ProjectileAttackAbility.h"
 #include "ThirdPersonCharacterController.h"
 
@@ -73,25 +74,19 @@ bool CharacterStatsApplier::ApplyDefinition(
 
     bool appliedAny = false;
 
-    if (auto* controller = pawn->GetComponent<ThirdPersonCharacterController>()) {
+    auto* controller = pawn->GetComponent<ThirdPersonCharacterController>();
+    if (controller) {
         controller->moveSpeed = definition.moveSpeed;
         controller->sprintMultiplier = definition.sprintMultiplier;
         controller->turnSpeed = definition.turnSpeed;
-        appliedAny = true;
-    }
-    else if (auto* controller = pawn->GetComponentInChildren<ThirdPersonCharacterController>()) {
-        controller->moveSpeed = definition.moveSpeed;
-        controller->sprintMultiplier = definition.sprintMultiplier;
-        controller->turnSpeed = definition.turnSpeed;
+        controller->ApplyCombatAnimationOverrides(
+            definition.aimDrawAnimationFbx,
+            definition.aimLoopAnimationFbx,
+            definition.attackAnimationFbx);
         appliedAny = true;
     }
 
     if (auto* health = pawn->GetComponent<HealthComponent>()) {
-        health->SetMaxHealth(definition.maxHealth);
-        health->SetCurrentHealth(definition.maxHealth);
-        appliedAny = true;
-    }
-    else if (auto* health = pawn->GetComponentInChildren<HealthComponent>()) {
         health->SetMaxHealth(definition.maxHealth);
         health->SetCurrentHealth(definition.maxHealth);
         appliedAny = true;
@@ -102,18 +97,21 @@ bool CharacterStatsApplier::ApplyDefinition(
         ammo->fullReloadDuration = definition.fullReloadDuration;
         appliedAny = true;
     }
-    else if (auto* ammo = pawn->GetComponentInChildren<PlayerAmmoSystem>()) {
-        ammo->maxShots = definition.maxShots;
-        ammo->fullReloadDuration = definition.fullReloadDuration;
-        appliedAny = true;
-    }
 
-    if (auto* attack = pawn->GetComponent<ProjectileAttackAbility>()) {
-        attack->SetProjectileCombatOverrides(definition.projectileDamage, definition.projectileSpeed);
+    if (auto* meleeAttack = pawn->GetComponent<PlayerMeleeSweepAttackAbility>()) {
+        meleeAttack->SetMeleeCombatOverrides(
+            definition.projectileDamage,
+            definition.meleeRange,
+            definition.meleeRadius,
+            definition.meleeTickInterval,
+            definition.meleeKnockback);
         appliedAny = true;
     }
-    else if (auto* attack = pawn->GetComponentInChildren<ProjectileAttackAbility>()) {
-        attack->SetProjectileCombatOverrides(definition.projectileDamage, definition.projectileSpeed);
+    else if (auto* rangedAttack = pawn->GetComponent<ProjectileAttackAbility>()) {
+        if (!definition.projectilePrefabRef.empty()) {
+            rangedAttack->SetProjectilePrefabRef(definition.projectilePrefabRef);
+        }
+        rangedAttack->SetProjectileCombatOverrides(definition.projectileDamage, definition.projectileSpeed);
         appliedAny = true;
     }
 

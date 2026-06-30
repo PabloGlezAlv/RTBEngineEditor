@@ -25,12 +25,48 @@ void CharacterAbility::OnUpdate(float deltaTime)
     }
 
     activeElapsed += safeDeltaTime;
+    ProcessActiveAbility(safeDeltaTime);
+}
+
+void CharacterAbility::ProcessActiveAbility(float safeDeltaTime)
+{
+    if (GetTickInterval() > kCompletionEpsilon) {
+        ProcessTickedHitAbility(safeDeltaTime);
+        return;
+    }
+
+    ProcessSingleHitAbility(safeDeltaTime);
+}
+
+void CharacterAbility::ProcessSingleHitAbility(float /*safeDeltaTime*/)
+{
     if (!hitExecuted && activeElapsed + kCompletionEpsilon >= GetHitDelayDuration()) {
         hitExecuted = true;
         ExecuteAbilityHit();
     }
 
     if (activeElapsed + kCompletionEpsilon >= GetHitDelayDuration() + GetRecoveryDuration()) {
+        FinishAbility();
+    }
+}
+
+void CharacterAbility::ProcessTickedHitAbility(float safeDeltaTime)
+{
+    const float tickInterval = std::max(kCompletionEpsilon, GetTickInterval());
+    const float activeWindowStart = GetHitDelayDuration();
+    const float activeWindowEnd = GetHitDelayDuration() + GetRecoveryDuration();
+
+    if (activeElapsed + kCompletionEpsilon >= activeWindowStart &&
+        activeElapsed <= activeWindowEnd + kCompletionEpsilon) {
+        tickAccumulator += safeDeltaTime;
+        while (tickAccumulator + kCompletionEpsilon >= tickInterval &&
+               activeElapsed <= activeWindowEnd + kCompletionEpsilon) {
+            tickAccumulator -= tickInterval;
+            ExecuteAbilityHit();
+        }
+    }
+
+    if (activeElapsed + kCompletionEpsilon >= activeWindowEnd) {
         FinishAbility();
     }
 }
@@ -55,6 +91,7 @@ bool CharacterAbility::TryActivate(RTBEngine::ECS::GameObject* instigator,
     activeInstigator = instigator;
     activeDirection = planarDirection;
     activeElapsed = 0.0f;
+    tickAccumulator = 0.0f;
     hitExecuted = false;
     abilityActive = true;
     cooldownRemaining = std::max(0.0f, GetCooldownDuration());
@@ -67,6 +104,7 @@ void CharacterAbility::CancelAbility()
     activeInstigator = nullptr;
     activeDirection = RTBEngine::Math::Vector3::Forward();
     activeElapsed = 0.0f;
+    tickAccumulator = 0.0f;
     hitExecuted = false;
     abilityActive = false;
 }

@@ -44,11 +44,41 @@ public:
     RTBEngine::ECS::GameObject* characterCard3 = nullptr;
     RTBEngine::ECS::GameObject* characterCard4 = nullptr;
 
+    RTBEngine::UI::UIPanel* characterCardFrame0 = nullptr;
+    RTBEngine::UI::UIPanel* characterCardFrame1 = nullptr;
+    RTBEngine::UI::UIPanel* characterCardFrame2 = nullptr;
+    RTBEngine::UI::UIPanel* characterCardFrame3 = nullptr;
+    RTBEngine::UI::UIPanel* characterCardFrame4 = nullptr;
+
+    RTBEngine::UI::UIButton* characterCardButton0 = nullptr;
+    RTBEngine::UI::UIButton* characterCardButton1 = nullptr;
+    RTBEngine::UI::UIButton* characterCardButton2 = nullptr;
+    RTBEngine::UI::UIButton* characterCardButton3 = nullptr;
+    RTBEngine::UI::UIButton* characterCardButton4 = nullptr;
+
+    RTBEngine::UI::UIText* characterCardNameText0 = nullptr;
+    RTBEngine::UI::UIText* characterCardNameText1 = nullptr;
+    RTBEngine::UI::UIText* characterCardNameText2 = nullptr;
+    RTBEngine::UI::UIText* characterCardNameText3 = nullptr;
+    RTBEngine::UI::UIText* characterCardNameText4 = nullptr;
+
     RTBEngine::UI::UIButton* quickSelectButton0 = nullptr;
     RTBEngine::UI::UIButton* quickSelectButton1 = nullptr;
     RTBEngine::UI::UIButton* quickSelectButton2 = nullptr;
     RTBEngine::UI::UIButton* quickSelectButton3 = nullptr;
     RTBEngine::UI::UIButton* quickSelectButton4 = nullptr;
+
+    RTBEngine::UI::UIPanel* quickSelectFrame0 = nullptr;
+    RTBEngine::UI::UIPanel* quickSelectFrame1 = nullptr;
+    RTBEngine::UI::UIPanel* quickSelectFrame2 = nullptr;
+    RTBEngine::UI::UIPanel* quickSelectFrame3 = nullptr;
+    RTBEngine::UI::UIPanel* quickSelectFrame4 = nullptr;
+
+    RTBEngine::UI::UIText* quickSelectLabel0 = nullptr;
+    RTBEngine::UI::UIText* quickSelectLabel1 = nullptr;
+    RTBEngine::UI::UIText* quickSelectLabel2 = nullptr;
+    RTBEngine::UI::UIText* quickSelectLabel3 = nullptr;
+    RTBEngine::UI::UIText* quickSelectLabel4 = nullptr;
 
     MainMenuCharacterPreview* characterPreview = nullptr;
     RTBEngine::ECS::AudioSourceComponent* clickAudio = nullptr;
@@ -79,8 +109,8 @@ private:
     bool callbacksBound = false;
 
     void BindButtons();
-    void ResolveCharacterCards();
-    void ResolveQuickSelectButtons();
+    void BindCharacterCardWidgets();
+    void BindQuickSelectWidgets();
     void LoadCharacterDefinitions();
     void SetOverlayVisible(bool visible);
     void SelectPendingCharacter(const std::string& characterId);
@@ -95,5 +125,4 @@ private:
     void StyleQuickSelectButton(QuickSelectWidgets& quickSelect, bool selected);
     void PlayClickSound() const;
     CharacterDefinition* FindDefinitionById(const std::string& characterId) const;
-    RTBEngine::UI::UIText* FindLabelText(RTBEngine::ECS::GameObject* cardRoot) const;
 };

@@ -32,7 +32,7 @@ namespace RTBEngine {
     }
 }
 
-class ProjectileAttackAbility;
+class CharacterAbility;
 
 class ThirdPersonCharacterController : public PlayableCharacterController
 {
@@ -51,6 +51,9 @@ public:
     void ReviveFromDeath();
     void AddPlanarKnockback(const RTBEngine::Math::Vector3& direction, float strength);
     void PlayReplicatedAttackVisual(const RTBEngine::Math::Vector3& attackDirection);
+    void ApplyCombatAnimationOverrides(const std::string& aimDrawFbx,
+                                       const std::string& aimLoopFbx,
+                                       const std::string& attackFbx);
 
     RTBEngine::ECS::GameObject* cameraObject = nullptr;
     HealthComponent* health = nullptr;
@@ -61,7 +64,7 @@ public:
     float cameraDistance = 11.0f;
     RTBEngine::Math::Vector3 cameraFocusOffset = RTBEngine::Math::Vector3(0.0f, 1.2f, 0.0f);
     RTBEngine::Animation::Animator* animator = nullptr;
-    ProjectileAttackAbility* projectileAttack = nullptr;
+    CharacterAbility* attackAbility = nullptr;
     RTBEngine::UI::UIJoystick* attackJoystick = nullptr;
     RTBEngine::ECS::TrailRenderer* attackAimTrail = nullptr;
     float aimTrailForwardOffset = 0.40f;
@@ -99,7 +102,10 @@ private:
     AimPhase aimPhase = AimPhase::Draw;
     bool wasDraggingJoystick = false;
     RTBEngine::Animation::Animator* registeredAnimator = nullptr;
+    bool missingHealthWarningShown = false;
+    bool missingAttackAbilityWarningShown = false;
     bool missingAnimatorWarningShown = false;
+    bool missingCameraWarningShown = false;
     AnimationSlotState idleSlotState;
     AnimationSlotState walkSlotState;
     AnimationSlotState runSlotState;
@@ -112,11 +118,7 @@ private:
     RTBEngine::Math::Vector3 activeAttackDirection = RTBEngine::Math::Vector3::Zero();
 
     void ClampSettings();
-    void ResolveCameraObject();
-    void ResolveHealth();
-    void ResolveAnimator();
-    void ResolveProjectileAttack();
-    void ResolveAttackAimTrail();
+    void ValidateRequiredReferences();
     void DisableCompetingCameraController() const;
     void ApplyCameraFollowTransform();
     void ApplySpectateCameraFollow(RTBEngine::ECS::GameObject* targetPawn);
@@ -156,7 +158,7 @@ private:
     void StopPlanarMotion() const;
     RTBEngine::Math::Vector3 GetDesiredMoveDirection(bool& outIsRunning) const;
     RTBEngine::Math::Vector3 GetAimTrailWorldOrigin(const RTBEngine::Math::Vector3& attackDirection) const;
-    float GetProjectileTravelDistance() const;
+    float GetAimRangeForVisual() const;
     RTBEngine::Math::Vector3 GetAttackDirectionFromJoystick(const RTBEngine::Math::Vector2& joystickValue) const;
     RTBEngine::Math::Vector3 GetActiveAttackDirection() const;
     void SendNetworkInput();

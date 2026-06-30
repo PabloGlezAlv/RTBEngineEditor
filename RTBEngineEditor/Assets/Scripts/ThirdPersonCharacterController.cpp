@@ -8,7 +8,7 @@
 #include <RTBEngine/Online/OnlineGameplayNet.h>
 #include "PauseMenuController.h"
 #include "PlayerAmmoSystem.h"
-#include "ProjectileAttackAbility.h"
+#include "CharacterAbility.h"
 #include "CharacterCombatOrigins.h"
 
 #include <RTBEngine/Animation/Animator.h>
@@ -169,7 +169,7 @@ RTB_REGISTER_COMPONENT(ThirdPersonCharacterController)
     RTB_PROPERTY_RANGE(cameraDistance, 0.5f, 20.0f)
     RTB_PROPERTY(cameraFocusOffset)
     RTB_PROPERTY_COMPONENT(animator, Animator)
-    RTB_PROPERTY_COMPONENT(projectileAttack, ProjectileAttackAbility)
+    RTB_PROPERTY_COMPONENT(attackAbility, CharacterAbility)
     RTB_PROPERTY_COMPONENT(attackJoystick, UIJoystick)
     RTB_PROPERTY_COMPONENT(attackAimTrail, TrailRenderer)
     RTB_PROPERTY_RANGE(aimTrailForwardOffset, 0.0f, 3.0f)
@@ -189,12 +189,9 @@ void ThirdPersonCharacterController::OnStart()
     hasReplicatedMotionSample = false;
     replicatedAnimatorReady = false;
     ClampSettings();
-    ResolveHealth();
-    ResolveAnimator();
-    ResolveProjectileAttack();
-    ResolveAttackAimTrail();
+    ValidateCharacterHealth();
+    ValidateRequiredReferences();
     RegisterAnimationSlots();
-    ResolveCameraObject();
     DisableCompetingCameraController();
     RebindHealthSubscription();
     RebindAttackJoystickSubscription();
@@ -315,8 +312,7 @@ void ThirdPersonCharacterController::OnLateUpdate(float deltaTime)
         HideAttackAimTrail();
         // Runs after NetworkTransform when that component is listed earlier on the pawn.
         if (UsesReplicatedAnimator()) {
-            if (!replicatedAnimatorReady) {
-                ResolveAnimator();
+            if (!replicatedAnimatorReady && animator) {
                 RegisterAnimationSlots();
                 replicatedAnimatorReady = true;
             }
@@ -388,14 +384,14 @@ void ThirdPersonCharacterController::PollAttackCompletion()
         animator && attackSlotState.ready && animator->GetClip(kAttackAlias);
 
     if (!hasAttackAnimation) {
-        if (!projectileAttack || !projectileAttack->IsAbilityActive()) {
+        if (!attackAbility || !attackAbility->IsAbilityActive()) {
             FinishAttack();
         }
         return;
     }
 
     if ((animator->GetCurrentClipName() == kAttackAlias && animator->IsPlaying()) ||
-        (projectileAttack && projectileAttack->IsAbilityActive())) {
+        (attackAbility && attackAbility->IsAbilityActive())) {
         return;
     }
 
@@ -405,14 +401,11 @@ void ThirdPersonCharacterController::PollAttackCompletion()
 void ThirdPersonCharacterController::OnValidate()
 {
     ClampSettings();
-    ResolveHealth();
-    ResolveAnimator();
-    ResolveProjectileAttack();
-    ResolveAttackAimTrail();
+    ValidateCharacterHealth();
+    ValidateRequiredReferences();
     if (animator) {
         RegisterAnimationSlots();
     }
-    ResolveCameraObject();
     DisableCompetingCameraController();
     RebindAttackJoystickSubscription();
     HideAttackAimTrail();
@@ -441,63 +434,33 @@ void ThirdPersonCharacterController::ClampSettings()
     cameraDistance = std::max(0.1f, cameraDistance);
 }
 
-void ThirdPersonCharacterController::ResolveCameraObject()
+void ThirdPersonCharacterController::ValidateRequiredReferences()
 {
-    if (cameraObject) {
+    if (!owner) {
         return;
     }
 
-    if (owner) {
-        auto* childCamera = owner->GetComponentInChildren<RTBEngine::ECS::CameraComponent>();
-        if (childCamera && childCamera->GetOwner() != owner) {
-            cameraObject = childCamera->GetOwner();
-            return;
-        }
+    const std::string pawnName = owner->GetName();
+
+    if (!health && !missingHealthWarningShown) {
+        RTB_WARN("[ThirdPersonCharacterController] health is not assigned on '" + pawnName + "'.");
+        missingHealthWarningShown = true;
     }
 
-    auto* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
-    if (!scene) {
-        return;
+    if (!animator && !missingAnimatorWarningShown) {
+        RTB_WARN("[ThirdPersonCharacterController] animator is not assigned on '" + pawnName + "'.");
+        missingAnimatorWarningShown = true;
     }
 
-    auto* mainCamera = scene->GetMainCamera();
-    if (!mainCamera || !mainCamera->GetOwner()) {
-        return;
+    if (!attackAbility && !missingAttackAbilityWarningShown) {
+        RTB_WARN("[ThirdPersonCharacterController] attackAbility is not assigned on '" + pawnName + "'.");
+        missingAttackAbilityWarningShown = true;
     }
 
-    cameraObject = mainCamera->GetOwner();
-}
-
-void ThirdPersonCharacterController::ResolveHealth()
-{
-    ResolveCharacterHealth();
-}
-
-void ThirdPersonCharacterController::ResolveAnimator()
-{
-    if (animator || !owner) {
-        return;
+    if (!cameraObject && !missingCameraWarningShown) {
+        RTB_WARN("[ThirdPersonCharacterController] cameraObject is not assigned on '" + pawnName + "'.");
+        missingCameraWarningShown = true;
     }
-
-    animator = owner->GetComponentInChildren<RTBEngine::Animation::Animator>();
-}
-
-void ThirdPersonCharacterController::ResolveProjectileAttack()
-{
-    if (projectileAttack || !owner) {
-        return;
-    }
-
-    projectileAttack = owner->GetComponent<ProjectileAttackAbility>();
-}
-
-void ThirdPersonCharacterController::ResolveAttackAimTrail()
-{
-    if (attackAimTrail || !owner) {
-        return;
-    }
-
-    attackAimTrail = owner->GetComponentInChildren<RTBEngine::ECS::TrailRenderer>();
 }
 
 void ThirdPersonCharacterController::DisableCompetingCameraController() const
@@ -538,8 +501,9 @@ void ThirdPersonCharacterController::ReviveFromDeath()
     SetAimArrowVisible(false);
     SetOcclusionTargetEnabled(owner, true);
 
-    ResolveAnimator();
-    RegisterAnimationSlots();
+    if (animator) {
+        RegisterAnimationSlots();
+    }
     UpdateAnimatorLocomotion(false, false);
 }
 
@@ -720,8 +684,8 @@ void ThirdPersonCharacterController::HandleJoystickAttackReleased(const RTBEngin
         return;
     }
 
-    if (!projectileAttack ||
-        !projectileAttack->HasValidProjectilePrefab() ||
+    if (!attackAbility ||
+        !attackAbility->HasValidAttack() ||
         PauseMenuController::IsAnyMenuOpen()) {
         if (wasAiming) {
             FinishAiming();
@@ -737,12 +701,14 @@ void ThirdPersonCharacterController::HandleJoystickAttackReleased(const RTBEngin
         return;
     }
 
-    if (PlayerAmmoSystem* ammoSystem = owner->GetComponent<PlayerAmmoSystem>()) {
-        if (!ammoSystem->CanFire()) {
-            if (wasAiming) {
-                FinishAiming();
+    if (attackAbility && attackAbility->ConsumesAmmo()) {
+        if (PlayerAmmoSystem* ammoSystem = owner->GetComponent<PlayerAmmoSystem>()) {
+            if (!ammoSystem->CanFire()) {
+                if (wasAiming) {
+                    FinishAiming();
+                }
+                return;
             }
-            return;
         }
     }
 
@@ -758,8 +724,10 @@ void ThirdPersonCharacterController::HandleJoystickAttackReleased(const RTBEngin
             }
         }
 
-        if (PlayerAmmoSystem* ammoSystem = owner->GetComponent<PlayerAmmoSystem>()) {
-            ammoSystem->ConsumeShot();
+        if (attackAbility && attackAbility->ConsumesAmmo()) {
+            if (PlayerAmmoSystem* ammoSystem = owner->GetComponent<PlayerAmmoSystem>()) {
+                ammoSystem->ConsumeShot();
+            }
         }
 
         ++networkAttackSequence;
@@ -774,8 +742,8 @@ void ThirdPersonCharacterController::HandleJoystickAttackReleased(const RTBEngin
 bool ThirdPersonCharacterController::CanStartAiming() const
 {
     return attackJoystick &&
-        projectileAttack &&
-        projectileAttack->HasValidProjectilePrefab() &&
+        attackAbility &&
+        attackAbility->HasValidAttack() &&
         !PauseMenuController::IsAnyMenuOpen() &&
         state == State::Locomotion;
 }
@@ -788,7 +756,10 @@ void ThirdPersonCharacterController::TryBeginAiming()
 
     state = State::Aiming;
     aimPhase = AimPhase::Draw;
-    SetAimArrowVisible(true);
+    const bool showRangedAimVisual =
+        attackAbility &&
+        attackAbility->GetAimVisualKind() == CharacterAbility::AimVisualKind::RangedProjectile;
+    SetAimArrowVisible(showRangedAimVisual);
 
     if (aimDrawSlotState.ready && animator->GetClip(kAimDrawAlias)) {
         animator->Play(kAimDrawAlias, false);
@@ -818,7 +789,10 @@ void ThirdPersonCharacterController::UpdateAimingState(float /*deltaTime*/)
     }
 
     UpdateAttackAimTrail();
-    SetAimArrowVisible(true);
+    if (attackAbility &&
+        attackAbility->GetAimVisualKind() == CharacterAbility::AimVisualKind::RangedProjectile) {
+        SetAimArrowVisible(true);
+    }
 }
 
 void ThirdPersonCharacterController::FinishAiming()
@@ -933,16 +907,15 @@ void ThirdPersonCharacterController::SetAimArrowVisible(bool visible)
 
 void ThirdPersonCharacterController::UpdateAttackAimTrail()
 {
-    ResolveAttackAimTrail();
-
     if (!attackAimTrail) {
         return;
     }
 
     if (!attackJoystick ||
         !attackJoystick->IsDragging() ||
-        !projectileAttack ||
-        !projectileAttack->HasValidProjectilePrefab() ||
+        !attackAbility ||
+        attackAbility->GetAimVisualKind() != CharacterAbility::AimVisualKind::RangedProjectile ||
+        !attackAbility->HasValidAttack() ||
         state != State::Aiming ||
         PauseMenuController::IsAnyMenuOpen()) {
         HideAttackAimTrail();
@@ -959,7 +932,7 @@ void ThirdPersonCharacterController::UpdateAttackAimTrail()
     RTBEngine::Math::Vector3 start = GetAimTrailWorldOrigin(attackDirection);
     start.y += aimTrailHeightOffset;
 
-    const RTBEngine::Math::Vector3 end = start + attackDirection * GetProjectileTravelDistance();
+    const RTBEngine::Math::Vector3 end = start + attackDirection * GetAimRangeForVisual();
     const RTBEngine::Math::Vector3 points[] = {
         start,
         end
@@ -1166,7 +1139,7 @@ void ThirdPersonCharacterController::StartAttack(const RTBEngine::Math::Vector3&
     HideAttackAimTrail();
     SetAimArrowVisible(false);
 
-    if ((state != State::Locomotion && state != State::Aiming) || !projectileAttack) {
+    if ((state != State::Locomotion && state != State::Aiming) || !attackAbility) {
         return;
     }
 
@@ -1180,7 +1153,7 @@ void ThirdPersonCharacterController::StartAttack(const RTBEngine::Math::Vector3&
     activeAttackDirection = normalizedAttackDirection;
     FaceAttackDirection(activeAttackDirection);
 
-    if (!projectileAttack->TryActivate(owner, activeAttackDirection)) {
+    if (!attackAbility->TryActivate(owner, activeAttackDirection)) {
         activeAttackDirection = RTBEngine::Math::Vector3::Zero();
         return;
     }
@@ -1215,15 +1188,14 @@ void ThirdPersonCharacterController::HandleDeath(const HealthComponent::DeathEve
     aimPhase = AimPhase::Draw;
     wasDraggingJoystick = false;
     activeAttackDirection = RTBEngine::Math::Vector3::Zero();
-    if (projectileAttack) {
-        projectileAttack->CancelAbility();
+    if (attackAbility) {
+        attackAbility->CancelAbility();
     }
     HideAttackAimTrail();
     SetAimArrowVisible(false);
     StopPlanarMotion();
     SetOcclusionTargetEnabled(owner, false);
 
-    ResolveCameraObject();
     if (IsLocallyControlled() && cameraObject) {
         const bool isOnline = RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby();
         const RTBEngine::ECS::NetworkIdentity* identity =
@@ -1457,13 +1429,33 @@ RTBEngine::Math::Vector3 ThirdPersonCharacterController::GetAimTrailWorldOrigin(
         aimTrailForwardOffset);
 }
 
-float ThirdPersonCharacterController::GetProjectileTravelDistance() const
+float ThirdPersonCharacterController::GetAimRangeForVisual() const
 {
-    if (projectileAttack) {
-        return projectileAttack->GetTravelDistance();
+    if (!attackAbility) {
+        return 0.0f;
     }
 
-    return 0.0f;
+    return attackAbility->GetAimRangeForVisual();
+}
+
+void ThirdPersonCharacterController::ApplyCombatAnimationOverrides(
+    const std::string& aimDrawFbx,
+    const std::string& aimLoopFbx,
+    const std::string& attackFbx)
+{
+    if (!aimDrawFbx.empty()) {
+        aimDrawAnimationFbx = aimDrawFbx;
+    }
+    if (!aimLoopFbx.empty()) {
+        aimLoopAnimationFbx = aimLoopFbx;
+    }
+    if (!attackFbx.empty()) {
+        attackAnimationFbx = attackFbx;
+    }
+
+    if (animator) {
+        RegisterAnimationSlots();
+    }
 }
 
 RTBEngine::Math::Vector3 ThirdPersonCharacterController::GetAttackDirectionFromJoystick(
@@ -1529,7 +1521,7 @@ void ThirdPersonCharacterController::SendNetworkInput()
 
 void ThirdPersonCharacterController::TryProcessRemoteAttackInput()
 {
-    if (!owner || IsLocallyControlled() || !projectileAttack) {
+    if (!owner || IsLocallyControlled() || !attackAbility) {
         return;
     }
 
@@ -1565,7 +1557,7 @@ void ThirdPersonCharacterController::PlayPredictedAttackVisual(const RTBEngine::
     HideAttackAimTrail();
     SetAimArrowVisible(false);
 
-    if ((state != State::Locomotion && state != State::Aiming) || !projectileAttack) {
+    if ((state != State::Locomotion && state != State::Aiming) || !attackAbility) {
         return;
     }
 
