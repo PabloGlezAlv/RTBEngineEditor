@@ -61,6 +61,10 @@ RTB_REGISTER_COMPONENT(ProjectileAttackAbility)
     RTB_PROPERTY_ASSET_PATH(projectilePrefabRef, "prefab")
     RTB_PROPERTY_RANGE(attackOriginHeightOffset, -2.0f, 3.0f)
     RTB_PROPERTY_RANGE(launchForwardOffset, -2.0f, 2.0f)
+    RTB_PROPERTY_RANGE(hitDelay, 0.0f, 10.0f)
+    RTB_PROPERTY_RANGE(recoveryDuration, 0.0f, 10.0f)
+    RTB_PROPERTY_RANGE(tickInterval, 0.0f, 2.0f)
+    RTB_PROPERTY_RANGE(tickCount, 1, 8)
     RTB_PROPERTY_COMPONENT(fireAudio, AudioSourceComponent)
     RTB_PROPERTY_COMPONENT(hitAudio, AudioSourceComponent)
 RTB_END_REGISTER(ProjectileAttackAbility)
@@ -71,12 +75,63 @@ void ProjectileAttackAbility::OnStart()
     RefreshCachedProjectileStats();
 }
 
-void ProjectileAttackAbility::SetProjectileCombatOverrides(float damage, float speed, float knockback)
+void ProjectileAttackAbility::SetProjectileCombatOverrides(
+    float damage,
+    float speed,
+    float knockback,
+    int burstCount,
+    float burstInterval)
 {
-    projectileDamageOverride = std::max(0.0f, damage);
+    totalAttackDamage = std::max(0.0f, damage);
+    burstTickCount = std::max(1, burstCount);
+    float resolvedBurstInterval = burstInterval;
+    if (burstTickCount <= 1 && tickCount > 1) {
+        burstTickCount = tickCount;
+        if (resolvedBurstInterval <= 0.0f) {
+            resolvedBurstInterval = tickInterval;
+        }
+    }
+    tickCount = burstTickCount;
+
     projectileSpeedOverride = std::max(0.0f, speed);
     projectileKnockbackOverride = std::max(0.0f, knockback);
+
+    if (burstTickCount <= 1 || resolvedBurstInterval <= 0.0f) {
+        damagePerProjectile = totalAttackDamage;
+        projectileDamageOverride = totalAttackDamage;
+        tickInterval = 0.0f;
+        recoveryDuration = 0.0f;
+    } else {
+        damagePerProjectile = totalAttackDamage / static_cast<float>(burstTickCount);
+        projectileDamageOverride = damagePerProjectile;
+        tickInterval = std::max(0.1f, resolvedBurstInterval);
+        recoveryDuration = static_cast<float>(burstTickCount - 1) * tickInterval;
+    }
+
     RefreshCachedProjectileStats();
+}
+
+int ProjectileAttackAbility::GetTickCount() const
+{
+    if (tickInterval <= 0.0f) {
+        return 0;
+    }
+
+    const int ticks = burstTickCount > 1 ? burstTickCount : tickCount;
+    return ticks > 1 ? ticks : 0;
+}
+
+float ProjectileAttackAbility::GetDamagePerProjectile() const
+{
+    if (damagePerProjectile > 0.0f) {
+        return damagePerProjectile;
+    }
+
+    if (totalAttackDamage > 0.0f && GetTickCount() > 1) {
+        return totalAttackDamage / static_cast<float>(GetTickCount());
+    }
+
+    return totalAttackDamage > 0.0f ? totalAttackDamage : cachedDamage;
 }
 
 void ProjectileAttackAbility::SetProjectilePrefabRef(const std::string& prefabRef)
@@ -203,8 +258,12 @@ bool ProjectileAttackAbility::SpawnProjectile(RTBEngine::ECS::GameObject* instig
     if (projectileSpeedOverride > 0.0f) {
         projectile->speed = projectileSpeedOverride;
     }
-    if (projectileDamageOverride > 0.0f) {
-        projectile->damage = projectileDamageOverride;
+
+    const float spawnDamage = networkSnapshot
+        ? networkSnapshot->damage
+        : GetDamagePerProjectile();
+    if (spawnDamage > 0.0f) {
+        projectile->damage = spawnDamage;
     }
     projectile->knockbackStrength = projectileKnockbackOverride;
 
@@ -350,6 +409,18 @@ bool ProjectileAttackAbility::CanActivateAbility(
     return true;
 }
 
+void ProjectileAttackAbility::OnAbilityStarted()
+{
+    RTBEngine::ECS::GameObject* instigator = GetActiveInstigator();
+    if (!instigator || !IsLocallyControlledInstigator(instigator)) {
+        return;
+    }
+
+    if (auto* ammoSystem = instigator->GetComponent<PlayerAmmoSystem>()) {
+        ammoSystem->ConsumeShot();
+    }
+}
+
 void ProjectileAttackAbility::ExecuteAbilityHit()
 {
     RTBEngine::ECS::GameObject* instigator = GetActiveInstigator();
@@ -365,12 +436,20 @@ void ProjectileAttackAbility::ExecuteAbilityHit()
         }
     }
 
-    FireNow(instigator, GetActiveDirection());
+    SpawnProjectile(
+        instigator,
+        GetActiveDirection(),
+        ResolvePhysicsWorld(instigator),
+        true);
 }
 
 void ProjectileAttackAbility::ClampSettings()
 {
     launchForwardOffset = std::clamp(launchForwardOffset, -2.0f, 2.0f);
+    hitDelay = std::max(0.0f, hitDelay);
+    recoveryDuration = std::max(0.0f, recoveryDuration);
+    tickInterval = std::max(0.0f, tickInterval);
+    tickCount = std::max(1, tickCount);
 }
 
 void ProjectileAttackAbility::ResolveProjectilePrefab()
@@ -417,6 +496,8 @@ void ProjectileAttackAbility::RefreshCachedProjectileStats()
 
     if (projectileDamageOverride > 0.0f) {
         cachedDamage = projectileDamageOverride;
+    } else if (totalAttackDamage > 0.0f) {
+        cachedDamage = totalAttackDamage;
     }
 }
 

@@ -11,6 +11,8 @@ return {
     fullReloadDuration = 5.50,
     projectileDamage = 13.00,
     projectileSpeed = 17.00,
+    projectileBurstCount = 3,
+    projectileBurstInterval = 0.30,
     modelRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Mage.fbx",
     previewPrefabRef = "Assets/Prefabs/Player/Preview/Character Preview Arcanist.prefab",
     gameplayPrefabRef = "Assets/Prefabs/Player/Gameplay/Player Arcanist.prefab",

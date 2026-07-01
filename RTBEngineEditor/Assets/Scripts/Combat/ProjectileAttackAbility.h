@@ -35,6 +35,10 @@ public:
     std::string projectilePrefabRef = "Assets/Prefabs/Combat/Projectiles/Arrow Projectile.prefab";
     float attackOriginHeightOffset = 0.55f;
     float launchForwardOffset = 0.35f;
+    float hitDelay = 0.0f;
+    float recoveryDuration = 0.0f;
+    float tickInterval = 0.0f;
+    int tickCount = 1;
     RTBEngine::ECS::AudioSourceComponent* fireAudio = nullptr;
     RTBEngine::ECS::AudioSourceComponent* hitAudio = nullptr;
 
@@ -56,15 +60,22 @@ public:
     AimVisualKind GetAimVisualKind() const override { return AimVisualKind::RangedProjectile; }
     float GetAimRangeForVisual() const override { return GetTravelDistance(); }
 
-    void SetProjectileCombatOverrides(float damage, float speed, float knockback = 0.0f);
+    void SetProjectileCombatOverrides(float damage,
+                                    float speed,
+                                    float knockback = 0.0f,
+                                    int burstCount = 1,
+                                    float burstInterval = 0.0f);
     void SetProjectilePrefabRef(const std::string& prefabRef);
 
 protected:
     float GetCooldownDuration() const override { return 0.0f; }
-    float GetHitDelayDuration() const override { return 0.0f; }
-    float GetRecoveryDuration() const override { return 0.0f; }
+    float GetHitDelayDuration() const override { return hitDelay; }
+    float GetRecoveryDuration() const override { return recoveryDuration; }
+    float GetTickInterval() const override { return tickInterval; }
+    int GetTickCount() const override;
     bool CanActivateAbility(RTBEngine::ECS::GameObject* instigator,
                             const RTBEngine::Math::Vector3& direction) const override;
+    void OnAbilityStarted() override;
     void ExecuteAbilityHit() override;
 
 private:
@@ -75,6 +86,11 @@ private:
     float projectileDamageOverride = 0.0f;
     float projectileSpeedOverride = 0.0f;
     float projectileKnockbackOverride = 0.0f;
+    float totalAttackDamage = 0.0f;
+    float damagePerProjectile = 0.0f;
+    int burstTickCount = 1;
+
+    float GetDamagePerProjectile() const;
 
     void ClampSettings();
     void ResolveProjectilePrefab();

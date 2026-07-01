@@ -115,7 +115,9 @@ bool CharacterStatsApplier::ApplyDefinition(
         rangedAttack->SetProjectileCombatOverrides(
             definition.projectileDamage,
             definition.projectileSpeed,
-            definition.projectileKnockback);
+            definition.projectileKnockback,
+            definition.projectileBurstCount,
+            definition.projectileBurstInterval);
         appliedAny = true;
     }
 

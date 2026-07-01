@@ -22,6 +22,8 @@ public:
 
     float projectileDamage = 25.0f;
     float projectileSpeed = 14.0f;
+    float projectileBurstInterval = 0.0f;
+    int projectileBurstCount = 1;
 
     std::string modelRef;
     std::string previewPrefabRef;

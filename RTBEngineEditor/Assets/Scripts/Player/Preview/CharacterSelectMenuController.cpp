@@ -34,11 +34,32 @@ namespace {
 
     float ResolveDisplayedDamage(const CharacterDefinition& definition, bool isMelee)
     {
-        if (!isMelee || definition.meleeTickCount <= 1) {
+        if (isMelee) {
+            if (definition.meleeTickCount <= 1) {
+                return definition.projectileDamage;
+            }
+
+            return definition.projectileDamage / static_cast<float>(definition.meleeTickCount);
+        }
+
+        if (definition.projectileBurstCount <= 1) {
             return definition.projectileDamage;
         }
 
-        return definition.projectileDamage / static_cast<float>(definition.meleeTickCount);
+        return definition.projectileDamage / static_cast<float>(definition.projectileBurstCount);
+    }
+
+    const char* ResolveDamageLabel(const CharacterDefinition& definition, bool isMelee)
+    {
+        if (isMelee && definition.meleeTickCount > 1) {
+            return "Damage (per tick): ";
+        }
+
+        if (!isMelee && definition.projectileBurstCount > 1) {
+            return "Damage (per bolt): ";
+        }
+
+        return "Damage: ";
     }
 
 }
@@ -413,7 +434,7 @@ std::string CharacterSelectMenuController::BuildStatsBody(const CharacterDefinit
     stream << "Sprint: x" << FormatFloat(definition.sprintMultiplier, 2) << "\n";
     stream << (isMelee ? "Charges: " : "Shots: ") << definition.maxShots << "\n";
     stream << "Reload: " << FormatFloat(definition.fullReloadDuration, 1) << " s\n";
-    stream << (isMelee ? "Damage (per tick): " : "Damage: ")
+    stream << ResolveDamageLabel(definition, isMelee)
            << FormatFloat(ResolveDisplayedDamage(definition, isMelee), 0);
     if (isMelee) {
         stream << "\nRange: " << FormatFloat(definition.meleeRange, 1);
@@ -429,7 +450,7 @@ std::string CharacterSelectMenuController::BuildSummaryBody(const CharacterDefin
 
     std::ostringstream stream;
     stream << "Health: " << FormatFloat(definition.maxHealth, 0) << "\n";
-    stream << (isMelee ? "Damage (per tick): " : "Damage: ")
+    stream << ResolveDamageLabel(definition, isMelee)
            << FormatFloat(ResolveDisplayedDamage(definition, isMelee), 0) << "\n";
     stream << "Speed: " << FormatFloat(definition.moveSpeed) << "\n";
     stream << "Sprint: x" << FormatFloat(definition.sprintMultiplier, 2) << "\n";
