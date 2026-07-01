@@ -17,7 +17,7 @@ return {
         },
         {
             type = "EnemyTargetTracker",
-            targetObject = "E8682E33-50ED-45D8-BC76-B31113639F9E"
+            targetObject = ""
         },
         {
             type = "EnemyAnimationDriver",

@@ -30,7 +30,7 @@ public:
     RTBEngine::UI::UIButton* exitButton = nullptr;
     RTBEngine::UI::UIText* notificationText = nullptr;
     bool pauseSimulation = false;
-    bool useRelativeMouseWhenClosed = true;
+    bool useRelativeMouseWhenClosed = false;
     std::string mainMenuScenePath = "Assets/Scenes/MainMenu.lua";
 
     RTB_COMPONENT(PauseMenuController)
@@ -42,6 +42,7 @@ public:
     void ExitToMainMenu();
     bool IsMenuOpen() const { return menuVisible; }
     static bool IsAnyMenuOpen();
+    static void ApplyGameplayMouseMode();
 
 private:
     struct UIElementState {

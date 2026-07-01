@@ -54,6 +54,7 @@ public:
     void ApplyCombatAnimationOverrides(const std::string& aimDrawFbx,
                                        const std::string& aimLoopFbx,
                                        const std::string& attackFbx);
+    void RefreshAfterSpawn();
 
     RTBEngine::ECS::GameObject* cameraObject = nullptr;
     HealthComponent* health = nullptr;
@@ -101,6 +102,10 @@ private:
     State state = State::Locomotion;
     AimPhase aimPhase = AimPhase::Draw;
     bool wasDraggingJoystick = false;
+    bool usingMouseAim = false;
+    bool wasMouseAiming = false;
+    RTBEngine::Math::Vector2 cachedAttackJoystickValue = RTBEngine::Math::Vector2::Zero();
+    float attackStateElapsed = 0.0f;
     RTBEngine::Animation::Animator* registeredAnimator = nullptr;
     bool missingHealthWarningShown = false;
     bool missingAttackAbilityWarningShown = false;
@@ -123,6 +128,8 @@ private:
     void ApplyCameraFollowTransform();
     void ApplySpectateCameraFollow(RTBEngine::ECS::GameObject* targetPawn);
     void RegisterAnimationSlots();
+    void EnsureAnimationReady();
+    void ForceStartLocomotionAnimation();
     void RegisterAnimationSlot(const char* slotLabel,
                                const std::string& sourceFbx,
                                const char* alias,
@@ -132,6 +139,8 @@ private:
     void RebindAttackJoystickSubscription();
     void UnsubscribeFromAttackJoystick();
     void HandleJoystickAttackReleased(const RTBEngine::Math::Vector2& joystickValue);
+    void HandleAttackReleasedWithDirection(const RTBEngine::Math::Vector3& attackDirection);
+    bool SupportsMouseAimInput() const;
     bool CanStartAiming() const;
     void TryBeginAiming();
     void UpdateAimingState(float deltaTime);
@@ -160,12 +169,14 @@ private:
     RTBEngine::Math::Vector3 GetAimTrailWorldOrigin(const RTBEngine::Math::Vector3& attackDirection) const;
     float GetAimRangeForVisual() const;
     RTBEngine::Math::Vector3 GetAttackDirectionFromJoystick(const RTBEngine::Math::Vector2& joystickValue) const;
+    RTBEngine::Math::Vector3 GetAttackDirectionFromCamera() const;
+    void UpdateAimFacingToward(const RTBEngine::Math::Vector3& aimDirection, float deltaTime);
     RTBEngine::Math::Vector3 GetActiveAttackDirection() const;
     void SendNetworkInput();
     void TryProcessRemoteAttackInput();
     void PlayPredictedAttackVisual(const RTBEngine::Math::Vector3& attackDirection);
     void UpdatePredictedAttackVisual(float deltaTime);
-    void PollAttackCompletion();
+    void PollAttackCompletion(float deltaTime);
     void ApplyDynamicPlanarMotion(RTBEngine::Physics::RigidBody* rigidBody,
                                   const RTBEngine::Math::Vector3& moveDirection,
                                   const RTBEngine::Math::Vector3& facingDirection,

@@ -1,0 +1,804 @@
+return {
+                name = "Player Ranger",
+                uuid = "E8682E33-50ED-45D8-BC76-B31113639F9E",
+                collisionLayer = "Characters",
+                position = Vector3(0.00, 0.00, 0.00),
+                components = {
+                    {
+                        type = "CharacterStatsApplier",
+                        usePlayerSelection = true,
+                        characterDefinitionRef = "",
+                    },
+                    {
+                        type = "OcclusionTarget",
+                        targetEnabled = true,
+                        focusOffset = Vector3(0.00, 1.05, 0.00)
+                    },
+                    {
+                        type = "NetworkIdentity",
+                        networkOwnerUserId = "",
+                        networkPlayerSlot = -1
+                    },
+                    {
+                        type = "NetworkTransform",
+                        sendRate = 20.00,
+                        interpolationSpeed = 14.00,
+                        replicatePosition = true,
+                        replicateRotation = true
+                    },
+                    {
+                        type = "ThirdPersonCharacterController",
+                        cameraObject = "0E7CE370-7C0E-45A8-89CA-AD7A3E70C216",
+                        health = "E8682E33-50ED-45D8-BC76-B31113639F9E/HealthComponent",
+                        team = 1,
+                        moveSpeed = 4.00,
+                        sprintMultiplier = 1.75,
+                        turnSpeed = 720.00,
+                        cameraDistance = 11.00,
+                        cameraFocusOffset = Vector3(0.00, 1.05, 0.00),
+                        animator = "5200AC9B-039A-416E-82AE-FD5FE1754C95/Animator",
+                        attackAbility = "E8682E33-50ED-45D8-BC76-B31113639F9E/ProjectileAttackAbility",
+                        attackJoystick = "B4C7E92D-5F22-43A9-8E3B-2A6D7D1A8C10/UIJoystick",
+                        attackAimTrail = "7C57C988-6629-4FE8-AFF1-8D4D39C84D1B/TrailRenderer",
+                        aimTrailForwardOffset = 0.40,
+                        aimTrailHeightOffset = 0.00,
+                        aimArrowVisual = "R4NG3R00-ARRO-4000-8000-000000000001",
+                        idleAnimationFbx = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_General.fbx|Idle_A",
+                        walkAnimationFbx = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_MovementBasic.fbx|Walking_A",
+                        runAnimationFbx = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_MovementBasic.fbx|Running_A",
+                        aimDrawAnimationFbx = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_CombatRanged.fbx|Ranged_Bow_Draw",
+                        aimLoopAnimationFbx = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_CombatRanged.fbx|Ranged_Bow_Aiming_Idle",
+                        attackAnimationFbx = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_CombatRanged.fbx|Ranged_Bow_Release",
+                        deathAnimationFbx = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_General.fbx|Death_A"
+                    },
+                    {
+                        type = "HealthComponent",
+                        maxHealth = 100.00,
+                        currentHealth = 100.00
+                    },
+                    {
+                        type = "PlayerHealthNetSync"
+                    },
+                    {
+                        type = "AudioSourceComponent",
+                        volume = 0.85,
+                        pitch = 1.00,
+                        loop = false,
+                        playOnStart = false,
+                        audioClip = "Assets/Audio/Combat/player_grunt.mp3"
+                    },
+                    {
+                        type = "PlayerDamageFeedback",
+                        health = "E8682E33-50ED-45D8-BC76-B31113639F9E/HealthComponent",
+                        hurtSoundPath = "Assets/Audio/Combat/player_grunt.mp3",
+                        soundCooldown = 0.12
+                    },
+                    {
+                        type = "PlayerAmmoSystem",
+                        ammoSlider = "A1000001-0010-4000-8000-000000000010/UISlider",
+                        ammoFillPanel = "A1000001-0011-4000-8000-000000000011/UIPanel",
+                        maxShots = 3,
+                        fullReloadDuration = 10.00,
+                        fullAmmoColor = Color(0.18, 0.52, 0.95, 1.00),
+                        partialAmmoColor = Color(0.52, 0.72, 0.92, 0.55)
+                    },
+                                        {
+                        type = "ProjectileAttackAbility",
+                        projectilePrefabRef = "Assets/Prefabs/Arrow Projectile.prefab",
+                        attackOriginHeightOffset = 0.50,
+                        launchForwardOffset = 0.35,
+                        fireAudio = "C0MBAT-F1RE-4001-8000-000000000001/AudioSourceComponent",
+                        hitAudio = "C0MBAT-H1T0-4001-8000-000000000001/AudioSourceComponent"
+                    },
+                    {
+                        type = "RigidBodyComponent",
+                        mass = 1.00,
+                        friction = 0.50,
+                        restitution = 0.00,
+                        freezeRotationX = true,
+                        freezeRotationY = false,
+                        freezeRotationZ = true,
+                        bodyType = "Dynamic"
+                    },
+                    {
+                        type = "CapsuleColliderComponent",
+                        radius = 0.30,
+                        height = 1.55,
+                        centerOffset = Vector3(0.00, 0.78, 0.00),
+                        isTrigger = false
+                    },
+                },
+                children = {
+                    {
+                        name = "CombatFireAudio",
+                        uuid = "C0MBAT-F1RE-4001-8000-000000000001",
+                        components = {
+                            {
+                                type = "AudioSourceComponent",
+                                volume = 0.85,
+                                pitch = 1.00,
+                                loop = false,
+                                playOnStart = false,
+                                audioClip = "Assets/Audio/Combat/bow_release.mp3"
+                            },
+                        }
+                    },
+                    {
+                        name = "CombatHitAudio",
+                        uuid = "C0MBAT-H1T0-4001-8000-000000000001",
+                        components = {
+                            {
+                                type = "AudioSourceComponent",
+                                volume = 0.85,
+                                pitch = 1.00,
+                                loop = false,
+                                playOnStart = false,
+                                audioClip = "Assets/Audio/Combat/hit_projectile.mp3"
+                            },
+                        }
+                    },
+                    {
+                        name = "FootCircle",
+                        uuid = "F00T-C1RC-4000-8000-000000000001",
+                        position = Vector3(0.00, 0.03, 0.00),
+                        rotation = Quaternion.FromEulerAngles(-90.00, 0.00, 0.00),
+                        children = {
+                            {
+                                name = "FootCircleCanvas",
+                                uuid = "F00T-C1RC-4000-8000-000000000002",
+                                components = {
+                                    {
+                                        type = "Canvas",
+                                        renderMode = "WorldSpace",
+                                        canvasSize = Vector2(128.00, 128.00),
+                                        pixelsPerUnit = 100.00,
+                                        sortOrder = 4,
+                                        faceCamera = false,
+                                        faceCameraLockY = false
+                                    },
+                                },
+                                children = {
+                                    {
+                                        name = "CircleImage",
+                                        uuid = "F00T-C1RC-4000-8000-000000000003",
+                                        components = {
+                                            {
+                                                type = "UIImage",
+                                                texture = "Assets/UI/player_foot_ring.png",
+                                                tintColor = Color(1.00, 1.00, 1.00, 0.72),
+                                                preserveAspect = true,
+                                                isVisible = true,
+                                                raycastTarget = false,
+                                                anchorMin = Vector2(0.50, 0.50),
+                                                anchorMax = Vector2(0.50, 0.50),
+                                                pivot = Vector2(0.50, 0.50),
+                                                anchoredPosition = Vector2(0.00, 0.00),
+                                                sizeDelta = Vector2(118.00, 118.00),
+                                                rotation = 0.00,
+                                                scale = Vector2(1.00, 1.00)
+                                            },
+                                        }
+                                    },
+                                }
+                            },
+                        }
+                    },
+                    {
+                        name = "PlayerNameplate",
+                        uuid = "A1000001-0001-4000-8000-000000000001",
+                        position = Vector3(0.00, 2.20, 0.00),
+                        rotation = Quaternion.FromEulerAngles(50.00, -180.00, 0.00),
+                        children = {
+                            {
+                                name = "NameplateCanvas",
+                                uuid = "A1000001-0002-4000-8000-000000000002",
+                                components = {
+                                    {
+                                        type = "Canvas",
+                                        renderMode = "WorldSpace",
+                                        canvasSize = Vector2(200.00, 24.00),
+                                        pixelsPerUnit = 100.00,
+                                        sortOrder = 25,
+                                        faceCamera = false,
+                                        faceCameraLockY = false
+                                    },
+                                    {
+                                        type = "PlayerNameplateUI",
+                                        displayNameText = "A1000001-0004-4000-8000-000000000004/UIText",
+                                        healthBarUI = "A1000001-0005-4000-8000-000000000005/HealthBarUI"
+                                    },
+                                },
+                                children = {
+                                    {
+                                        name = "NameplateRoot",
+                                        uuid = "A1000001-0003-4000-8000-000000000003",
+                                        children = {
+                                            {
+                                                name = "FrameImage",
+                                                uuid = "A1000001-0008-4000-8000-000000000008",
+                                                components = {
+                                                    {
+                                                        type = "UIImage",
+                                                        texture = "Assets/UI/GuildSlate/health_nameplate_frame.texture",
+                                                        tintColor = Color(1.00, 1.00, 1.00, 1.00),
+                                                        preserveAspect = false,
+                                                        isVisible = true,
+                                                        raycastTarget = false,
+                                                        anchorMin = Vector2(0.50, 0.50),
+                                                        anchorMax = Vector2(0.50, 0.50),
+                                                        pivot = Vector2(0.50, 0.50),
+                                                        anchoredPosition = Vector2(0.00, 0.00),
+                                                        sizeDelta = Vector2(200.00, 20.00),
+                                                        rotation = 0.00,
+                                                        scale = Vector2(0.92, 1.89)
+                                                    },
+                                                }
+                                            },
+                                            {
+                                                name = "DisplayName",
+                                                uuid = "A1000001-0004-4000-8000-000000000004",
+                                                components = {
+                                                    {
+                                                        type = "UIText",
+                                                        text = "Player",
+                                                        color = Color(1.00, 0.82, 0.47, 1.00),
+                                                        fontSize = 27.10,
+                                                        alignment = "Center",
+                                                        font = nil,
+                                                        isVisible = true,
+                                                        raycastTarget = false,
+                                                        anchorMin = Vector2(0.50, 0.76),
+                                                        anchorMax = Vector2(0.50, 0.76),
+                                                        pivot = Vector2(0.50, 0.50),
+                                                        anchoredPosition = Vector2(0.00, 24.00),
+                                                        sizeDelta = Vector2(184.00, 12.00),
+                                                        rotation = 0.00,
+                                                        scale = Vector2(1.00, 1.00)
+                                                    },
+                                                }
+                                            },
+                                            {
+                                                name = "NameplateHealthTrack",
+                                                uuid = "A1000001-0005-4000-8000-000000000005",
+                                                components = {
+                                                    {
+                                                        type = "UIPanel",
+                                                        backgroundColor = Color(0.00, 0.00, 0.00, 0.00),
+                                                        borderColor = Color(0.00, 0.00, 0.00, 0.00),
+                                                        borderThickness = 0.00,
+                                                        hasBorder = false,
+                                                        isVisible = true,
+                                                        raycastTarget = false,
+                                                        anchorMin = Vector2(0.50, 0.24),
+                                                        anchorMax = Vector2(0.50, 0.24),
+                                                        pivot = Vector2(0.50, 0.50),
+                                                        anchoredPosition = Vector2(0.00, -2.00),
+                                                        sizeDelta = Vector2(168.00, 5.00),
+                                                        rotation = 0.00,
+                                                        scale = Vector2(1.00, 1.00)
+                                                    },
+                                                    {
+                                                        type = "UISlider",
+                                                        minValue = 0.00,
+                                                        maxValue = 1.00,
+                                                        value = 1.00,
+                                                        interactable = false,
+                                                        fillPanel = "A1000001-0006-4000-8000-000000000006/UIPanel",
+                                                        handlePanel = "A1000001-0007-4000-8000-000000000007/UIPanel"
+                                                    },
+                                                    {
+                                                        type = "HealthBarUI",
+                                                        health = "E8682E33-50ED-45D8-BC76-B31113639F9E/HealthComponent",
+                                                        fillPanel = "A1000001-0006-4000-8000-000000000006/UIPanel",
+                                                        highHealthColor = Color(0.12, 0.78, 0.24, 1.00),
+                                                        midHealthColor = Color(0.95, 0.74, 0.16, 1.00),
+                                                        lowHealthColor = Color(0.82, 0.18, 0.18, 1.00)
+                                                    },
+                                                },
+                                                children = {
+                                                    {
+                                                        name = "TrackImage",
+                                                        uuid = "A1000001-0009-4000-8000-000000000009",
+                                                        components = {
+                                                            {
+                                                                type = "UIImage",
+                                                                texture = "Assets/UI/GuildSlate/health_bar_track.texture",
+                                                                tintColor = Color(1.00, 1.00, 1.00, 1.00),
+                                                                preserveAspect = false,
+                                                                isVisible = true,
+                                                                raycastTarget = false,
+                                                                anchorMin = Vector2(0.50, 0.50),
+                                                                anchorMax = Vector2(0.50, 0.50),
+                                                                pivot = Vector2(0.50, 0.50),
+                                                                anchoredPosition = Vector2(0.00, 0.00),
+                                                                sizeDelta = Vector2(168.00, 13.00),
+                                                                rotation = 0.00,
+                                                                scale = Vector2(1.00, 1.00)
+                                                            },
+                                                        }
+                                                    },
+                                                    {
+                                                        name = "NameplateFill",
+                                                        uuid = "A1000001-0006-4000-8000-000000000006",
+                                                        components = {
+                                                            {
+                                                                type = "UIPanel",
+                                                                backgroundColor = Color(0.12, 0.78, 0.24, 1.00),
+                                                                borderColor = Color(0.00, 0.00, 0.00, 0.00),
+                                                                borderThickness = 0.00,
+                                                                hasBorder = false,
+                                                                isVisible = true,
+                                                                raycastTarget = false,
+                                                                anchorMin = Vector2(0.00, 0.50),
+                                                                anchorMax = Vector2(0.00, 0.50),
+                                                                pivot = Vector2(0.00, 0.50),
+                                                                anchoredPosition = Vector2(1.00, 0.00),
+                                                                sizeDelta = Vector2(168.00, 12.00),
+                                                                rotation = 0.00,
+                                                                scale = Vector2(1.00, 1.00)
+                                                            },
+                                                        }
+                                                    },
+                                                    {
+                                                        name = "NameplateHandle",
+                                                        uuid = "A1000001-0007-4000-8000-000000000007",
+                                                        components = {
+                                                            {
+                                                                type = "UIPanel",
+                                                                backgroundColor = Color(0.00, 0.00, 0.00, 0.00),
+                                                                borderColor = Color(0.00, 0.00, 0.00, 0.00),
+                                                                borderThickness = 0.00,
+                                                                hasBorder = false,
+                                                                isVisible = false,
+                                                                raycastTarget = false,
+                                                                anchorMin = Vector2(0.00, 0.50),
+                                                                anchorMax = Vector2(0.00, 0.50),
+                                                                pivot = Vector2(0.50, 0.50),
+                                                                anchoredPosition = Vector2(168.00, 0.00),
+                                                                sizeDelta = Vector2(1.00, 1.00),
+                                                                rotation = 0.00,
+                                                                scale = Vector2(1.00, 1.00)
+                                                            },
+                                                        }
+                                                    },
+                                                }
+                                            },
+                                            {
+                                                name = "NameplateAmmoTrack",
+                                                uuid = "A1000001-0010-4000-8000-000000000010",
+                                                components = {
+                                                    {
+                                                        type = "UIPanel",
+                                                        backgroundColor = Color(0.00, 0.00, 0.00, 0.00),
+                                                        borderColor = Color(0.00, 0.00, 0.00, 0.00),
+                                                        borderThickness = 0.00,
+                                                        hasBorder = false,
+                                                        isVisible = true,
+                                                        raycastTarget = false,
+                                                        anchorMin = Vector2(0.50, 0.10),
+                                                        anchorMax = Vector2(0.50, 0.10),
+                                                        pivot = Vector2(0.50, 0.50),
+                                                        anchoredPosition = Vector2(0.00, -10.00),
+                                                        sizeDelta = Vector2(168.00, 5.00),
+                                                        rotation = 0.00,
+                                                        scale = Vector2(1.00, 1.00)
+                                                    },
+                                                    {
+                                                        type = "UISlider",
+                                                        minValue = 0.00,
+                                                        maxValue = 1.00,
+                                                        value = 1.00,
+                                                        interactable = false,
+                                                        fillPanel = "A1000001-0011-4000-8000-000000000011/UIPanel",
+                                                        handlePanel = "A1000001-0012-4000-8000-000000000012/UIPanel"
+                                                    },
+                                                },
+                                                children = {
+                                                    {
+                                                        name = "AmmoTrackImage",
+                                                        uuid = "A1000001-0013-4000-8000-000000000013",
+                                                        components = {
+                                                            {
+                                                                type = "UIImage",
+                                                                texture = "Assets/UI/GuildSlate/health_bar_track.texture",
+                                                                tintColor = Color(1.00, 1.00, 1.00, 1.00),
+                                                                preserveAspect = false,
+                                                                isVisible = true,
+                                                                raycastTarget = false,
+                                                                anchorMin = Vector2(0.50, 0.50),
+                                                                anchorMax = Vector2(0.50, 0.50),
+                                                                pivot = Vector2(0.50, 0.50),
+                                                                anchoredPosition = Vector2(0.00, 0.00),
+                                                                sizeDelta = Vector2(168.00, 13.00),
+                                                                rotation = 0.00,
+                                                                scale = Vector2(1.00, 1.00)
+                                                            },
+                                                        }
+                                                    },
+                                                    {
+                                                        name = "NameplateAmmoFill",
+                                                        uuid = "A1000001-0011-4000-8000-000000000011",
+                                                        components = {
+                                                            {
+                                                                type = "UIPanel",
+                                                                backgroundColor = Color(0.18, 0.52, 0.95, 1.00),
+                                                                borderColor = Color(0.00, 0.00, 0.00, 0.00),
+                                                                borderThickness = 0.00,
+                                                                hasBorder = false,
+                                                                isVisible = true,
+                                                                raycastTarget = false,
+                                                                anchorMin = Vector2(0.00, 0.50),
+                                                                anchorMax = Vector2(0.00, 0.50),
+                                                                pivot = Vector2(0.00, 0.50),
+                                                                anchoredPosition = Vector2(1.00, 0.00),
+                                                                sizeDelta = Vector2(168.00, 12.00),
+                                                                rotation = 0.00,
+                                                                scale = Vector2(1.00, 1.00)
+                                                            },
+                                                        }
+                                                    },
+                                                    {
+                                                        name = "NameplateAmmoHandle",
+                                                        uuid = "A1000001-0012-4000-8000-000000000012",
+                                                        components = {
+                                                            {
+                                                                type = "UIPanel",
+                                                                backgroundColor = Color(0.00, 0.00, 0.00, 0.00),
+                                                                borderColor = Color(0.00, 0.00, 0.00, 0.00),
+                                                                borderThickness = 0.00,
+                                                                hasBorder = false,
+                                                                isVisible = false,
+                                                                raycastTarget = false,
+                                                                anchorMin = Vector2(0.00, 0.50),
+                                                                anchorMax = Vector2(0.00, 0.50),
+                                                                pivot = Vector2(0.50, 0.50),
+                                                                anchoredPosition = Vector2(168.00, 0.00),
+                                                                sizeDelta = Vector2(1.00, 1.00),
+                                                                rotation = 0.00,
+                                                                scale = Vector2(1.00, 1.00)
+                                                            },
+                                                        }
+                                                    },
+                                                }
+                                            },
+                                        }
+                                    },
+                                }
+                            },
+                        }
+                    },
+                    {
+                        name = "Attack Aim Trail",
+                        uuid = "7C57C988-6629-4FE8-AFF1-8D4D39C84D1B",
+                        position = Vector3(0.00, 1.00, 0.40),
+                        components = {
+                            {
+                                type = "TrailRenderer",
+                                width = 0.35,
+                                color = Color(1.00, 1.00, 1.00, 0.54),
+                                fadeAlphaAlongLength = false,
+                                visible = false
+                            },
+                        }
+                    },
+{
+                        name = "Player",
+                        uuid = "5200AC9B-039A-416E-82AE-FD5FE1754C95",
+                        scale = Vector3(0.85, 0.85, 0.85),
+                        components = {
+                            {
+                                type = "Animator",
+                                modelRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Ranger.fbx",
+                                currentClipName = "ThirdPerson.Idle",
+                                defaultClip = "Ranged_Bow_Aiming_Idle",
+                                speed = 1.00,
+                                playing = true,
+                                looping = true,
+                                additionalModels = {
+                                    "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_MovementBasic.fbx",
+                                    "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_General.fbx",
+                                    "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_CombatRanged.fbx"
+                                }
+                            },
+                        },
+                        children = {
+                            {
+            name = "Ranger_Body",
+            uuid = "F02F4F7D-E02E-4BFE-BC2C-B95B4789F6B3",
+            components = {
+                {
+                    type = "MeshRenderer",
+                    meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Ranger.fbx",
+                    textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/ranger_texture.png",
+                    colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                    meshIndex = 0,
+                    multiMesh = false
+                },
+            }
+        },
+        {
+            name = "Ranger_ArmLeft",
+            uuid = "D96B4FA5-8242-4AAB-AD20-636EC682F83B",
+            components = {
+                {
+                    type = "MeshRenderer",
+                    meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Ranger.fbx",
+                    textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/ranger_texture.png",
+                    colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                    meshIndex = 1,
+                    multiMesh = false
+                },
+            }
+        },
+        {
+            name = "Ranger_LegLeft",
+            uuid = "0014770D-C798-471E-89E4-961965808A32",
+            components = {
+                {
+                    type = "MeshRenderer",
+                    meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Ranger.fbx",
+                    textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/ranger_texture.png",
+                    colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                    meshIndex = 2,
+                    multiMesh = false
+                },
+            }
+        },
+        {
+            name = "Ranger_LegRight",
+            uuid = "50EFDE79-BA4D-4340-961E-70E7378D52F6",
+            components = {
+                {
+                    type = "MeshRenderer",
+                    meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Ranger.fbx",
+                    textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/ranger_texture.png",
+                    colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                    meshIndex = 3,
+                    multiMesh = false
+                },
+            }
+        },
+        {
+            name = "Ranger_ArmRight",
+            uuid = "C670D418-3446-4B72-AF56-E7E400F25F60",
+            components = {
+                {
+                    type = "MeshRenderer",
+                    meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Ranger.fbx",
+                    textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/ranger_texture.png",
+                    colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                    meshIndex = 4,
+                    multiMesh = false
+                },
+            }
+        },
+        {
+            name = "Ranger_Head",
+            uuid = "141353F4-CEB5-4FF6-93FB-27EAD6F7823B",
+            position = Vector3(0.00, 1.24, 0.00),
+            components = {
+                {
+                    type = "MeshRenderer",
+                    meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Ranger.fbx",
+                    textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/ranger_texture.png",
+                    colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                    meshIndex = 5,
+                    multiMesh = false
+                },
+            }
+        },
+        {
+            name = "Ranger_Quiver",
+            uuid = "0ACCC6B3-6BA7-4353-A7D3-9656D95A57CD",
+            position = Vector3(0.01, 0.91, -0.39),
+            components = {
+                {
+                    type = "MeshRenderer",
+                    meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Ranger.fbx",
+                    textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/ranger_texture.png",
+                    colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                    meshIndex = 6,
+                    multiMesh = false
+                },
+            }
+        },
+        {
+            name = "Ranger_Cape",
+            uuid = "DDED2BA7-E9C6-4FE0-91B6-184A548DF391",
+            position = Vector3(0.00, 1.24, 0.00),
+            components = {
+                {
+                    type = "MeshRenderer",
+                    meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Ranger.fbx",
+                    textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/ranger_texture.png",
+                    colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                    meshIndex = 7,
+                    multiMesh = false
+                },
+            }
+        },
+        {
+            name = "root",
+            uuid = "C5AD6486-1C69-44C8-8FA5-1631DCC3890A",
+            children = {
+                {
+                    name = "hips",
+                    uuid = "69657A7D-CE8E-42BB-AE35-5AC07910643C",
+                    children = {
+                        {
+                            name = "spine",
+                            uuid = "5C4C8BA9-6DC6-4D34-B001-841D4E3DCA8B",
+                            children = {
+                                {
+                                    name = "chest",
+                                    uuid = "C02222AD-8A4A-44A9-9568-713639DFE8FE",
+                                    children = {
+                                        {
+                                            name = "upperarm.l",
+                                            uuid = "EC6C2857-949D-4DA2-BDF4-ED2450B6C5E5",
+                                            children = {
+                                                {
+                                                    name = "lowerarm.l",
+                                                    uuid = "4DB13D0A-4290-419D-A32D-54B0C4E831A5",
+                                                    children = {
+                                                        {
+                                                            name = "wrist.l",
+                                                            uuid = "2F5ABDB7-48FE-4ADC-B568-EEC24DC4B0A1",
+                                                            children = {
+                                                                {
+                                                                    name = "hand.l",
+                                                                    uuid = "B2E987EF-3736-4B47-93F3-D0C2A9364C95",
+                                                                    children = {
+                                                                        {
+                                                                            name = "handslot.l",
+                                                                            uuid = "08964EA4-D7F7-4A0C-BF39-2A6FE9D938B9",
+                                                                            children = {
+                                                                                {
+                                                                                    name = "Ranger_Bow",
+                                                                                    uuid = "109DAEF5-4736-4BB3-B63F-DD6B5B44855E",
+                                                                                    rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
+                                                                                    components = {
+                                                                                        {
+                                                                                            type = "MeshRenderer",
+                                                                                            meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/bow_withString.obj",
+                                                                                            textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/ranger_texture.png",
+                                                                                            colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                                                                            meshIndex = 0,
+                                                                                            multiMesh = false
+                                                                                        },
+                                                                                    }
+                                                                                },
+                                                                            }
+                                                                        },
+                                                                    }
+                                                                },
+                                                            }
+                                                        },
+                                                    }
+                                                },
+                                            }
+                                        },
+                                        {
+                                            name = "upperarm.r",
+                                            uuid = "0E0C67B4-D021-47E3-8F72-A485BFC87DC6",
+                                            children = {
+                                                {
+                                                    name = "lowerarm.r",
+                                                    uuid = "E5B6B75F-147D-4477-8084-1D15986F517E",
+                                                    children = {
+                                                        {
+                                                            name = "wrist.r",
+                                                            uuid = "3AC8ADA2-B039-4438-92D1-4FA79F1F2F0F",
+                                                            children = {
+                                                                {
+                                                                    name = "hand.r",
+                                                                    uuid = "0BFBA09A-04BA-4516-AA49-8F07C2032614",
+                                                                    children = {
+                                                                        {
+                                                                            name = "handslot.r",
+                                                                            uuid = "5F01E38D-E9AC-46EF-81CB-2F439BD1306F",
+                                                                            children = {
+                                                                                {
+                                                                                    name = "Ranger_Arrow",
+                                                                                    uuid = "R4NG3R00-ARRO-4000-8000-000000000001",
+                                                                                    active = false,
+                                                                                    rotation = Quaternion.FromEulerAngles(-90.00, 0.00, 0.00),
+                                                                                    components = {
+                                                                                        {
+                                                                                            type = "MeshRenderer",
+                                                                                            meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/arrow_bow.obj",
+                                                                                            textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/ranger_texture.png",
+                                                                                            colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                                                                            meshIndex = 0,
+                                                                                            multiMesh = false
+                                                                                        },
+                                                                                    }
+                                                                                },
+                                                                            }
+                                                                        },
+                                                                    }
+                                                                },
+                                                            }
+                                                        },
+                                                    }
+                                                },
+                                            }
+                                        },
+                                        {
+                                            name = "head",
+                                            uuid = "C733BE2F-9D91-40B5-B63D-6EF9A02D5257",
+                                        },
+                                    }
+                                },
+                            }
+                        },
+                        {
+                            name = "upperleg.l",
+                            uuid = "99A671E3-FA32-4222-BEEC-7C9757774FF2",
+                            children = {
+                                {
+                                    name = "lowerleg.l",
+                                    uuid = "922E0DA8-D636-4982-A610-6C56CC401DB5",
+                                    children = {
+                                        {
+                                            name = "foot.l",
+                                            uuid = "110886C1-A83F-40FE-8B68-FC24F2E8C303",
+                                            children = {
+                                                {
+                                                    name = "toes.l",
+                                                    uuid = "2DC5DA98-335A-479A-8B30-CBED96801F0A",
+                                                },
+                                            }
+                                        },
+                                    }
+                                },
+                            }
+                        },
+                        {
+                            name = "upperleg.r",
+                            uuid = "0E2ECE82-9C85-4ABF-8BB7-B404F5285237",
+                            children = {
+                                {
+                                    name = "lowerleg.r",
+                                    uuid = "FD5B45FE-6637-4772-8CE9-8B3F54F5EA60",
+                                    children = {
+                                        {
+                                            name = "foot.r",
+                                            uuid = "CF8BCD2B-2AE5-4426-A71C-25377ECCEECC",
+                                            children = {
+                                                {
+                                                    name = "toes.r",
+                                                    uuid = "6F30C2FE-29EF-469A-B98B-C948563D6B7B",
+                                                },
+                                            }
+                                        },
+                                    }
+                                },
+                            }
+                        },
+                    }
+                },
+            }
+        },
+                        }
+                    },
+                    {
+                        name = "MainCamera",
+                        uuid = "0E7CE370-7C0E-45A8-89CA-AD7A3E70C216",
+                        position = Vector3(0.00, 9.48, -7.07),
+                        rotation = Quaternion.FromEulerAngles(50.00, 0.00, 0.00),
+                        components = {
+                            {
+                                type = "CameraComponent",
+                                fov = 45.00,
+                                nearClip = 0.10,
+                                farClip = 100.00,
+                                projectionType = "Perspective",
+                                orthographicSize = 3.50,
+                                syncWithTransform = true,
+                                isMainCamera = true
+                            },
+                        }
+                    },
+                }
+}
