@@ -206,6 +206,8 @@ void ThirdPersonCharacterController::OnStart()
     if (health && health->IsDead()) {
         HandleDeath(health->GetLastDeathEvent());
     }
+
+    EnsureAnimationReady();
 }
 
 void ThirdPersonCharacterController::OnUpdate(float deltaTime)

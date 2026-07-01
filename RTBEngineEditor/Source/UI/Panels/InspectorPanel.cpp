@@ -140,8 +140,7 @@ namespace RTBEditor {
         }
 
         std::string StripClipVendorPrefix(const std::string& value) {
-            const size_t pipe = value.find('|');
-            return pipe != std::string::npos ? value.substr(pipe + 1) : value;
+            return RTBEngine::Animation::Animator::NormalizeClipName(value);
         }
 
         void ReleaseModelMeshes(RTBEngine::Rendering::ModelData& data) {
@@ -223,35 +222,7 @@ namespace RTBEditor {
                 return;
             }
 
-            animator->ClearClips();
-
-            auto loadClipSource = [animator](const std::string& path) {
-                if (path.empty()) {
-                    return;
-                }
-
-                RTBEngine::Rendering::ModelData data =
-                    RTBEngine::Rendering::ModelLoader::LoadModelWithAnimations(path);
-
-                for (const auto& clip : data.animations) {
-                    animator->AddClip(StripClipVendorPrefix(clip->GetName()), clip);
-                }
-
-                ReleaseModelMeshes(data);
-            };
-
-            loadClipSource(animator->modelRef);
-            for (const auto& path : animator->additionalModels) {
-                loadClipSource(path);
-            }
-
-            if (!animator->defaultClip.empty() && animator->GetClip(animator->defaultClip) == nullptr) {
-                animator->defaultClip.clear();
-            }
-
-            if (!animator->currentClipName.empty() && animator->GetClip(animator->currentClipName) == nullptr) {
-                animator->currentClipName.clear();
-            }
+            animator->ReloadClipLibrary();
         }
 
         CompatibleFbxScanResult FindCompatibleAnimationFbxPaths(const std::string& modelRef) {
