@@ -44,6 +44,7 @@ public:
         float maxDistance = 1.15f;
         float radius = 0.55f;
         float damage = 25.0f;
+        float knockbackStrength = 0.0f;
         int instigatorTeam = 0;
         bool ignoreSameTeam = true;
         bool destroyOnHit = true;
@@ -70,6 +71,7 @@ public:
     float maxDistance = 1.15f;
     float radius = 0.55f;
     float damage = 25.0f;
+    float knockbackStrength = 0.0f;
     int instigatorTeam = 0;
     bool ignoreSameTeam = true;
     bool destroyOnHit = true;

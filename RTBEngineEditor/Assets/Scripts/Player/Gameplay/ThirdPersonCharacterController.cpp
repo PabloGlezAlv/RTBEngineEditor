@@ -445,6 +445,15 @@ void ThirdPersonCharacterController::PollAttackCompletion(float deltaTime)
         attackStateElapsed += deltaTime;
     }
 
+    if (attackAbility && attackAbility->IsAbilityActive()) {
+        constexpr float kAbilitySafetyTimeoutSeconds = 5.0f;
+        if (attackStateElapsed < kAbilitySafetyTimeoutSeconds) {
+            return;
+        }
+
+        RTB_WARN("[ThirdPersonCharacterController] Attack ability timed out; forcing locomotion.");
+    }
+
     const bool hasAttackAnimation =
         animator && attackSlotState.ready && animator->GetClip(kAttackAlias);
 

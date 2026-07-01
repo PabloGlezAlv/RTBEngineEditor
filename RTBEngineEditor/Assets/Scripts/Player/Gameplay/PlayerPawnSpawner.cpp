@@ -16,7 +16,6 @@
 #include <RTBEngine/Scene/CameraComponent.h>
 #include <RTBEngine/Scene/PrefabRegistry.h>
 #include <RTBEngine/Scene/SceneManager.h>
-#include <RTBEngine/Scripting/SceneLoader.h>
 #include <RTBEngine/UI/Elements/UIJoystick.h>
 
 #include <filesystem>
@@ -139,14 +138,17 @@ void WireSpawnedPlayerReferences(
 
     RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
     if (scene) {
-        RTBEngine::Scripting::SceneLoader::RebuildFbxHierarchies(scene);
         if (controller->animator && !controller->animator->AreBoneGOsCreated()) {
             controller->animator->CreateBoneGameObjects(scene);
         }
     }
 
     if (auto* statsApplier = spawnedPawn->GetComponent<CharacterStatsApplier>()) {
-        statsApplier->OnAwake();
+        PlayerCharacterSelection& selection = PlayerCharacterSelection::GetInstance();
+        selection.EnsureSelectionFromCatalog();
+        if (CharacterDefinition* definition = selection.GetSelectedDefinition()) {
+            CharacterStatsApplier::ApplyDefinition(spawnedPawn, *definition);
+        }
     }
 
     controller->RefreshAfterSpawn();

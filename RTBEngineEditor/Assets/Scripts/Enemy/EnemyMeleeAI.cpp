@@ -673,7 +673,10 @@ void EnemyMeleeAI::HandleDamageTaken(const HealthComponent::DamageTakenEvent& ev
                 owner->GetWorldPosition() - eventData.damage.instigator->GetWorldPosition();
         }
 
-        locomotion->ApplyKnockback(eventData.damage.hitDirection, fallbackDirection);
+        locomotion->ApplyKnockback(
+            eventData.damage.hitDirection,
+            fallbackDirection,
+            eventData.damage.knockbackStrength);
     }
 
     state = State::HitReact;

@@ -38,6 +38,7 @@ protected:
     virtual float GetHitDelayDuration() const = 0;
     virtual float GetRecoveryDuration() const = 0;
     virtual float GetTickInterval() const { return 0.0f; }
+    virtual int GetTickCount() const { return 0; }
     virtual bool CanActivateAbility(RTBEngine::ECS::GameObject* instigator,
                                     const RTBEngine::Math::Vector3& direction) const;
     virtual void OnAbilityStarted() {}
@@ -50,6 +51,7 @@ private:
     float cooldownRemaining = 0.0f;
     float activeElapsed = 0.0f;
     float tickAccumulator = 0.0f;
+    int ticksExecuted = 0;
     bool abilityActive = false;
     bool hitExecuted = false;
 

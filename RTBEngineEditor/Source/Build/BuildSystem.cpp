@@ -368,10 +368,27 @@ namespace RTBEditor {
         // Build the MSBuild command.
         // We invoke via cmd /C and carefully quote the path with spaces.
         // /nologo suppresses the banner, /v:m = minimal verbosity.
+        // Use an isolated intermediate directory so compilation still works while the editor
+        // has the output GameScripts.dll loaded (avoids PDB/IDB lock on the default IntDir).
+        const Project* project = Project::GetActiveProject();
+        std::string intDirArg;
+        if (project) {
+            const fs::path intermediateDirectory =
+                project->GetProjectDirectory() / "GameScripts" / "x64" / (configuration + "Build");
+            const fs::path absoluteIntermediateDirectory =
+                fs::absolute(intermediateDirectory).lexically_normal();
+            std::error_code dirError;
+            fs::create_directories(absoluteIntermediateDirectory, dirError);
+            if (!dirError) {
+                intDirArg = " /p:IntDir=\"" + EnsureGenericTrailingSlash(absoluteIntermediateDirectory) + "\"";
+            }
+        }
+
         std::string cmd =
             "cmd /C \"\"" + msbuildPath + "\" \"" + vcxprojPath + "\""
             " /p:Configuration=" + configuration +
-            " /p:Platform=x64"
+            " /p:Platform=x64" +
+            intDirArg +
             " /t:Build"
             " /nologo /v:m\"";
 

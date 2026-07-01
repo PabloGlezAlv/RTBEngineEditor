@@ -59,9 +59,10 @@
       <PreprocessorDefinitions>_DEBUG;GAMESCRIPTS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\RTBEngine_SDK\Include;$(ProjectDir)..\RTBEngine_SDK\Include\RTBEngine;$(ProjectDir)..\RTBEngine_SDK\Include\Bullet;$(ProjectDir)..\Assets\Scripts;$(ProjectDir)..\Assets\Scripts\Character;$(ProjectDir)..\Assets\Scripts\Player;$(ProjectDir)..\Assets\Scripts\Player\Gameplay;$(ProjectDir)..\Assets\Scripts\Player\Preview;$(ProjectDir)..\Assets\Scripts\Online;$(ProjectDir)..\Assets\Scripts\Enemy;$(ProjectDir)..\Assets\Scripts\Combat;$(ProjectDir)..\Assets\Scripts\Session;$(ProjectDir)..\Assets\Scripts\UI;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\RTBEngine_SDK\Include;$(ProjectDir)..\RTBEngine_SDK\Include\RTBEngine;$(ProjectDir)..\RTBEngine_SDK\Include\Bullet;$(ProjectDir)..\RTBEngine_SDK\Include\Lua;$(ProjectDir)..\RTBEngine_SDK\Include\LuaBridge;$(ProjectDir)..\..\..\RTBEngine\RTBEngine\ThirdParty\lua\include;$(ProjectDir)..\..\..\RTBEngine\RTBEngine\ThirdParty\luaBridge\Source;$(ProjectDir)..\Assets\Scripts;$(ProjectDir)..\Assets\Scripts\Character;$(ProjectDir)..\Assets\Scripts\Player;$(ProjectDir)..\Assets\Scripts\Player\Gameplay;$(ProjectDir)..\Assets\Scripts\Player\Preview;$(ProjectDir)..\Assets\Scripts\Online;$(ProjectDir)..\Assets\Scripts\Enemy;$(ProjectDir)..\Assets\Scripts\Combat;$(ProjectDir)..\Assets\Scripts\Session;$(ProjectDir)..\Assets\Scripts\UI;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <ProgramDataBaseFileName>$(IntDir)$(TargetName).pdb</ProgramDataBaseFileName>
+      <AdditionalOptions>/FS %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -79,7 +80,7 @@
       <PreprocessorDefinitions>NDEBUG;GAMESCRIPTS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\RTBEngine_SDK\Include;$(ProjectDir)..\RTBEngine_SDK\Include\RTBEngine;$(ProjectDir)..\RTBEngine_SDK\Include\Bullet;$(ProjectDir)..\Assets\Scripts;$(ProjectDir)..\Assets\Scripts\Character;$(ProjectDir)..\Assets\Scripts\Player;$(ProjectDir)..\Assets\Scripts\Player\Gameplay;$(ProjectDir)..\Assets\Scripts\Player\Preview;$(ProjectDir)..\Assets\Scripts\Online;$(ProjectDir)..\Assets\Scripts\Enemy;$(ProjectDir)..\Assets\Scripts\Combat;$(ProjectDir)..\Assets\Scripts\Session;$(ProjectDir)..\Assets\Scripts\UI;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\RTBEngine_SDK\Include;$(ProjectDir)..\RTBEngine_SDK\Include\RTBEngine;$(ProjectDir)..\RTBEngine_SDK\Include\Bullet;$(ProjectDir)..\RTBEngine_SDK\Include\Lua;$(ProjectDir)..\RTBEngine_SDK\Include\LuaBridge;$(ProjectDir)..\..\..\RTBEngine\RTBEngine\ThirdParty\lua\include;$(ProjectDir)..\..\..\RTBEngine\RTBEngine\ThirdParty\luaBridge\Source;$(ProjectDir)..\Assets\Scripts;$(ProjectDir)..\Assets\Scripts\Character;$(ProjectDir)..\Assets\Scripts\Player;$(ProjectDir)..\Assets\Scripts\Player\Gameplay;$(ProjectDir)..\Assets\Scripts\Player\Preview;$(ProjectDir)..\Assets\Scripts\Online;$(ProjectDir)..\Assets\Scripts\Enemy;$(ProjectDir)..\Assets\Scripts\Combat;$(ProjectDir)..\Assets\Scripts\Session;$(ProjectDir)..\Assets\Scripts\UI;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>

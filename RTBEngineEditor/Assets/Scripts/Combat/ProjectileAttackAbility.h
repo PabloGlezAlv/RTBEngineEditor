@@ -56,7 +56,7 @@ public:
     AimVisualKind GetAimVisualKind() const override { return AimVisualKind::RangedProjectile; }
     float GetAimRangeForVisual() const override { return GetTravelDistance(); }
 
-    void SetProjectileCombatOverrides(float damage, float speed);
+    void SetProjectileCombatOverrides(float damage, float speed, float knockback = 0.0f);
     void SetProjectilePrefabRef(const std::string& prefabRef);
 
 protected:
@@ -74,6 +74,7 @@ private:
     float cachedDamage = 0.0f;
     float projectileDamageOverride = 0.0f;
     float projectileSpeedOverride = 0.0f;
+    float projectileKnockbackOverride = 0.0f;
 
     void ClampSettings();
     void ResolveProjectilePrefab();

@@ -32,7 +32,7 @@ public:
     float recoveryDuration = 0.45f;
     float sphereRadius = 0.45f;
     float sphereDistance = 0.95f;
-    float knockbackStrength = 2.5f;
+    float knockbackStrength = 0.0f;
     bool ignoreSameTeam = true;
     RTBEngine::ECS::AudioSourceComponent* hitAudio = nullptr;
 

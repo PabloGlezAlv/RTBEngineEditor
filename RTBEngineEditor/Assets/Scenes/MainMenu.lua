@@ -32,7 +32,7 @@ function CreateScene()
                         type = "MainMenuCharacterPreview",
                         previewOffset = Vector3(0.00, 0.00, 0.00),
                         previewYawDegrees = 0.00,
-                        previewScale = 0.90,
+                        previewScale = 0.85,
                         idleAnimationFbx = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_General.fbx|Idle_A"
                     },
                 }
@@ -40,7 +40,7 @@ function CreateScene()
             {
                 name = "Directional Light",
                 uuid = "48103FD7-E1F1-4AAB-8127-C0C2ED5B4111",
-                rotation = Quaternion.FromEulerAngles(1.75, -52.21, 44.97),
+                rotation = Quaternion.FromEulerAngles(44.85, -30.24, 4.10),
                 components = {
                     {
                         type = "LightComponent",
@@ -58,7 +58,7 @@ function CreateScene()
             {
                 name = "Fill Light",
                 uuid = "MM-FILL-0001-4000-8000-000000000001",
-                rotation = Quaternion.FromEulerAngles(-14.26, 138.27, -24.35),
+                rotation = Quaternion.FromEulerAngles(-27.08, 144.33, 7.42),
                 components = {
                     {
                         type = "LightComponent",
@@ -1158,14 +1158,10 @@ function CreateScene()
                                 clickTextColor = Color(0.86, 0.84, 0.78, 1.00),
                                 clickImageTint = Color(0.92, 0.92, 0.92, 1.00),
                                 clickScaleBoost = 0.97,
-                                disabledTextColor = Color(0.55, 0.54, 0.50, 1.00),
-                                disabledImageTint = Color(0.45, 0.45, 0.45, 1.00),
                                 hoverInTimeSec = 0.12,
                                 hoverOutTimeSec = 0.18,
                                 pressInTimeSec = 0.08,
-                                pressOutTimeSec = 0.12,
-                                playClickSound = true,
-                                clickAudio = "073830E4-5E61-4968-B33A-433B8A60D77C/AudioSourceComponent"
+                                pressOutTimeSec = 0.12
                             },
                         },
                         children = {
@@ -1260,14 +1256,10 @@ function CreateScene()
                                 clickTextColor = Color(0.86, 0.84, 0.78, 1.00),
                                 clickImageTint = Color(0.92, 0.92, 0.92, 1.00),
                                 clickScaleBoost = 0.97,
-                                disabledTextColor = Color(0.55, 0.54, 0.50, 1.00),
-                                disabledImageTint = Color(0.45, 0.45, 0.45, 1.00),
                                 hoverInTimeSec = 0.12,
                                 hoverOutTimeSec = 0.18,
                                 pressInTimeSec = 0.08,
-                                pressOutTimeSec = 0.12,
-                                playClickSound = true,
-                                clickAudio = "073830E4-5E61-4968-B33A-433B8A60D77C/AudioSourceComponent"
+                                pressOutTimeSec = 0.12
                             },
                         },
                         children = {
@@ -1362,14 +1354,10 @@ function CreateScene()
                                 clickTextColor = Color(0.86, 0.84, 0.78, 1.00),
                                 clickImageTint = Color(0.92, 0.92, 0.92, 1.00),
                                 clickScaleBoost = 0.97,
-                                disabledTextColor = Color(0.55, 0.54, 0.50, 1.00),
-                                disabledImageTint = Color(0.45, 0.45, 0.45, 1.00),
                                 hoverInTimeSec = 0.12,
                                 hoverOutTimeSec = 0.18,
                                 pressInTimeSec = 0.08,
-                                pressOutTimeSec = 0.12,
-                                playClickSound = true,
-                                clickAudio = "073830E4-5E61-4968-B33A-433B8A60D77C/AudioSourceComponent"
+                                pressOutTimeSec = 0.12
                             },
                             {
                                 type = "ApplicationQuitButton"
@@ -1467,14 +1455,10 @@ function CreateScene()
                                 clickTextColor = Color(0.86, 0.84, 0.78, 1.00),
                                 clickImageTint = Color(0.92, 0.92, 0.92, 1.00),
                                 clickScaleBoost = 0.97,
-                                disabledTextColor = Color(0.55, 0.54, 0.50, 1.00),
-                                disabledImageTint = Color(0.45, 0.45, 0.45, 1.00),
                                 hoverInTimeSec = 0.12,
                                 hoverOutTimeSec = 0.18,
                                 pressInTimeSec = 0.08,
-                                pressOutTimeSec = 0.12,
-                                playClickSound = true,
-                                clickAudio = "073830E4-5E61-4968-B33A-433B8A60D77C/AudioSourceComponent"
+                                pressOutTimeSec = 0.12
                             },
                         },
                         children = {
@@ -1679,19 +1663,15 @@ function CreateScene()
                                         normalImageTint = Color(1.00, 1.00, 1.00, 1.00),
                                         hoverTextColor = Color(1.00, 0.82, 0.47, 1.00),
                                         hoverImageTint = Color(1.00, 1.00, 1.00, 1.00),
-                                        hoverScaleBoost = 1.04,
+                                        hoverScaleBoost = 1.05,
                                         hoverRotationDeg = 0.00,
                                         clickTextColor = Color(0.86, 0.84, 0.78, 1.00),
                                         clickImageTint = Color(0.92, 0.92, 0.92, 1.00),
                                         clickScaleBoost = 0.97,
-                                        disabledTextColor = Color(0.55, 0.54, 0.50, 1.00),
-                                        disabledImageTint = Color(0.45, 0.45, 0.45, 1.00),
                                         hoverInTimeSec = 0.12,
                                         hoverOutTimeSec = 0.18,
                                         pressInTimeSec = 0.08,
-                                        pressOutTimeSec = 0.12,
-                                        playClickSound = true,
-                                        clickAudio = "073830E4-5E61-4968-B33A-433B8A60D77C/AudioSourceComponent"
+                                        pressOutTimeSec = 0.12
                                     },
                                 },
                                 children = {
@@ -1781,19 +1761,15 @@ function CreateScene()
                                         normalImageTint = Color(1.00, 1.00, 1.00, 1.00),
                                         hoverTextColor = Color(1.00, 0.82, 0.47, 1.00),
                                         hoverImageTint = Color(1.00, 1.00, 1.00, 1.00),
-                                        hoverScaleBoost = 1.04,
+                                        hoverScaleBoost = 1.05,
                                         hoverRotationDeg = 0.00,
                                         clickTextColor = Color(0.86, 0.84, 0.78, 1.00),
                                         clickImageTint = Color(0.92, 0.92, 0.92, 1.00),
                                         clickScaleBoost = 0.97,
-                                        disabledTextColor = Color(0.55, 0.54, 0.50, 1.00),
-                                        disabledImageTint = Color(0.45, 0.45, 0.45, 1.00),
                                         hoverInTimeSec = 0.12,
                                         hoverOutTimeSec = 0.18,
                                         pressInTimeSec = 0.08,
-                                        pressOutTimeSec = 0.12,
-                                        playClickSound = true,
-                                        clickAudio = "073830E4-5E61-4968-B33A-433B8A60D77C/AudioSourceComponent"
+                                        pressOutTimeSec = 0.12
                                     },
                                 },
                                 children = {

@@ -13,11 +13,11 @@ public:
     std::string characterDefinitionRef;
     std::string fallbackCharacterId;
 
-    RTB_COMPONENT(CharacterStatsApplier)
-
     void OnAwake() override;
 
     static bool ApplyDefinition(RTBEngine::ECS::GameObject* pawn, const CharacterDefinition& definition);
+
+    RTB_COMPONENT(CharacterStatsApplier)
 
 private:
     CharacterDefinition* ResolveDefinition() const;

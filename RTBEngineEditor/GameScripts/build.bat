@@ -28,15 +28,12 @@ exit /b 1
 :found_msbuild
 
 echo [INFO] Compiling GameScripts (%CONFIGURATION%^|x64)...
-"%MSBUILD%" GameScripts.vcxproj /p:Configuration=%CONFIGURATION% /p:Platform=x64 /t:Build
+"%MSBUILD%" GameScripts.vcxproj /p:Configuration=%CONFIGURATION% /p:Platform=x64 /p:IntDir=x64\%CONFIGURATION%Build\ /t:Build /nologo /v:m
 
 if %ERRORLEVEL% neq 0 (
     echo [ERROR] Compilation FAILED!
-    pause
     exit /b %ERRORLEVEL%
 )
 
 echo [INFO] GameScripts.dll has been successfully replaced in the target directory.
-
-pause
 exit /b 0

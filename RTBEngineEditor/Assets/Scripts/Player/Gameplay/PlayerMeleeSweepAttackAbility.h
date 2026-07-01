@@ -33,7 +33,8 @@ public:
     float sphereRadius = 0.45f;
     float sphereDistance = 1.20f;
     float tickInterval = 0.50f;
-    float knockbackStrength = 2.5f;
+    int tickCount = 1;
+    float knockbackStrength = 0.0f;
     bool ignoreSameTeam = true;
     RTBEngine::ECS::AudioSourceComponent* hitAudio = nullptr;
 
@@ -44,6 +45,7 @@ public:
                                  float range,
                                  float radius,
                                  float tickSeconds,
+                                 int definitionTickCount,
                                  float knockback);
 
     float GetDamageAmount() const { return damage; }
@@ -59,6 +61,7 @@ protected:
     float GetHitDelayDuration() const override { return hitDelay; }
     float GetRecoveryDuration() const override { return recoveryDuration; }
     float GetTickInterval() const override { return tickInterval; }
+    int GetTickCount() const override;
     bool CanActivateAbility(RTBEngine::ECS::GameObject* instigator,
                             const RTBEngine::Math::Vector3& direction) const override;
     void OnAbilityStarted() override;
@@ -66,6 +69,12 @@ protected:
 
 private:
     void ClampSettings();
+    float GetDamagePerHit() const;
     bool ApplySweepHits(RTBEngine::ECS::GameObject* instigator,
-                        const RTBEngine::Math::Vector3& attackDirection);
+                        const RTBEngine::Math::Vector3& attackDirection,
+                        float hitDamage);
+
+    float totalAttackDamage = 0.0f;
+    float damagePerHit = 0.0f;
+    int attackTickCount = 1;
 };

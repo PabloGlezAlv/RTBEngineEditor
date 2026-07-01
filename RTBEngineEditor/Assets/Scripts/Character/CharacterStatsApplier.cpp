@@ -104,6 +104,7 @@ bool CharacterStatsApplier::ApplyDefinition(
             definition.meleeRange,
             definition.meleeRadius,
             definition.meleeTickInterval,
+            definition.meleeTickCount,
             definition.meleeKnockback);
         appliedAny = true;
     }
@@ -111,7 +112,10 @@ bool CharacterStatsApplier::ApplyDefinition(
         if (!definition.projectilePrefabRef.empty()) {
             rangedAttack->SetProjectilePrefabRef(definition.projectilePrefabRef);
         }
-        rangedAttack->SetProjectileCombatOverrides(definition.projectileDamage, definition.projectileSpeed);
+        rangedAttack->SetProjectileCombatOverrides(
+            definition.projectileDamage,
+            definition.projectileSpeed,
+            definition.projectileKnockback);
         appliedAny = true;
     }
 

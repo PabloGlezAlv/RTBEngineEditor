@@ -163,6 +163,7 @@ RTB_REGISTER_COMPONENT(ProjectileComponent)
     RTB_PROPERTY_RANGE(maxDistance, 0.05f, 50.0f)
     RTB_PROPERTY_RANGE(radius, 0.05f, 5.0f)
     RTB_PROPERTY_RANGE(damage, 0.0f, 1000.0f)
+    RTB_PROPERTY_RANGE(knockbackStrength, 0.0f, 20.0f)
     RTB_PROPERTY_RANGE(instigatorTeam, 0, 8)
     RTB_PROPERTY(ignoreSameTeam)
     RTB_PROPERTY(destroyOnHit)
@@ -283,6 +284,7 @@ void ProjectileComponent::Initialize(const ProjectileConfig& config)
     maxDistance = config.maxDistance;
     radius = config.radius;
     damage = config.damage;
+    knockbackStrength = config.knockbackStrength;
     ignoreSameTeam = config.ignoreSameTeam;
     destroyOnHit = config.destroyOnHit;
     maxHits = config.maxHits;
@@ -312,6 +314,7 @@ void ProjectileComponent::ClampSettings()
     }
     radius = std::max(0.05f, radius);
     damage = std::max(0.0f, damage);
+    knockbackStrength = std::max(0.0f, knockbackStrength);
     maxHits = std::max(0, maxHits);
 }
 
@@ -455,6 +458,7 @@ void ProjectileComponent::InitializeFromOwnerTransform()
     config.maxDistance = maxDistance;
     config.radius = radius;
     config.damage = damage;
+    config.knockbackStrength = knockbackStrength;
     config.instigatorTeam = instigatorTeam;
     config.ignoreSameTeam = ignoreSameTeam;
     config.destroyOnHit = destroyOnHit;
@@ -580,6 +584,7 @@ bool ProjectileComponent::HandleSweepHit(const RTBEngine::Math::Vector3& previou
             damageContext.instigator = instigator;
             damageContext.hitPoint = hit.point;
             damageContext.hitDirection = direction;
+            damageContext.knockbackStrength = knockbackStrength;
             targetHealth->TakeDamage(damage, damageContext);
 
             if (IsLocallyControlledInstigator(instigator) && hitAudio) {

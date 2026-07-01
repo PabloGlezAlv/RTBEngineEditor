@@ -55,18 +55,45 @@ void CharacterAbility::ProcessTickedHitAbility(float safeDeltaTime)
     const float tickInterval = std::max(kCompletionEpsilon, GetTickInterval());
     const float activeWindowStart = GetHitDelayDuration();
     const float activeWindowEnd = GetHitDelayDuration() + GetRecoveryDuration();
+    const int maxTicks = GetTickCount();
 
-    if (activeElapsed + kCompletionEpsilon >= activeWindowStart &&
-        activeElapsed <= activeWindowEnd + kCompletionEpsilon) {
-        tickAccumulator += safeDeltaTime;
-        while (tickAccumulator + kCompletionEpsilon >= tickInterval &&
-               activeElapsed <= activeWindowEnd + kCompletionEpsilon) {
-            tickAccumulator -= tickInterval;
-            ExecuteAbilityHit();
+    if (activeElapsed + kCompletionEpsilon >= activeWindowStart) {
+        if (maxTicks > 1) {
+            if (ticksExecuted == 0) {
+                ++ticksExecuted;
+                ExecuteAbilityHit();
+            } else {
+                tickAccumulator += safeDeltaTime;
+                while (tickAccumulator + kCompletionEpsilon >= tickInterval &&
+                       ticksExecuted < maxTicks) {
+                    tickAccumulator -= tickInterval;
+                    ++ticksExecuted;
+                    ExecuteAbilityHit();
+                }
+            }
+        } else {
+            tickAccumulator += safeDeltaTime;
+            while (tickAccumulator + kCompletionEpsilon >= tickInterval &&
+                   activeElapsed <= activeWindowEnd + kCompletionEpsilon) {
+                tickAccumulator -= tickInterval;
+                ExecuteAbilityHit();
+            }
         }
     }
 
+    if (maxTicks > 1 && ticksExecuted >= maxTicks) {
+        FinishAbility();
+        return;
+    }
+
     if (activeElapsed + kCompletionEpsilon >= activeWindowEnd) {
+        if (maxTicks > 1 && ticksExecuted < maxTicks) {
+            while (ticksExecuted < maxTicks) {
+                ++ticksExecuted;
+                ExecuteAbilityHit();
+            }
+        }
+
         FinishAbility();
     }
 }
@@ -92,6 +119,7 @@ bool CharacterAbility::TryActivate(RTBEngine::ECS::GameObject* instigator,
     activeDirection = planarDirection;
     activeElapsed = 0.0f;
     tickAccumulator = 0.0f;
+    ticksExecuted = 0;
     hitExecuted = false;
     abilityActive = true;
     cooldownRemaining = std::max(0.0f, GetCooldownDuration());
@@ -105,6 +133,7 @@ void CharacterAbility::CancelAbility()
     activeDirection = RTBEngine::Math::Vector3::Forward();
     activeElapsed = 0.0f;
     tickAccumulator = 0.0f;
+    ticksExecuted = 0;
     hitExecuted = false;
     abilityActive = false;
 }

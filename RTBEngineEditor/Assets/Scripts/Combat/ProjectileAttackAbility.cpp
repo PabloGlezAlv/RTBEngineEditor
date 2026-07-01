@@ -71,10 +71,11 @@ void ProjectileAttackAbility::OnStart()
     RefreshCachedProjectileStats();
 }
 
-void ProjectileAttackAbility::SetProjectileCombatOverrides(float damage, float speed)
+void ProjectileAttackAbility::SetProjectileCombatOverrides(float damage, float speed, float knockback)
 {
     projectileDamageOverride = std::max(0.0f, damage);
     projectileSpeedOverride = std::max(0.0f, speed);
+    projectileKnockbackOverride = std::max(0.0f, knockback);
     RefreshCachedProjectileStats();
 }
 
@@ -205,6 +206,7 @@ bool ProjectileAttackAbility::SpawnProjectile(RTBEngine::ECS::GameObject* instig
     if (projectileDamageOverride > 0.0f) {
         projectile->damage = projectileDamageOverride;
     }
+    projectile->knockbackStrength = projectileKnockbackOverride;
 
     if (networkSnapshot) {
         ProjectileComponent::ProjectileConfig config;

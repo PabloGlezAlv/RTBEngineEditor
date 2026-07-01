@@ -32,6 +32,15 @@ namespace {
         return stream.str();
     }
 
+    float ResolveDisplayedDamage(const CharacterDefinition& definition, bool isMelee)
+    {
+        if (!isMelee || definition.meleeTickCount <= 1) {
+            return definition.projectileDamage;
+        }
+
+        return definition.projectileDamage / static_cast<float>(definition.meleeTickCount);
+    }
+
 }
 
 RTB_REGISTER_COMPONENT(CharacterSelectMenuController)
@@ -405,7 +414,7 @@ std::string CharacterSelectMenuController::BuildStatsBody(const CharacterDefinit
     stream << (isMelee ? "Charges: " : "Shots: ") << definition.maxShots << "\n";
     stream << "Reload: " << FormatFloat(definition.fullReloadDuration, 1) << " s\n";
     stream << (isMelee ? "Damage (per tick): " : "Damage: ")
-           << FormatFloat(definition.projectileDamage, 0);
+           << FormatFloat(ResolveDisplayedDamage(definition, isMelee), 0);
     if (isMelee) {
         stream << "\nRange: " << FormatFloat(definition.meleeRange, 1);
     } else if (!definition.projectilePrefabRef.empty()) {
@@ -421,7 +430,7 @@ std::string CharacterSelectMenuController::BuildSummaryBody(const CharacterDefin
     std::ostringstream stream;
     stream << "Health: " << FormatFloat(definition.maxHealth, 0) << "\n";
     stream << (isMelee ? "Damage (per tick): " : "Damage: ")
-           << FormatFloat(definition.projectileDamage, 0) << "\n";
+           << FormatFloat(ResolveDisplayedDamage(definition, isMelee), 0) << "\n";
     stream << "Speed: " << FormatFloat(definition.moveSpeed) << "\n";
     stream << "Sprint: x" << FormatFloat(definition.sprintMultiplier, 2) << "\n";
     stream << (isMelee ? "Charges: " : "Shots: ") << definition.maxShots << "\n";

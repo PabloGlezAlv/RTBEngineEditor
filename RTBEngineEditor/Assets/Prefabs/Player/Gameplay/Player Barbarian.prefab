@@ -89,10 +89,11 @@ return {
                         damage = 12.00,
                         hitDelay = 0.10,
                         recoveryDuration = 1.50,
-                        sphereRadius = 0.45,
-                        sphereDistance = 1.20,
+                        sphereRadius = 0.55,
+                        sphereDistance = 1.40,
                         tickInterval = 0.50,
-                        knockbackStrength = 2.50,
+                        tickCount = 4,
+                        knockbackStrength = 0.00,
                         ignoreSameTeam = true,
                         hitAudio = "C0MBAT-H1T0-4001-8000-000000000001/AudioSourceComponent"
                     },
@@ -480,7 +481,7 @@ return {
                         components = {
                             {
                                 type = "TrailRenderer",
-                                width = 0.35,
+                                width = 1.10,
                                 color = Color(1.00, 1.00, 1.00, 0.54),
                                 fadeAlphaAlongLength = false,
                                 visible = false

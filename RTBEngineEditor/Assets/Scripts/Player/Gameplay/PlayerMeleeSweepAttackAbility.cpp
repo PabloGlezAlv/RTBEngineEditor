@@ -86,7 +86,8 @@ RTB_REGISTER_COMPONENT(PlayerMeleeSweepAttackAbility)
     RTB_PROPERTY_RANGE(recoveryDuration, 0.0f, 10.0f)
     RTB_PROPERTY_RANGE(sphereRadius, 0.05f, 5.0f)
     RTB_PROPERTY_RANGE(sphereDistance, 0.05f, 10.0f)
-    RTB_PROPERTY_RANGE(tickInterval, 0.1f, 2.0f)
+    RTB_PROPERTY_RANGE(tickInterval, 0.0f, 2.0f)
+    RTB_PROPERTY_RANGE(tickCount, 1, 8)
     RTB_PROPERTY_RANGE(knockbackStrength, 0.0f, 20.0f)
     RTB_PROPERTY(ignoreSameTeam)
     RTB_PROPERTY_COMPONENT(hitAudio, AudioSourceComponent)
@@ -102,14 +103,55 @@ void PlayerMeleeSweepAttackAbility::SetMeleeCombatOverrides(
     float range,
     float radius,
     float tickSeconds,
+    int definitionTickCount,
     float knockback)
 {
-    damage = std::max(0.0f, damageAmount);
+    totalAttackDamage = std::max(0.0f, damageAmount);
+    attackTickCount = std::max(1, definitionTickCount);
+    if (attackTickCount <= 1 && tickSeconds > 0.0f && tickCount > 1) {
+        attackTickCount = tickCount;
+    }
+    tickCount = attackTickCount;
+
     sphereDistance = std::max(0.05f, range);
     sphereRadius = std::max(0.05f, radius);
-    tickInterval = std::max(0.1f, tickSeconds);
     knockbackStrength = std::max(0.0f, knockback);
+
+    if (attackTickCount <= 1 || tickSeconds <= 0.0f) {
+        damagePerHit = totalAttackDamage;
+        damage = totalAttackDamage;
+        tickInterval = 0.0f;
+    } else {
+        damagePerHit = totalAttackDamage / static_cast<float>(attackTickCount);
+        damage = damagePerHit;
+        tickInterval = std::max(0.1f, tickSeconds);
+        recoveryDuration = static_cast<float>(attackTickCount - 1) * tickInterval;
+    }
+
     ClampSettings();
+}
+
+int PlayerMeleeSweepAttackAbility::GetTickCount() const
+{
+    if (tickInterval <= 0.0f) {
+        return 0;
+    }
+
+    const int ticks = attackTickCount > 1 ? attackTickCount : tickCount;
+    return ticks > 1 ? ticks : 0;
+}
+
+float PlayerMeleeSweepAttackAbility::GetDamagePerHit() const
+{
+    if (damagePerHit > 0.0f) {
+        return damagePerHit;
+    }
+
+    if (totalAttackDamage > 0.0f && GetTickCount() > 1) {
+        return totalAttackDamage / static_cast<float>(GetTickCount());
+    }
+
+    return totalAttackDamage > 0.0f ? totalAttackDamage : damage;
 }
 
 bool PlayerMeleeSweepAttackAbility::CanActivateAbility(
@@ -150,17 +192,18 @@ void PlayerMeleeSweepAttackAbility::ExecuteAbilityHit()
         return;
     }
 
-    ApplySweepHits(instigator, GetActiveDirection());
+    ApplySweepHits(instigator, GetActiveDirection(), GetDamagePerHit());
 }
 
 bool PlayerMeleeSweepAttackAbility::ApplySweepHits(
     RTBEngine::ECS::GameObject* instigator,
-    const RTBEngine::Math::Vector3& attackDirection)
+    const RTBEngine::Math::Vector3& attackDirection,
+    float hitDamage)
 {
     ClampSettings();
 
     RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
-    if (!scene || damage <= 0.0f) {
+    if (!scene || hitDamage <= 0.0f) {
         return false;
     }
 
@@ -224,12 +267,12 @@ bool PlayerMeleeSweepAttackAbility::ApplySweepHits(
         }
 
         HealthComponent::DamageContext damageContext;
-        damageContext.amount = damage;
+        damageContext.amount = hitDamage;
         damageContext.instigator = instigator;
         damageContext.hitPoint = targetPosition;
         damageContext.hitDirection = castDirection;
         damageContext.knockbackStrength = knockbackStrength;
-        targetHealth->TakeDamage(damage, damageContext);
+        targetHealth->TakeDamage(hitDamage, damageContext);
 
         anyHit = true;
     }
@@ -249,6 +292,10 @@ void PlayerMeleeSweepAttackAbility::ClampSettings()
     recoveryDuration = std::max(0.05f, recoveryDuration);
     sphereRadius = std::max(0.05f, sphereRadius);
     sphereDistance = std::max(0.05f, sphereDistance);
-    tickInterval = std::max(0.1f, tickInterval);
+    if (tickInterval > 0.0f) {
+        tickInterval = std::max(0.1f, tickInterval);
+    }
+    tickCount = std::max(1, tickCount);
+    attackTickCount = std::max(1, attackTickCount);
     knockbackStrength = std::max(0.0f, knockbackStrength);
 }

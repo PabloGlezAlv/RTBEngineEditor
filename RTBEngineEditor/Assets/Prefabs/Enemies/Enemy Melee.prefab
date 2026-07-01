@@ -30,7 +30,7 @@ return {
             type = "EnemyLocomotionController",
             moveSpeed = 2.60,
             turnSpeed = 540.00,
-            knockbackImpulse = 3.50
+            knockbackImpulse = 0.00
         },
         {
             type = "NavAgentComponent",
@@ -62,14 +62,14 @@ return {
             recoveryDuration = 0.45,
             sphereRadius = 0.45,
             sphereDistance = 0.95,
-            knockbackStrength = 2.50,
+            knockbackStrength = 0.00,
             ignoreSameTeam = true,
             hitAudio = nil
         },
         {
             type = "HealthComponent",
-            maxHealth = 28.75,
-            currentHealth = 1.00
+            maxHealth = 200.00,
+            currentHealth = 200.00
         },
         {
             type = "ComicOuchSpawner",
