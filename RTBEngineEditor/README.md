@@ -34,6 +34,7 @@ A visual game editor for **RTBEngine**, built in **C++17** using **ImGui** for t
 24. [Workflow Guides](#24-workflow-guides)
 25. [Online and Multiplayer](#25-online-and-multiplayer)
 26. [Optional Windows and Navigation Debug](#26-optional-windows-and-navigation-debug)
+27. [Prefab Edit Mode](#27-prefab-edit-mode)
 
 ---
 
@@ -58,7 +59,7 @@ RTBEngineEditor/
     │   │   ├── DragDropPayloads.h            Payload type constants and structs
     │   │   │
     │   │   ├── Panels/
-    │   │   │   ├── EditorPanel.h             Base class, EditorContext, nav debug settings
+    │   │   │   ├── EditorPanel.h             Base class, EditorContext, prefab helpers
     │   │   │   ├── SceneHierarchyPanel.h / .cpp
     │   │   │   ├── InspectorPanel.h / .cpp
     │   │   │   ├── SceneViewPanel.h / .cpp
@@ -69,6 +70,9 @@ RTBEngineEditor/
     │   │   │   ├── PhysicsLayersPanel.h / .cpp
     │   │   │   ├── NavigationDebugPanel.h / .cpp
     │   │   │   └── ToolbarPanel.h / .cpp
+    │   │   │
+    │   │   ├── Prefab/
+    │   │   │   └── PrefabEditorSession.h / .cpp   Isolated staging scene for prefab editing
     │   │   │
     │   │   └── Modals/
     │   │       ├── BuildDialog.h / .cpp
@@ -89,10 +93,20 @@ RTBEngineEditor/
     │       └── EditorComponents.h / .cpp     Test/utility script component registration
     │
     ├── Assets/
-    │   ├── Cubemap/
-    │   ├── Models/
+    │   ├── Data/Characters/                  CharacterDefinition .rtbasset files
+    │   ├── Prefabs/
+    │   │   ├── Player/
+    │   │   │   ├── Gameplay/                 In-match player pawns (Player Knight.prefab, …)
+    │   │   │   └── Preview/                  Menu / character-select previews
+    │   │   ├── Enemies/
+    │   │   └── Combat/
+    │   │       ├── Projectiles/
+    │   │       └── Effects/
     │   ├── Scenes/
     │   ├── Scripts/                          C++ script components (GameScripts project)
+    │   │   ├── Character/                    Shared character data & abilities
+    │   │   ├── Player/Gameplay|Preview/
+    │   │   ├── Enemy/ Combat/ Session/ Online/ UI/
     │   ├── Shaders/
     │   └── Textures/
     │
@@ -142,11 +156,15 @@ EditorApplication::Initialize()
 
 ```
 EditorApplication::Update()
-  1. Handle pendingSceneLoad (from Content Browser double-click)
-  2. Application::ProcessInput()                     ← SDL events → InputManager
-  3. if (state == Play || state == Pause):
+  1. Handle pendingSceneLoad (Content Browser double-click on .lua)
+  2. Handle pendingPrefabOpen (Content Browser / Inspector on .prefab)
+  3. Application::ProcessInput()                     ← SDL events → InputManager
+  4. if (state == Edit && prefab mode):
+       tick particle + animator preview on GetEditingScene()
+  5. if (state == Play || state == Pause):
        Application::Update(deltaTime)                ← scene update, physics, audio
-  4. RenderSceneToFramebuffer()
+  6. RenderSceneToFramebuffer()
+       uses GetEditingScene() → staging scene in prefab mode, active scene otherwise
        a. SceneViewPanel::GetFramebuffer().Bind()
           Application::RenderShadowPass()
           Application::RenderGeometryPass(editorCamera)
@@ -159,8 +177,8 @@ EditorApplication::Update()
           Application::RenderGeometryPass(gameCamera)
           CanvasSystem::RenderAll()
           FrameBuffer::Unbind()
-  5. EditorLayer::Render()                           ← all ImGui panels
-  6. Application::Window::SwapBuffers()
+  7. EditorLayer::Render()                           ← all ImGui panels + PrefabModeBar
+  8. Application::Window::SwapBuffers()
 ```
 
 ---
@@ -236,22 +254,41 @@ struct OptionalWindowState {
 
 struct EditorContext {
     RTBEngine::ECS::GameObject* selectedGameObject = nullptr;
+    std::vector<RTBEngine::ECS::GameObject*> selectedGameObjects;
     EditorState                 state              = EditorState::Edit;
     std::filesystem::path       selectedAssetPath;
     std::filesystem::path       pendingSceneLoad;
+    std::filesystem::path       pendingPrefabOpen;
+    std::unique_ptr<PrefabEditorSession> prefabEditor;
     NavDebugSettings            navDebug;
     OptionalWindowState         optionalWindows;
+    // … clipboard / physics-ready callbacks …
 };
 ```
 
 | Field | Purpose |
 |-------|---------|
-| `selectedGameObject` | Which object is shown in the Inspector and highlighted in the Scene View |
-| `state` | Current edit/play/pause state, used by panels to conditionally enable controls |
-| `selectedAssetPath` | Path of the file selected in the Content Browser, shown in asset-ref fields |
-| `pendingSceneLoad` | Set by Content Browser on double-click of a `.lua` file; consumed by `EditorApplication::Update()` |
-| `navDebug` | Navigation overlay toggles — consumed by `NavGridDebugRenderer` (Scene View only) |
-| `optionalWindows` | Open/closed state for Online, Physics Layers, and Navigation Debug panels |
+| `selectedGameObject` | Primary selection for Inspector and Scene View gizmos |
+| `selectedGameObjects` | Multi-selection list (Hierarchy, copy/paste) |
+| `state` | Current edit/play/pause state |
+| `selectedAssetPath` | File selected in Content Browser (Inspector shows asset inspector) |
+| `pendingSceneLoad` | Double-click `.lua` → consumed by `EditorApplication::Update()` |
+| `pendingPrefabOpen` | Double-click `.prefab` or Inspector **Open Prefab** → opens prefab mode |
+| `prefabEditor` | Owns the isolated staging scene while editing a prefab asset |
+| `navDebug` | Navigation overlay toggles for Scene View |
+| `optionalWindows` | Online / Physics Layers / Navigation Debug panel visibility |
+
+**Prefab routing helpers** (same header):
+
+```cpp
+bool IsPrefabEditMode(const EditorContext& context);
+RTBEngine::ECS::Scene* GetEditingScene(const EditorContext& context);
+void MarkEditingDirty(EditorContext& context);
+```
+
+- `GetEditingScene()` returns `prefabEditor->GetStagingScene()` in prefab mode, otherwise `SceneManager::GetActiveScene()`.
+- Hierarchy, Scene View, Inspector, render loop, and clipboard operations all use `GetEditingScene()` so the level scene stays loaded but untouched while you edit a prefab.
+- `MarkEditingDirty()` sets the prefab session dirty flag in prefab mode, or `SceneManager::MarkSceneDirty()` otherwise.
 
 ### Panel Base Class
 
@@ -785,7 +822,7 @@ Computes the property address through `prop.GetMutableData(component)` and dispa
 | `GameObjectRef` | Drag-drop target (PAYLOAD_GAMEOBJECT) | Shows target name |
 | `ComponentRef` | Drag-drop target (PAYLOAD_GAMEOBJECT) | Resolves on UUID |
 
-After any change: calls `component->OnValidate()` and marks scene dirty.
+After any change: calls `component->OnValidate()` and `MarkEditingDirty(context)` (scene or prefab, depending on mode).
 
 ### Custom Component Drawers
 
@@ -793,6 +830,7 @@ Some engine components bypass the generic property loop and render dedicated con
 
 | Component | Controls |
 |-----------|----------|
+| `Animator` | `modelRef`, `additionalModels` (vector of FBX paths); changing them calls `ReloadClipLibrary()` then `OnValidate()` |
 | `ParticleSystem` | **Play**, **Pause**, **Stop**, **Burst** (`burstCount`), live stats (active count, playback state), then all reflected properties |
 | `NavGridComponent` | **Bake Grid**, **Clear Baked**, baked status / walkable count; debug overlay is in **Window → Navigation Debug** (not here) |
 
@@ -1191,6 +1229,7 @@ Extension mapping:
 |-----------|---------|
 | (directory) | Folder |
 | `.lua` | Lua |
+| `.prefab` | Prefab |
 | `.obj`, `.fbx`, `.dae`, `.gltf` | Model |
 | `.png`, `.jpg`, `.jpeg`, `.bmp`, `.tga` | Image |
 | `.vert`, `.frag`, `.glsl` | Shader |
@@ -1198,6 +1237,15 @@ Extension mapping:
 | (other) | File |
 
 Icons are loaded from `Default/Icons/` as PNG textures on panel initialization.
+
+### Directory Listing Order
+
+Entries in each folder are collected via `CollectSortedDirectoryEntries()`:
+
+1. **Subdirectories first** (alphabetical, case-insensitive)
+2. **Files second** (alphabetical, case-insensitive)
+
+This matches typical asset-browser UX: folders are easy to scan before loose files.
 
 ### Navigation
 
@@ -1216,6 +1264,7 @@ void LoadIcons();
 **Double click**:
 - Folder → navigate into it.
 - `.lua` file → set `context.pendingSceneLoad = path` (consumed by `EditorApplication::Update`).
+- `.prefab` file → set `context.pendingPrefabOpen = path` → `TryOpenPrefab()` (unsaved prefab popup if dirty).
 - Other files → no action (future: open in default app).
 
 **Scene load guard** (in `EditorApplication::Update`):
@@ -1689,6 +1738,23 @@ Script components live in `Assets/Scripts/` and are compiled into `GameScripts.d
 
 The script bridge is now ABI-safe: scripts pass plain descriptors to the engine, and the engine builds its own reflected metadata internally. Because of that, the SDK and `GameScripts.dll` need to be rebuilt after changes to the bridge, reflection macros, or public script headers.
 
+### Folder Layout
+
+Scripts are grouped by gameplay role:
+
+| Folder | Purpose |
+|--------|---------|
+| `Character/` | `CharacterDefinition`, catalog, abilities, stats, combat helpers |
+| `Player/Gameplay/` | In-match pawn: `ThirdPersonCharacterController`, melee, ammo, spawner |
+| `Player/Preview/` | Menu / character-select preview drivers |
+| `Enemy/` | `EnemyMeleeAI`, `EnemyAnimationDriver`, etc. |
+| `Combat/` | Projectiles, health, damage numbers, hit flash |
+| `Session/` | `RoundManager`, `GameSession`, net message IDs |
+| `Online/` | Lobby / multiplayer menu controllers |
+| `UI/` | HUD, menus, button styles, nameplates |
+
+Prefabs mirror this split: `Assets/Prefabs/Player/Gameplay/` for match pawns, `Assets/Prefabs/Player/Preview/` for menu previews. `Assets/Data/Characters/*.rtbasset` references the gameplay prefab path for each character.
+
 ### Creating a Component
 
 Use the Content Browser context menu: right-click → New → C++ Component. Enter the name in the dialog. The editor generates the `.h` and `.cpp` files with the correct boilerplate (see [Content Browser Panel](#13-content-browser-panel)).
@@ -2120,7 +2186,7 @@ startScene=Assets/Scenes/Main.lua
 
 | Shortcut | Action |
 |----------|--------|
-| `Ctrl+S` | Save scene (only if dirty) |
+| `Ctrl+S` | Save scene (if dirty) or save prefab (prefab edit mode) |
 | `Ctrl+Shift+S` | Save scene as... |
 | `Ctrl+B` | Open Build dialog |
 | `W` (Scene View focused) | Gizmo: Translate |
@@ -2170,11 +2236,22 @@ startScene=Assets/Scenes/Main.lua
 
 ### Setting Up Third-Person Locomotion Animations
 
-1. Add `Animator` and `ThirdPersonCharacterController` to the player object.
-2. In the controller, drag the sibling `Animator` component into the `animator` field.
-3. Drag the desired idle, walk, and run `.fbx` files from the Content Browser into `idleAnimationFbx`, `walkAnimationFbx`, and `runAnimationFbx`.
-4. Save the scene. The component stores those selections as logical `Assets/...` references.
-5. Enter Play mode. The controller registers the first clip from each FBX under its internal aliases and switches between them automatically based on locomotion state.
+1. Open the player prefab (`Assets/Prefabs/Player/Gameplay/…`) in **Prefab Edit Mode** or edit the pawn in the level scene.
+2. Ensure `Animator` has `modelRef` set to the character rig FBX; add KayKit / Mixamo packs to `additionalModels` if needed.
+3. Add `ThirdPersonCharacterController` (`Assets/Scripts/Player/Gameplay/`) and assign the sibling `Animator` in the Inspector.
+4. Drag idle, walk, and run `.fbx` files into `idleAnimationFbx`, `walkAnimationFbx`, and `runAnimationFbx` on the controller.
+5. Save prefab or scene. On load, `ConfigureAnimator` → `ReloadClipLibrary()` builds the clip map; the controller registers `ThirdPerson.*` aliases via `LoadClipFromFbx`.
+6. Enter Play mode. `EnsureAnimationReady()` on the controller waits for aliases before `Play()` — locomotion switches idle / walk / run from speed and input.
+
+### Editing a Prefab Asset
+
+1. In **Content Browser**, double-click a `.prefab` (e.g. `Assets/Prefabs/Player/Gameplay/Player Knight.prefab`).
+2. Confirm save/discard if another prefab had unsaved changes.
+3. Hierarchy and Scene View show the **staging** prefab root; the level scene stays loaded in the background.
+4. Edit transforms, components, and child objects; **Save Prefab** (`Ctrl+S`) writes the asset via `PrefabSaver`.
+5. Click **Back to Scene** to leave prefab mode. **Play** is disabled while editing a prefab.
+
+See [§27 Prefab Edit Mode](#27-prefab-edit-mode) for the full pipeline.
 
 ### Setting Up Grid Navigation
 
@@ -2419,3 +2496,83 @@ Open from **Window → Physics Layers**. Edits `PhysicsLayerSettings` for the ac
 | Navigation debug | If enabled in Navigation Debug panel | **Never** |
 
 This matches the rule that editor debug visuals are authoring aids only and must not appear in the player-facing Game View.
+
+---
+
+## 27. Prefab Edit Mode
+
+Prefab editing lets you author `.prefab` assets in an isolated staging scene without unloading or modifying the level currently open in the editor.
+
+### Entry Points
+
+| Action | Result |
+|--------|--------|
+| Double-click `.prefab` in Content Browser | Sets `pendingPrefabOpen` → `TryOpenPrefab()` |
+| Inspector **Open Prefab** on a prefab asset | Same as above |
+| Toolbar **Back to Scene** | `PrefabEditorSession::Close()` — destroys staging scene |
+
+`TryOpenPrefab()` checks for unsaved prefab changes and may show a save/discard/cancel popup before switching assets.
+
+### PrefabEditorSession
+
+`Source/UI/Prefab/PrefabEditorSession.h` owns the edit session:
+
+```cpp
+class PrefabEditorSession {
+public:
+    bool Open(const std::filesystem::path& absolutePath);
+    void Close();
+    bool Save();
+    bool IsOpen() const;
+    bool IsDirty() const;
+    RTBEngine::ECS::Scene* GetStagingScene() const;
+    RTBEngine::ECS::GameObject* GetRootObject() const;
+    const std::filesystem::path& GetAssetPath() const;
+};
+```
+
+**Open flow:**
+
+1. Create empty staging `Scene` (not registered as the active scene).
+2. `PrefabRegistry::Load` + `Prefab::Instantiate(..., regenerateUuids=false)` so saved UUIDs round-trip.
+3. `BringGameObjectToLife` on the root so components initialize in staging.
+4. Spawn editor-only `__PrefabEditorLight` for Scene View lighting.
+5. Select prefab root in Hierarchy.
+
+**Save flow:**
+
+1. `Prefab::CreateFromGameObject(stagingRoot)` captures hierarchy + components.
+2. `PrefabSaver::Save` writes `.prefab` (Lua table, same format as scene GameObject entries).
+3. `PrefabRegistry::Reload` refreshes the in-memory asset.
+4. Clear dirty flag.
+
+**Close flow:** destroy staging scene and light; active level scene is unchanged throughout.
+
+### Panel Routing
+
+While `EditorContext::prefabEditor` is open:
+
+- `GetEditingScene(context)` → staging scene (Hierarchy, Scene View, Inspector, gizmos, copy/paste).
+- `IsPrefabEditMode(context)` → true; **Play** is blocked.
+- `MarkEditingDirty(context)` → prefab dirty flag instead of scene dirty.
+- Scene View still ticks `ParticleSystem` and `Animator` in Edit state for preview (scripts do not run).
+
+A **Prefab Mode** bar above the dock shows the asset path, dirty indicator, **Save Prefab**, and **Back to Scene**.
+
+### Asset Organization
+
+```
+Assets/Prefabs/
+  Player/
+    Gameplay/     Player Knight.prefab, …
+    Preview/      Character Preview Knight.prefab, …
+  Enemies/        Enemy Melee.prefab, …
+  Combat/
+    Projectiles/  Arrow.prefab, Sphere.prefab
+    Effects/      Impact Sparks, damage numbers, …
+```
+
+### Not Yet Implemented
+
+- **Apply / Revert overrides** on prefab instances placed in a level scene (phase 5).
+- `Animator::OnValidate` bone GameObjects still target the active scene — known limitation in prefab mode.
