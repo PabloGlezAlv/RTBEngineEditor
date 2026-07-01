@@ -19,7 +19,7 @@ def extract_balanced_block(text: str, start_index: int):
     raise ValueError("unbalanced")
 
 
-text = Path("Assets/Prefabs/Player Ranger.prefab").read_text(encoding="utf-8")
+text = Path("Assets/Prefabs/Player/Gameplay/Player Ranger.prefab").read_text(encoding="utf-8")
 match = re.search(r"return\s*\{", text)
 base, _ = extract_balanced_block(text, match.end() - 1)
 marker = f'uuid = "{PLAYER_VISUAL_UUID}"'

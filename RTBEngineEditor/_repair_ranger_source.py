@@ -7,7 +7,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 PREFABS = ROOT / "Assets" / "Prefabs"
-RANGER = PREFABS / "Player Ranger.prefab"
+RANGER = PREFABS / "Player" / "Gameplay" / "Player Ranger.prefab"
 SOURCE = ROOT / "_player_pawn_source.lua"
 
 PLAYER_VISUAL_UUID = "5200AC9B-039A-416E-82AE-FD5FE1754C95"
@@ -95,7 +95,7 @@ def main() -> None:
     body_start = text.index("{", return_idx)
     body = text[body_start:]
 
-    preview_inner = read_preview_children_inner(PREFABS / "Character Preview Ranger.prefab")
+    preview_inner = read_preview_children_inner(PREFABS / "Player" / "Preview" / "Character Preview Ranger.prefab")
     visual = build_player_visual_child(
         "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Ranger.fbx",
         preview_inner,

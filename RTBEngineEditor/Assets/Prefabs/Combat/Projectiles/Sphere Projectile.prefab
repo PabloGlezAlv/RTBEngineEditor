@@ -1,11 +1,11 @@
 return {
-    name = "Arrow Projectile",
+    name = "Sphere Projectile",
     collisionLayer = "Projectiles",
     position = Vector3(0.00, 0.00, 0.00),
     components = {
         {
             type = "MeshRenderer",
-            meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/arrow_bow.obj",
+            meshRef = "Default/Models/sphere.obj",
             textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/ranger_texture.png",
             colorRef = Color(1.00, 1.00, 1.00, 1.00),
             meshIndex = 0,
@@ -26,7 +26,7 @@ return {
             ignoreSameTeam = true,
             destroyOnHit = true,
             maxHits = 1,
-            impactParticlePrefabRef = "Assets/Prefabs/Arrow Impact Sparks.prefab"
+            impactParticlePrefabRef = "Assets/Prefabs/Combat/Effects/Arrow Impact Sparks.prefab"
         },
     }
 }

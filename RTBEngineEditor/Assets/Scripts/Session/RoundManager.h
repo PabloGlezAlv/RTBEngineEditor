@@ -43,7 +43,7 @@ public:
     float playerRespawnDelay = 30.0f;
     float teamWipeSceneDelay = 5.0f;
     std::string finalScenePath = "Assets/Scenes/FinalScene.lua";
-    std::string enemyPrefabRef = "Assets/Prefabs/Enemy Melee.prefab";
+    std::string enemyPrefabRef = "Assets/Prefabs/Enemies/Enemy Melee.prefab";
 
     std::vector<RTBEngine::ECS::GameObject*> spawnPoints;
 

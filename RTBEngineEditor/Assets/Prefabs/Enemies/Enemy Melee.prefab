@@ -74,7 +74,7 @@ return {
         {
             type = "ComicOuchSpawner",
             health = nil,
-            bubblePrefabRef = "Assets/Prefabs/Comic Ouch Bubble.prefab",
+            bubblePrefabRef = "Assets/Prefabs/Combat/Effects/Comic Ouch Bubble.prefab",
             bubbleTextures = {
                 "Assets/UI/Comic/Ouch/ouch_01.png",
                 "Assets/UI/Comic/Ouch/ow_01.png",
@@ -92,7 +92,7 @@ return {
         {
             type = "FloatingDamageNumberSpawner",
             health = nil,
-            damageNumberPrefabRef = "Assets/Prefabs/Floating Damage Number.prefab",
+            damageNumberPrefabRef = "Assets/Prefabs/Combat/Effects/Floating Damage Number.prefab",
             hitFallbackOffset = Vector3(0.00, 1.20, 0.00),
             textColor = Color(1.00, 0.92, 0.35, 1.00)
         },

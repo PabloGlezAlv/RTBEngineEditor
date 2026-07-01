@@ -18,6 +18,9 @@
 
 #include <fstream>
 #include <sstream>
+#include <algorithm>
+#include <cctype>
+#include <vector>
 #include <Windows.h>
 #include <shellapi.h>
 
@@ -35,6 +38,41 @@ namespace RTBEditor {
                 return project->GetAssetReferencePath(relativePath);
             }
             return (std::filesystem::path("Assets") / relativePath).lexically_normal().generic_string();
+        }
+
+        std::string ToLowerCopy(std::string value) {
+            for (char& ch : value) {
+                ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
+            }
+            return value;
+        }
+
+        std::vector<std::filesystem::directory_entry> CollectSortedDirectoryEntries(
+            const std::filesystem::path& directory)
+        {
+            std::vector<std::filesystem::directory_entry> entries;
+            if (!std::filesystem::exists(directory)) {
+                return entries;
+            }
+
+            for (const auto& entry : std::filesystem::directory_iterator(directory)) {
+                entries.push_back(entry);
+            }
+
+            std::sort(entries.begin(), entries.end(),
+                [](const std::filesystem::directory_entry& left,
+                   const std::filesystem::directory_entry& right) {
+                    const bool leftIsDirectory = left.is_directory();
+                    const bool rightIsDirectory = right.is_directory();
+                    if (leftIsDirectory != rightIsDirectory) {
+                        return leftIsDirectory;
+                    }
+
+                    return ToLowerCopy(left.path().filename().string()) <
+                        ToLowerCopy(right.path().filename().string());
+                });
+
+            return entries;
         }
 
         void OpenGameScriptsProjectOrFiles(const std::filesystem::path& primaryFile,
@@ -244,7 +282,9 @@ namespace RTBEditor {
 
         if (std::filesystem::exists(currentDirectory)) {
             bool isEmpty = true;
-            for (auto& directoryEntry : std::filesystem::directory_iterator(currentDirectory)) {
+            const std::vector<std::filesystem::directory_entry> sortedEntries =
+                CollectSortedDirectoryEntries(currentDirectory);
+            for (const auto& directoryEntry : sortedEntries) {
                 isEmpty = false;
                 const auto& path = directoryEntry.path();
                 std::string filenameString = path.filename().string();

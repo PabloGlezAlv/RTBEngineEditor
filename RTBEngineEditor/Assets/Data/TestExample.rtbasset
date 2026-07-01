@@ -1,7 +1,0 @@
-return {
-    type = "TestDataAsset",
-    displayName = "Test Example",
-    floatValue = 3.50,
-    textureRef = "",
-    nestedDataAssetRef = "",
-}

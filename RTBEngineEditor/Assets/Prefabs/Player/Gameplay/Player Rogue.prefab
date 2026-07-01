@@ -1,5 +1,5 @@
 return {
-                name = "Player Arcanist",
+                name = "Player Rogue",
                 uuid = "E8682E33-50ED-45D8-BC76-B31113639F9E",
                 collisionLayer = "Characters",
                 position = Vector3(0.00, 0.00, 0.00),
@@ -84,7 +84,7 @@ return {
                     },
                                         {
                         type = "ProjectileAttackAbility",
-                        projectilePrefabRef = "Assets/Prefabs/Sphere Projectile.prefab",
+                        projectilePrefabRef = "Assets/Prefabs/Combat/Projectiles/Sphere Projectile.prefab",
                         attackOriginHeightOffset = 0.50,
                         launchForwardOffset = 0.35,
                         fireAudio = "C0MBAT-F1RE-4001-8000-000000000001/AudioSourceComponent",
@@ -488,7 +488,7 @@ return {
                         components = {
                             {
                                 type = "Animator",
-                                modelRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Mage.fbx",
+                                modelRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Rogue.fbx",
                                 currentClipName = "ThirdPerson.Idle",
                                 defaultClip = "Ranged_Bow_Aiming_Idle",
                                 speed = 1.00,
@@ -503,13 +503,14 @@ return {
                         },
                         children = {
                             {
-                        name = "Mage_LegLeft",
-                        uuid = "10CC6DC7-AA61-4877-AF3B-4171FEB7C0D9",
+                        name = "Rogue_Head",
+                        uuid = "7DE8CEFE-5231-4FEE-9182-D0C465A34C7D",
+                        position = Vector3(-0.00, 1.22, 0.00),
                         components = {
                             {
                                 type = "MeshRenderer",
-                                meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Mage.fbx",
-                                textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/mage_texture.png",
+                                meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Rogue.fbx",
+                                textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/rogue_texture.png",
                                 colorRef = Color(1.00, 1.00, 1.00, 1.00),
                                 meshIndex = 0,
                                 multiMesh = false
@@ -517,13 +518,17 @@ return {
                         }
                     },
                     {
-                        name = "Mage_ArmLeft",
-                        uuid = "94F74518-2C0E-41C9-98AC-71F2A1BA8051",
+                        name = "Rig_Medium",
+                        uuid = "D9C43027-8CD2-4FE6-BB4A-1211F55C1F01",
+                    },
+                    {
+                        name = "Rogue_LegLeft",
+                        uuid = "604040FA-B522-4F93-938E-CBD253281732",
                         components = {
                             {
                                 type = "MeshRenderer",
-                                meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Mage.fbx",
-                                textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/mage_texture.png",
+                                meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Rogue.fbx",
+                                textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/rogue_texture.png",
                                 colorRef = Color(1.00, 1.00, 1.00, 1.00),
                                 meshIndex = 1,
                                 multiMesh = false
@@ -531,13 +536,13 @@ return {
                         }
                     },
                     {
-                        name = "Mage_ArmRight",
-                        uuid = "FBAECBC5-2BDF-4C13-A570-DA2F365B2427",
+                        name = "Rogue_LegRight",
+                        uuid = "25C431BD-AB47-4DE3-942B-B70CC05C5D0E",
                         components = {
                             {
                                 type = "MeshRenderer",
-                                meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Mage.fbx",
-                                textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/mage_texture.png",
+                                meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Rogue.fbx",
+                                textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/rogue_texture.png",
                                 colorRef = Color(1.00, 1.00, 1.00, 1.00),
                                 meshIndex = 2,
                                 multiMesh = false
@@ -545,14 +550,13 @@ return {
                         }
                     },
                     {
-                        name = "Mage_Cape",
-                        uuid = "BABD5E6C-D928-4053-9F06-826312E7DB9F",
-                        position = Vector3(0.00, 1.22, -0.00),
+                        name = "Rogue_ArmLeft",
+                        uuid = "DFBE986B-2CBA-4EA1-809B-324ABA2E527A",
                         components = {
                             {
                                 type = "MeshRenderer",
-                                meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Mage.fbx",
-                                textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/mage_texture.png",
+                                meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Rogue.fbx",
+                                textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/rogue_texture.png",
                                 colorRef = Color(1.00, 1.00, 1.00, 1.00),
                                 meshIndex = 3,
                                 multiMesh = false
@@ -560,14 +564,13 @@ return {
                         }
                     },
                     {
-                        name = "Mage_Head",
-                        uuid = "C7CEF0D9-2C34-4425-9926-E875E0AEA46B",
-                        position = Vector3(0.00, 1.22, -0.00),
+                        name = "Rogue_ArmRight",
+                        uuid = "71DB810B-F69E-469B-86A0-A1EE4C587075",
                         components = {
                             {
                                 type = "MeshRenderer",
-                                meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Mage.fbx",
-                                textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/mage_texture.png",
+                                meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Rogue.fbx",
+                                textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/rogue_texture.png",
                                 colorRef = Color(1.00, 1.00, 1.00, 1.00),
                                 meshIndex = 4,
                                 multiMesh = false
@@ -575,13 +578,13 @@ return {
                         }
                     },
                     {
-                        name = "Mage_LegRight",
-                        uuid = "50DF6EE9-F859-43CB-9920-1038C12DAF11",
+                        name = "Rogue_Body",
+                        uuid = "EA213FC0-4ADF-48DB-A79B-0CCDD73BD85C",
                         components = {
                             {
                                 type = "MeshRenderer",
-                                meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Mage.fbx",
-                                textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/mage_texture.png",
+                                meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Rogue.fbx",
+                                textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/rogue_texture.png",
                                 colorRef = Color(1.00, 1.00, 1.00, 1.00),
                                 meshIndex = 5,
                                 multiMesh = false
@@ -589,14 +592,14 @@ return {
                         }
                     },
                     {
-                        name = "Mage_Hat",
-                        uuid = "4905FF7E-8E68-4379-B589-EFE06C2E183D",
-                        position = Vector3(0.00, 1.22, -0.00),
+                        name = "Rogue_Cape",
+                        uuid = "9D229296-E501-4F0C-B370-7B4461AAD599",
+                        position = Vector3(-0.00, 1.22, 0.00),
                         components = {
                             {
                                 type = "MeshRenderer",
-                                meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Mage.fbx",
-                                textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/mage_texture.png",
+                                meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Rogue.fbx",
+                                textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/rogue_texture.png",
                                 colorRef = Color(1.00, 1.00, 1.00, 1.00),
                                 meshIndex = 6,
                                 multiMesh = false
@@ -604,67 +607,65 @@ return {
                         }
                     },
                     {
-                        name = "Mage_Body",
-                        uuid = "A6EB2B03-3822-4DDF-AAE4-E91E0433DB39",
-                        components = {
-                            {
-                                type = "MeshRenderer",
-                                meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Mage.fbx",
-                                textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/mage_texture.png",
-                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                meshIndex = 7,
-                                multiMesh = false
-                            },
-                        }
-                    },
-                    {
-                        name = "Rig_Medium",
-                        uuid = "88F6CF7D-3A48-4518-BBE8-6BF5EEE6A39F",
-                    },
-                    {
                         name = "root",
-                        uuid = "7BD6D9AC-6D1E-4BB4-BDA6-61432173859F",
+                        uuid = "AED578F8-4615-4B55-8071-89AD8E9B140F",
                         children = {
                             {
                                 name = "hips",
-                                uuid = "D29D3385-D09C-470A-ACDD-3F9CBA5FEC85",
+                                uuid = "7E04A8AB-CE92-4C23-8998-54FC7ADDEA79",
                                 children = {
                                     {
                                         name = "spine",
-                                        uuid = "FBBB3E8C-D912-4E88-946A-98278935A008",
+                                        uuid = "1AD128FF-9250-47E5-80FA-70B763862261",
                                         children = {
                                             {
                                                 name = "chest",
-                                                uuid = "95468F1C-74E7-4A49-94F8-2858DF8CD276",
+                                                uuid = "1AEE9925-0F5D-434D-A6B3-C6152905EF6D",
                                                 children = {
                                                     {
+                                                        name = "Rogue_Crossbow",
+                                                        uuid = "A9F5BD98-E35E-4002-A0DD-AF5483E14A08",
+                                                        position = Vector3(0.00, 0.10, -0.18),
+                                                        rotation = Quaternion.FromEulerAngles(-70.00, 0.00, 0.00),
+                                                        components = {
+                                                            {
+                                                                type = "MeshRenderer",
+                                                                meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/fbx(unity)/crossbow_2handed.fbx",
+                                                                textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/rogue_texture.png",
+                                                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                                                meshIndex = 0,
+                                                                multiMesh = false
+                                                            },
+                                                        }
+                                                    },
+                                                    {
                                                         name = "upperarm.l",
-                                                        uuid = "59347BA7-70FA-461E-A112-7C699DF997EE",
+                                                        uuid = "DCB7813D-CC4D-452F-B095-5C21FE0D6220",
                                                         children = {
                                                             {
                                                                 name = "lowerarm.l",
-                                                                uuid = "C01D3F70-5EDF-4A2A-A5CA-00913F391453",
+                                                                uuid = "4AD7FC37-BDA7-4DC0-B330-2B92317BFEA8",
                                                                 children = {
                                                                     {
                                                                         name = "wrist.l",
-                                                                        uuid = "743E122E-F991-4DD3-9C56-74CF4B5D03BA",
+                                                                        uuid = "51C6C0E1-D5FC-4D8C-98A3-F5E0472B8A56",
                                                                         children = {
                                                                             {
                                                                                 name = "hand.l",
-                                                                                uuid = "97B3A052-78F7-467A-B02E-FD279F851529",
+                                                                                uuid = "E0A76D6E-1003-4219-BAC5-64516FBC05D7",
                                                                                 children = {
                                                                                     {
                                                                                         name = "handslot.l",
-                                                                                        uuid = "D4D03F2F-C0E5-4A73-BA78-7F2EFBDD295D",
+                                                                                        uuid = "E0C3877C-7262-4D38-A107-5A385EBAB621",
                                                                                         children = {
                                                                                             {
-                                                                                                name = "Mage_Spellbook",
-                                                                                                uuid = "ABB05A37-CEF6-4F87-AF3A-F6825A717BD2",
+                                                                                                name = "Rogue_Smokebomb",
+                                                                                                uuid = "B0EF893A-9220-42E4-8177-699F9583B6B1",
                                                                                                 components = {
                                                                                                     {
                                                                                                         type = "MeshRenderer",
-                                                                                                        meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/fbx(unity)/spellbook_open.fbx",
-                                                                                                        textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/mage_texture.png",
+                                                                                                        meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/fbx(unity)/smokebomb.fbx",
+                                                                                                        textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/rogue_texture.png",
                                                                                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
                                                                                                         meshIndex = 0,
                                                                                                         multiMesh = false
@@ -683,32 +684,32 @@ return {
                                                     },
                                                     {
                                                         name = "upperarm.r",
-                                                        uuid = "38CEE13F-6A82-4C5B-B981-2F084B9C172A",
+                                                        uuid = "9F84E3BA-7896-4C15-A1C8-EB966898BE3F",
                                                         children = {
                                                             {
                                                                 name = "lowerarm.r",
-                                                                uuid = "2FED6737-76D4-4359-909C-EA0705EFDEDC",
+                                                                uuid = "F9870941-FE30-4E1C-9DAA-6FDCCED79596",
                                                                 children = {
                                                                     {
                                                                         name = "wrist.r",
-                                                                        uuid = "1665C12A-065A-49A0-8B86-A0419E8C2BB2",
+                                                                        uuid = "CEA2CB5C-301A-4CF2-B982-641E044D8038",
                                                                         children = {
                                                                             {
                                                                                 name = "hand.r",
-                                                                                uuid = "31CFFDAC-16DE-4EA1-8087-A4471B20A856",
+                                                                                uuid = "ECFCE6D5-E6FE-4D79-AFF3-91D7C9954F8C",
                                                                                 children = {
                                                                                     {
                                                                                         name = "handslot.r",
-                                                                                        uuid = "916A9099-94D8-45A2-BA15-A2D292CDB206",
+                                                                                        uuid = "032CE981-3E1B-4825-8D05-E06FFC35A4FB",
                                                                                         children = {
                                                                                             {
-                                                                                                name = "Mage_Staff",
-                                                                                                uuid = "0D2A76CF-0673-44F5-8EC7-A8E35C4403C8",
+                                                                                                name = "Rogue_Dagger",
+                                                                                                uuid = "3169CDB4-A81F-404E-B449-5E86B8F4FF45",
                                                                                                 components = {
                                                                                                     {
                                                                                                         type = "MeshRenderer",
-                                                                                                        meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/fbx(unity)/staff.fbx",
-                                                                                                        textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/mage_texture.png",
+                                                                                                        meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/fbx(unity)/dagger.fbx",
+                                                                                                        textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/rogue_texture.png",
                                                                                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
                                                                                                         meshIndex = 0,
                                                                                                         multiMesh = false
@@ -727,7 +728,7 @@ return {
                                                     },
                                                     {
                                                         name = "head",
-                                                        uuid = "6840B17C-E20A-4069-AADB-7E46D74149BA",
+                                                        uuid = "FA20EDB1-D6EE-44B5-93E7-EA1B3F887C1E",
                                                     },
                                                 }
                                             },
@@ -735,19 +736,19 @@ return {
                                     },
                                     {
                                         name = "upperleg.l",
-                                        uuid = "BA9B352E-7393-464A-8BBF-8F6D9E23470E",
+                                        uuid = "9C6B8CB2-088A-4C3C-932E-9B14DB4DA1F0",
                                         children = {
                                             {
                                                 name = "lowerleg.l",
-                                                uuid = "712C49FC-FF36-434A-AF73-342329B105F8",
+                                                uuid = "E1C0A255-E13C-4565-9D92-31A721D77A99",
                                                 children = {
                                                     {
                                                         name = "foot.l",
-                                                        uuid = "3E6EF9C4-DEAA-4317-BBE7-7F21D0F7EC3C",
+                                                        uuid = "09C1EE86-304A-4A36-A576-951601130EEF",
                                                         children = {
                                                             {
                                                                 name = "toes.l",
-                                                                uuid = "D080703E-5EF1-4EA8-B06F-A319ADFD9120",
+                                                                uuid = "82358F2E-9B43-444E-9543-0ED67AEF47A9",
                                                             },
                                                         }
                                                     },
@@ -757,19 +758,19 @@ return {
                                     },
                                     {
                                         name = "upperleg.r",
-                                        uuid = "F40C664E-D342-4346-9D7B-089C70857AA9",
+                                        uuid = "FAB34B04-2584-475C-A35B-0D0001ECD776",
                                         children = {
                                             {
                                                 name = "lowerleg.r",
-                                                uuid = "4A23FE6B-8312-4EAB-B8C4-C0D1788126F4",
+                                                uuid = "27938078-D909-43F1-B564-C6B3962E2430",
                                                 children = {
                                                     {
                                                         name = "foot.r",
-                                                        uuid = "8F894E65-99F9-4E67-A7CB-A9F6D8441353",
+                                                        uuid = "D8EEC920-7883-425B-8857-CF895F82D9F1",
                                                         children = {
                                                             {
                                                                 name = "toes.r",
-                                                                uuid = "D5BA142F-1A06-46C4-AB9D-5B5A3B1E7C98",
+                                                                uuid = "FEAA3E1C-0151-41BC-9D65-5C1D40D397BA",
                                                             },
                                                         }
                                                     },

@@ -32,7 +32,7 @@ public:
     void OnStart() override;
     void OnValidate() override;
 
-    std::string projectilePrefabRef = "Assets/Prefabs/Arrow Projectile.prefab";
+    std::string projectilePrefabRef = "Assets/Prefabs/Combat/Projectiles/Arrow Projectile.prefab";
     float attackOriginHeightOffset = 0.55f;
     float launchForwardOffset = 0.35f;
     RTBEngine::ECS::AudioSourceComponent* fireAudio = nullptr;

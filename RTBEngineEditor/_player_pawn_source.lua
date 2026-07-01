@@ -84,7 +84,7 @@
                     },
                     {
                         type = "ProjectileAttackAbility",
-                        projectilePrefabRef = "Assets/Prefabs/Arrow Projectile.prefab",
+                        projectilePrefabRef = "Assets/Prefabs/Combat/Projectiles/Arrow Projectile.prefab",
                         attackOriginHeightOffset = 0.50,
                         launchForwardOffset = 0.35,
                         fireAudio = "C0MBAT-F1RE-4001-8000-000000000001/AudioSourceComponent",

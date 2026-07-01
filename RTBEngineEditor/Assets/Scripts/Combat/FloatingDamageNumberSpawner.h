@@ -24,7 +24,7 @@ public:
     ~FloatingDamageNumberSpawner() override = default;
 
     HealthComponent* health = nullptr;
-    std::string damageNumberPrefabRef = "Assets/Prefabs/Floating Damage Number.prefab";
+    std::string damageNumberPrefabRef = "Assets/Prefabs/Combat/Effects/Floating Damage Number.prefab";
     RTBEngine::Math::Vector3 hitFallbackOffset = RTBEngine::Math::Vector3(0.0f, 1.20f, 0.0f);
     RTBEngine::Math::Vector4 textColor = RTBEngine::Math::Vector4(1.0f, 0.92f, 0.35f, 1.0f);
 

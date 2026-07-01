@@ -506,7 +506,7 @@ function CreateScene()
                         playerRespawnDelay = 30.00,
                         teamWipeSceneDelay = 5.00,
                         finalScenePath = "Assets/Scenes/FinalScene.lua",
-                        enemyPrefabRef = "Assets/Prefabs/Enemy Melee.prefab",
+                        enemyPrefabRef = "Assets/Prefabs/Enemies/Enemy Melee.prefab",
                         spawnPoints = {
                             "74B6BC8E-5892-4C38-A4B6-8AAAF7B1F001",
                             "74B6BC8E-5892-4C38-A4B6-8AAAF7B1F002",

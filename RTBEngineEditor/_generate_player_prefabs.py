@@ -9,6 +9,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 SCENE = ROOT / "Assets" / "Scenes" / "DefaultScene.lua"
 PREFABS = ROOT / "Assets" / "Prefabs"
+PREFABS_PLAYER_GAMEPLAY = PREFABS / "Player" / "Gameplay"
+PREFABS_PLAYER_PREVIEW = PREFABS / "Player" / "Preview"
+PREFABS_COMBAT_PROJECTILES = PREFABS / "Combat" / "Projectiles"
 
 PLAYER_ROOT_UUID = "E8682E33-50ED-45D8-BC76-B31113639F9E"
 PLAYER_VISUAL_UUID = "5200AC9B-039A-416E-82AE-FD5FE1754C95"
@@ -31,15 +34,15 @@ CHARACTERS = [
         "id": "ranger",
         "prefab_name": "Player Ranger",
         "model_fbx": "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Ranger.fbx",
-        "preview": "Character Preview Ranger.prefab",
+        "preview": "Player/Preview/Character Preview Ranger.prefab",
         "ranged": True,
-        "projectile_prefab": "Assets/Prefabs/Arrow Projectile.prefab",
+        "projectile_prefab": "Assets/Prefabs/Combat/Projectiles/Arrow Projectile.prefab",
     },
     {
         "id": "knight",
         "prefab_name": "Player Knight",
         "model_fbx": "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Knight.fbx",
-        "preview": "Character Preview Knight.prefab",
+        "preview": "Player/Preview/Character Preview Knight.prefab",
         "ranged": False,
         "projectile_prefab": "",
     },
@@ -47,7 +50,7 @@ CHARACTERS = [
         "id": "barbarian",
         "prefab_name": "Player Barbarian",
         "model_fbx": "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Barbarian.fbx",
-        "preview": "Character Preview Barbarian.prefab",
+        "preview": "Player/Preview/Character Preview Barbarian.prefab",
         "ranged": False,
         "projectile_prefab": "",
     },
@@ -55,17 +58,17 @@ CHARACTERS = [
         "id": "arcanist",
         "prefab_name": "Player Arcanist",
         "model_fbx": "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Mage.fbx",
-        "preview": "Character Preview Arcanist.prefab",
+        "preview": "Player/Preview/Character Preview Arcanist.prefab",
         "ranged": True,
-        "projectile_prefab": "Assets/Prefabs/Sphere Projectile.prefab",
+        "projectile_prefab": "Assets/Prefabs/Combat/Projectiles/Sphere Projectile.prefab",
     },
     {
         "id": "rogue",
         "prefab_name": "Player Rogue",
         "model_fbx": "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Rogue.fbx",
-        "preview": "Character Preview Rogue.prefab",
+        "preview": "Player/Preview/Character Preview Rogue.prefab",
         "ranged": True,
-        "projectile_prefab": "Assets/Prefabs/Sphere Projectile.prefab",
+        "projectile_prefab": "Assets/Prefabs/Combat/Projectiles/Sphere Projectile.prefab",
     },
 ]
 
@@ -116,7 +119,7 @@ def extract_player_go(scene_text: str) -> str:
     if source_path.exists():
         return source_path.read_text(encoding="utf-8").strip()
 
-    prefab_path = PREFABS / "Player Ranger.prefab"
+    prefab_path = PREFABS_PLAYER_GAMEPLAY / "Player Ranger.prefab"
     if prefab_path.exists():
         text = prefab_path.read_text(encoding="utf-8")
         match = re.search(r"return\s*\{", text)
@@ -304,14 +307,14 @@ def update_default_scene(scene_text: str, player_go_block: str) -> str:
 
 
 def create_sphere_projectile_prefab() -> None:
-    arrow = (PREFABS / "Arrow Projectile.prefab").read_text(encoding="utf-8")
+    arrow = (PREFABS_COMBAT_PROJECTILES / "Arrow Projectile.prefab").read_text(encoding="utf-8")
     sphere = arrow.replace('name = "Arrow Projectile"', 'name = "Sphere Projectile"')
     sphere = re.sub(
         r'meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/arrow_bow\.obj"',
         'meshRef = "Default/Models/sphere.obj"',
         sphere,
     )
-    (PREFABS / "Sphere Projectile.prefab").write_text(sphere, encoding="utf-8")
+    (PREFABS_COMBAT_PROJECTILES / "Sphere Projectile.prefab").write_text(sphere, encoding="utf-8")
 
 
 def main() -> None:
@@ -320,12 +323,12 @@ def main() -> None:
     scene_text = SCENE.read_text(encoding="utf-8")
     player_go = extract_player_go(scene_text)
 
-    if not (PREFABS / "Sphere Projectile.prefab").exists():
+    if not (PREFABS_COMBAT_PROJECTILES / "Sphere Projectile.prefab").exists():
         create_sphere_projectile_prefab()
 
     for character in CHARACTERS:
         prefab_content = customize_prefab(player_go, character)
-        out_path = PREFABS / f"{character['prefab_name']}.prefab"
+        out_path = PREFABS_PLAYER_GAMEPLAY / f"{character['prefab_name']}.prefab"
         out_path.write_text(prefab_content, encoding="utf-8")
         rebuild_file(out_path)
         depth = balance_depth(out_path.read_text(encoding="utf-8"))

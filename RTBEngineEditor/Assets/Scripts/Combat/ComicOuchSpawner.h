@@ -24,7 +24,7 @@ public:
     ~ComicOuchSpawner() override = default;
 
     HealthComponent* health = nullptr;
-    std::string bubblePrefabRef = "Assets/Prefabs/Comic Ouch Bubble.prefab";
+    std::string bubblePrefabRef = "Assets/Prefabs/Combat/Effects/Comic Ouch Bubble.prefab";
     std::vector<std::string> bubbleTextures = {
         "Assets/UI/Comic/Ouch/ouch_01.png",
         "Assets/UI/Comic/Ouch/ow_01.png",

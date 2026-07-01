@@ -14,7 +14,7 @@ from _rebuild_player_prefab_tail import MAIN_CAMERA_BLOCK, balance_depth
 
 ROOT = Path(__file__).resolve().parent
 SOURCE = ROOT / "_player_pawn_source.lua"
-RANGER = ROOT / "Assets" / "Prefabs" / "Player Ranger.prefab"
+RANGER = ROOT / "Assets" / "Prefabs" / "Player" / "Gameplay" / "Player Ranger.prefab"
 PREFABS = ROOT / "Assets" / "Prefabs"
 
 
@@ -39,7 +39,7 @@ def restore_source() -> None:
         count=1,
     )
 
-    preview_inner = read_preview_children_inner(PREFABS / "Character Preview Ranger.prefab")
+    preview_inner = read_preview_children_inner(PREFABS / "Player" / "Preview" / "Character Preview Ranger.prefab")
     visual = build_player_visual_child(
         "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Ranger.fbx",
         preview_inner,
