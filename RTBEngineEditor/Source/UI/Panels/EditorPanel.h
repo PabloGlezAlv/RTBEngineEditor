@@ -1,13 +1,16 @@
 #pragma once
 #include <RTBEngine/Scene/GameObject.h>
 #include <RTBEngine/Scene/Scene.h>
+#include <RTBEngine/Scene/SceneManager.h>
 #include "../../Core/EditorTypes.h"
+#include "../Prefab/PrefabEditorSession.h"
 #include <filesystem>
 #include <string>
 #include <cstdint>
 #include <vector>
 #include <algorithm>
 #include <functional>
+#include <memory>
 
 namespace RTBEngine {
     namespace Core {
@@ -53,6 +56,8 @@ namespace RTBEditor {
         EditorState state = EditorState::Edit;
         std::filesystem::path selectedAssetPath;
         std::filesystem::path pendingSceneLoad;
+        std::filesystem::path pendingPrefabOpen;
+        std::unique_ptr<PrefabEditorSession> prefabEditor;
         StatsData stats;
         bool showStatsOverlay = false;
         NavDebugSettings navDebug;
@@ -124,6 +129,25 @@ namespace RTBEditor {
         if (gameObject) {
             context.selectedGameObjects.push_back(gameObject);
         }
+    }
+
+    inline bool IsPrefabEditMode(const EditorContext& context) {
+        return context.prefabEditor && context.prefabEditor->IsOpen();
+    }
+
+    inline RTBEngine::ECS::Scene* GetEditingScene(const EditorContext& context) {
+        if (IsPrefabEditMode(context)) {
+            return context.prefabEditor->GetStagingScene();
+        }
+        return RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
+    }
+
+    inline void MarkEditingDirty(EditorContext& context) {
+        if (IsPrefabEditMode(context)) {
+            context.prefabEditor->MarkDirty();
+            return;
+        }
+        RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
     }
 
     inline void ToggleSelection(EditorContext& context, RTBEngine::ECS::GameObject* gameObject) {

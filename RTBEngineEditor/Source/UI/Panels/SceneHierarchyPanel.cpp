@@ -19,6 +19,7 @@
 #include <RTBEngine/UI/Elements/UIText.h>
 #include <RTBEngine/Math/Vectors/Vector2.h>
 #include "../DragDropPayloads.h"
+#include "../Prefab/PrefabEditorSession.h"
 #include "../../Project/Project.h"
 #include <filesystem>
 #include <vector>
@@ -90,17 +91,28 @@ namespace RTBEditor {
         ImGui::Begin("Hierarchy");
 
         auto& sceneManager = RTBEngine::ECS::SceneManager::GetInstance();
-        auto activeScene = sceneManager.GetActiveScene();
+        auto activeScene = GetEditingScene(context);
+        const bool prefabEditMode = IsPrefabEditMode(context);
         if (activeScene) {
-            // Scene header
-            std::string sceneName = activeScene->GetName();
-            if (sceneManager.IsSceneDirty()) {
-                sceneName += " *";
+            if (prefabEditMode && context.prefabEditor) {
+                std::string prefabLabel = context.prefabEditor->GetAssetPath().filename().string();
+                if (context.prefabEditor->IsDirty()) {
+                    prefabLabel += " *";
+                }
+
+                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.45f, 0.72f, 1.0f, 1.0f));
+                ImGui::Text("PREFAB MODE: %s", prefabLabel.c_str());
+                ImGui::PopStyleColor();
+            } else {
+                std::string sceneName = activeScene->GetName();
+                if (sceneManager.IsSceneDirty()) {
+                    sceneName += " *";
+                }
+
+                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.8f, 0.8f, 1.0f, 1.0f));
+                ImGui::Text("Scene: %s", sceneName.c_str());
+                ImGui::PopStyleColor();
             }
-            
-            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.8f, 0.8f, 1.0f, 1.0f));
-            ImGui::Text("Scene: %s", sceneName.c_str());
-            ImGui::PopStyleColor();
             ImGui::Separator();
 
             ImGui::SetNextItemWidth(-FLT_MIN);
@@ -141,14 +153,14 @@ namespace RTBEditor {
             ImGui::Spacing();
 
             //Scene Settings
-            if (ImGui::CollapsingHeader("Scene Settings")) {
+            if (!prefabEditMode && ImGui::CollapsingHeader("Scene Settings")) {
                 ImGui::Spacing();
 
                 // Skybox enabled toggle
                 bool skyboxEnabled = activeScene->IsSkyboxEnabled();
                 if (ImGui::Checkbox("Skybox Enabled", &skyboxEnabled)) {
                     activeScene->SetSkyboxEnabled(skyboxEnabled);
-                    RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                    MarkEditingDirty(context);
                 }
 
                 ImGui::Spacing();
@@ -187,7 +199,7 @@ namespace RTBEditor {
                             RTBEngine::Core::ResourceManager::GetInstance().LoadCubemapAsset(assetPath);
                         if (cubemap) {
                             activeScene->SetSkyboxCubemap(cubemap);
-                            RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                            MarkEditingDirty(context);
                         }
                     }
                     ImGui::EndDragDropTarget();
@@ -197,7 +209,7 @@ namespace RTBEditor {
                 ImGui::SameLine();
                 if (ImGui::Button("x", ImVec2(22.0f, 0))) {
                     activeScene->SetSkyboxCubemap(nullptr);
-                    RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                    MarkEditingDirty(context);
                 }
 
                 ImGui::Spacing();
@@ -210,6 +222,10 @@ namespace RTBEditor {
             } else {
                 for (const auto& gameObject : activeScene->GetGameObjects()) {
                     if (gameObject->GetParent() == nullptr) {
+                        if (prefabEditMode &&
+                            PrefabEditorSession::IsEditorUtilityObject(gameObject.get())) {
+                            continue;
+                        }
                         DrawGameObjectNode(gameObject.get(), context);
                     }
                 }
@@ -298,7 +314,7 @@ namespace RTBEditor {
                         if (creationParent) go->SetParent(creationParent);
                         activeScene->AddGameObject(go);
                         context.selectedGameObject = go;
-                        RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                        MarkEditingDirty(context);
                     }
                     if (ImGui::MenuItem("Sphere")) {
                         CreateSphere(activeScene, context, creationParent);
@@ -325,7 +341,7 @@ namespace RTBEditor {
                         if (creationParent) go->SetParent(creationParent);
                         activeScene->AddGameObject(go);
                         context.selectedGameObject = go;
-                        RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                        MarkEditingDirty(context);
                     }
                     if (ImGui::MenuItem("Canvas")) {
                         CreateCanvas(activeScene, context, creationParent);
@@ -360,30 +376,32 @@ namespace RTBEditor {
                 RTBEngine::ECS::GameObject* dragged = reinterpret_cast<RTBEngine::ECS::GameObject*>(data->gameObjectId);
                 if (dragged && dragged->GetParent()) {
                     dragged->SetParent(nullptr);
-                    RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                    MarkEditingDirty(context);
                 }
             }
-            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(PAYLOAD_PREFAB)) {
-                const PrefabPayload* data = static_cast<const PrefabPayload*>(payload->Data);
+            if (!prefabEditMode) {
+                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(PAYLOAD_PREFAB)) {
+                    const PrefabPayload* data = static_cast<const PrefabPayload*>(payload->Data);
 
-                std::filesystem::path assetRoot = GetAssetRootPath();
-                std::string absolutePath = (assetRoot / data->path).string();
+                    std::filesystem::path assetRoot = GetAssetRootPath();
+                    std::string absolutePath = (assetRoot / data->path).string();
 
-                RTBEngine::ECS::Prefab* prefab = RTBEngine::ECS::PrefabRegistry::GetInstance().GetByPath(absolutePath);
+                    RTBEngine::ECS::Prefab* prefab = RTBEngine::ECS::PrefabRegistry::GetInstance().GetByPath(absolutePath);
 
-                if (prefab && activeScene) {
-                    std::vector<RTBEngine::ECS::GameObject*> childGOs;
-                    RTBEngine::ECS::GameObject* go = prefab->Instantiate(nullptr, childGOs);
-                    if (go) {
-                        activeScene->AddGameObject(go, false);
-                        for (auto* child : childGOs) {
-                            if (child) {
-                                activeScene->AddGameObject(child, false);
+                    if (prefab && activeScene) {
+                        std::vector<RTBEngine::ECS::GameObject*> childGOs;
+                        RTBEngine::ECS::GameObject* go = prefab->Instantiate(nullptr, childGOs);
+                        if (go) {
+                            activeScene->AddGameObject(go, false);
+                            for (auto* child : childGOs) {
+                                if (child) {
+                                    activeScene->AddGameObject(child, false);
+                                }
                             }
+                            activeScene->BringGameObjectToLife(go);
+                            context.selectedGameObject = go;
+                            MarkEditingDirty(context);
                         }
-                        activeScene->BringGameObjectToLife(go);
-                        context.selectedGameObject = go;
-                        RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
                     }
                 }
             }
@@ -401,7 +419,7 @@ namespace RTBEditor {
                         RTBEngine::Rendering::BuildFbxHierarchy(activeScene, modelData, assetPath, resources);
                     if (root) {
                         context.selectedGameObject = root;
-                        RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                        MarkEditingDirty(context);
                     }
                 }
             }
@@ -429,7 +447,8 @@ namespace RTBEditor {
         matches.reserve(static_cast<size_t>(scene->GetGameObjects().size()));
 
         for (const auto& gameObject : scene->GetGameObjects()) {
-            if (gameObject && MatchesHierarchySearch(gameObject.get(), filter)) {
+            if (gameObject && !PrefabEditorSession::IsEditorUtilityObject(gameObject.get()) &&
+                MatchesHierarchySearch(gameObject.get(), filter)) {
                 matches.push_back(gameObject.get());
             }
         }
@@ -571,8 +590,7 @@ namespace RTBEditor {
             ImGui::Separator();
 
             if (ImGui::MenuItem("Delete", "Del")) {
-                auto* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
-                if (scene) {
+                if (RTBEngine::ECS::Scene* scene = GetEditingScene(context)) {
                     DeleteGameObject(scene, gameObject, context);
                     ClearSelection(context);
                 }
@@ -606,31 +624,33 @@ namespace RTBEditor {
 
                 if (!isCycle) {
                     dragged->SetParent(gameObject);
-                    RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                    MarkEditingDirty(context);
                 }
             }
 
-            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(PAYLOAD_PREFAB)) {
-                const PrefabPayload* data = static_cast<const PrefabPayload*>(payload->Data);
+            if (!IsPrefabEditMode(context)) {
+                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(PAYLOAD_PREFAB)) {
+                    const PrefabPayload* data = static_cast<const PrefabPayload*>(payload->Data);
 
-                std::filesystem::path assetRoot = GetAssetRootPath();
-                std::string absolutePath = (assetRoot / data->path).string();
+                    std::filesystem::path assetRoot = GetAssetRootPath();
+                    std::string absolutePath = (assetRoot / data->path).string();
 
-                RTBEngine::ECS::Prefab* prefab = RTBEngine::ECS::PrefabRegistry::GetInstance().GetByPath(absolutePath);
-                RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
-                if (prefab && scene) {
-                    std::vector<RTBEngine::ECS::GameObject*> childGOs;
-                    RTBEngine::ECS::GameObject* go = prefab->Instantiate(gameObject, childGOs);
-                    if (go) {
-                        scene->AddGameObject(go, false);
-                        for (auto* child : childGOs) {
-                            if (child) {
-                                scene->AddGameObject(child, false);
+                    RTBEngine::ECS::Prefab* prefab = RTBEngine::ECS::PrefabRegistry::GetInstance().GetByPath(absolutePath);
+                    RTBEngine::ECS::Scene* scene = GetEditingScene(context);
+                    if (prefab && scene) {
+                        std::vector<RTBEngine::ECS::GameObject*> childGOs;
+                        RTBEngine::ECS::GameObject* go = prefab->Instantiate(gameObject, childGOs);
+                        if (go) {
+                            scene->AddGameObject(go, false);
+                            for (auto* child : childGOs) {
+                                if (child) {
+                                    scene->AddGameObject(child, false);
+                                }
                             }
+                            scene->BringGameObjectToLife(go);
+                            context.selectedGameObject = go;
+                            MarkEditingDirty(context);
                         }
-                        scene->BringGameObjectToLife(go);
-                        context.selectedGameObject = go;
-                        RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
                     }
                 }
             }
@@ -658,7 +678,7 @@ namespace RTBEditor {
 
         scene->AddGameObject(go);
         context.selectedGameObject = go;
-        RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+        MarkEditingDirty(context);
     }
 
     void SceneHierarchyPanel::CreateCube(RTBEngine::ECS::Scene* scene, EditorContext& context, RTBEngine::ECS::GameObject* parent) {
@@ -673,7 +693,7 @@ namespace RTBEditor {
 
         scene->AddGameObject(go);
         context.selectedGameObject = go;
-        RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+        MarkEditingDirty(context);
     }
 
     void SceneHierarchyPanel::CreatePlane(RTBEngine::ECS::Scene* scene, EditorContext& context, RTBEngine::ECS::GameObject* parent) {
@@ -688,7 +708,7 @@ namespace RTBEditor {
 
         scene->AddGameObject(go);
         context.selectedGameObject = go;
-        RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+        MarkEditingDirty(context);
     }
 
     void SceneHierarchyPanel::CreateParticleSystem(RTBEngine::ECS::Scene* scene, EditorContext& context, RTBEngine::ECS::GameObject* parent) {
@@ -715,7 +735,7 @@ namespace RTBEditor {
 
         scene->AddGameObject(go);
         context.selectedGameObject = go;
-        RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+        MarkEditingDirty(context);
     }
 
     void SceneHierarchyPanel::CreateCanvas(RTBEngine::ECS::Scene* scene, EditorContext& context, RTBEngine::ECS::GameObject* parent) {
@@ -728,7 +748,7 @@ namespace RTBEditor {
 
         scene->AddGameObject(go);
         context.selectedGameObject = go;
-        RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+        MarkEditingDirty(context);
     }
 
     void SceneHierarchyPanel::CreateUIText(RTBEngine::ECS::Scene* scene, EditorContext& context, RTBEngine::ECS::GameObject* parent) {
@@ -746,7 +766,7 @@ namespace RTBEditor {
 
         scene->AddGameObject(go);
         context.selectedGameObject = go;
-        RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+        MarkEditingDirty(context);
     }
 
     void SceneHierarchyPanel::CreateUIButton(RTBEngine::ECS::Scene* scene, EditorContext& context, RTBEngine::ECS::GameObject* parent) {
@@ -783,7 +803,7 @@ namespace RTBEditor {
         scene->AddGameObject(textGO);
 
         context.selectedGameObject = buttonGO;
-        RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+        MarkEditingDirty(context);
     }
 
     void SceneHierarchyPanel::CreateUIInputField(RTBEngine::ECS::Scene* scene, EditorContext& context, RTBEngine::ECS::GameObject* parent) {
@@ -829,7 +849,7 @@ namespace RTBEditor {
         scene->AddGameObject(textGO);
 
         context.selectedGameObject = inputGO;
-        RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+        MarkEditingDirty(context);
     }
 
     void SceneHierarchyPanel::CreateUISlider(RTBEngine::ECS::Scene* scene, EditorContext& context, RTBEngine::ECS::GameObject* parent) {
@@ -885,13 +905,13 @@ namespace RTBEditor {
         slider->SetValue(0.5f);
 
         context.selectedGameObject = sliderGO;
-        RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+        MarkEditingDirty(context);
     }
 
     void SceneHierarchyPanel::DeleteGameObject(RTBEngine::ECS::Scene* scene, RTBEngine::ECS::GameObject* gameObject, EditorContext& context) {
         scene->RemoveGameObject(gameObject);
         context.selectedGameObject = nullptr;
-        RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+        MarkEditingDirty(context);
     }
 
 }

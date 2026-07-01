@@ -2,6 +2,7 @@
 #define IMGUI_DEFINE_MATH_OPERATORS
 #endif
 #include "SceneViewPanel.h"
+#include "../Prefab/PrefabEditorSession.h"
 #include <imgui.h>
 #include <ImGuizmo.h>
 #include <RTBEngine/Input/InputManager.h>
@@ -61,6 +62,16 @@ namespace RTBEditor {
         ImGui::SameLine();
         if (ImGui::Button(gizmoLocalMode ? "Local" : "World")) {
             gizmoLocalMode = !gizmoLocalMode;
+        }
+
+        if (IsPrefabEditMode(context) && context.prefabEditor) {
+            ImGui::SameLine();
+            ImGui::Separator();
+            ImGui::SameLine();
+            ImGui::TextColored(
+                ImVec4(0.45f, 0.72f, 1.0f, 1.0f),
+                "Editing Prefab: %s",
+                context.prefabEditor->GetAssetPath().filename().string().c_str());
         }
 
         ImGui::PopStyleVar();
@@ -211,7 +222,7 @@ namespace RTBEditor {
         RTBEngine::Math::Vector2 viewportSize((float)viewportWidth, (float)viewportHeight);
         Ray ray = Ray::ScreenPointToRay(localMousePos, viewportSize, &editorCamera);
 
-        RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
+        RTBEngine::ECS::Scene* scene = GetEditingScene(context);
         if (!scene) {
             return;
         }
@@ -224,6 +235,9 @@ namespace RTBEditor {
         for (const auto& goPtr : gameObjects) {
             RTBEngine::ECS::GameObject* obj = goPtr.get();
             if (!obj) continue;
+            if (IsPrefabEditMode(context) && PrefabEditorSession::IsEditorUtilityObject(obj)) {
+                continue;
+            }
 
             RTBEngine::ECS::MeshRenderer* meshRenderer = obj->GetComponent<RTBEngine::ECS::MeshRenderer>();
             if (!meshRenderer) continue;
@@ -346,7 +360,7 @@ namespace RTBEditor {
                 if (comp) comp->OnValidate();
             }
 
-            RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+            MarkEditingDirty(context);
         }
     }
 

@@ -30,6 +30,9 @@
     <ClCompile Include="Source\Project\Project.cpp">
       <Filter>Archivos de origen</Filter>
     </ClCompile>
+    <ClCompile Include="Source\UI\Prefab\PrefabEditorSession.cpp">
+      <Filter>Archivos de origen</Filter>
+    </ClCompile>
     <ClCompile Include="Source\UI\EditorLayer.cpp">
       <Filter>Archivos de origen</Filter>
     </ClCompile>
@@ -84,6 +87,9 @@
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
     <ClInclude Include="Source\Project\Project.h">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\UI\Prefab\PrefabEditorSession.h">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
     <ClInclude Include="Source\UI\EditorLayer.h">

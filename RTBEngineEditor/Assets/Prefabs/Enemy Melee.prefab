@@ -17,11 +17,11 @@ return {
         },
         {
             type = "EnemyTargetTracker",
-            targetObject = ""
+            targetObject = nil
         },
         {
             type = "EnemyAnimationDriver",
-            animator = "E1F5A9B7-1030-4F9B-9A18-77AD11B06E20/Animator",
+            animator = nil,
             walkAnimationFbx = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_MovementBasic.fbx|Walking_A",
             attackAnimationFbx = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_CombatMelee.fbx|Melee_2H_Attack_Chop",
             deathAnimationFbx = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_General.fbx|Death_A"
@@ -40,14 +40,15 @@ return {
         },
         {
             type = "EnemyMeleeAI",
-            health = "753770D2-B00E-4859-B7D3-5ABF1249B014/HealthComponent",
+            health = nil,
             team = 2,
-            targetTracker = "753770D2-B00E-4859-B7D3-5ABF1249B014/EnemyTargetTracker",
-            animationDriver = "753770D2-B00E-4859-B7D3-5ABF1249B014/EnemyAnimationDriver",
-            locomotion = "753770D2-B00E-4859-B7D3-5ABF1249B014/EnemyLocomotionController",
-            navAgent = "753770D2-B00E-4859-B7D3-5ABF1249B014/NavAgentComponent",
-            meleeAttack = "753770D2-B00E-4859-B7D3-5ABF1249B014/MeleeSphereAttackAbility",
+            targetTracker = nil,
+            animationDriver = nil,
+            locomotion = nil,
+            navAgent = nil,
+            meleeAttack = nil,
             attackRange = 1.35,
+            preferredAttackDistance = 1.05,
             hitReactDuration = 0.40,
             deathHoldDuration = 0.75,
             shrinkDuration = 0.85
@@ -63,7 +64,7 @@ return {
             sphereDistance = 0.95,
             knockbackStrength = 2.50,
             ignoreSameTeam = true,
-            hitAudio = "C0MBAT-M1LE-4001-8000-000000000001/AudioSourceComponent"
+            hitAudio = nil
         },
         {
             type = "HealthComponent",
@@ -72,24 +73,25 @@ return {
         },
         {
             type = "ComicOuchSpawner",
+            health = nil,
             bubblePrefabRef = "Assets/Prefabs/Comic Ouch Bubble.prefab",
             bubbleTextures = {
                 "Assets/UI/Comic/Ouch/ouch_01.png",
                 "Assets/UI/Comic/Ouch/ow_01.png",
-                "Assets/UI/Comic/Ouch/ugh_01.png",
-            },
+                "Assets/UI/Comic/Ouch/ugh_01.png"            },
             hitFallbackOffset = Vector3(0.00, 1.20, 0.00),
             cooldown = 0.15
         },
         {
             type = "HitFlashComponent",
-            health = "753770D2-B00E-4859-B7D3-5ABF1249B014/HealthComponent",
+            health = nil,
             flashColor = Color(2.50, 0.50, 0.45, 1.00),
             flashDuration = 0.15,
             includeChildren = true
         },
         {
             type = "FloatingDamageNumberSpawner",
+            health = nil,
             damageNumberPrefabRef = "Assets/Prefabs/Floating Damage Number.prefab",
             hitFallbackOffset = Vector3(0.00, 1.20, 0.00),
             textColor = Color(1.00, 0.92, 0.35, 1.00)
@@ -99,9 +101,10 @@ return {
             mass = 1.00,
             friction = 0.80,
             restitution = 0.00,
-            bodyType = "Dynamic",
             freezeRotationX = true,
-            freezeRotationZ = true
+            freezeRotationY = false,
+            freezeRotationZ = true,
+            bodyType = "Dynamic"
         },
         {
             type = "CapsuleColliderComponent",
@@ -114,13 +117,14 @@ return {
     children = {
         {
             name = "CombatMeleeHitAudio",
-            uuid = "C0MBAT-M1LE-4001-8000-000000000001",
             components = {
                 {
                     type = "AudioSourceComponent",
-                    clip = "Assets/Audio/Combat/hit_melee_body.mp3",
                     volume = 0.85,
-                    playOnStart = false
+                    pitch = 1.00,
+                    loop = false,
+                    playOnStart = false,
+                    audioClip = "Assets/Audio/Combat/hit_melee_body.mp3"
                 },
             },
         },
@@ -132,7 +136,6 @@ return {
         },
         {
             name = "Enemy Model",
-            uuid = "E1F5A9B7-1030-4F9B-9A18-77AD11B06E20",
             scale = Vector3(0.85, 0.85, 0.85),
             components = {
                 {
@@ -146,8 +149,7 @@ return {
                     additionalModels = {
                         "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_MovementBasic.fbx",
                         "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_General.fbx",
-                        "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_CombatMelee.fbx",
-                    }
+                        "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_CombatMelee.fbx"                    }
                 },
             },
             children = {
@@ -162,7 +164,7 @@ return {
                             meshIndex = 0,
                             multiMesh = false
                         },
-                    }
+                    },
                 },
                 {
                     name = "Barbarian_Head",
@@ -176,7 +178,7 @@ return {
                             meshIndex = 1,
                             multiMesh = false
                         },
-                    }
+                    },
                 },
                 {
                     name = "Barbarian_BearHat",
@@ -190,7 +192,7 @@ return {
                             meshIndex = 2,
                             multiMesh = false
                         },
-                    }
+                    },
                 },
                 {
                     name = "Barbarian_LegLeft",
@@ -203,7 +205,7 @@ return {
                             meshIndex = 3,
                             multiMesh = false
                         },
-                    }
+                    },
                 },
                 {
                     name = "Barbarian_LegRight",
@@ -216,7 +218,7 @@ return {
                             meshIndex = 4,
                             multiMesh = false
                         },
-                    }
+                    },
                 },
                 {
                     name = "Barbarian_ArmRight",
@@ -229,7 +231,7 @@ return {
                             meshIndex = 5,
                             multiMesh = false
                         },
-                    }
+                    },
                 },
                 {
                     name = "Barbarian_ArmLeft",
@@ -242,57 +244,115 @@ return {
                             meshIndex = 6,
                             multiMesh = false
                         },
-                    }
+                    },
                 },
                 {
                     name = "root",
+                    rotation = Quaternion.FromEulerAngles(0.00, -0.00, 0.00),
+                    components = {
+                    },
                     children = {
                         {
                             name = "hips",
+                            position = Vector3(0.00, 0.41, -0.00),
+                            rotation = Quaternion.FromEulerAngles(0.00, 0.00, 0.00),
+                            components = {
+                            },
                             children = {
                                 {
                                     name = "spine",
+                                    position = Vector3(-0.00, 0.19, -0.00),
+                                    components = {
+                                    },
                                     children = {
                                         {
                                             name = "chest",
+                                            position = Vector3(-0.00, 0.37, 0.00),
+                                            scale = Vector3(1.00, 1.00, 1.00),
+                                            components = {
+                                            },
                                             children = {
                                                 {
                                                     name = "upperarm.l",
+                                                    position = Vector3(0.21, 0.13, 0.00),
+                                                    rotation = Quaternion.FromEulerAngles(-3.28, 90.00, -90.00),
+                                                    scale = Vector3(1.00, 1.00, 1.00),
+                                                    components = {
+                                                    },
                                                     children = {
                                                         {
                                                             name = "lowerarm.l",
+                                                            position = Vector3(0.00, 0.24, 0.00),
+                                                            rotation = Quaternion.FromEulerAngles(0.00, 0.00, -6.34),
+                                                            scale = Vector3(1.00, 1.00, 1.00),
+                                                            components = {
+                                                            },
                                                             children = {
                                                                 {
                                                                     name = "wrist.l",
+                                                                    position = Vector3(-0.00, 0.26, -0.00),
+                                                                    rotation = Quaternion.FromEulerAngles(0.00, 0.00, 3.06),
+                                                                    scale = Vector3(1.00, 1.00, 1.00),
+                                                                    components = {
+                                                                    },
                                                                     children = {
                                                                         {
                                                                             name = "hand.l",
+                                                                            position = Vector3(-0.00, 0.07, -0.00),
+                                                                            components = {
+                                                                            },
                                                                             children = {
                                                                                 {
                                                                                     name = "handslot.l",
+                                                                                    position = Vector3(0.00, 0.10, -0.06),
+                                                                                    rotation = Quaternion.FromEulerAngles(0.00, 0.00, -90.00),
+                                                                                    components = {
+                                                                                    },
                                                                                 },
-                                                                            }
+                                                                            },
                                                                         },
-                                                                    }
+                                                                    },
                                                                 },
-                                                            }
+                                                            },
                                                         },
-                                                    }
+                                                    },
                                                 },
                                                 {
                                                     name = "upperarm.r",
+                                                    position = Vector3(-0.21, 0.13, 0.00),
+                                                    rotation = Quaternion.FromEulerAngles(-3.28, -90.00, 90.00),
+                                                    scale = Vector3(1.00, 1.00, 1.00),
+                                                    components = {
+                                                    },
                                                     children = {
                                                         {
                                                             name = "lowerarm.r",
+                                                            position = Vector3(-0.00, 0.24, 0.00),
+                                                            rotation = Quaternion.FromEulerAngles(0.00, -0.00, 6.34),
+                                                            scale = Vector3(1.00, 1.00, 1.00),
+                                                            components = {
+                                                            },
                                                             children = {
                                                                 {
                                                                     name = "wrist.r",
+                                                                    position = Vector3(0.00, 0.26, -0.00),
+                                                                    rotation = Quaternion.FromEulerAngles(0.00, 0.00, -3.06),
+                                                                    scale = Vector3(1.00, 1.00, 1.00),
+                                                                    components = {
+                                                                    },
                                                                     children = {
                                                                         {
                                                                             name = "hand.r",
+                                                                            position = Vector3(0.00, 0.07, -0.00),
+                                                                            components = {
+                                                                            },
                                                                             children = {
                                                                                 {
                                                                                     name = "handslot.r",
+                                                                                    position = Vector3(-0.00, 0.10, -0.06),
+                                                                                    rotation = Quaternion.FromEulerAngles(0.00, 0.00, 90.00),
+                                                                                    components = {
+                                                                                    },
                                                                                     children = {
                                                                                         {
                                                                                             name = "Barbarian_Axe",
@@ -307,64 +367,107 @@ return {
                                                                                                     meshIndex = 0,
                                                                                                     multiMesh = false
                                                                                                 },
-                                                                                            }
+                                                                                            },
                                                                                         },
-                                                                                    }
+                                                                                    },
                                                                                 },
-                                                                            }
+                                                                            },
                                                                         },
-                                                                    }
+                                                                    },
                                                                 },
-                                                            }
+                                                            },
                                                         },
-                                                    }
+                                                    },
                                                 },
                                                 {
                                                     name = "head",
+                                                    position = Vector3(-0.00, 0.27, 0.00),
+                                                    components = {
+                                                    },
                                                 },
-                                            }
+                                            },
                                         },
-                                    }
+                                    },
                                 },
                                 {
                                     name = "upperleg.l",
+                                    position = Vector3(0.17, 0.11, 0.00),
+                                    rotation = Quaternion.FromEulerAngles(1.99, -180.00, 180.00),
+                                    scale = Vector3(1.00, 1.00, 1.00),
+                                    components = {
+                                    },
                                     children = {
                                         {
                                             name = "lowerleg.l",
+                                            position = Vector3(0.00, 0.23, -0.00),
+                                            rotation = Quaternion.FromEulerAngles(12.20, -0.00, -0.00),
+                                            scale = Vector3(1.00, 1.00, 1.00),
+                                            components = {
+                                            },
                                             children = {
                                                 {
                                                     name = "foot.l",
+                                                    position = Vector3(-0.00, 0.15, -0.00),
+                                                    rotation = Quaternion.FromEulerAngles(-54.16, 0.00, 0.00),
+                                                    scale = Vector3(1.00, 1.00, 1.00),
+                                                    components = {
+                                                    },
                                                     children = {
                                                         {
                                                             name = "toes.l",
+                                                            position = Vector3(0.00, 0.17, 0.00),
+                                                            rotation = Quaternion.FromEulerAngles(-46.04, -180.00, 0.00),
+                                                            scale = Vector3(1.00, 1.00, 1.00),
+                                                            components = {
+                                                            },
                                                         },
-                                                    }
+                                                    },
                                                 },
-                                            }
+                                            },
                                         },
-                                    }
+                                    },
                                 },
                                 {
                                     name = "upperleg.r",
+                                    position = Vector3(-0.17, 0.11, 0.00),
+                                    rotation = Quaternion.FromEulerAngles(1.99, 180.00, -180.00),
+                                    scale = Vector3(1.00, 1.00, 1.00),
+                                    components = {
+                                    },
                                     children = {
                                         {
                                             name = "lowerleg.r",
+                                            position = Vector3(-0.00, 0.23, -0.00),
+                                            rotation = Quaternion.FromEulerAngles(12.20, 0.00, 0.00),
+                                            scale = Vector3(1.00, 1.00, 1.00),
+                                            components = {
+                                            },
                                             children = {
                                                 {
                                                     name = "foot.r",
+                                                    position = Vector3(0.00, 0.15, -0.00),
+                                                    rotation = Quaternion.FromEulerAngles(-54.16, 0.00, 0.00),
+                                                    scale = Vector3(1.00, 1.00, 1.00),
+                                                    components = {
+                                                    },
                                                     children = {
                                                         {
                                                             name = "toes.r",
+                                                            position = Vector3(-0.00, 0.17, 0.00),
+                                                            rotation = Quaternion.FromEulerAngles(-46.04, 180.00, 0.00),
+                                                            scale = Vector3(1.00, 1.00, 1.00),
+                                                            components = {
+                                                            },
                                                         },
-                                                    }
+                                                    },
                                                 },
-                                            }
+                                            },
                                         },
-                                    }
+                                    },
                                 },
-                            }
+                            },
                         },
-                    }
+                    },
                 },
             },
         },

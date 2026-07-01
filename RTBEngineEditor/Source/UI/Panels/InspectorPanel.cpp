@@ -14,6 +14,8 @@
 #include <RTBEngine/Math/Quaternions/Quaternion.h>
 #include <RTBEngine/Scene/SceneManager.h>
 #include <RTBEngine/Scene/Scene.h>
+#include <RTBEngine/Scene/Prefab.h>
+#include <RTBEngine/Scene/PrefabRegistry.h>
 #include <RTBEngine/Physics/PhysicsLayerSettings.h>
 #include <RTBEngine/Scene/MissingComponent.h>
 #include <RTBEngine/Scene/MeshRenderer.h>
@@ -497,11 +499,20 @@ namespace RTBEditor {
 
     InspectorPanel::~InspectorPanel() {}
 
+    void InspectorPanel::MarkDirtyFromInspector() {
+        if (dirtyContext) {
+            MarkEditingDirty(*dirtyContext);
+        } else {
+            RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+        }
+    }
+
     void InspectorPanel::OnUIRender(EditorContext& context) {
+        dirtyContext = nullptr;
         ImGui::Begin("Inspector");
 
         // Validate that the selected GOs still exist in the active scene
-        auto* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
+        auto* scene = GetEditingScene(context);
         if (scene) {
             auto existsInScene = [scene](RTBEngine::ECS::GameObject* go) {
                 if (!go) return false;
@@ -533,12 +544,13 @@ namespace RTBEditor {
             ImGui::Text("Multiple GameObjects selected.");
             ImGui::TextDisabled("Modo multi-objeto: la edicion de propiedades no esta disponible.");
         } else if (context.selectedGameObject) {
+            dirtyContext = &context;
             auto& name = context.selectedGameObject->GetName();
 
             bool isActive = context.selectedGameObject->IsActive();
             if (ImGui::Checkbox("##Active", &isActive)) {
                 context.selectedGameObject->SetActive(isActive);
-                RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                MarkDirtyFromInspector();
             }
             if (ImGui::IsItemHovered()) {
                 ImGui::SetTooltip("Activar o desactivar el GameObject");
@@ -552,7 +564,7 @@ namespace RTBEditor {
             strncpy_s(buffer, sizeof(buffer), name.c_str(), _TRUNCATE);
             if (ImGui::InputText("##Name", buffer, sizeof(buffer))) {
                 context.selectedGameObject->SetName(buffer);
-                RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                MarkDirtyFromInspector();
             }
 
             {
@@ -570,7 +582,7 @@ namespace RTBEditor {
                         if (ImGui::Selectable(layerName.c_str(), selected)) {
                             context.selectedGameObject->SetCollisionLayer(layerIndex);
                             layerSettings.ApplyToGameObject(context.selectedGameObject);
-                            RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                            MarkDirtyFromInspector();
                         }
 
                         if (selected) {
@@ -582,13 +594,13 @@ namespace RTBEditor {
                 EndInspectorRow();
             }
 
-            if (context.selectedGameObject->IsPrefabInstance()) {
+            if (!IsPrefabEditMode(context) && context.selectedGameObject->IsPrefabInstance()) {
                 ImGui::Spacing();
                 ImGui::TextColored(ImVec4(0.4f, 0.6f, 1.0f, 1.0f), "Prefab: %s", context.selectedGameObject->GetPrefabName().c_str());
                 ImGui::SameLine();
                 if (ImGui::Button("Unlink")) {
                     context.selectedGameObject->SetPrefabName("");
-                    RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                    MarkDirtyFromInspector();
                 }
                 ImGui::Spacing();
             }
@@ -664,7 +676,7 @@ namespace RTBEditor {
                                         boxCollider->FitToOwnerMesh();
                                     }
 
-                                    RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                                    MarkDirtyFromInspector();
                                 }
                                 addComponentSearchBuffer[0] = '\0';
                                 ImGui::CloseCurrentPopup();
@@ -680,10 +692,11 @@ namespace RTBEditor {
             // Deferred component removal
             for (auto* comp : componentsToRemove) {
                 context.selectedGameObject->RemoveComponent(comp);
-                RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                MarkDirtyFromInspector();
             }
 
             componentsToRemove.clear();
+            dirtyContext = nullptr;
 
         } else if (!context.selectedAssetPath.empty()) {
             std::string ext = context.selectedAssetPath.extension().string();
@@ -698,6 +711,8 @@ namespace RTBEditor {
                 DrawFbxAssetInspector(context.selectedAssetPath);
             } else if (ext == ".rtbasset") {
                 DrawDataAssetInspector(context.selectedAssetPath);
+            } else if (ext == ".prefab") {
+                DrawPrefabAssetInspector(context);
             }
         } else {
             ImGui::Text("Select a GameObject to see its properties.");
@@ -712,6 +727,7 @@ namespace RTBEditor {
     }
 
     void InspectorPanel::DrawComponents(RTBEngine::ECS::GameObject* gameObject, EditorContext& context) {
+        dirtyContext = &context;
         // Detect if this GameObject has any UIElement — if so show Rect Transform instead of Transform
         RTBEngine::UI::UIElement* uiElement = gameObject->GetComponent<RTBEngine::UI::UIElement>();
 
@@ -722,7 +738,7 @@ namespace RTBEditor {
                 BeginInspectorRow("Position");
                 if (ImGui::DragFloat2("##rectPosition", (float*)&pos, 1.0f)) {
                     uiElement->SetAnchoredPosition(pos);
-                    RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                    MarkDirtyFromInspector();
                 }
                 EndInspectorRow();
 
@@ -730,7 +746,7 @@ namespace RTBEditor {
                 BeginInspectorRow("Anchor Min");
                 if (ImGui::DragFloat2("##rectAnchorMin", (float*)&anchorMin, 0.01f, 0.0f, 1.0f)) {
                     uiElement->SetAnchorMin(anchorMin);
-                    RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                    MarkDirtyFromInspector();
                 }
                 EndInspectorRow();
 
@@ -738,7 +754,7 @@ namespace RTBEditor {
                 BeginInspectorRow("Anchor Max");
                 if (ImGui::DragFloat2("##rectAnchorMax", (float*)&anchorMax, 0.01f, 0.0f, 1.0f)) {
                     uiElement->SetAnchorMax(anchorMax);
-                    RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                    MarkDirtyFromInspector();
                 }
                 EndInspectorRow();
 
@@ -749,7 +765,7 @@ namespace RTBEditor {
                 BeginInspectorRow(isStretched ? "Size Delta" : "Size");
                 if (ImGui::DragFloat2("##rectSize", (float*)&size, 1.0f)) {
                     uiElement->SetSizeDelta(size);
-                    RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                    MarkDirtyFromInspector();
                 }
                 EndInspectorRow();
 
@@ -761,7 +777,7 @@ namespace RTBEditor {
                 BeginInspectorRow("Pivot");
                 if (ImGui::DragFloat2("##rectPivot", (float*)&pivot, 0.01f, 0.0f, 1.0f)) {
                     uiElement->SetPivot(pivot);
-                    RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                    MarkDirtyFromInspector();
                 }
                 EndInspectorRow();
 
@@ -769,7 +785,7 @@ namespace RTBEditor {
                 BeginInspectorRow("Rotation");
                 if (ImGui::DragFloat("##rectRotation", &rot, 0.5f)) {
                     uiElement->SetRotation(rot);
-                    RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                    MarkDirtyFromInspector();
                 }
                 EndInspectorRow();
 
@@ -777,7 +793,7 @@ namespace RTBEditor {
                 BeginInspectorRow("Scale");
                 if (ImGui::DragFloat2("##rectScale", (float*)&scl, 0.01f)) {
                     uiElement->SetScale(scl);
-                    RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                    MarkDirtyFromInspector();
                 }
                 EndInspectorRow();
 
@@ -792,7 +808,7 @@ namespace RTBEditor {
                 BeginInspectorRow("Position");
                 if (ImGui::DragFloat3("##transformPosition", (float*)&localPos, 0.1f)) {
                     transform.SetPosition(localPos);
-                    RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                    MarkDirtyFromInspector();
                 }
                 EndInspectorRow();
 
@@ -808,7 +824,7 @@ namespace RTBEditor {
                     ApplyInspectorRotationDegrees(transform, cachedRotationDeg);
                     cachedRotationDeg = RotationDegreesFromQuaternion(transform.GetRotation());
                     cachedRotationSource = transform.GetRotation().Normalized();
-                    RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                    MarkDirtyFromInspector();
                 }
                 EndInspectorRow();
 
@@ -824,7 +840,7 @@ namespace RTBEditor {
                 BeginInspectorRow("Scale");
                 if (ImGui::DragFloat3("##transformScale", (float*)&localScale, 0.01f)) {
                     transform.SetScale(localScale);
-                    RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                    MarkDirtyFromInspector();
                 }
                 EndInspectorRow();
             }
@@ -934,15 +950,15 @@ namespace RTBEditor {
         if (ImGui::SmallButton("...##SelectScene")) {
             assetBrowserModal->Open(
                 AssetType::Scene,
-                [component, value](const std::string& path) {
+                [this, component, value](const std::string& path) {
                     *value = MakeAssetReference(path);
                     component->OnValidate();
-                    RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                    MarkDirtyFromInspector();
                 },
-                [component, value](const std::string& path) {
+                [this, component, value](const std::string& path) {
                     *value = std::filesystem::path(path).lexically_normal().generic_string();
                     component->OnValidate();
-                    RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                    MarkDirtyFromInspector();
                 });
         }
 
@@ -1027,11 +1043,11 @@ namespace RTBEditor {
             : "...##SelectAssetRef")) {
             assetBrowserModal->Open(
                 ResolveAssetBrowserType(assetType),
-                [component, value](const std::string& path) {
+                [this, component, value](const std::string& path) {
                     *value = MakeAssetReference(path);
                     if (component) {
                         component->OnValidate();
-                        RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                        MarkDirtyFromInspector();
                     }
                 });
         }
@@ -1054,7 +1070,7 @@ namespace RTBEditor {
         using namespace RTBEngine::Reflection;
 
         bool changed = false;
-        RTBEngine::ECS::Scene* activeScene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
+        RTBEngine::ECS::Scene* activeScene = dirtyContext ? GetEditingScene(*dirtyContext) : nullptr;
 
         size_t elementCount = 0;
         switch (prop.listElementType) {
@@ -1556,14 +1572,14 @@ namespace RTBEditor {
                 if (ImGui::SmallButton("...##SelectTexture")) {
                     assetBrowserModal->Open(
                         AssetType::Texture,
-                        [texPtr, loadTextureForInspector](const std::string& path) {
+                        [this, texPtr, loadTextureForInspector](const std::string& path) {
                             std::string fullPath = "Assets/" + path;
                             auto* tex = loadTextureForInspector(fullPath);
-                            if (tex) { *texPtr = tex; RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty(); }
+                            if (tex) { *texPtr = tex; MarkDirtyFromInspector(); }
                         },
-                        [texPtr, loadTextureForInspector](const std::string& path) {
+                        [this, texPtr, loadTextureForInspector](const std::string& path) {
                             auto* tex = loadTextureForInspector(path);
-                            if (tex) { *texPtr = tex; RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty(); }
+                            if (tex) { *texPtr = tex; MarkDirtyFromInspector(); }
                         }
                     );
                 }
@@ -1624,12 +1640,12 @@ namespace RTBEditor {
 
                 ImGui::SameLine();
                 if (ImGui::SmallButton("...##SelectAudioClip")) {
-                    assetBrowserModal->Open(AssetType::AudioClip, [clipPtr](const std::string& path) {
+                    assetBrowserModal->Open(AssetType::AudioClip, [this, clipPtr](const std::string& path) {
                         std::string fullPath = std::string("Assets/") + path;
                         auto* audioClip = RTBEngine::Core::ResourceManager::GetInstance().LoadAudioClip(fullPath);
                         if (audioClip) {
                             *clipPtr = audioClip;
-                            RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+                            MarkDirtyFromInspector();
                         }
                     });
                 }
@@ -1692,13 +1708,13 @@ namespace RTBEditor {
                 if (ImGui::SmallButton("...##SelectMesh")) {
                     assetBrowserModal->Open(
                         AssetType::Mesh,
-                        [meshPtr](const std::string& path) {
+                        [this, meshPtr](const std::string& path) {
                             auto* mesh = RTBEngine::Core::ResourceManager::GetInstance().LoadModel("Assets/" + path);
-                            if (mesh) { *meshPtr = mesh; RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty(); }
+                            if (mesh) { *meshPtr = mesh; MarkDirtyFromInspector(); }
                         },
-                        [meshPtr](const std::string& path) {
+                        [this, meshPtr](const std::string& path) {
                             auto* mesh = RTBEngine::Core::ResourceManager::GetInstance().LoadModel(path);
-                            if (mesh) { *meshPtr = mesh; RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty(); }
+                            if (mesh) { *meshPtr = mesh; MarkDirtyFromInspector(); }
                         }
                     );
                 }
@@ -1762,15 +1778,15 @@ namespace RTBEditor {
                 if (ImGui::SmallButton("...##SelectFont")) {
                     assetBrowserModal->Open(
                         AssetType::Font,
-                        [fontPtr](const std::string& path) {
+                        [this, fontPtr](const std::string& path) {
                             float sizes[] = { 12.0f, 16.0f, 18.0f, 24.0f, 32.0f, 48.0f };
                             auto* font = RTBEngine::Core::ResourceManager::GetInstance().LoadFont("Assets/" + path, sizes, 6);
-                            if (font) { *fontPtr = font; RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty(); }
+                            if (font) { *fontPtr = font; MarkDirtyFromInspector(); }
                         },
-                        [fontPtr](const std::string& path) {
+                        [this, fontPtr](const std::string& path) {
                             float sizes[] = { 12.0f, 16.0f, 18.0f, 24.0f, 32.0f, 48.0f };
                             auto* font = RTBEngine::Core::ResourceManager::GetInstance().LoadFont(path, sizes, 6);
-                            if (font) { *fontPtr = font; RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty(); }
+                            if (font) { *fontPtr = font; MarkDirtyFromInspector(); }
                         }
                     );
                 }
@@ -1784,7 +1800,7 @@ namespace RTBEditor {
             }
             case RTBEngine::Reflection::PropertyType::GameObjectRef: {
                 RTBEngine::ECS::GameObject** goPtr = (RTBEngine::ECS::GameObject**)data;
-                RTBEngine::ECS::Scene* activeScene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
+                RTBEngine::ECS::Scene* activeScene = dirtyContext ? GetEditingScene(*dirtyContext) : nullptr;
                 const bool hasLiveGameObject = *goPtr && IsGameObjectInScene(activeScene, *goPtr);
                 BeginInspectorRow(inspectorLabel.c_str());
 
@@ -1836,7 +1852,7 @@ namespace RTBEditor {
             }
             case RTBEngine::Reflection::PropertyType::ComponentRef: {
                 RTBEngine::ECS::Component** compPtr = (RTBEngine::ECS::Component**)data;
-                RTBEngine::ECS::Scene* activeScene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
+                RTBEngine::ECS::Scene* activeScene = dirtyContext ? GetEditingScene(*dirtyContext) : nullptr;
                 const bool hasLiveComponent = *compPtr && IsComponentInScene(activeScene, *compPtr);
                 const std::string componentRefLabel = FormatComponentRefLabel(prop);
                 BeginInspectorRow(componentRefLabel.c_str());
@@ -1931,7 +1947,7 @@ namespace RTBEditor {
 
         if (changed) {
             component->OnValidate();
-            RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+            MarkDirtyFromInspector();
         }
 
         ImGui::PopID();
@@ -2080,7 +2096,7 @@ namespace RTBEditor {
 
         if (changed) {
             animator->OnValidate();
-            RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+            MarkDirtyFromInspector();
         }
     }
 
@@ -2141,7 +2157,7 @@ namespace RTBEditor {
 
         if (changed) {
             particleSystem->OnValidate();
-            RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+            MarkDirtyFromInspector();
         }
     }
 
@@ -2197,7 +2213,7 @@ namespace RTBEditor {
 
         if (changed) {
             navGridComponent->OnValidate();
-            RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+            MarkDirtyFromInspector();
         }
     }
 
@@ -2575,6 +2591,31 @@ namespace RTBEditor {
         }
 
         ImGui::PopID();
+    }
+
+    void InspectorPanel::DrawPrefabAssetInspector(EditorContext& context)
+    {
+        const std::filesystem::path& prefabPath = context.selectedAssetPath;
+        ImGui::Text("Prefab Asset");
+        ImGui::Text("%s", prefabPath.filename().string().c_str());
+        ImGui::Separator();
+
+        RTBEngine::ECS::Prefab* prefab =
+            RTBEngine::ECS::PrefabRegistry::GetInstance().GetByPath(prefabPath.string());
+        if (!prefab) {
+            ImGui::TextColored(ImVec4(1.0f, 0.45f, 0.45f, 1.0f),
+                "Prefab is not loaded in the registry.");
+            return;
+        }
+
+        ImGui::Text("Root Name: %s", prefab->GetName().c_str());
+        ImGui::Spacing();
+        ImGui::TextWrapped("Double-click the asset in the Content Browser to open Prefab Mode.");
+        ImGui::Spacing();
+
+        if (ImGui::Button("Open Prefab", ImVec2(140.0f, 0.0f))) {
+            context.pendingPrefabOpen = prefabPath;
+        }
     }
 
     void InspectorPanel::DrawDataAssetInspector(const std::filesystem::path& dataAssetPath)

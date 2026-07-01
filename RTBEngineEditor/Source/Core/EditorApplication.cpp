@@ -179,8 +179,12 @@ namespace RTBEditor {
             RenderUnsavedScenePopup();
             });
 
+        uiLayer->SetPrefabModeCallbacks(
+            [this]() { TryClosePrefab(); },
+            [this]() { uiLayer->SavePrefab(); });
+
         uiLayer->GetContext().ensureScenePhysicsReady = [this]() -> bool {
-            RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
+            RTBEngine::ECS::Scene* scene = GetEditingScene(uiLayer->GetContext());
             if (!scene || !engineApp) {
                 return false;
             }
@@ -243,7 +247,7 @@ namespace RTBEditor {
             stats.frameTimeMs = deltaTime * 1000.0f;
 
             // ECS / scene counters
-            RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
+            RTBEngine::ECS::Scene* scene = GetEditingScene(uiLayer->GetContext());
             if (scene) {
                 stats.gameObjects = scene->GetActiveGameObjectCount();
                 stats.components = scene->GetActiveComponentCount();
@@ -269,10 +273,10 @@ namespace RTBEditor {
         if (state == EditorState::Edit) {
             RTBEngine::Online::OnlineSystem::GetInstance().Tick(deltaTime);
 
-            RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
-            if (scene) {
-                RTBEngine::ECS::ParticleSystem::TickScenePreview(scene, deltaTime);
-                TickAnimatorPreview(scene, deltaTime);
+            RTBEngine::ECS::Scene* editingScene = GetEditingScene(uiLayer->GetContext());
+            if (editingScene) {
+                RTBEngine::ECS::ParticleSystem::TickScenePreview(editingScene, deltaTime);
+                TickAnimatorPreview(editingScene, deltaTime);
             }
         }
 
@@ -281,6 +285,13 @@ namespace RTBEditor {
             std::filesystem::path requested = uiLayer->GetContext().pendingSceneLoad;
             uiLayer->GetContext().pendingSceneLoad.clear();
             TryOpenScene(requested);
+        }
+
+        // Consume prefab open request from Content Browser double-click
+        if (!uiLayer->GetContext().pendingPrefabOpen.empty() && state == EditorState::Edit) {
+            std::filesystem::path requested = uiLayer->GetContext().pendingPrefabOpen;
+            uiLayer->GetContext().pendingPrefabOpen.clear();
+            TryOpenPrefab(requested);
         }
 
         // If an async script compilation finished, join the worker and reload the DLL.
@@ -443,7 +454,7 @@ namespace RTBEditor {
 
     void EditorApplication::TryOpenScene(const std::filesystem::path& path) {
         pendingOpenScenePath = path;
-        if (RTBEngine::ECS::SceneManager::GetInstance().IsSceneDirty()) {
+        if (HasBlockingUnsavedChanges(PendingAction::OpenScene)) {
             pendingAction = PendingAction::OpenScene;
             showUnsavedScenePopup = true;
         }
@@ -452,8 +463,78 @@ namespace RTBEditor {
         }
     }
 
+    void EditorApplication::TryOpenPrefab(const std::filesystem::path& path) {
+        pendingOpenPrefabPath = path;
+        if (HasBlockingUnsavedChanges(PendingAction::OpenPrefab)) {
+            pendingAction = PendingAction::OpenPrefab;
+            showUnsavedScenePopup = true;
+        }
+        else {
+            OnOpenPrefab();
+        }
+    }
+
+    void EditorApplication::TryClosePrefab() {
+        if (!uiLayer || !uiLayer->IsPrefabEditMode()) {
+            return;
+        }
+
+        if (HasBlockingUnsavedChanges(PendingAction::ClosePrefab)) {
+            pendingAction = PendingAction::ClosePrefab;
+            showUnsavedScenePopup = true;
+        }
+        else {
+            OnClosePrefab();
+        }
+    }
+
+    bool EditorApplication::HasUnsavedPrefabChanges() const {
+        if (!uiLayer) {
+            return false;
+        }
+
+        PrefabEditorSession* session = uiLayer->GetPrefabEditorSession();
+        return session && session->IsOpen() && session->IsDirty();
+    }
+
+    bool EditorApplication::HasBlockingUnsavedChanges(PendingAction action) const {
+        auto& sm = RTBEngine::ECS::SceneManager::GetInstance();
+
+        if (action == PendingAction::ClosePrefab) {
+            return HasUnsavedPrefabChanges();
+        }
+
+        if (action == PendingAction::OpenPrefab) {
+            if (sm.IsSceneDirty()) {
+                return true;
+            }
+            if (uiLayer && uiLayer->IsPrefabEditMode() && HasUnsavedPrefabChanges()) {
+                return true;
+            }
+            return false;
+        }
+
+        if (HasUnsavedPrefabChanges()) {
+            return true;
+        }
+
+        if (uiLayer && uiLayer->IsPrefabEditMode()) {
+            if (action == PendingAction::Play || action == PendingAction::Build ||
+                action == PendingAction::OpenScene) {
+                return true;
+            }
+            return false;
+        }
+
+        return sm.IsSceneDirty();
+    }
+
     void EditorApplication::OnOpenScene() {
         if (pendingOpenScenePath.empty()) return;
+
+        if (uiLayer && uiLayer->IsPrefabEditMode()) {
+            OnClosePrefab();
+        }
 
         if (uiLayer)
             uiLayer->ClearSelection();
@@ -466,8 +547,33 @@ namespace RTBEditor {
         pendingOpenScenePath.clear();
     }
 
+    void EditorApplication::OnOpenPrefab() {
+        if (!uiLayer || pendingOpenPrefabPath.empty()) {
+            return;
+        }
+
+        if (uiLayer->IsPrefabEditMode()) {
+            OnClosePrefab();
+        }
+
+        uiLayer->OpenPrefab(pendingOpenPrefabPath);
+        pendingOpenPrefabPath.clear();
+    }
+
+    void EditorApplication::OnClosePrefab() {
+        if (!uiLayer) {
+            return;
+        }
+
+        uiLayer->ClosePrefab();
+    }
+
     void EditorApplication::TryPlay() {
-        if (RTBEngine::ECS::SceneManager::GetInstance().IsSceneDirty()) {
+        if (uiLayer && uiLayer->IsPrefabEditMode()) {
+            return;
+        }
+
+        if (HasBlockingUnsavedChanges(PendingAction::Play)) {
             pendingAction = PendingAction::Play;
             showUnsavedScenePopup = true;
         }
@@ -477,7 +583,7 @@ namespace RTBEditor {
     }
 
     void EditorApplication::TryBuild() {
-        if (RTBEngine::ECS::SceneManager::GetInstance().IsSceneDirty()) {
+        if (HasBlockingUnsavedChanges(PendingAction::Build)) {
             pendingAction = PendingAction::Build;
             showUnsavedScenePopup = true;
         }
@@ -487,7 +593,11 @@ namespace RTBEditor {
     }
 
     void EditorApplication::TryExit() {
-        if (RTBEngine::ECS::SceneManager::GetInstance().IsSceneDirty()) {
+        if (uiLayer && uiLayer->IsPrefabEditMode() && !HasUnsavedPrefabChanges()) {
+            OnClosePrefab();
+        }
+
+        if (HasBlockingUnsavedChanges(PendingAction::Exit)) {
             pendingAction = PendingAction::Exit;
             showUnsavedScenePopup = true;
         }
@@ -500,8 +610,15 @@ namespace RTBEditor {
         switch (pendingAction) {
         case PendingAction::Play:  OnPlay(); break;
         case PendingAction::Build: uiLayer->OpenBuildDialog(); break;
-        case PendingAction::Exit:      isRunning = false; break;
+        case PendingAction::Exit:
+            if (uiLayer && uiLayer->IsPrefabEditMode()) {
+                OnClosePrefab();
+            }
+            isRunning = false;
+            break;
         case PendingAction::OpenScene: OnOpenScene(); break;
+        case PendingAction::OpenPrefab: OnOpenPrefab(); break;
+        case PendingAction::ClosePrefab: OnClosePrefab(); break;
         case PendingAction::None:      break;
         }
         pendingAction = PendingAction::None;
@@ -509,26 +626,62 @@ namespace RTBEditor {
 
     void EditorApplication::RenderUnsavedScenePopup() {
         if (showUnsavedScenePopup) {
-            ImGui::OpenPopup("Scene is not saved");
+            ImGui::OpenPopup("UnsavedChangesPopup");
             showUnsavedScenePopup = false;
         }
 
         bool popupOpen = true;
-        if (ImGui::BeginPopupModal("Scene is not saved", &popupOpen,
+        if (ImGui::BeginPopupModal("UnsavedChangesPopup", &popupOpen,
             ImGuiWindowFlags_AlwaysAutoResize)) {
-            ImGui::Text("The current scene has unsaved changes.");
+            const bool prefabDirty = HasUnsavedPrefabChanges();
+            const bool sceneDirty = RTBEngine::ECS::SceneManager::GetInstance().IsSceneDirty();
+            const bool closingPrefab = pendingAction == PendingAction::ClosePrefab;
+            const bool openingPrefab = pendingAction == PendingAction::OpenPrefab;
+            const bool inPrefabMode = uiLayer && uiLayer->IsPrefabEditMode();
+
+            if (closingPrefab || (openingPrefab && prefabDirty)) {
+                ImGui::Text("The prefab has unsaved changes.");
+            } else if (inPrefabMode && pendingAction != PendingAction::ClosePrefab) {
+                ImGui::Text("You are editing a prefab. Close prefab mode before continuing.");
+            } else if (sceneDirty) {
+                ImGui::Text("The current scene has unsaved changes.");
+            } else {
+                ImGui::Text("There are unsaved changes.");
+            }
+
             ImGui::Text("What would you like to do?");
             ImGui::Spacing();
 
+            const bool canSavePrefab = prefabDirty &&
+                (closingPrefab || openingPrefab || pendingAction == PendingAction::Exit);
+            const bool canSaveScene = sceneDirty && !inPrefabMode;
+            const bool canSave = canSavePrefab || canSaveScene;
+
+            if (!canSave) {
+                ImGui::BeginDisabled();
+            }
             if (ImGui::Button("Save")) {
-                auto& sm = RTBEngine::ECS::SceneManager::GetInstance();
-                if (RTBEngine::Scripting::SceneSaver::SaveScene(
-                    sm.GetActiveScene(), sm.GetActiveScenePath())) {
-                    sm.ClearSceneDirty();
-                    uiLayer->GetMenuBar()->SetSceneDirty(false);
+                bool saved = false;
+                if (canSavePrefab) {
+                    saved = uiLayer->SavePrefab();
+                }
+                if (canSaveScene) {
+                    auto& sm = RTBEngine::ECS::SceneManager::GetInstance();
+                    if (RTBEngine::Scripting::SceneSaver::SaveScene(
+                        sm.GetActiveScene(), sm.GetActiveScenePath())) {
+                        sm.ClearSceneDirty();
+                        uiLayer->GetMenuBar()->SetSceneDirty(false);
+                        saved = true;
+                    }
+                }
+
+                if (saved || !canSave) {
                     ExecutePendingAction();
                     ImGui::CloseCurrentPopup();
                 }
+            }
+            if (!canSave) {
+                ImGui::EndDisabled();
             }
             ImGui::SameLine();
             if (ImGui::Button("Ignore")) {
@@ -538,15 +691,16 @@ namespace RTBEditor {
             ImGui::SameLine();
             if (ImGui::Button("Cancel")) {
                 pendingAction = PendingAction::None;
+                pendingOpenPrefabPath.clear();
                 ImGui::CloseCurrentPopup();
             }
 
             ImGui::EndPopup();
         }
 
-        // Si el usuario cerró con la X, limpiar la acción pendiente
         if (!popupOpen) {
             pendingAction = PendingAction::None;
+            pendingOpenPrefabPath.clear();
         }
     }
 
@@ -581,15 +735,17 @@ namespace RTBEditor {
     void EditorApplication::RenderSceneToFramebuffer() {
         if (!uiLayer) return;
 
-        RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
-        if (!scene) return;
+        EditorContext& editorContext = uiLayer->GetContext();
+        RTBEngine::ECS::Scene* sceneViewScene = GetEditingScene(editorContext);
+        RTBEngine::ECS::Scene* activeScene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
+        if (!sceneViewScene) return;
 
-        PruneSelectionToScene(uiLayer->GetContext(), scene);
+        PruneSelectionToScene(editorContext, sceneViewScene);
 
         // Reset per-frame render counters before any draw submissions
         RTBEngine::ECS::MeshRenderer::ResetRenderStats();
 
-        RTBEngine::UI::CanvasSystem::GetInstance().Update(scene);
+        RTBEngine::UI::CanvasSystem::GetInstance().Update(sceneViewScene);
 
         // 1. Render Scene View (Editor Camera)
         SceneViewPanel* sceneView = uiLayer->GetSceneViewPanel();
@@ -602,10 +758,10 @@ namespace RTBEditor {
             if (framebuffer && editorCamera && vpWidth > 0 && vpHeight > 0) {
                 framebuffer->Bind();
                 glViewport(0, 0, vpWidth, vpHeight);
-                engineApp->RenderShadowPass(scene);
+                engineApp->RenderShadowPass(sceneViewScene);
                 framebuffer->Bind();
                 glViewport(0, 0, vpWidth, vpHeight);
-                engineApp->RenderGeometryPass(scene, editorCamera);
+                engineApp->RenderGeometryPass(sceneViewScene, editorCamera);
 
                 // Render editor grid and axes
                 if (sceneView->GetGridRenderer()) {
@@ -624,9 +780,9 @@ namespace RTBEditor {
                 if (sceneView->GetNavGridDebugRenderer()) {
                     sceneView->GetNavGridDebugRenderer()->Render(
                         editorCamera,
-                        scene,
+                        sceneViewScene,
                         uiLayer->GetSelectedGameObject(),
-                        uiLayer->GetContext().navDebug);
+                        editorContext.navDebug);
                 }
 
                 framebuffer->Unbind();
@@ -635,9 +791,9 @@ namespace RTBEditor {
 
         // 2. Render Game View (Main Camera)
         GameViewPanel* gameView = uiLayer->GetGameViewPanel();
-        if (gameView) {
+        if (gameView && activeScene) {
             RTBEngine::Rendering::Framebuffer* framebuffer = gameView->GetFramebuffer();
-            RTBEngine::ECS::CameraComponent* mainCamComp = scene->GetMainCamera();
+            RTBEngine::ECS::CameraComponent* mainCamComp = activeScene->GetMainCamera();
             int vpWidth = static_cast<int>(gameView->GetRenderWidth());
             int vpHeight = static_cast<int>(gameView->GetRenderHeight());
 
@@ -649,7 +805,7 @@ namespace RTBEditor {
                     framebuffer->Bind();
                     glViewport(0, 0, vpWidth, vpHeight);
                     // For now, reuse shadow maps from first pass
-                    engineApp->RenderGeometryPass(scene, mainCamera);
+                    engineApp->RenderGeometryPass(activeScene, mainCamera);
 
                     // Note: Scene UI is rendered in GameViewPanel::OnUIRender()
                     // after the framebuffer image, within the ImGui frame

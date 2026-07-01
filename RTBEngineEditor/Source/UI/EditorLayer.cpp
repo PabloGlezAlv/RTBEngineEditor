@@ -25,6 +25,7 @@ namespace RTBEditor {
 
     EditorLayer::EditorLayer() {
         EditorWindowPrefs::LoadInto(context);
+        context.prefabEditor = std::make_unique<PrefabEditorSession>();
 
         menuBar = std::make_unique<MainMenuBar>();
         buildDialog = std::make_unique<BuildDialog>();
@@ -85,11 +86,10 @@ namespace RTBEditor {
     }
 
     void EditorLayer::OnUIRender() {
-        PruneSelectionToScene(
-            context,
-            RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene());
+        PruneSelectionToScene(context, GetEditingScene(context));
 
         SetupDockspace();
+        DrawPrefabModeBar();
 
         // Render all registered panels
         for (auto& panel : panels) {
@@ -214,6 +214,12 @@ namespace RTBEditor {
         if (buildDialog) buildDialog->Open();
     }
 
+    void EditorLayer::SetPrefabModeCallbacks(std::function<void()> onRequestClosePrefabCallback,
+                                             std::function<void()> onSavePrefabCallback) {
+        onRequestClosePrefab = std::move(onRequestClosePrefabCallback);
+        onSavePrefab = std::move(onSavePrefabCallback);
+    }
+
     void EditorLayer::ClearSelection() {
         RTBEditor::ClearSelection(context);
     }
@@ -225,6 +231,14 @@ namespace RTBEditor {
         }
 
         const bool ctrlDown = io.KeyCtrl;
+
+        if (ctrlDown && ImGui::IsKeyPressed(ImGuiKey_S, false)) {
+            if (RTBEditor::IsPrefabEditMode(context)) {
+                if (context.prefabEditor && context.prefabEditor->IsDirty() && onSavePrefab) {
+                    onSavePrefab();
+                }
+            }
+        }
 
         if (ctrlDown && ImGui::IsKeyPressed(ImGuiKey_C, false)) {
             CopySelectionToClipboard();
@@ -250,8 +264,9 @@ namespace RTBEditor {
             }
         }
 
-        const std::string& activeScenePath =
-            RTBEngine::ECS::SceneManager::GetInstance().GetActiveScenePath();
+        const std::string& activeScenePath = RTBEditor::IsPrefabEditMode(context)
+            ? context.prefabEditor->GetAssetPath().string()
+            : RTBEngine::ECS::SceneManager::GetInstance().GetActiveScenePath();
 
         for (auto* go : context.selectedGameObjects) {
             if (!go) continue;
@@ -282,7 +297,7 @@ namespace RTBEditor {
             return;
         }
 
-        auto* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
+        auto* scene = GetEditingScene(context);
         if (!scene) {
             return;
         }
@@ -293,8 +308,9 @@ namespace RTBEditor {
             pasteParent = context.selectedGameObject;
         }
 
-        const std::string& activeScenePath =
-            RTBEngine::ECS::SceneManager::GetInstance().GetActiveScenePath();
+        const std::string& activeScenePath = RTBEditor::IsPrefabEditMode(context)
+            ? context.prefabEditor->GetAssetPath().string()
+            : RTBEngine::ECS::SceneManager::GetInstance().GetActiveScenePath();
 
         RTBEditor::ClearSelection(context);
 
@@ -355,7 +371,7 @@ namespace RTBEditor {
             ++index;
         }
 
-        RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+        MarkEditingDirty(context);
     }
 
     void EditorLayer::DuplicateSelection() {
@@ -369,6 +385,93 @@ namespace RTBEditor {
 
     void EditorLayer::PersistWindowPrefs() {
         EditorWindowPrefs::SaveFrom(context);
+    }
+
+    bool EditorLayer::OpenPrefab(const std::filesystem::path& absolutePath) {
+        if (!context.prefabEditor) {
+            context.prefabEditor = std::make_unique<PrefabEditorSession>();
+        }
+
+        if (!context.prefabEditor->Open(absolutePath)) {
+            return false;
+        }
+
+        ClearSelection();
+        context.selectedAssetPath.clear();
+        if (context.prefabEditor->GetRootObject()) {
+            SetSingleSelection(context, context.prefabEditor->GetRootObject());
+        }
+        return true;
+    }
+
+    void EditorLayer::ClosePrefab() {
+        if (context.prefabEditor) {
+            context.prefabEditor->Close();
+        }
+        ClearSelection();
+        context.selectedAssetPath.clear();
+    }
+
+    bool EditorLayer::SavePrefab() {
+        return context.prefabEditor && context.prefabEditor->Save();
+    }
+
+    PrefabEditorSession* EditorLayer::GetPrefabEditorSession() {
+        return context.prefabEditor.get();
+    }
+
+    bool EditorLayer::IsPrefabEditMode() const {
+        return context.prefabEditor && context.prefabEditor->IsOpen();
+    }
+
+    void EditorLayer::DrawPrefabModeBar() {
+        if (!IsPrefabEditMode()) {
+            return;
+        }
+
+        const PrefabEditorSession* session = context.prefabEditor.get();
+        if (!session) {
+            return;
+        }
+
+        ImGuiViewport* viewport = ImGui::GetMainViewport();
+        ImGui::SetNextWindowPos(ImVec2(viewport->WorkPos.x, viewport->WorkPos.y + ImGui::GetFrameHeight()));
+        ImGui::SetNextWindowSize(ImVec2(viewport->WorkSize.x, 0.0f));
+
+        ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration
+            | ImGuiWindowFlags_NoDocking
+            | ImGuiWindowFlags_AlwaysAutoResize
+            | ImGuiWindowFlags_NoSavedSettings
+            | ImGuiWindowFlags_NoFocusOnAppearing
+            | ImGuiWindowFlags_NoNav;
+
+        ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.12f, 0.22f, 0.42f, 1.0f));
+        ImGui::Begin("PrefabModeBar", nullptr, flags);
+
+        if (ImGui::Button("< Back to Scene")) {
+            if (onRequestClosePrefab) {
+                onRequestClosePrefab();
+            }
+        }
+
+        ImGui::SameLine();
+        ImGui::Text("|");
+        ImGui::SameLine();
+        ImGui::Text("Prefab: %s", session->GetAssetPath().filename().string().c_str());
+        if (session->IsDirty()) {
+            ImGui::SameLine();
+            ImGui::TextColored(ImVec4(1.0f, 0.82f, 0.35f, 1.0f), "*");
+        }
+
+        ImGui::SameLine();
+        if (ImGui::Button("Save Prefab")) {
+            if (onSavePrefab) {
+                onSavePrefab();
+            }
+        }
+
+        ImGui::End();
+        ImGui::PopStyleColor();
     }
 
 }

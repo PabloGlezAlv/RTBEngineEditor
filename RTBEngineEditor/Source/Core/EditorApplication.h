@@ -12,7 +12,7 @@ namespace RTBEditor {
 
 #include "EditorTypes.h"
 
-    enum class PendingAction { None, Play, Build, Exit, OpenScene };
+    enum class PendingAction { None, Play, Build, Exit, OpenScene, OpenPrefab, ClosePrefab };
 
     class EditorApplication {
     public:
@@ -32,6 +32,8 @@ namespace RTBEditor {
         void TryBuild();
         void TryExit();
         void TryOpenScene(const std::filesystem::path& path);
+        void TryOpenPrefab(const std::filesystem::path& path);
+        void TryClosePrefab();
 
         // Script compilation
         void OnCompileScripts();
@@ -47,6 +49,10 @@ namespace RTBEditor {
         void ExecutePendingAction();
         void RenderUnsavedScenePopup();
         void OnOpenScene();
+        void OnOpenPrefab();
+        void OnClosePrefab();
+        bool HasUnsavedPrefabChanges() const;
+        bool HasBlockingUnsavedChanges(PendingAction action) const;
     private:
         std::unique_ptr<RTBEngine::Core::Application> engineApp;
         std::unique_ptr<EditorLayer> uiLayer;
@@ -62,6 +68,7 @@ namespace RTBEditor {
         std::string pendingScenePath;
         std::string scenePathBeforePlay;
         std::filesystem::path pendingOpenScenePath;
+        std::filesystem::path pendingOpenPrefabPath;
 
         // Stats smoothing
         float smoothedFps = 0.0f;

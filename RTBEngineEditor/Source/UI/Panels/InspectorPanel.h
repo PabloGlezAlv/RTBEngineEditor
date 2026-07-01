@@ -63,6 +63,7 @@ namespace RTBEditor {
         void DrawTextureAssetInspector(const std::filesystem::path& texturePath);
         void SaveTextureAsset(const std::filesystem::path& texturePath);
         void DrawDataAssetInspector(const std::filesystem::path& dataAssetPath);
+        void DrawPrefabAssetInspector(EditorContext& context);
         void SaveDataAssetInspector();
         void DrawDataAssetProperty(RTBEngine::Data::DataAsset* asset,
                                    const RTBEngine::Reflection::PropertyInfo& prop,
@@ -100,6 +101,9 @@ namespace RTBEditor {
 
         char addComponentSearchBuffer[128] = {};
         bool addComponentPopupWasOpen = false;
+
+        EditorContext* dirtyContext = nullptr;
+        void MarkDirtyFromInspector();
 
     };
 

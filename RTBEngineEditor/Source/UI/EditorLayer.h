@@ -66,9 +66,18 @@ namespace RTBEditor {
         void OpenBuildDialog();
         void PersistWindowPrefs();
 
+        void SetPrefabModeCallbacks(std::function<void()> onRequestClosePrefabCallback,
+                                    std::function<void()> onSavePrefabCallback);
+        bool OpenPrefab(const std::filesystem::path& absolutePath);
+        void ClosePrefab();
+        bool SavePrefab();
+        PrefabEditorSession* GetPrefabEditorSession();
+        bool IsPrefabEditMode() const;
+
     private:
         void SetupDockspace();
         void CreateDefaultLayout(ImGuiID dockspaceId);
+        void DrawPrefabModeBar();
 
     private:
         EditorContext context;
@@ -82,6 +91,8 @@ namespace RTBEditor {
         std::vector<ClipboardEntry> clipboardPrefabs; 
         
         std::function<void()> renderPopupCallback;
+        std::function<void()> onRequestClosePrefab;
+        std::function<void()> onSavePrefab;
 
         void HandleGlobalShortcuts();
     };

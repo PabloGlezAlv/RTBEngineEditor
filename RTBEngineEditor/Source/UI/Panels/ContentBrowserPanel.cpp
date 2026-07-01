@@ -268,7 +268,7 @@ namespace RTBEditor {
                     for (auto& c : clickedExt) c = std::tolower(c);
                     if (clickedExt == ".cubemap" || clickedExt == ".texture" || clickedExt == ".h" || clickedExt == ".cpp" ||
                         clickedExt == ".fbx" || clickedExt == ".obj" || clickedExt == ".gltf" || clickedExt == ".glb" ||
-                        clickedExt == ".rtbasset") {
+                        clickedExt == ".rtbasset" || clickedExt == ".prefab") {
                         context.selectedAssetPath = path;
                         context.selectedGameObject = nullptr;
                         // Toggle FBX texture expansion
@@ -300,6 +300,8 @@ namespace RTBEditor {
                         for (auto& c : ext) c = std::tolower(c);
                         if (ext == ".lua") {
                             context.pendingSceneLoad = MakeAssetReference(std::filesystem::relative(path, rootPath));
+                        } else if (ext == ".prefab") {
+                            context.pendingPrefabOpen = path;
                         }
                     }
                 }

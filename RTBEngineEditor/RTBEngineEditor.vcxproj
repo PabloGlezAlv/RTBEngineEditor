@@ -119,6 +119,7 @@ if exist "$(ProjectDir)MyProject.rtbproj" xcopy /y /d "$(ProjectDir)MyProject.rt
     <ClCompile Include="Source\Core\MultiplayerTestLauncher.cpp" />
     <ClCompile Include="Source\main.cpp" />
     <ClCompile Include="Source\Project\Project.cpp" />
+    <ClCompile Include="Source\UI\Prefab\PrefabEditorSession.cpp" />
     <ClCompile Include="Source\UI\EditorLayer.cpp" />
     <ClCompile Include="Source\UI\EditorDockingUtils.cpp" />
     <ClCompile Include="Source\UI\EditorWindowPrefs.cpp" />
@@ -155,6 +156,7 @@ if exist "$(ProjectDir)MyProject.rtbproj" xcopy /y /d "$(ProjectDir)MyProject.rt
     <ClInclude Include="Source\Core\MultiplayerTestLauncher.h" />
     <ClInclude Include="Source\Project\Project.h" />
     <ClInclude Include="Source\UI\DragDropPayloads.h" />
+    <ClInclude Include="Source\UI\Prefab\PrefabEditorSession.h" />
     <ClInclude Include="Source\UI\EditorLayer.h" />
     <ClInclude Include="Source\UI\EditorDockingUtils.h" />
     <ClInclude Include="Source\UI\EditorWindowPrefs.h" />
