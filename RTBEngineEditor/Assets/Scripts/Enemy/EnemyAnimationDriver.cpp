@@ -1,32 +1,28 @@
 #include "EnemyAnimationDriver.h"
 
-#include "EnemyMeleeAIShared.h"
-
 #include <RTBEngine/Animation/Animator.h>
-#include <RTBEngine/Core/Logger.h>
 #include <RTBEngine/Scene/GameObject.h>
 
 using ThisClass = EnemyAnimationDriver;
 
+namespace {
+    constexpr const char* kAnimWalk = "Walk";
+    constexpr const char* kAnimAttack = "Attack";
+    constexpr const char* kAnimDeath = "Death";
+}
+
 RTB_REGISTER_COMPONENT(EnemyAnimationDriver)
     RTB_PROPERTY_COMPONENT(animator, Animator)
-    RTB_PROPERTY_FBX(walkAnimationFbx)
-    RTB_PROPERTY_FBX(attackAnimationFbx)
-    RTB_PROPERTY_FBX(deathAnimationFbx)
 RTB_END_REGISTER(EnemyAnimationDriver)
 
 void EnemyAnimationDriver::OnStart()
 {
     ResolveAnimator();
-    RegisterAnimationSlots();
 }
 
 void EnemyAnimationDriver::OnValidate()
 {
     ResolveAnimator();
-    if (animator) {
-        RegisterAnimationSlots();
-    }
 }
 
 void EnemyAnimationDriver::ResolveAnimator()
@@ -36,70 +32,22 @@ void EnemyAnimationDriver::ResolveAnimator()
         return;
     }
 
-    animator = owner->GetComponentInChildren<RTBEngine::Animation::Animator>();
-}
-
-void EnemyAnimationDriver::RegisterAnimationSlots()
-{
-    const bool animatorChanged = (registeredAnimator != animator);
-    if (animatorChanged) {
-        registeredAnimator = animator;
-        walkSlotState = {};
-        attackSlotState = {};
-        deathSlotState = {};
-    }
-
     if (!animator) {
-        if (!missingAnimatorWarningShown &&
-            (!walkAnimationFbx.empty() || !attackAnimationFbx.empty() || !deathAnimationFbx.empty())) {
-            RTB_WARN("[EnemyAnimationDriver] Assign an Animator component to use FBX animation slots.");
-            missingAnimatorWarningShown = true;
-        }
-        return;
+        animator = owner->GetComponentInChildren<RTBEngine::Animation::Animator>();
     }
-
-    missingAnimatorWarningShown = false;
-    RegisterAnimationSlot("Walk", walkAnimationFbx, EnemyMeleeAIDetail::kWalkAlias, walkSlotState);
-    RegisterAnimationSlot("Attack", attackAnimationFbx, EnemyMeleeAIDetail::kAttackAlias, attackSlotState);
-    RegisterAnimationSlot("Death", deathAnimationFbx, EnemyMeleeAIDetail::kDeathAlias, deathSlotState);
-}
-
-void EnemyAnimationDriver::RegisterAnimationSlot(const char* slotLabel,
-                                                 const std::string& sourceFbx,
-                                                 const char* alias,
-                                                 AnimationSlotState& slotState)
-{
-    if (slotState.sourceFbx == sourceFbx) {
-        return;
-    }
-
-    slotState.sourceFbx = sourceFbx;
-    slotState.ready = false;
-
-    if (!animator || sourceFbx.empty()) {
-        return;
-    }
-
-    if (!animator->LoadClipFromFbx(alias, sourceFbx)) {
-        RTB_WARN(std::string("[EnemyAnimationDriver] ") + slotLabel +
-                 " slot FBX has no usable animation clip: " + sourceFbx);
-        return;
-    }
-
-    slotState.ready = true;
 }
 
 void EnemyAnimationDriver::PlayWalkLoop()
 {
-    if (!animator || !walkSlotState.ready || !animator->GetClip(EnemyMeleeAIDetail::kWalkAlias)) {
+    if (!animator || !animator->HasKey(kAnimWalk)) {
         return;
     }
 
-    if (animator->GetCurrentClipName() == EnemyMeleeAIDetail::kWalkAlias && animator->IsPlaying()) {
+    if (animator->IsPlayingKey(kAnimWalk) && animator->IsPlaying()) {
         return;
     }
 
-    animator->Play(EnemyMeleeAIDetail::kWalkAlias, true);
+    animator->PlayKey(kAnimWalk);
 }
 
 bool EnemyAnimationDriver::PlayAttack()
@@ -108,7 +56,7 @@ bool EnemyAnimationDriver::PlayAttack()
         return false;
     }
 
-    animator->Play(EnemyMeleeAIDetail::kAttackAlias, false);
+    animator->PlayKey(kAnimAttack, false);
     return true;
 }
 
@@ -118,32 +66,28 @@ bool EnemyAnimationDriver::PlayDeath()
         return false;
     }
 
-    animator->Play(EnemyMeleeAIDetail::kDeathAlias, false);
+    animator->PlayKey(kAnimDeath, false);
     return true;
 }
 
 bool EnemyAnimationDriver::HasAttackAnimation() const
 {
-    return animator && attackSlotState.ready && animator->GetClip(EnemyMeleeAIDetail::kAttackAlias);
+    return animator && animator->HasKey(kAnimAttack);
 }
 
 bool EnemyAnimationDriver::HasDeathAnimation() const
 {
-    return animator && deathSlotState.ready && animator->GetClip(EnemyMeleeAIDetail::kDeathAlias);
+    return animator && animator->HasKey(kAnimDeath);
 }
 
 bool EnemyAnimationDriver::IsAttackPlaying() const
 {
-    return HasAttackAnimation() &&
-        animator->GetCurrentClipName() == EnemyMeleeAIDetail::kAttackAlias &&
-        animator->IsPlaying();
+    return HasAttackAnimation() && animator->IsPlayingKey(kAnimAttack);
 }
 
 bool EnemyAnimationDriver::IsDeathPlaying() const
 {
-    return HasDeathAnimation() &&
-        animator->GetCurrentClipName() == EnemyMeleeAIDetail::kDeathAlias &&
-        animator->IsPlaying();
+    return HasDeathAnimation() && animator->IsPlayingKey(kAnimDeath);
 }
 
 void EnemyAnimationDriver::HoldDeathPose()

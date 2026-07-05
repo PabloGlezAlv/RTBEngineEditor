@@ -4,12 +4,16 @@ return {
         {
             type = "Animator",
             modelRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Barbarian.fbx",
-            currentClipName = "MainMenuPreview.Idle",
-            defaultClip = "",
+                        keyClips = {
+                { key = "Idle", clipFbxRef = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_General.fbx|Idle_A", loop = true },
+            },
+            currentClipName = "Idle",
+            defaultClip = "Idle",
             speed = 1.00,
             playing = false,
             looping = true,
             additionalModels = {
+                "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_General.fbx",
             }
         },
     },

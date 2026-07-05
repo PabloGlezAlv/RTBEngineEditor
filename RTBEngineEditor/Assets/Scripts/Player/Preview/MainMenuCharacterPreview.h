@@ -17,8 +17,6 @@ public:
     RTBEngine::Math::Vector3 previewOffset = RTBEngine::Math::Vector3(0.0f, 0.0f, 0.0f);
     float previewYawDegrees = 0.0f;
     float previewScale = 0.85f;
-    std::string idleAnimationFbx =
-        "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_General.fbx|Idle_A";
 
     RTB_COMPONENT(MainMenuCharacterPreview)
 

@@ -223,6 +223,7 @@ namespace RTBEditor {
             }
 
             animator->ReloadClipLibrary();
+            animator->ReloadKeyClips();
         }
 
         CompatibleFbxScanResult FindCompatibleAnimationFbxPaths(const std::string& modelRef) {
@@ -1969,6 +1970,8 @@ namespace RTBEditor {
             ImGui::TextWrapped("%s", animatorScanStatus.c_str());
         }
 
+        DrawAnimatorKeyClips(animator, changed);
+
         //Default clip combo
         {
             std::vector<std::string> clipNames = animator->GetClipNames();
@@ -2068,6 +2071,65 @@ namespace RTBEditor {
         if (changed) {
             animator->OnValidate();
             MarkDirtyFromInspector();
+        }
+    }
+
+    void InspectorPanel::DrawAnimatorKeyClips(RTBEngine::Animation::Animator* animator, bool& changed)
+    {
+        if (!animator) {
+            return;
+        }
+
+        ImGui::Spacing();
+        const size_t entryCount = animator->keyClips.size();
+        const std::string header = "Animation Keys (" + std::to_string(entryCount) + ")";
+        ImGui::Separator();
+        ImGui::TextDisabled("%s", header.c_str());
+
+        std::vector<size_t> indicesToRemove;
+        for (size_t index = 0; index < animator->keyClips.size(); ++index) {
+            RTBEngine::Animation::AnimationKeyClip& entry = animator->keyClips[index];
+            ImGui::PushID(static_cast<int>(index));
+
+            ImGui::Separator();
+            ImGui::Text("Entry %zu", index + 1);
+
+            char keyBuffer[128] = {};
+            strncpy_s(keyBuffer, sizeof(keyBuffer), entry.key.c_str(), _TRUNCATE);
+            if (ImGui::InputText("Key", keyBuffer, sizeof(keyBuffer))) {
+                entry.key = keyBuffer;
+                changed = true;
+            }
+
+            RTBEngine::Reflection::PropertyInfo clipRefProp;
+            clipRefProp.name = "clipFbxRef";
+            clipRefProp.displayName = "Clip FBX";
+            clipRefProp.assetType = "fbx";
+            if (DrawAssetRefProperty(animator, clipRefProp, &entry.clipFbxRef, changed, false)) {
+                changed = true;
+            }
+
+            if (ImGui::Checkbox("Loop", &entry.loop)) {
+                changed = true;
+            }
+
+            if (ImGui::Button("Remove")) {
+                indicesToRemove.push_back(index);
+                changed = true;
+            }
+
+            ImGui::PopID();
+        }
+
+        for (auto it = indicesToRemove.rbegin(); it != indicesToRemove.rend(); ++it) {
+            if (*it < animator->keyClips.size()) {
+                animator->keyClips.erase(animator->keyClips.begin() + static_cast<ptrdiff_t>(*it));
+            }
+        }
+
+        if (ImGui::Button("Add Animation Key")) {
+            animator->keyClips.push_back({});
+            changed = true;
         }
     }
 

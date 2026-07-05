@@ -71,22 +71,10 @@ public:
     float aimTrailForwardOffset = 0.40f;
     float aimTrailHeightOffset = 0.0f;
     RTBEngine::ECS::GameObject* aimArrowVisual = nullptr;
-    std::string idleAnimationFbx;
-    std::string walkAnimationFbx;
-    std::string runAnimationFbx;
-    std::string aimDrawAnimationFbx = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_CombatRanged.fbx|Ranged_Bow_Draw";
-    std::string aimLoopAnimationFbx = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_CombatRanged.fbx|Ranged_Bow_Aiming_Idle";
-    std::string attackAnimationFbx = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_CombatRanged.fbx|Ranged_Bow_Release";
-    std::string deathAnimationFbx = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_General.fbx|Death_A";
 
     RTB_COMPONENT(ThirdPersonCharacterController)
 
 private:
-    struct AnimationSlotState {
-        std::string sourceFbx;
-        bool ready = false;
-    };
-
     enum class State {
         Locomotion,
         Aiming,
@@ -108,18 +96,10 @@ private:
     float attackStateElapsed = 0.0f;
     bool attackAbilitySafetyExpired = false;
     RTBEngine::Scripting::LatentActionHandle attackSafetyHandle;
-    RTBEngine::Animation::Animator* registeredAnimator = nullptr;
     bool missingHealthWarningShown = false;
     bool missingAttackAbilityWarningShown = false;
     bool missingAnimatorWarningShown = false;
     bool missingCameraWarningShown = false;
-    AnimationSlotState idleSlotState;
-    AnimationSlotState walkSlotState;
-    AnimationSlotState runSlotState;
-    AnimationSlotState aimDrawSlotState;
-    AnimationSlotState aimLoopSlotState;
-    AnimationSlotState attackSlotState;
-    AnimationSlotState deathSlotState;
     RTBEngine::UI::UIJoystick* subscribedAttackJoystick = nullptr;
     RTBEngine::Core::EventSubscription attackJoystickReleaseSubscription;
     RTBEngine::Math::Vector3 activeAttackDirection = RTBEngine::Math::Vector3::Zero();
@@ -129,13 +109,8 @@ private:
     void DisableCompetingCameraController() const;
     void ApplyCameraFollowTransform();
     void ApplySpectateCameraFollow(RTBEngine::ECS::GameObject* targetPawn);
-    void RegisterAnimationSlots();
     void EnsureAnimationReady();
     void ForceStartLocomotionAnimation();
-    void RegisterAnimationSlot(const char* slotLabel,
-                               const std::string& sourceFbx,
-                               const char* alias,
-                               AnimationSlotState& slotState);
     void RebindHealthSubscription();
     void UnsubscribeFromHealth();
     void RebindAttackJoystickSubscription();

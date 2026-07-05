@@ -33,7 +33,6 @@ function CreateScene()
                         previewOffset = Vector3(0.00, 0.00, 0.00),
                         previewYawDegrees = 0.00,
                         previewScale = 0.85,
-                        idleAnimationFbx = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_General.fbx|Idle_A"
                     },
                 }
             },

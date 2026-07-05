@@ -44,13 +44,36 @@ namespace {
     constexpr float kDirectionEpsilon = 0.0001f;
     constexpr float kFixedCameraYawDegrees = 0.0f;
     constexpr float kFixedCameraPitchDegrees = 50.0f;
-    constexpr const char* kIdleAlias = "ThirdPerson.Idle";
-    constexpr const char* kWalkAlias = "ThirdPerson.Walk";
-    constexpr const char* kRunAlias = "ThirdPerson.Run";
-    constexpr const char* kAimDrawAlias = "ThirdPerson.AimDraw";
-    constexpr const char* kAimLoopAlias = "ThirdPerson.AimLoop";
-    constexpr const char* kAttackAlias = "ThirdPerson.Attack";
-    constexpr const char* kDeathAlias = "ThirdPerson.Death";
+    constexpr const char* kAnimIdle = "Idle";
+    constexpr const char* kAnimWalk = "Walk";
+    constexpr const char* kAnimRun = "Run";
+    constexpr const char* kAnimAimDraw = "AimDraw";
+    constexpr const char* kAnimAimLoop = "AimLoop";
+    constexpr const char* kAnimAttack = "Attack";
+    constexpr const char* kAnimDeath = "Death";
+
+    bool IsCombatLocomotionBlockerClip(const std::string& clipName)
+    {
+        const std::string normalized =
+            RTBEngine::Animation::Animator::NormalizeClipName(clipName);
+        return normalized == kAnimAttack ||
+            normalized == kAnimAimDraw ||
+            normalized == kAnimAimLoop;
+    }
+
+    bool IsNonLocomotionFallbackClip(const std::string& clipName)
+    {
+        const std::string normalized =
+            RTBEngine::Animation::Animator::NormalizeClipName(clipName);
+        if (normalized == kAnimDeath ||
+            normalized == kAnimAttack ||
+            normalized == kAnimAimDraw ||
+            normalized == kAnimAimLoop) {
+            return true;
+        }
+
+        return normalized.rfind("Death", 0) == 0;
+    }
 
     float ClampAngleDegrees(float angle)
     {
@@ -177,13 +200,6 @@ RTB_REGISTER_COMPONENT(ThirdPersonCharacterController)
     RTB_PROPERTY_RANGE(aimTrailForwardOffset, 0.0f, 3.0f)
     RTB_PROPERTY_RANGE(aimTrailHeightOffset, -2.0f, 3.0f)
     RTB_PROPERTY_GAMEOBJECT(aimArrowVisual)
-    RTB_PROPERTY_FBX(idleAnimationFbx)
-    RTB_PROPERTY_FBX(walkAnimationFbx)
-    RTB_PROPERTY_FBX(runAnimationFbx)
-    RTB_PROPERTY_FBX(aimDrawAnimationFbx)
-    RTB_PROPERTY_FBX(aimLoopAnimationFbx)
-    RTB_PROPERTY_FBX(attackAnimationFbx)
-    RTB_PROPERTY_FBX(deathAnimationFbx)
 RTB_END_REGISTER(ThirdPersonCharacterController)
 
 void ThirdPersonCharacterController::OnStart()
@@ -235,7 +251,7 @@ void ThirdPersonCharacterController::OnUpdate(float deltaTime)
     }
 
     if (IsLocallyControlled() &&
-        (!idleSlotState.ready || (animator && !animator->AreBoneGOsCreated()))) {
+        (animator && !animator->AreBoneGOsCreated())) {
         EnsureAnimationReady();
     }
 }
@@ -293,9 +309,8 @@ void ThirdPersonCharacterController::OnFixedUpdate(float fixedDeltaTime)
         SetAimArrowVisible(false);
         const bool attackClipPlaying =
             animator &&
-            attackSlotState.ready &&
-            animator->GetCurrentClipName() == kAttackAlias &&
-            animator->IsPlaying();
+            animator->HasKey(kAnimAttack) &&
+            animator->IsPlayingKey(kAnimAttack);
         if (attackClipPlaying) {
             UpdateAttackFacingLock(fixedDeltaTime);
         }
@@ -327,7 +342,6 @@ void ThirdPersonCharacterController::OnLateUpdate(float deltaTime)
         // Runs after NetworkTransform when that component is listed earlier on the pawn.
         if (UsesReplicatedAnimator()) {
             if (!replicatedAnimatorReady && animator) {
-                RegisterAnimationSlots();
                 replicatedAnimatorReady = true;
             }
             UpdateAnimatorFromReplicatedMotion(deltaTime);
@@ -449,15 +463,13 @@ void ThirdPersonCharacterController::PollAttackCompletion(float deltaTime)
         return;
     }
 
-    const bool hasAttackAnimation =
-        animator && attackSlotState.ready && animator->GetClip(kAttackAlias);
+    const bool hasAttackAnimation = animator && animator->HasKey(kAnimAttack);
 
     if (hasAttackAnimation) {
-        const bool attackClipStillPlaying =
-            animator->GetCurrentClipName() == kAttackAlias && animator->IsPlaying();
+        const bool attackClipStillPlaying = animator->IsPlayingKey(kAnimAttack);
         if (attackClipStillPlaying) {
             float maxAttackSeconds = 1.5f;
-            if (RTBEngine::Animation::AnimationClip* clip = animator->GetClip(kAttackAlias)) {
+            if (RTBEngine::Animation::AnimationClip* clip = animator->GetClip(kAnimAttack)) {
                 maxAttackSeconds = std::max(0.05f, clip->GetDurationInSeconds()) + 0.08f;
             }
 
@@ -510,9 +522,6 @@ void ThirdPersonCharacterController::OnValidate()
     ClampSettings();
     ValidateCharacterHealth();
     ValidateRequiredReferences();
-    if (animator) {
-        RegisterAnimationSlots();
-    }
     DisableCompetingCameraController();
     RebindAttackJoystickSubscription();
     HideAttackAimTrail();
@@ -607,9 +616,6 @@ void ThirdPersonCharacterController::ReviveFromDeath()
     SetAimArrowVisible(false);
     SetOcclusionTargetEnabled(owner, true);
 
-    if (animator) {
-        RegisterAnimationSlots();
-    }
     UpdateAnimatorLocomotion(false, false);
 }
 
@@ -684,42 +690,6 @@ void ThirdPersonCharacterController::ApplySpectateCameraFollow(RTBEngine::ECS::G
     cameraObject->GetTransform().SetRotation(orbitRotation);
 }
 
-void ThirdPersonCharacterController::RegisterAnimationSlots()
-{
-    const bool animatorChanged = (registeredAnimator != animator);
-    if (animatorChanged) {
-        registeredAnimator = animator;
-        idleSlotState = {};
-        walkSlotState = {};
-        runSlotState = {};
-        aimDrawSlotState = {};
-        aimLoopSlotState = {};
-        attackSlotState = {};
-        deathSlotState = {};
-    }
-
-    if (!animator) {
-        if (!missingAnimatorWarningShown &&
-            (!idleAnimationFbx.empty() || !walkAnimationFbx.empty() || !runAnimationFbx.empty() ||
-             !aimDrawAnimationFbx.empty() || !aimLoopAnimationFbx.empty() ||
-             !attackAnimationFbx.empty() || !deathAnimationFbx.empty())) {
-            RTB_WARN("[ThirdPersonCharacterController] Assign an Animator component to use FBX animation slots.");
-            missingAnimatorWarningShown = true;
-        }
-        return;
-    }
-
-    missingAnimatorWarningShown = false;
-
-    RegisterAnimationSlot("Idle", idleAnimationFbx, kIdleAlias, idleSlotState);
-    RegisterAnimationSlot("Walk", walkAnimationFbx, kWalkAlias, walkSlotState);
-    RegisterAnimationSlot("Run", runAnimationFbx, kRunAlias, runSlotState);
-    RegisterAnimationSlot("AimDraw", aimDrawAnimationFbx, kAimDrawAlias, aimDrawSlotState);
-    RegisterAnimationSlot("AimLoop", aimLoopAnimationFbx, kAimLoopAlias, aimLoopSlotState);
-    RegisterAnimationSlot("Attack", attackAnimationFbx, kAttackAlias, attackSlotState);
-    RegisterAnimationSlot("Death", deathAnimationFbx, kDeathAlias, deathSlotState);
-}
-
 void ThirdPersonCharacterController::EnsureAnimationReady()
 {
     if (!animator || !owner) {
@@ -732,10 +702,8 @@ void ThirdPersonCharacterController::EnsureAnimationReady()
         animator->CreateBoneGameObjects(scene);
     }
 
-    RegisterAnimationSlots();
-
-    if (!idleSlotState.ready) {
-        RTB_WARN("[ThirdPersonCharacterController] Idle animation slot is not ready on '" +
+    if (!animator->HasKey(kAnimIdle)) {
+        RTB_WARN("[ThirdPersonCharacterController] Idle animation key is not configured on '" +
                  owner->GetName() + "'. Locomotion animations will not play.");
     }
 
@@ -748,9 +716,9 @@ void ThirdPersonCharacterController::ForceStartLocomotionAnimation()
         return;
     }
 
-    if (idleSlotState.ready && animator->GetClip(kIdleAlias)) {
-        if (animator->GetCurrentClipName() != kIdleAlias || !animator->IsPlaying()) {
-            animator->Play(kIdleAlias, true);
+    if (animator->HasKey(kAnimIdle)) {
+        if (!animator->IsPlayingKey(kAnimIdle)) {
+            animator->PlayKey(kAnimIdle);
         }
         return;
     }
@@ -758,7 +726,7 @@ void ThirdPersonCharacterController::ForceStartLocomotionAnimation()
     const std::vector<std::string> clipNames = animator->GetClipNames();
     for (const std::string& clipName : clipNames) {
         if (clipName == "T-Pose" || clipName == "TPose" || clipName == "BindPose" ||
-            clipName == "bind_pose") {
+            clipName == "bind_pose" || IsNonLocomotionFallbackClip(clipName)) {
             continue;
         }
 
@@ -773,31 +741,6 @@ void ThirdPersonCharacterController::ForceStartLocomotionAnimation()
                  owner->GetName() + "'; holding bind pose.");
         animator->HoldCurrentPose();
     }
-}
-
-void ThirdPersonCharacterController::RegisterAnimationSlot(const char* slotLabel,
-                                                           const std::string& sourceFbx,
-                                                           const char* alias,
-                                                           AnimationSlotState& slotState)
-{
-    if (slotState.sourceFbx == sourceFbx && slotState.ready) {
-        return;
-    }
-
-    slotState.sourceFbx = sourceFbx;
-    slotState.ready = false;
-
-    if (!animator || sourceFbx.empty()) {
-        return;
-    }
-
-    if (!animator->LoadClipFromFbx(alias, sourceFbx)) {
-        RTB_WARN(std::string("[ThirdPersonCharacterController] ") + slotLabel +
-                 " slot FBX has no usable animation clip: " + sourceFbx);
-        return;
-    }
-
-    slotState.ready = true;
 }
 
 void ThirdPersonCharacterController::RebindHealthSubscription()
@@ -937,26 +880,28 @@ void ThirdPersonCharacterController::TryBeginAiming()
         return;
     }
 
-    if (aimDrawSlotState.ready && animator->GetClip(kAimDrawAlias)) {
-        animator->Play(kAimDrawAlias, false);
+    if (animator->HasKey(kAnimAimDraw)) {
+        animator->PlayKey(kAnimAimDraw, false);
         return;
     }
 
-    if (aimLoopSlotState.ready && animator->GetClip(kAimLoopAlias)) {
+    if (animator->HasKey(kAnimAimLoop)) {
         aimPhase = AimPhase::Hold;
-        animator->Play(kAimLoopAlias, true);
+        animator->PlayKey(kAnimAimLoop);
     }
 }
 
 void ThirdPersonCharacterController::UpdateAimingState(float /*deltaTime*/)
 {
     if (animator) {
-        if (aimPhase == AimPhase::Draw && aimDrawSlotState.ready) {
+        if (aimPhase == AimPhase::Draw && animator->HasKey(kAnimAimDraw)) {
             const bool drawFinished =
-                animator->GetCurrentClipName() == kAimDrawAlias && !animator->IsPlaying();
-            if (drawFinished && aimLoopSlotState.ready && animator->GetClip(kAimLoopAlias)) {
+                RTBEngine::Animation::Animator::NormalizeClipName(animator->GetCurrentClipName()) ==
+                    kAnimAimDraw &&
+                !animator->IsPlaying();
+            if (drawFinished && animator->HasKey(kAnimAimLoop)) {
                 aimPhase = AimPhase::Hold;
-                animator->Play(kAimLoopAlias, true);
+                animator->PlayKey(kAnimAimLoop);
             }
         }
     }
@@ -1314,34 +1259,28 @@ void ThirdPersonCharacterController::UpdateAnimatorLocomotion(bool hasMovementIn
         return;
     }
 
-    const char* targetClipAlias = nullptr;
+    const char* targetKey = nullptr;
     if (hasMovementInput) {
-        if (isRunning && runSlotState.ready) {
-            targetClipAlias = kRunAlias;
-        } else if (walkSlotState.ready) {
-            targetClipAlias = kWalkAlias;
+        if (isRunning && animator->HasKey(kAnimRun)) {
+            targetKey = kAnimRun;
+        } else if (animator->HasKey(kAnimWalk)) {
+            targetKey = kAnimWalk;
         }
-    } else if (idleSlotState.ready) {
-        targetClipAlias = kIdleAlias;
+    } else if (animator->HasKey(kAnimIdle)) {
+        targetKey = kAnimIdle;
     }
 
-    if (!targetClipAlias || !animator->GetClip(targetClipAlias)) {
+    if (!targetKey) {
         return;
     }
 
     const std::string& currentClip = animator->GetCurrentClipName();
-    const bool onCombatClip =
-        currentClip == kAttackAlias ||
-        currentClip == kAimDrawAlias ||
-        currentClip == kAimLoopAlias;
-
-    if (!onCombatClip &&
-        currentClip == targetClipAlias &&
-        animator->IsPlaying()) {
+    if (!IsCombatLocomotionBlockerClip(currentClip) &&
+        animator->IsPlayingKey(targetKey)) {
         return;
     }
 
-    animator->Play(targetClipAlias, true);
+    animator->PlayKey(targetKey);
 }
 
 void ThirdPersonCharacterController::StartAttack(const RTBEngine::Math::Vector3& attackDirection)
@@ -1374,8 +1313,8 @@ void ThirdPersonCharacterController::StartAttack(const RTBEngine::Math::Vector3&
     state = State::Attacking;
     attackStateElapsed = 0.0f;
     ScheduleAttackSafetyTimeout();
-    if (animator && attackSlotState.ready && animator->GetClip(kAttackAlias)) {
-        animator->Play(kAttackAlias, false);
+    if (animator && animator->HasKey(kAnimAttack)) {
+        animator->PlayKey(kAnimAttack, false);
     }
 }
 
@@ -1440,8 +1379,8 @@ void ThirdPersonCharacterController::HandleDeath(const HealthComponent::DeathEve
         }
     }
 
-    if (animator && deathSlotState.ready && animator->GetClip(kDeathAlias)) {
-        animator->Play(kDeathAlias, false);
+    if (animator && animator->HasKey(kAnimDeath)) {
+        animator->PlayKey(kAnimDeath, false);
     }
 
     if (RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby() &&
@@ -1673,18 +1612,24 @@ void ThirdPersonCharacterController::ApplyCombatAnimationOverrides(
     const std::string& aimLoopFbx,
     const std::string& attackFbx)
 {
-    if (!aimDrawFbx.empty()) {
-        aimDrawAnimationFbx = aimDrawFbx;
-    }
-    if (!aimLoopFbx.empty()) {
-        aimLoopAnimationFbx = aimLoopFbx;
-    }
-    if (!attackFbx.empty()) {
-        attackAnimationFbx = attackFbx;
+    RTBEngine::Animation::Animator* targetAnimator = animator;
+    if (!targetAnimator && owner) {
+        targetAnimator = owner->GetComponentInChildren<RTBEngine::Animation::Animator>();
+        animator = targetAnimator;
     }
 
-    if (animator) {
-        RegisterAnimationSlots();
+    if (!targetAnimator) {
+        return;
+    }
+
+    if (!aimDrawFbx.empty()) {
+        targetAnimator->SetKeyClip(kAnimAimDraw, aimDrawFbx, false);
+    }
+    if (!aimLoopFbx.empty()) {
+        targetAnimator->SetKeyClip(kAnimAimLoop, aimLoopFbx, true);
+    }
+    if (!attackFbx.empty()) {
+        targetAnimator->SetKeyClip(kAnimAttack, attackFbx, false);
     }
 }
 
@@ -1839,8 +1784,8 @@ void ThirdPersonCharacterController::PlayPredictedAttackVisual(const RTBEngine::
     attackStateElapsed = 0.0f;
     ScheduleAttackSafetyTimeout();
 
-    if (animator && attackSlotState.ready && animator->GetClip(kAttackAlias)) {
-        animator->Play(kAttackAlias, false);
+    if (animator && animator->HasKey(kAnimAttack)) {
+        animator->PlayKey(kAnimAttack, false);
     }
 }
 

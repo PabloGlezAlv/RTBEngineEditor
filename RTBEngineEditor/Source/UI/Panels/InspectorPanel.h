@@ -54,6 +54,7 @@ namespace RTBEditor {
         std::string FormatTypeName(const char* typeName);
 
         void DrawAnimatorComponent(RTBEngine::Animation::Animator* animator);
+        void DrawAnimatorKeyClips(RTBEngine::Animation::Animator* animator, bool& changed);
         void DrawParticleSystemComponent(RTBEngine::ECS::ParticleSystem* particleSystem);
         void DrawNavGridComponent(RTBEngine::ECS::NavGridComponent* navGridComponent, EditorContext& context);
         void DrawCubemapAssetInspector(const std::filesystem::path& cubemapPath);

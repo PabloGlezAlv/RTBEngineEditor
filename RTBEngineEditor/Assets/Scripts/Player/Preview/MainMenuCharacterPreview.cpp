@@ -14,14 +14,13 @@
 using ThisClass = MainMenuCharacterPreview;
 
 namespace {
-    constexpr const char* kPreviewIdleAlias = "MenuPreviewIdle";
+    constexpr const char* kAnimIdle = "Idle";
 }
 
 RTB_REGISTER_COMPONENT(MainMenuCharacterPreview)
     RTB_PROPERTY(previewOffset)
     RTB_PROPERTY(previewYawDegrees)
     RTB_PROPERTY(previewScale)
-    RTB_PROPERTY_FBX(idleAnimationFbx)
 RTB_END_REGISTER(MainMenuCharacterPreview)
 
 void MainMenuCharacterPreview::OnDestroy()
@@ -64,23 +63,17 @@ void MainMenuCharacterPreview::PlayIdleAnimation()
         return;
     }
 
-    auto* animator = previewInstance->GetComponent<RTBEngine::Animation::Animator>();
+    auto* animator = previewInstance->GetComponentInChildren<RTBEngine::Animation::Animator>();
     if (!animator) {
         return;
     }
 
-    bool clipReady = false;
-    if (!idleAnimationFbx.empty()) {
-        clipReady = animator->GetClip(kPreviewIdleAlias) != nullptr
-            || animator->LoadClipFromFbx(kPreviewIdleAlias, idleAnimationFbx);
-        if (clipReady) {
-            animator->Play(kPreviewIdleAlias, true);
-        }
+    if (animator->HasKey(kAnimIdle)) {
+        animator->PlayKey(kAnimIdle);
+        return;
     }
 
-    if (!clipReady) {
-        animator->Stop();
-    }
+    animator->Stop();
 }
 
 void MainMenuCharacterPreview::ShowCharacterById(const std::string& characterId)

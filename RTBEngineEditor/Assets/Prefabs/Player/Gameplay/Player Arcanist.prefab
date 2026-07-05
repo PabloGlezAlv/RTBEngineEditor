@@ -43,13 +43,6 @@ return {
                         aimTrailForwardOffset = 0.40,
                         aimTrailHeightOffset = 0.00,
                         aimArrowVisual = "R4NG3R00-ARRO-4000-8000-000000000001",
-                        idleAnimationFbx = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_General.fbx|Idle_A",
-                        walkAnimationFbx = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_MovementBasic.fbx|Walking_A",
-                        runAnimationFbx = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_MovementBasic.fbx|Running_A",
-                        aimDrawAnimationFbx = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_CombatRanged.fbx|Ranged_Bow_Draw",
-                        aimLoopAnimationFbx = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_CombatRanged.fbx|Ranged_Bow_Aiming_Idle",
-                        attackAnimationFbx = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_CombatRanged.fbx|Ranged_Bow_Release",
-                        deathAnimationFbx = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_General.fbx|Death_A"
                     },
                     {
                         type = "HealthComponent",
@@ -489,8 +482,17 @@ return {
                             {
                                 type = "Animator",
                                 modelRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Mage.fbx",
-                                currentClipName = "ThirdPerson.Idle",
-                                defaultClip = "Ranged_Bow_Aiming_Idle",
+                                                                keyClips = {
+                                    { key = "Idle", clipFbxRef = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_General.fbx|Idle_A", loop = true },
+                                    { key = "Walk", clipFbxRef = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_MovementBasic.fbx|Walking_A", loop = true },
+                                    { key = "Run", clipFbxRef = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_MovementBasic.fbx|Running_A", loop = true },
+                                    { key = "AimDraw", clipFbxRef = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_CombatRanged.fbx|Ranged_Bow_Draw", loop = false },
+                                    { key = "AimLoop", clipFbxRef = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_CombatRanged.fbx|Ranged_Bow_Aiming_Idle", loop = true },
+                                    { key = "Attack", clipFbxRef = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_CombatRanged.fbx|Ranged_Bow_Release", loop = false },
+                                    { key = "Death", clipFbxRef = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_General.fbx|Death_A", loop = false },
+                                },
+                                currentClipName = "Idle",
+                                defaultClip = "Idle",
                                 speed = 1.00,
                                 playing = true,
                                 looping = true,

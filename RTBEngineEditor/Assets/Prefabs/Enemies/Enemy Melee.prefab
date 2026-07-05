@@ -21,10 +21,7 @@ return {
         },
         {
             type = "EnemyAnimationDriver",
-            animator = nil,
-            walkAnimationFbx = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_MovementBasic.fbx|Walking_A",
-            attackAnimationFbx = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_CombatMelee.fbx|Melee_2H_Attack_Chop",
-            deathAnimationFbx = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_General.fbx|Death_A"
+            animator = nil
         },
         {
             type = "EnemyLocomotionController",
@@ -141,8 +138,13 @@ return {
                 {
                     type = "Animator",
                     modelRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Barbarian.fbx",
-                    currentClipName = "Idle_A",
-                    defaultClip = "Idle_A",
+                                        keyClips = {
+                        { key = "Walk", clipFbxRef = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_MovementBasic.fbx|Walking_A", loop = true },
+                        { key = "Attack", clipFbxRef = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_CombatMelee.fbx|Melee_2H_Attack_Chop", loop = false },
+                        { key = "Death", clipFbxRef = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_General.fbx|Death_A", loop = false },
+                    },
+                    currentClipName = "Walk",
+                    defaultClip = "Walk",
                     speed = 1.00,
                     playing = false,
                     looping = true,
