@@ -445,13 +445,8 @@ void ThirdPersonCharacterController::PollAttackCompletion(float deltaTime)
         attackStateElapsed += deltaTime;
     }
 
-    if (attackAbility && attackAbility->IsAbilityActive()) {
-        constexpr float kAbilitySafetyTimeoutSeconds = 5.0f;
-        if (attackStateElapsed < kAbilitySafetyTimeoutSeconds) {
-            return;
-        }
-
-        RTB_WARN("[ThirdPersonCharacterController] Attack ability timed out; forcing locomotion.");
+    if (attackAbility && attackAbility->IsAbilityActive() && !attackAbilitySafetyExpired) {
+        return;
     }
 
     const bool hasAttackAnimation =
@@ -480,6 +475,34 @@ void ThirdPersonCharacterController::PollAttackCompletion(float deltaTime)
     }
 
     FinishAttack();
+}
+
+void ThirdPersonCharacterController::ClearAttackSafetyTimeout()
+{
+    if (attackSafetyHandle.IsValid()) {
+        CancelInvoke(attackSafetyHandle);
+        attackSafetyHandle = {};
+    }
+
+    attackAbilitySafetyExpired = false;
+}
+
+void ThirdPersonCharacterController::ScheduleAttackSafetyTimeout()
+{
+    ClearAttackSafetyTimeout();
+
+    constexpr float kAbilitySafetyTimeoutSeconds = 5.0f;
+    attackSafetyHandle = Invoke(kAbilitySafetyTimeoutSeconds, [this]() {
+        if (state != State::Attacking) {
+            return;
+        }
+
+        attackAbilitySafetyExpired = true;
+
+        if (attackAbility && attackAbility->IsAbilityActive()) {
+            RTB_WARN("[ThirdPersonCharacterController] Attack ability timed out; forcing locomotion.");
+        }
+    });
 }
 
 void ThirdPersonCharacterController::OnValidate()
@@ -1350,6 +1373,7 @@ void ThirdPersonCharacterController::StartAttack(const RTBEngine::Math::Vector3&
 
     state = State::Attacking;
     attackStateElapsed = 0.0f;
+    ScheduleAttackSafetyTimeout();
     if (animator && attackSlotState.ready && animator->GetClip(kAttackAlias)) {
         animator->Play(kAttackAlias, false);
     }
@@ -1365,6 +1389,7 @@ void ThirdPersonCharacterController::FinishAttack()
         attackAbility->CancelAbility();
     }
 
+    ClearAttackSafetyTimeout();
     activeAttackDirection = RTBEngine::Math::Vector3::Zero();
     state = State::Locomotion;
     aimPhase = AimPhase::Draw;
@@ -1392,6 +1417,7 @@ void ThirdPersonCharacterController::HandleDeath(const HealthComponent::DeathEve
     aimPhase = AimPhase::Draw;
     wasDraggingJoystick = false;
     activeAttackDirection = RTBEngine::Math::Vector3::Zero();
+    ClearAttackSafetyTimeout();
     if (attackAbility) {
         attackAbility->CancelAbility();
     }
@@ -1810,6 +1836,8 @@ void ThirdPersonCharacterController::PlayPredictedAttackVisual(const RTBEngine::
     activeAttackDirection = normalizedAttackDirection;
     FaceAttackDirection(activeAttackDirection);
     state = State::Attacking;
+    attackStateElapsed = 0.0f;
+    ScheduleAttackSafetyTimeout();
 
     if (animator && attackSlotState.ready && animator->GetClip(kAttackAlias)) {
         animator->Play(kAttackAlias, false);

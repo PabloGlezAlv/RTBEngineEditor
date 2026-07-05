@@ -134,87 +134,42 @@ void ButtonStyle::OnAwake()
 
 
 void ButtonStyle::OnStart()
-
 {
-
-    StopTransition();
-
-    NormalizeTimingProperties();
-
-    RefreshBindings();
-
-    baseTransformCaptured = false;
-
-    CaptureBaseVisualTransform();
-
-    isPointerOver = false;
-
-    isPressed = false;
-
-    SyncInteractionState();
-
-
-
-    RTBEngine::Math::Vector2 targetScale;
-
-    float targetRotation = 0.0f;
-
-    RTBEngine::Math::Vector4 targetTextColor;
-
-    RTBEngine::Math::Vector4 targetImageTint;
-
-    ResolveTargetVisuals(currentState, targetScale, targetRotation, targetTextColor, targetImageTint);
-
-    ApplyTextureForState(currentState);
-
-    FinishTransition(targetScale, targetRotation, targetTextColor, targetImageTint);
-
-    RestoreHitPanelAppearance();
-
-    SetUpdateTickEnabled(true);
-
+    InitializeVisualState(true);
 }
 
-
-
 void ButtonStyle::OnValidate()
-
 {
+    InitializeVisualState(false);
+}
 
+void ButtonStyle::InitializeVisualState(bool enableRuntimePolling)
+{
     StopTransition();
-
     NormalizeTimingProperties();
-
     RefreshBindings();
-
     baseTransformCaptured = false;
-
     CaptureBaseVisualTransform();
-
     isPointerOver = false;
-
     isPressed = false;
 
-    SyncInteractionState();
-
-
+    lastInteractable = IsButtonInteractable();
+    currentState = lastInteractable ? State::Normal : State::Disabled;
 
     RTBEngine::Math::Vector2 targetScale;
-
     float targetRotation = 0.0f;
-
     RTBEngine::Math::Vector4 targetTextColor;
-
     RTBEngine::Math::Vector4 targetImageTint;
-
     ResolveTargetVisuals(currentState, targetScale, targetRotation, targetTextColor, targetImageTint);
-
     ApplyTextureForState(currentState);
-
     FinishTransition(targetScale, targetRotation, targetTextColor, targetImageTint);
-
     RestoreHitPanelAppearance();
 
+    if (enableRuntimePolling) {
+        RefreshUpdateTick();
+    } else {
+        SetUpdateTickEnabled(false);
+    }
 }
 
 
@@ -421,6 +376,8 @@ void ButtonStyle::SyncInteractionState()
 
             StartTransition(State::Disabled);
 
+            RefreshUpdateTick();
+
             return;
 
         }
@@ -428,6 +385,8 @@ void ButtonStyle::SyncInteractionState()
 
 
         StartTransition(ResolveStateFromInteraction());
+
+        RefreshUpdateTick();
 
         return;
 
@@ -456,6 +415,8 @@ void ButtonStyle::SyncInteractionState()
         FinishTransition(targetScale, targetRotation, targetTextColor, targetImageTint);
 
     }
+
+    RefreshUpdateTick();
 
 }
 
@@ -817,6 +778,8 @@ void ButtonStyle::OnUpdate(float deltaTime)
 
 {
 
+    (void)deltaTime;
+
     if (!ShouldMutateVisuals()) {
 
         return;
@@ -825,33 +788,45 @@ void ButtonStyle::OnUpdate(float deltaTime)
 
 
 
-    latentRunner.Tick(deltaTime);
-
-
-
     SyncInteractionState();
-
     RestoreHitPanelAppearance();
+}
 
 
 
-    if (!latentRunner.HasActiveActions()) {
+void ButtonStyle::RefreshUpdateTick()
 
-        activeTransition = {};
+{
 
-        if (!IsButtonInteractable()) {
+    if (!ShouldMutateVisuals()) {
 
-            SetUpdateTickEnabled(true);
-
-            return;
-
-        }
-
-
-
-        SetUpdateTickEnabled(false);
+        return;
 
     }
+
+
+
+    if (activeTransition.IsValid()) {
+
+        SetUpdateTickEnabled(true);
+
+        return;
+
+    }
+
+
+
+    if (!IsButtonInteractable()) {
+
+        SetUpdateTickEnabled(true);
+
+        return;
+
+    }
+
+
+
+    SetUpdateTickEnabled(false);
 
 }
 
@@ -1025,7 +1000,7 @@ void ButtonStyle::StartTransition(State nextState)
 
     const float safeAnimationTime = std::max(0.001f, transitionDuration);
 
-    activeTransition = latentRunner.Play(
+    activeTransition = StartSequence(
 
         RTBEngine::Scripting::LatentSequence()
 
@@ -1050,6 +1025,8 @@ void ButtonStyle::StartTransition(State nextState)
                 [this, targetScale, targetRotation, targetTextColor, targetImageTint]() {
 
                     FinishTransition(targetScale, targetRotation, targetTextColor, targetImageTint);
+
+                    RefreshUpdateTick();
 
                 })
 
@@ -1079,13 +1056,9 @@ void ButtonStyle::StopTransition()
 
     if (activeTransition.IsValid()) {
 
-        latentRunner.Stop(activeTransition);
+        CancelInvoke(activeTransition);
 
         activeTransition = {};
-
-    } else if (latentRunner.HasActiveActions()) {
-
-        latentRunner.StopAll();
 
     }
 

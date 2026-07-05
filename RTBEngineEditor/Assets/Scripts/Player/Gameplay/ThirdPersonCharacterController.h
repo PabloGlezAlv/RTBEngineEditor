@@ -106,6 +106,8 @@ private:
     bool wasMouseAiming = false;
     RTBEngine::Math::Vector2 cachedAttackJoystickValue = RTBEngine::Math::Vector2::Zero();
     float attackStateElapsed = 0.0f;
+    bool attackAbilitySafetyExpired = false;
+    RTBEngine::Scripting::LatentActionHandle attackSafetyHandle;
     RTBEngine::Animation::Animator* registeredAnimator = nullptr;
     bool missingHealthWarningShown = false;
     bool missingAttackAbilityWarningShown = false;
@@ -177,6 +179,8 @@ private:
     void PlayPredictedAttackVisual(const RTBEngine::Math::Vector3& attackDirection);
     void UpdatePredictedAttackVisual(float deltaTime);
     void PollAttackCompletion(float deltaTime);
+    void ScheduleAttackSafetyTimeout();
+    void ClearAttackSafetyTimeout();
     void ApplyDynamicPlanarMotion(RTBEngine::Physics::RigidBody* rigidBody,
                                   const RTBEngine::Math::Vector3& moveDirection,
                                   const RTBEngine::Math::Vector3& facingDirection,

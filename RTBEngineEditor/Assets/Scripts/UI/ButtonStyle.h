@@ -20,8 +20,6 @@
 
 #include <RTBEngine/Reflection/PropertyMacros.h>
 
-#include <RTBEngine/Scripting/LatentActions.h>
-
 
 
 namespace RTBEngine {
@@ -175,8 +173,6 @@ private:
 
     RTBEngine::Math::Vector4 currentImageTint;
 
-    RTBEngine::Scripting::LatentActionRunner latentRunner;
-
     RTBEngine::Scripting::LatentActionHandle activeTransition;
 
     bool                     baseTransformCaptured = false;
@@ -208,6 +204,8 @@ private:
 
     void NormalizeTimingProperties();
 
+    void InitializeVisualState(bool enableRuntimePolling);
+
     bool IsButtonInteractable() const;
 
     RTBEngine::Rendering::Texture* ResolveTextureForState(State state) const;
@@ -235,6 +233,8 @@ private:
     void StartTransition(State nextState);
 
     void StopTransition();
+
+    void RefreshUpdateTick();
 
     void FinishTransition(const RTBEngine::Math::Vector2& finalScale,
 
