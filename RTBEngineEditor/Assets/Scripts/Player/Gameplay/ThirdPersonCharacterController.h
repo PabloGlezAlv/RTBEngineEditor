@@ -102,6 +102,9 @@ private:
     bool missingCameraWarningShown = false;
     RTBEngine::UI::UIJoystick* subscribedAttackJoystick = nullptr;
     RTBEngine::Core::EventSubscription attackJoystickReleaseSubscription;
+    RTBEngine::Core::EventSubscription aimDrawFinishedSubscription;
+    RTBEngine::Core::EventSubscription attackFinishedSubscription;
+    bool attackClipFinished = false;
     RTBEngine::Math::Vector3 activeAttackDirection = RTBEngine::Math::Vector3::Zero();
 
     void ClampSettings();
@@ -115,6 +118,8 @@ private:
     void UnsubscribeFromHealth();
     void RebindAttackJoystickSubscription();
     void UnsubscribeFromAttackJoystick();
+    void RebindAnimatorKeySubscriptions();
+    void UnsubscribeFromAnimatorKeys();
     void HandleJoystickAttackReleased(const RTBEngine::Math::Vector2& joystickValue);
     void HandleAttackReleasedWithDirection(const RTBEngine::Math::Vector3& attackDirection);
     bool SupportsMouseAimInput() const;

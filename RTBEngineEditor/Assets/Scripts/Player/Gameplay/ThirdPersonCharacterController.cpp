@@ -212,6 +212,7 @@ void ThirdPersonCharacterController::OnStart()
     DisableCompetingCameraController();
     RebindHealthSubscription();
     RebindAttackJoystickSubscription();
+    RebindAnimatorKeySubscriptions();
     if (IsLocallyControlled()) {
         ApplyCameraFollowTransform();
         RTBEngine::Input::InputManager::GetInstance().SetMouseRelativeMode(false);
@@ -310,7 +311,7 @@ void ThirdPersonCharacterController::OnFixedUpdate(float fixedDeltaTime)
         const bool attackClipPlaying =
             animator &&
             animator->HasKey(kAnimAttack) &&
-            animator->IsPlayingKey(kAnimAttack);
+            !attackClipFinished;
         if (attackClipPlaying) {
             UpdateAttackFacingLock(fixedDeltaTime);
         }
@@ -466,8 +467,7 @@ void ThirdPersonCharacterController::PollAttackCompletion(float deltaTime)
     const bool hasAttackAnimation = animator && animator->HasKey(kAnimAttack);
 
     if (hasAttackAnimation) {
-        const bool attackClipStillPlaying = animator->IsPlayingKey(kAnimAttack);
-        if (attackClipStillPlaying) {
+        if (!attackClipFinished) {
             float maxAttackSeconds = 1.5f;
             if (RTBEngine::Animation::AnimationClip* clip = animator->GetClip(kAnimAttack)) {
                 maxAttackSeconds = std::max(0.05f, clip->GetDurationInSeconds()) + 0.08f;
@@ -524,6 +524,7 @@ void ThirdPersonCharacterController::OnValidate()
     ValidateRequiredReferences();
     DisableCompetingCameraController();
     RebindAttackJoystickSubscription();
+    RebindAnimatorKeySubscriptions();
     HideAttackAimTrail();
     SetAimArrowVisible(false);
     UpdateAnimatorLocomotion(false, false);
@@ -537,6 +538,7 @@ void ThirdPersonCharacterController::OnDestroy()
     HideAttackAimTrail();
     aimArrowVisual = nullptr;
     UnsubscribeFromAttackJoystick();
+    UnsubscribeFromAnimatorKeys();
     UnsubscribeFromHealth();
 }
 
@@ -779,6 +781,45 @@ void ThirdPersonCharacterController::UnsubscribeFromAttackJoystick()
     subscribedAttackJoystick = nullptr;
 }
 
+void ThirdPersonCharacterController::RebindAnimatorKeySubscriptions()
+{
+    UnsubscribeFromAnimatorKeys();
+
+    if (!animator) {
+        return;
+    }
+
+    aimDrawFinishedSubscription = animator->SubscribeKeyFinished(
+        kAnimAimDraw,
+        [this](const RTBEngine::Animation::AnimationKeyFinishedEvent& /*event*/) {
+            if (!animator || state != State::Aiming || aimPhase != AimPhase::Draw) {
+                return;
+            }
+
+            aimPhase = AimPhase::Hold;
+            if (animator->HasKey(kAnimAimLoop)) {
+                animator->PlayKey(kAnimAimLoop);
+            }
+        });
+
+    attackFinishedSubscription = animator->SubscribeKeyFinished(
+        kAnimAttack,
+        [this](const RTBEngine::Animation::AnimationKeyFinishedEvent& /*event*/) {
+            if (state != State::Attacking) {
+                return;
+            }
+
+            attackClipFinished = true;
+            PollAttackCompletion(0.0f);
+        });
+}
+
+void ThirdPersonCharacterController::UnsubscribeFromAnimatorKeys()
+{
+    aimDrawFinishedSubscription.Reset();
+    attackFinishedSubscription.Reset();
+}
+
 void ThirdPersonCharacterController::HandleJoystickAttackReleased(const RTBEngine::Math::Vector2& joystickValue)
 {
     HandleAttackReleasedWithDirection(GetAttackDirectionFromJoystick(joystickValue));
@@ -893,19 +934,6 @@ void ThirdPersonCharacterController::TryBeginAiming()
 
 void ThirdPersonCharacterController::UpdateAimingState(float /*deltaTime*/)
 {
-    if (animator) {
-        if (aimPhase == AimPhase::Draw && animator->HasKey(kAnimAimDraw)) {
-            const bool drawFinished =
-                RTBEngine::Animation::Animator::NormalizeClipName(animator->GetCurrentClipName()) ==
-                    kAnimAimDraw &&
-                !animator->IsPlaying();
-            if (drawFinished && animator->HasKey(kAnimAimLoop)) {
-                aimPhase = AimPhase::Hold;
-                animator->PlayKey(kAnimAimLoop);
-            }
-        }
-    }
-
     UpdateAttackAimTrail();
     if (attackAbility &&
         attackAbility->GetAimVisualKind() == CharacterAbility::AimVisualKind::RangedProjectile) {
@@ -1312,6 +1340,7 @@ void ThirdPersonCharacterController::StartAttack(const RTBEngine::Math::Vector3&
 
     state = State::Attacking;
     attackStateElapsed = 0.0f;
+    attackClipFinished = false;
     ScheduleAttackSafetyTimeout();
     if (animator && animator->HasKey(kAnimAttack)) {
         animator->PlayKey(kAnimAttack, false);
@@ -1333,6 +1362,7 @@ void ThirdPersonCharacterController::FinishAttack()
     state = State::Locomotion;
     aimPhase = AimPhase::Draw;
     attackStateElapsed = 0.0f;
+    attackClipFinished = false;
     wasDraggingJoystick = false;
     wasMouseAiming = false;
     usingMouseAim = false;
@@ -1356,6 +1386,7 @@ void ThirdPersonCharacterController::HandleDeath(const HealthComponent::DeathEve
     aimPhase = AimPhase::Draw;
     wasDraggingJoystick = false;
     activeAttackDirection = RTBEngine::Math::Vector3::Zero();
+    attackClipFinished = false;
     ClearAttackSafetyTimeout();
     if (attackAbility) {
         attackAbility->CancelAbility();
@@ -1631,6 +1662,8 @@ void ThirdPersonCharacterController::ApplyCombatAnimationOverrides(
     if (!attackFbx.empty()) {
         targetAnimator->SetKeyClip(kAnimAttack, attackFbx, false);
     }
+
+    RebindAnimatorKeySubscriptions();
 }
 
 void ThirdPersonCharacterController::RefreshAfterSpawn()
@@ -1641,6 +1674,7 @@ void ThirdPersonCharacterController::RefreshAfterSpawn()
     DisableCompetingCameraController();
     RebindHealthSubscription();
     RebindAttackJoystickSubscription();
+    RebindAnimatorKeySubscriptions();
 
     bool isRunning = false;
     const RTBEngine::Math::Vector3 desiredMove = GetDesiredMoveDirection(isRunning);
@@ -1782,6 +1816,7 @@ void ThirdPersonCharacterController::PlayPredictedAttackVisual(const RTBEngine::
     FaceAttackDirection(activeAttackDirection);
     state = State::Attacking;
     attackStateElapsed = 0.0f;
+    attackClipFinished = false;
     ScheduleAttackSafetyTimeout();
 
     if (animator && animator->HasKey(kAnimAttack)) {

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <RTBEngine/Core/CountdownTimer.h>
 #include <RTBEngine/Core/Event.h>
 #include <RTBEngine/Scene/Component.h>
 #include <RTBEngine/Scene/Prefab.h>
@@ -84,20 +85,26 @@ private:
     State state = State::Stopped;
     int currentRound = 0;
     int nextRound = 1;
-    float countdownRemaining = 0.0f;
-    int displayedCountdownSeconds = -1;
-    int displayedRespawnSeconds = -1;
-    int displayedEndGameSeconds = -1;
-    float localRespawnRemaining = 0.0f;
-    float finalSceneDelayRemaining = 0.0f;
+
+    RTBEngine::Core::CountdownTimer roundCountdown;
+    RTBEngine::Core::CountdownTimer localRespawnCountdown;
+    RTBEngine::Core::CountdownTimer finalSceneCountdown;
+
+    RTBEngine::Core::EventSubscription roundCountdownSecondSubscription;
+    RTBEngine::Core::EventSubscription roundCountdownFinishedSubscription;
+    RTBEngine::Core::EventSubscription respawnCountdownSecondSubscription;
+    RTBEngine::Core::EventSubscription respawnCountdownFinishedSubscription;
+    RTBEngine::Core::EventSubscription finalSceneCountdownSecondSubscription;
+    RTBEngine::Core::EventSubscription finalSceneCountdownFinishedSubscription;
+
     bool hasRequestedEndScene = false;
     bool finalSceneLoadRequested = false;
     bool localRespawnPending = false;
 
     void ClampSettings();
     void InitializeRuntime();
+    void BindCountdownHandlers();
     bool HasAnySpawnPoint() const;
-    void UpdateCountdown(float deltaTime);
     void StartRound();
     void BeginCountdownForRound(int roundNumber);
     void SpawnRoundEnemies(int count, bool allowClientSpawn = false);
@@ -113,17 +120,14 @@ private:
     void CleanupSpawnedEnemies();
     void DespawnAllRoundEnemies();
     int GetEnemyCountForRound(int roundNumber) const;
-    void UpdateCountdownText();
     void HandleAnyPlayerDeath(HealthComponent* deadHealth);
     void BeginLocalRespawnCountdown();
     void CancelLocalRespawnCountdown();
-    void UpdateLocalRespawnCountdown(float deltaTime);
     void ReviveLocalPlayer();
     void RevivePlayerPawn(RTBEngine::ECS::GameObject* pawn);
     bool AreAllPlayersDead() const;
     void BeginTeamWipe();
     bool IsTrackedPlayerLocallyControlled() const;
     void EndGame(GameResult result);
-    void UpdateFinalSceneTransition(float deltaTime);
     void RequestFinalScene();
 };

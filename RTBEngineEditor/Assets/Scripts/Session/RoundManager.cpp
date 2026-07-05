@@ -19,6 +19,7 @@
 #include "RoundUIHandler.h"
 
 #include <RTBEngine/Animation/Animator.h>
+#include <RTBEngine/Core/CountdownTimer.h>
 #include <RTBEngine/Core/Logger.h>
 #include <RTBEngine/Core/Time.h>
 #include <RTBEngine/Scene/GameObject.h>
@@ -56,11 +57,13 @@ void RoundManager::OnStart()
     GameSession::GetInstance().Reset();
     hasRequestedEndScene = false;
     finalSceneLoadRequested = false;
-    finalSceneDelayRemaining = 0.0f;
+    roundCountdown.Reset();
+    localRespawnCountdown.Reset();
+    finalSceneCountdown.Reset();
     localRespawnPending = false;
-    localRespawnRemaining = 0.0f;
     ClampSettings();
     InitializeRuntime();
+    BindCountdownHandlers();
 
     if (RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby()) {
         GameNet::OnlineGameNetSubsystem::Init();
@@ -84,7 +87,9 @@ void RoundManager::OnStart()
 void RoundManager::OnUpdate(float deltaTime)
 {
     if (hasRequestedEndScene) {
-        UpdateFinalSceneTransition(deltaTime);
+        if (!finalSceneLoadRequested) {
+            finalSceneCountdown.Tick(deltaTime);
+        }
         return;
     }
 
@@ -95,12 +100,14 @@ void RoundManager::OnUpdate(float deltaTime)
         }
     }
 
-    UpdateLocalRespawnCountdown(deltaTime);
+    if (localRespawnPending) {
+        localRespawnCountdown.Tick(deltaTime);
+    }
     CleanupSpawnedEnemies();
 
     switch (state) {
     case State::Countdown:
-        UpdateCountdown(deltaTime);
+        roundCountdown.Tick(deltaTime);
         break;
     case State::RoundActive:
         if (spawnedEnemies.empty() &&
@@ -147,8 +154,7 @@ void RoundManager::ApplyNetworkRoundStart(int roundNumber, int enemyCount)
     currentRound = roundNumber;
     nextRound = roundNumber;
     state = State::RoundActive;
-    countdownRemaining = 0.0f;
-    displayedCountdownSeconds = -1;
+    roundCountdown.Reset();
 
     if (uiHandler) {
         uiHandler->ShowRound(currentRound);
@@ -168,16 +174,18 @@ void RoundManager::ApplyNetworkRoundCountdown(int roundNumber, float duration)
 
     DespawnAllRoundEnemies();
     nextRound = std::max(1, roundNumber);
-    countdownRemaining = std::max(0.0f, duration);
-    displayedCountdownSeconds = -1;
     state = State::Countdown;
+
+    if (duration > 0.0f) {
+        roundCountdown.Start(duration);
+    } else {
+        roundCountdown.Reset();
+    }
 
     if (uiHandler) {
         uiHandler->ShowRound(nextRound);
-        if (countdownRemaining <= 0.0f) {
+        if (duration <= 0.0f || !roundCountdown.IsRunning()) {
             uiHandler->HideCountdown();
-        } else {
-            UpdateCountdownText();
         }
     }
 }
@@ -217,8 +225,7 @@ void RoundManager::ApplyNetworkEnemySpawn(
         currentRound = roundNumber;
         nextRound = roundNumber;
         state = State::RoundActive;
-        countdownRemaining = 0.0f;
-        displayedCountdownSeconds = -1;
+        roundCountdown.Reset();
         if (uiHandler) {
             uiHandler->ShowRound(currentRound);
             uiHandler->HideCountdown();
@@ -356,22 +363,72 @@ bool RoundManager::HasAnySpawnPoint() const
     return false;
 }
 
-void RoundManager::UpdateCountdown(float deltaTime)
+void RoundManager::BindCountdownHandlers()
 {
-    countdownRemaining = std::max(0.0f, countdownRemaining - deltaTime);
+    roundCountdownSecondSubscription = roundCountdown.SubscribeSecondChanged(
+        [this](int seconds) {
+            if (uiHandler) {
+                uiHandler->ShowCountdown(seconds);
+            }
+        });
 
-    if (countdownRemaining <= 0.0f) {
-        if (RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby() &&
-            !RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
-            countdownRemaining = 0.0f;
-            return;
-        }
+    roundCountdownFinishedSubscription = roundCountdown.SubscribeFinished(
+        [this]() {
+            if (state != State::Countdown) {
+                return;
+            }
 
-        StartRound();
-        return;
-    }
+            if (RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby() &&
+                !RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
+                return;
+            }
 
-    UpdateCountdownText();
+            StartRound();
+        });
+
+    respawnCountdownSecondSubscription = localRespawnCountdown.SubscribeSecondChanged(
+        [this](int seconds) {
+            if (!uiHandler) {
+                return;
+            }
+
+            if (localRespawnCountdown.GetRemaining() > 0.0f) {
+                uiHandler->ShowRespawnCountdown(seconds);
+            } else {
+                uiHandler->HideRespawnCountdown();
+            }
+        });
+
+    respawnCountdownFinishedSubscription = localRespawnCountdown.SubscribeFinished(
+        [this]() {
+            if (!localRespawnPending || hasRequestedEndScene) {
+                return;
+            }
+
+            ReviveLocalPlayer();
+        });
+
+    finalSceneCountdownSecondSubscription = finalSceneCountdown.SubscribeSecondChanged(
+        [this](int seconds) {
+            if (!uiHandler) {
+                return;
+            }
+
+            if (finalSceneCountdown.GetRemaining() > 0.0f) {
+                uiHandler->ShowEndGameCountdown(seconds);
+            } else {
+                uiHandler->HideEndGameCountdown();
+            }
+        });
+
+    finalSceneCountdownFinishedSubscription = finalSceneCountdown.SubscribeFinished(
+        [this]() {
+            if (finalSceneLoadRequested) {
+                return;
+            }
+
+            RequestFinalScene();
+        });
 }
 
 void RoundManager::StartRound()
@@ -391,7 +448,7 @@ void RoundManager::StartRound()
 
     currentRound = std::max(1, nextRound);
     state = State::RoundActive;
-    displayedCountdownSeconds = -1;
+    roundCountdown.Reset();
     RefreshTrackedPlayers();
 
     if (uiHandler) {
@@ -415,8 +472,6 @@ void RoundManager::StartRound()
 void RoundManager::BeginCountdownForRound(int roundNumber)
 {
     nextRound = std::max(1, roundNumber);
-    countdownRemaining = roundCountdownDuration;
-    displayedCountdownSeconds = -1;
     state = State::Countdown;
 
     if (uiHandler) {
@@ -431,12 +486,7 @@ void RoundManager::BeginCountdownForRound(int roundNumber)
         GameNet::OnlineGameNetSubsystem::BroadcastRoundCountdown(countdown);
     }
 
-    if (countdownRemaining <= 0.0f) {
-        StartRound();
-        return;
-    }
-
-    UpdateCountdownText();
+    roundCountdown.Start(roundCountdownDuration);
 }
 
 void RoundManager::SpawnRoundEnemies(int count, bool allowClientSpawn)
@@ -677,21 +727,6 @@ int RoundManager::GetEnemyCountForRound(int roundNumber) const
     return std::max(1, baseEnemiesPerRound + std::max(0, roundNumber - 1) * additionalEnemiesPerRound);
 }
 
-void RoundManager::UpdateCountdownText()
-{
-    if (!uiHandler) {
-        return;
-    }
-
-    const int countdownSeconds = static_cast<int>(std::ceil(countdownRemaining));
-    if (countdownSeconds == displayedCountdownSeconds) {
-        return;
-    }
-
-    displayedCountdownSeconds = countdownSeconds;
-    uiHandler->ShowCountdown(displayedCountdownSeconds);
-}
-
 bool RoundManager::AreAllPlayersDead() const
 {
     if (trackedPlayers.empty()) {
@@ -742,55 +777,17 @@ void RoundManager::HandleAnyPlayerDeath(HealthComponent* deadHealth)
 void RoundManager::BeginLocalRespawnCountdown()
 {
     localRespawnPending = true;
-    localRespawnRemaining = playerRespawnDelay;
-    displayedRespawnSeconds = -1;
-
-    if (uiHandler) {
-        if (localRespawnRemaining > 0.0f) {
-            uiHandler->ShowRespawnCountdown(static_cast<int>(std::ceil(localRespawnRemaining)));
-        } else {
-            uiHandler->HideRespawnCountdown();
-        }
-    }
-
-    if (localRespawnRemaining <= 0.0f) {
-        ReviveLocalPlayer();
-    }
+    localRespawnCountdown.Start(playerRespawnDelay);
 }
 
 void RoundManager::CancelLocalRespawnCountdown()
 {
     localRespawnPending = false;
-    localRespawnRemaining = 0.0f;
-    displayedRespawnSeconds = -1;
+    localRespawnCountdown.Stop();
+    localRespawnCountdown.Reset();
 
     if (uiHandler) {
         uiHandler->HideRespawnCountdown();
-    }
-}
-
-void RoundManager::UpdateLocalRespawnCountdown(float deltaTime)
-{
-    if (!localRespawnPending || hasRequestedEndScene) {
-        return;
-    }
-
-    localRespawnRemaining = std::max(0.0f, localRespawnRemaining - std::max(0.0f, deltaTime));
-
-    if (uiHandler) {
-        const int respawnSeconds = static_cast<int>(std::ceil(localRespawnRemaining));
-        if (respawnSeconds != displayedRespawnSeconds) {
-            displayedRespawnSeconds = respawnSeconds;
-            if (localRespawnRemaining > 0.0f) {
-                uiHandler->ShowRespawnCountdown(respawnSeconds);
-            } else {
-                uiHandler->HideRespawnCountdown();
-            }
-        }
-    }
-
-    if (localRespawnRemaining <= 0.0f) {
-        ReviveLocalPlayer();
     }
 }
 
@@ -871,48 +868,14 @@ void RoundManager::EndGame(GameResult result)
 
     hasRequestedEndScene = true;
     finalSceneLoadRequested = false;
-    finalSceneDelayRemaining = std::max(0.0f, teamWipeSceneDelay);
-    displayedEndGameSeconds = -1;
     state = State::Stopped;
     GameSession::GetInstance().SetResult(result);
 
     if (uiHandler) {
         uiHandler->HideCountdown();
-        if (finalSceneDelayRemaining > 0.0f) {
-            uiHandler->ShowEndGameCountdown(static_cast<int>(std::ceil(finalSceneDelayRemaining)));
-        } else {
-            uiHandler->HideEndGameCountdown();
-        }
     }
 
-    if (finalSceneDelayRemaining <= 0.0f) {
-        RequestFinalScene();
-    }
-}
-
-void RoundManager::UpdateFinalSceneTransition(float deltaTime)
-{
-    if (finalSceneLoadRequested) {
-        return;
-    }
-
-    finalSceneDelayRemaining = std::max(0.0f, finalSceneDelayRemaining - std::max(0.0f, deltaTime));
-
-    if (uiHandler) {
-        const int endGameSeconds = static_cast<int>(std::ceil(finalSceneDelayRemaining));
-        if (endGameSeconds != displayedEndGameSeconds) {
-            displayedEndGameSeconds = endGameSeconds;
-            if (finalSceneDelayRemaining > 0.0f) {
-                uiHandler->ShowEndGameCountdown(endGameSeconds);
-            } else {
-                uiHandler->HideEndGameCountdown();
-            }
-        }
-    }
-
-    if (finalSceneDelayRemaining <= 0.0f) {
-        RequestFinalScene();
-    }
+    finalSceneCountdown.Start(teamWipeSceneDelay);
 }
 
 void RoundManager::RequestFinalScene()
