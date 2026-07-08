@@ -2,6 +2,7 @@
 
 #include "CharacterDefinition.h"
 #include "CharacterCombatUtils.h"
+#include "CombatAuthority.h"
 #include "PlayerMeleeSweepAttackAbility.h"
 #include "ThirdPersonCharacterController.h"
 #include "CharacterBase.h"
@@ -16,7 +17,6 @@
 #include <RTBEngine/Scene/SceneManager.h>
 #include "OnlineGameNetMessages.h"
 
-#include <RTBEngine/Online/OnlineGameplayNet.h>
 #include <RTBEngine/Scene/AudioSourceComponent.h>
 #include <RTBEngine/Scene/GameObject.h>
 #include <RTBEngine/Scene/PrefabRegistry.h>
@@ -37,21 +37,6 @@ namespace {
     bool HasPlanarDirection(const RTBEngine::Math::Vector3& value)
     {
         return std::abs(value.x) > kDirectionEpsilon || std::abs(value.z) > kDirectionEpsilon;
-    }
-
-    bool IsLocallyControlledInstigator(RTBEngine::ECS::GameObject* instigator)
-    {
-        if (!instigator) {
-            return false;
-        }
-
-        const RTBEngine::ECS::NetworkIdentity* identity =
-            instigator->GetComponent<RTBEngine::ECS::NetworkIdentity>();
-        if (!identity) {
-            return true;
-        }
-
-        return identity->IsLocallyControlled();
     }
 
     int ResolveCharacterTeam(RTBEngine::ECS::GameObject* gameObject)
@@ -179,7 +164,7 @@ bool ProjectileAttackAbility::FireNow(RTBEngine::ECS::GameObject* instigator,
                                       RTBEngine::Physics::PhysicsWorld* physicsWorld)
 {
     const bool spawned = SpawnProjectile(instigator, attackDirection, physicsWorld, true);
-    if (spawned && IsLocallyControlledInstigator(instigator)) {
+    if (spawned && CombatAuthority::CanConsumeAmmo(instigator)) {
         if (auto* ammoSystem = instigator->GetComponent<PlayerAmmoSystem>()) {
             ammoSystem->ConsumeShot();
         }
@@ -274,8 +259,7 @@ bool ProjectileAttackAbility::SpawnProjectile(RTBEngine::ECS::GameObject* instig
         return false;
     }
 
-    const bool applyDamage = !RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby() ||
-        RTBEngine::Online::OnlineGameplayNet::IsLobbyHost();
+    const bool applyDamage = CombatAuthority::ShouldProjectileApplyDamage();
 
     if (projectileSpeedOverride > 0.0f) {
         projectile->speed = projectileSpeedOverride;
@@ -319,32 +303,29 @@ bool ProjectileAttackAbility::SpawnProjectile(RTBEngine::ECS::GameObject* instig
         projectile->BeginFlight(context);
     }
 
-    if (IsLocallyControlledInstigator(instigator) && fireAudio) {
+    if (CombatAuthority::IsLocallyControlled(instigator) && fireAudio) {
         fireAudio->PlayOneShot();
     }
 
-    if (broadcastOnlineSpawn &&
-        RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby() &&
-        RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
-        RTBEngine::ECS::NetworkIdentity* identity = instigator->GetComponent<RTBEngine::ECS::NetworkIdentity>();
-        if (identity && identity->networkPlayerSlot >= 0) {
-            static std::uint32_t nextProjectileSpawnId = 1;
+    if (broadcastOnlineSpawn && CombatAuthority::ShouldBroadcastSpawn(instigator)) {
+        RTBEngine::ECS::NetworkIdentity* identity =
+            instigator->GetComponent<RTBEngine::ECS::NetworkIdentity>();
+        static std::uint32_t nextProjectileSpawnId = 1;
 
-            GameNet::ProjectileSpawnSnapshot snapshot;
-            snapshot.spawnId = nextProjectileSpawnId++;
-            snapshot.ownerPlayerSlot = identity->networkPlayerSlot;
-            snapshot.origin = spawnPosition;
-            snapshot.direction = planarDirection;
-            snapshot.speed = projectile->speed;
-            snapshot.maxDistance = projectile->GetTravelDistance();
-            snapshot.radius = projectile->radius;
-            snapshot.damage = projectile->damage;
-            snapshot.instigatorTeam = ResolveCharacterTeam(instigator);
-            snapshot.ignoreSameTeam = projectile->ignoreSameTeam;
-            snapshot.destroyOnHit = projectile->destroyOnHit;
-            snapshot.maxHits = projectile->maxHits;
-            GameNet::OnlineGameNetSubsystem::BroadcastProjectileSpawn(snapshot);
-        }
+        GameNet::ProjectileSpawnSnapshot snapshot;
+        snapshot.spawnId = nextProjectileSpawnId++;
+        snapshot.ownerPlayerSlot = identity->networkPlayerSlot;
+        snapshot.origin = spawnPosition;
+        snapshot.direction = planarDirection;
+        snapshot.speed = projectile->speed;
+        snapshot.maxDistance = projectile->GetTravelDistance();
+        snapshot.radius = projectile->radius;
+        snapshot.damage = projectile->damage;
+        snapshot.instigatorTeam = ResolveCharacterTeam(instigator);
+        snapshot.ignoreSameTeam = projectile->ignoreSameTeam;
+        snapshot.destroyOnHit = projectile->destroyOnHit;
+        snapshot.maxHits = projectile->maxHits;
+        GameNet::OnlineGameNetSubsystem::BroadcastProjectileSpawn(snapshot);
     }
 
     return true;
@@ -404,7 +385,7 @@ bool ProjectileAttackAbility::CanActivateAbility(
         return false;
     }
 
-    if (IsLocallyControlledInstigator(instigator)) {
+    if (CombatAuthority::CanConsumeAmmo(instigator)) {
         if (const auto* ammoSystem = instigator->GetComponent<PlayerAmmoSystem>()) {
             if (!ammoSystem->CanFire()) {
                 return false;
@@ -418,7 +399,7 @@ bool ProjectileAttackAbility::CanActivateAbility(
 void ProjectileAttackAbility::OnAbilityStarted()
 {
     RTBEngine::ECS::GameObject* instigator = GetActiveInstigator();
-    if (!instigator || !IsLocallyControlledInstigator(instigator)) {
+    if (!instigator || !CombatAuthority::CanConsumeAmmo(instigator)) {
         return;
     }
 
@@ -434,12 +415,8 @@ void ProjectileAttackAbility::ExecuteAbilityHit()
         return;
     }
 
-    if (RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby()) {
-        const RTBEngine::ECS::NetworkIdentity* identity =
-            instigator->GetComponent<RTBEngine::ECS::NetworkIdentity>();
-        if (identity && !identity->IsSimulatedByHost()) {
-            return;
-        }
+    if (!CombatAuthority::CanApplyDamage(instigator)) {
+        return;
     }
 
     SpawnProjectile(

@@ -2,13 +2,12 @@
 
 #include "CharacterCombatUtils.h"
 #include "CharacterDefinition.h"
+#include "CombatAuthority.h"
 #include "HealthComponent.h"
 #include "PlayerAmmoSystem.h"
 
-#include <RTBEngine/Online/OnlineGameplayNet.h>
 #include <RTBEngine/Scene/AudioSourceComponent.h>
 #include <RTBEngine/Scene/GameObject.h>
-#include <RTBEngine/Scene/NetworkIdentity.h>
 
 #include <algorithm>
 #include <cmath>
@@ -21,38 +20,6 @@ namespace {
     bool HasPlanarDirection(const RTBEngine::Math::Vector3& value)
     {
         return std::abs(value.x) > kDirectionEpsilon || std::abs(value.z) > kDirectionEpsilon;
-    }
-
-    bool IsLocallyControlledInstigator(RTBEngine::ECS::GameObject* instigator)
-    {
-        if (!instigator) {
-            return false;
-        }
-
-        const RTBEngine::ECS::NetworkIdentity* identity =
-            instigator->GetComponent<RTBEngine::ECS::NetworkIdentity>();
-        if (!identity) {
-            return true;
-        }
-
-        return identity->IsLocallyControlled();
-    }
-
-    bool HasSimulationAuthority(RTBEngine::ECS::GameObject* instigator)
-    {
-        if (!instigator) {
-            return false;
-        }
-
-        if (RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby()) {
-            const RTBEngine::ECS::NetworkIdentity* identity =
-                instigator->GetComponent<RTBEngine::ECS::NetworkIdentity>();
-            if (identity && !identity->IsSimulatedByHost()) {
-                return false;
-            }
-        }
-
-        return true;
     }
 }
 
@@ -155,7 +122,7 @@ bool PlayerMeleeSweepAttackAbility::CanActivateAbility(
         return false;
     }
 
-    if (IsLocallyControlledInstigator(instigator)) {
+    if (CombatAuthority::CanConsumeAmmo(instigator)) {
         if (const auto* ammoSystem = instigator->GetComponent<PlayerAmmoSystem>()) {
             if (!ammoSystem->CanFire()) {
                 return false;
@@ -169,7 +136,7 @@ bool PlayerMeleeSweepAttackAbility::CanActivateAbility(
 void PlayerMeleeSweepAttackAbility::OnAbilityStarted()
 {
     RTBEngine::ECS::GameObject* instigator = GetActiveInstigator();
-    if (!instigator || !IsLocallyControlledInstigator(instigator)) {
+    if (!instigator || !CombatAuthority::CanConsumeAmmo(instigator)) {
         return;
     }
 
@@ -181,7 +148,7 @@ void PlayerMeleeSweepAttackAbility::OnAbilityStarted()
 void PlayerMeleeSweepAttackAbility::ExecuteAbilityHit()
 {
     RTBEngine::ECS::GameObject* instigator = GetActiveInstigator();
-    if (!instigator || !HasSimulationAuthority(instigator)) {
+    if (!instigator || !CombatAuthority::CanApplyDamage(instigator)) {
         return;
     }
 
@@ -248,7 +215,7 @@ bool PlayerMeleeSweepAttackAbility::ApplySweepHits(
         anyHit = true;
     }
 
-    if (anyHit && hitAudio && IsLocallyControlledInstigator(instigator)) {
+    if (anyHit && hitAudio && CombatAuthority::IsLocallyControlled(instigator)) {
         hitAudio->PlayOneShot();
     }
 

@@ -2,10 +2,10 @@
 
 #include "CharacterBase.h"
 #include "CharacterCombatUtils.h"
+#include "CombatAuthority.h"
 
 #include <RTBEngine/Scene/AudioSourceComponent.h>
 #include <RTBEngine/Scene/GameObject.h>
-#include <RTBEngine/Scene/NetworkIdentity.h>
 #include <RTBEngine/Physics/PhysicsWorld.h>
 
 #include <algorithm>
@@ -34,21 +34,6 @@ namespace {
         }
 
         return false;
-    }
-
-    bool IsLocallyControlledCharacter(RTBEngine::ECS::GameObject* root)
-    {
-        if (!root) {
-            return false;
-        }
-
-        const RTBEngine::ECS::NetworkIdentity* identity =
-            root->GetComponent<RTBEngine::ECS::NetworkIdentity>();
-        if (!identity) {
-            return true;
-        }
-
-        return identity->IsLocallyControlled();
     }
 }
 
@@ -140,7 +125,7 @@ bool MeleeSphereAttackAbility::ApplySphereHit(
         damageContext.knockbackStrength = knockbackStrength;
         targetHealth->TakeDamage(damage, damageContext);
 
-        if (hitAudio && IsLocallyControlledCharacter(targetRoot)) {
+        if (hitAudio && CombatAuthority::IsLocallyControlled(targetRoot)) {
             hitAudio->PlayOneShot();
         }
 

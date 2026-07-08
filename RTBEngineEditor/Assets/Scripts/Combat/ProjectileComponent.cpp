@@ -1,18 +1,17 @@
 #include "ProjectileComponent.h"
 
 #include "CharacterBase.h"
+#include "CombatAuthority.h"
 #include "FloatingDamageNumberSpawner.h"
 #include "HitFlashComponent.h"
 
 #include <RTBEngine/Scene/AudioSourceComponent.h>
 #include <RTBEngine/Scene/GameObject.h>
-#include <RTBEngine/Scene/NetworkIdentity.h>
 #include <RTBEngine/Scene/RigidBodyComponent.h>
 #include "ProjectileTrailFadeLifetime.h"
 
 #include <RTBEngine/Core/ResourceManager.h>
 #include <RTBEngine/Math/Quaternions/Quaternion.h>
-#include <RTBEngine/Online/OnlineGameplayNet.h>
 #include <RTBEngine/Scene/PrefabRegistry.h>
 #include <RTBEngine/Scene/Scene.h>
 #include <RTBEngine/Scene/SceneManager.h>
@@ -113,21 +112,6 @@ namespace {
         }
 
         return false;
-    }
-
-    bool IsLocallyControlledInstigator(RTBEngine::ECS::GameObject* instigatorObject)
-    {
-        if (!instigatorObject) {
-            return false;
-        }
-
-        const RTBEngine::ECS::NetworkIdentity* identity =
-            instigatorObject->GetComponent<RTBEngine::ECS::NetworkIdentity>();
-        if (!identity) {
-            return true;
-        }
-
-        return identity->IsLocallyControlled();
     }
 
     void TryTriggerHitFlash(RTBEngine::ECS::GameObject* hitObject)
@@ -572,7 +556,7 @@ bool ProjectileComponent::HandleSweepHit(const RTBEngine::Math::Vector3& previou
     HealthComponent* targetHealth = ResolveHitHealth(hit.gameObject);
     if (targetHealth && !HasAlreadyHit(targetHealth)) {
         TryTriggerHitFlash(hit.gameObject);
-        if (!applyDamage && IsLocallyControlledInstigator(instigator)) {
+        if (!applyDamage && CombatAuthority::IsLocallyControlled(instigator)) {
             TryTriggerDamageNumber(hit.gameObject, damage, hit.point);
         }
     }
@@ -587,7 +571,7 @@ bool ProjectileComponent::HandleSweepHit(const RTBEngine::Math::Vector3& previou
             damageContext.knockbackStrength = knockbackStrength;
             targetHealth->TakeDamage(damage, damageContext);
 
-            if (IsLocallyControlledInstigator(instigator) && hitAudio) {
+            if (CombatAuthority::IsLocallyControlled(instigator) && hitAudio) {
                 hitAudio->PlayOneShot();
             }
 
