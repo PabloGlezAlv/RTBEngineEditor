@@ -2,6 +2,7 @@
 
 #include "OnlineGameNetMessages.h"
 #include "OnlinePlayerManager.h"
+#include "PlayerRegistry.h"
 #include "ThirdPersonCharacterController.h"
 
 #include <RTBEngine/Scene/NetworkIdentity.h>
@@ -64,6 +65,7 @@ void RoundManager::OnStart()
     ClampSettings();
     InitializeRuntime();
     BindCountdownHandlers();
+    BindPlayerRegistryHandlers();
 
     if (RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby()) {
         GameNet::OnlineGameNetSubsystem::Init();
@@ -93,17 +95,11 @@ void RoundManager::OnUpdate(float deltaTime)
         return;
     }
 
-    if (RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby()) {
-        trackedPlayersRefreshTimer += std::max(0.0f, deltaTime);
-        if (trackedPlayers.empty() || trackedPlayersRefreshTimer >= 1.0f) {
-            RefreshTrackedPlayers();
-        }
-    }
+    CleanupSpawnedEnemies();
 
     if (localRespawnPending) {
         localRespawnCountdown.Tick(deltaTime);
     }
-    CleanupSpawnedEnemies();
 
     switch (state) {
     case State::Countdown:
@@ -245,6 +241,8 @@ void RoundManager::OnValidate()
 
 void RoundManager::OnDestroy()
 {
+    playerSpawnSubscription.Reset();
+    playerDestroySubscription.Reset();
     trackedPlayers.clear();
 }
 
@@ -280,8 +278,6 @@ void RoundManager::InitializeRuntime()
         }
     }
 
-    RefreshTrackedPlayers();
-
     enemySpawnPrefab = nullptr;
     if (!enemyPrefabRef.empty()) {
         const std::string resolvedPath =
@@ -293,63 +289,64 @@ void RoundManager::InitializeRuntime()
     }
 }
 
-void RoundManager::RefreshTrackedPlayers()
+void RoundManager::BindPlayerRegistryHandlers()
 {
-    RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
-    if (!scene) {
+    playerSpawnSubscription = PlayerRegistry::GetInstance().SubscribePawnSpawned(
+        [this](const PawnInfo& info) {
+            HandlePlayerPawnRegistered(info);
+        });
+
+    playerDestroySubscription = PlayerRegistry::GetInstance().SubscribePawnDestroyed(
+        [this](RTBEngine::ECS::GameObject* pawn) {
+            HandlePlayerPawnUnregistered(pawn);
+        });
+
+    for (const PawnInfo& info : PlayerRegistry::GetInstance().GetAll()) {
+        HandlePlayerPawnRegistered(info);
+    }
+}
+
+void RoundManager::HandlePlayerPawnRegistered(const PawnInfo& info)
+{
+    if (!info.pawn || !info.health) {
         return;
     }
 
-    for (const auto& gameObject : scene->GetGameObjects()) {
-        if (!gameObject || !gameObject->IsActiveInHierarchy()) {
-            continue;
-        }
+    auto existingIt = std::find_if(
+        trackedPlayers.begin(),
+        trackedPlayers.end(),
+        [&](const TrackedPlayer& trackedPlayer) {
+            return trackedPlayer.pawn == info.pawn;
+        });
+    if (existingIt != trackedPlayers.end()) {
+        existingIt->health = info.health;
+        return;
+    }
 
-        ThirdPersonCharacterController* controller = gameObject->GetComponent<ThirdPersonCharacterController>();
-        if (!controller || controller->team != static_cast<int>(CharacterTeam::Player)) {
-            continue;
-        }
+    TrackedPlayer trackedPlayer;
+    trackedPlayer.pawn = info.pawn;
+    trackedPlayer.health = info.health;
+    trackedPlayer.deathSubscription = info.health->SubscribeToDeath(
+        [this, health = info.health](const HealthComponent::DeathEvent&) {
+            HandleAnyPlayerDeath(health);
+        });
+    trackedPlayers.push_back(std::move(trackedPlayer));
+}
 
-        HealthComponent* health = gameObject->GetComponent<HealthComponent>();
-        if (!health) {
-            health = gameObject->GetComponentInChildren<HealthComponent>();
-        }
-
-        if (!health) {
-            continue;
-        }
-
-        RTBEngine::ECS::GameObject* pawn = gameObject.get();
-        auto existingIt = std::find_if(
-            trackedPlayers.begin(),
-            trackedPlayers.end(),
-            [pawn](const TrackedPlayer& trackedPlayer) {
-                return trackedPlayer.pawn == pawn;
-            });
-        if (existingIt != trackedPlayers.end()) {
-            existingIt->health = health;
-            continue;
-        }
-
-        TrackedPlayer trackedPlayer;
-        trackedPlayer.pawn = pawn;
-        trackedPlayer.health = health;
-        trackedPlayer.deathSubscription = health->SubscribeToDeath(
-            [this, health](const HealthComponent::DeathEvent&) {
-                HandleAnyPlayerDeath(health);
-            });
-        trackedPlayers.push_back(std::move(trackedPlayer));
+void RoundManager::HandlePlayerPawnUnregistered(RTBEngine::ECS::GameObject* pawn)
+{
+    if (!pawn) {
+        return;
     }
 
     trackedPlayers.erase(
         std::remove_if(
             trackedPlayers.begin(),
             trackedPlayers.end(),
-            [](const TrackedPlayer& trackedPlayer) {
-                return !trackedPlayer.pawn || !trackedPlayer.pawn->IsActiveInHierarchy();
+            [pawn](const TrackedPlayer& trackedPlayer) {
+                return trackedPlayer.pawn == pawn;
             }),
         trackedPlayers.end());
-    trackedPlayersRefreshTimer = 0.0f;
 }
 
 bool RoundManager::HasAnySpawnPoint() const
@@ -449,7 +446,6 @@ void RoundManager::StartRound()
     currentRound = std::max(1, nextRound);
     state = State::RoundActive;
     roundCountdown.Reset();
-    RefreshTrackedPlayers();
 
     if (uiHandler) {
         uiHandler->ShowRound(currentRound);

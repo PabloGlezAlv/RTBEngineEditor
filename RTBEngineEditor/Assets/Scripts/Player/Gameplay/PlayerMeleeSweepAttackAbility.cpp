@@ -1,16 +1,13 @@
 #include "PlayerMeleeSweepAttackAbility.h"
 
-#include "CharacterBase.h"
 #include "CharacterCombatUtils.h"
+#include "HealthComponent.h"
 #include "PlayerAmmoSystem.h"
 
 #include <RTBEngine/Online/OnlineGameplayNet.h>
 #include <RTBEngine/Scene/AudioSourceComponent.h>
 #include <RTBEngine/Scene/GameObject.h>
 #include <RTBEngine/Scene/NetworkIdentity.h>
-#include <RTBEngine/Scene/Scene.h>
-#include <RTBEngine/Scene/SceneManager.h>
-#include <RTBEngine/Physics/PhysicsWorld.h>
 
 #include <algorithm>
 #include <cmath>
@@ -23,26 +20,6 @@ namespace {
     bool HasPlanarDirection(const RTBEngine::Math::Vector3& value)
     {
         return std::abs(value.x) > kDirectionEpsilon || std::abs(value.z) > kDirectionEpsilon;
-    }
-
-    int ResolveCharacterTeam(RTBEngine::ECS::GameObject* gameObject)
-    {
-        return CharacterCombatUtils::ResolveCharacterTeam(gameObject);
-    }
-
-    RTBEngine::ECS::GameObject* ResolveHealthRoot(RTBEngine::ECS::GameObject* gameObject)
-    {
-        if (!gameObject) {
-            return nullptr;
-        }
-
-        for (RTBEngine::ECS::GameObject* current = gameObject; current; current = current->GetParent()) {
-            if (current->GetComponent<HealthComponent>()) {
-                return current;
-            }
-        }
-
-        return nullptr;
     }
 
     bool IsLocallyControlledInstigator(RTBEngine::ECS::GameObject* instigator)
@@ -162,6 +139,10 @@ bool PlayerMeleeSweepAttackAbility::CanActivateAbility(
         return false;
     }
 
+    if (!CharacterCombatUtils::ResolvePhysicsWorld(instigator)) {
+        return false;
+    }
+
     if (IsLocallyControlledInstigator(instigator)) {
         if (const auto* ammoSystem = instigator->GetComponent<PlayerAmmoSystem>()) {
             if (!ammoSystem->CanFire()) {
@@ -202,8 +183,13 @@ bool PlayerMeleeSweepAttackAbility::ApplySweepHits(
 {
     ClampSettings();
 
-    RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
-    if (!scene || hitDamage <= 0.0f) {
+    if (!instigator || hitDamage <= 0.0f) {
+        return false;
+    }
+
+    RTBEngine::Physics::PhysicsWorld* physicsWorld =
+        CharacterCombatUtils::ResolvePhysicsWorld(instigator);
+    if (!physicsWorld) {
         return false;
     }
 
@@ -220,59 +206,32 @@ bool PlayerMeleeSweepAttackAbility::ApplySweepHits(
 
     const RTBEngine::Math::Vector3 castStart =
         instigator->GetWorldPosition() + (instigator->GetWorldRotation() * attackOriginOffset);
-    const int instigatorTeam = ResolveCharacterTeam(instigator);
+
+    CharacterCombatUtils::HostileOverlapQuery overlapQuery;
+    overlapQuery.physicsWorld = physicsWorld;
+    overlapQuery.instigator = instigator;
+    overlapQuery.origin = castStart;
+    overlapQuery.direction = castDirection;
+    overlapQuery.distance = sphereDistance;
+    overlapQuery.radius = sphereRadius;
+    overlapQuery.ignoreSameTeam = ignoreSameTeam;
+
+    const std::vector<CharacterCombatUtils::HostileOverlapHit> hits =
+        CharacterCombatUtils::OverlapHostileTargets(overlapQuery);
+
     bool anyHit = false;
-
-    for (const auto& gameObject : scene->GetGameObjects()) {
-        if (!gameObject || !gameObject->IsActiveInHierarchy() || gameObject.get() == instigator) {
-            continue;
-        }
-
-        HealthComponent* targetHealth = gameObject->GetComponent<HealthComponent>();
-        if (!targetHealth) {
-            targetHealth = gameObject->GetComponentInChildren<HealthComponent>();
-        }
-        if (!targetHealth || targetHealth->IsDead()) {
-            continue;
-        }
-
-        RTBEngine::ECS::GameObject* targetRoot = ResolveHealthRoot(targetHealth->GetOwner());
-        if (!targetRoot || targetRoot == instigator) {
-            continue;
-        }
-
-        const int targetTeam = ResolveCharacterTeam(targetRoot);
-        if (ignoreSameTeam &&
-            instigatorTeam != static_cast<int>(CharacterTeam::Neutral) &&
-            instigatorTeam == targetTeam) {
-            continue;
-        }
-
-        RTBEngine::Math::Vector3 targetPosition = targetRoot->GetWorldPosition();
-        targetPosition.y = castStart.y;
-
-        RTBEngine::Math::Vector3 toTarget = targetPosition - castStart;
-        const float along = toTarget.x * castDirection.x + toTarget.z * castDirection.z;
-        if (along < 0.0f || along > sphereDistance) {
-            continue;
-        }
-
-        RTBEngine::Math::Vector3 closestPoint = castStart + castDirection * along;
-        RTBEngine::Math::Vector3 lateral = targetPosition - closestPoint;
-        lateral.y = 0.0f;
-        const float lateralDistanceSquared = lateral.LengthSquared();
-        const float hitRadius = sphereRadius + 0.35f;
-        if (lateralDistanceSquared > hitRadius * hitRadius) {
+    for (const CharacterCombatUtils::HostileOverlapHit& hit : hits) {
+        if (!hit.health || hit.health->IsDead()) {
             continue;
         }
 
         HealthComponent::DamageContext damageContext;
         damageContext.amount = hitDamage;
         damageContext.instigator = instigator;
-        damageContext.hitPoint = targetPosition;
+        damageContext.hitPoint = hit.hitPoint;
         damageContext.hitDirection = castDirection;
         damageContext.knockbackStrength = knockbackStrength;
-        targetHealth->TakeDamage(hitDamage, damageContext);
+        hit.health->TakeDamage(hitDamage, damageContext);
 
         anyHit = true;
     }

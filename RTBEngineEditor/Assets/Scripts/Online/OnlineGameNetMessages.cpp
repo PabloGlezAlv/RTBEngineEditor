@@ -6,6 +6,9 @@
 #include "OnlinePlayerManager.h"
 #include "ThirdPersonCharacterController.h"
 
+#include "PlayerRegistry.h"
+
+#include <RTBEngine/Scene/ComponentQuery.h>
 #include <RTBEngine/Scene/NetworkIdentity.h>
 #include <RTBEngine/Scene/NetworkTransform.h>
 #include <RTBEngine/Scene/Scene.h>
@@ -84,22 +87,7 @@ namespace GameNet {
 
         OnlinePlayerManager* FindOnlinePlayerManager()
         {
-            RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
-            if (!scene) {
-                return nullptr;
-            }
-
-            for (const auto& gameObject : scene->GetGameObjects()) {
-                if (!gameObject) {
-                    continue;
-                }
-
-                if (OnlinePlayerManager* manager = gameObject->GetComponent<OnlinePlayerManager>()) {
-                    return manager;
-                }
-            }
-
-            return nullptr;
+            return RTBEngine::ECS::ComponentQuery::FindFirst<OnlinePlayerManager>();
         }
 
         int ResolvePlayerSlotForUser(const RTBEngine::Online::OnlineUserId& userId)
@@ -108,24 +96,10 @@ namespace GameNet {
                 return -1;
             }
 
-            RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
-            if (scene) {
-                const std::string userKey = userId.ToString();
-                for (const auto& gameObject : scene->GetGameObjects()) {
-                    if (!gameObject) {
-                        continue;
-                    }
-
-                    RTBEngine::ECS::NetworkIdentity* identity =
-                        gameObject->GetComponent<RTBEngine::ECS::NetworkIdentity>();
-                    if (!identity || identity->networkPlayerSlot < 0) {
-                        continue;
-                    }
-
-                    if (identity->networkOwnerUserId == userKey) {
-                        return identity->networkPlayerSlot;
-                    }
-                }
+            const int registrySlot =
+                PlayerRegistry::GetInstance().FindSlotByOwnerUserId(userId.ToString());
+            if (registrySlot >= 0) {
+                return registrySlot;
             }
 
             const std::vector<RTBEngine::Online::OnlineUserId> members =
@@ -247,20 +221,19 @@ namespace GameNet {
 
         RTBEngine::ECS::GameObject* FindGameObjectByNetworkId(std::uint32_t networkId)
         {
-            RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
-            if (!scene || networkId == RTBEngine::Online::OnlineGameplayNet::kInvalidNetworkObjectId) {
+            if (networkId == RTBEngine::Online::OnlineGameplayNet::kInvalidNetworkObjectId) {
                 return nullptr;
             }
 
-            for (const auto& gameObject : scene->GetGameObjects()) {
-                if (!gameObject) {
+            for (RTBEngine::ECS::Component* component :
+                    RTBEngine::ECS::ComponentQuery::GetComponents<RTBEngine::ECS::NetworkIdentity>()) {
+                auto* identity = dynamic_cast<RTBEngine::ECS::NetworkIdentity*>(component);
+                if (!identity || identity->GetNetworkId() != networkId) {
                     continue;
                 }
 
-                RTBEngine::ECS::NetworkIdentity* identity =
-                    gameObject->GetComponent<RTBEngine::ECS::NetworkIdentity>();
-                if (identity && identity->GetNetworkId() == networkId) {
-                    return gameObject.get();
+                if (RTBEngine::ECS::GameObject* owner = identity->GetOwner()) {
+                    return owner;
                 }
             }
 
@@ -358,23 +331,7 @@ namespace GameNet {
 
         RTBEngine::ECS::GameObject* FindPawnByPlayerSlot(int playerSlot)
         {
-            RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
-            if (!scene || playerSlot < 0) {
-                return nullptr;
-            }
-
-            for (const auto& gameObject : scene->GetGameObjects()) {
-                if (!gameObject) {
-                    continue;
-                }
-
-                RTBEngine::ECS::NetworkIdentity* identity = gameObject->GetComponent<RTBEngine::ECS::NetworkIdentity>();
-                if (identity && identity->networkPlayerSlot == playerSlot) {
-                    return gameObject.get();
-                }
-            }
-
-            return nullptr;
+            return PlayerRegistry::GetInstance().FindBySlot(playerSlot);
         }
 
         void HandlePlayerDeathState(const RTBEngine::Online::OnlineMessageContext& context)
@@ -993,24 +950,13 @@ namespace GameNet {
             return;
         }
 
-        RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
-        if (!scene) {
+        OnlinePlayerManager* manager =
+            RTBEngine::ECS::ComponentQuery::FindFirst<OnlinePlayerManager>();
+        if (!manager) {
             return;
         }
 
-        for (const auto& gameObject : scene->GetGameObjects()) {
-            if (!gameObject) {
-                continue;
-            }
-
-            OnlinePlayerManager* manager = gameObject->GetComponent<OnlinePlayerManager>();
-            if (!manager) {
-                continue;
-            }
-
-            manager->MergeAuthoritativeSessionProfile(snapshot);
-            return;
-        }
+        manager->MergeAuthoritativeSessionProfile(snapshot);
     }
 
     bool OnlineGameNetSubsystem::TryConsumePlayerNetworkBind(PlayerNetworkBindSnapshot& outSnapshot)
@@ -1287,6 +1233,8 @@ namespace GameNet {
 
         if (OnlinePlayerManager* playerManager = FindOnlinePlayerManager()) {
             playerManager->RemovePawnFromTracking(pawn, playerSlot);
+        } else {
+            PlayerRegistry::GetInstance().Unregister(pawn);
         }
 
         scene->RemoveGameObject(pawn);
@@ -1327,11 +1275,6 @@ namespace GameNet {
             return;
         }
 
-        RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
-        if (!scene) {
-            return;
-        }
-
         std::unordered_set<std::string> activeMemberKeys;
         for (const RTBEngine::Online::OnlineUserId& member :
                 RTBEngine::Online::OnlineGameplayNet::GetOrderedLobbyMembers()) {
@@ -1341,13 +1284,13 @@ namespace GameNet {
         }
 
         std::vector<int> disconnectedSlots;
-        for (const auto& gameObject : scene->GetGameObjects()) {
-            if (!gameObject) {
+        for (const PawnInfo& info : PlayerRegistry::GetInstance().GetAll()) {
+            if (!info.pawn) {
                 continue;
             }
 
             RTBEngine::ECS::NetworkIdentity* identity =
-                gameObject->GetComponent<RTBEngine::ECS::NetworkIdentity>();
+                info.pawn->GetComponent<RTBEngine::ECS::NetworkIdentity>();
             if (!identity || identity->networkPlayerSlot < 0 || identity->IsLocallyControlled()) {
                 continue;
             }

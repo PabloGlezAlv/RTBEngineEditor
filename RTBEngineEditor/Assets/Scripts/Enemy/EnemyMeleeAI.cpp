@@ -10,6 +10,7 @@
 
 #include <RTBEngine/Core/Logger.h>
 #include <RTBEngine/Core/Time.h>
+#include <RTBEngine/Scene/ComponentQuery.h>
 #include <RTBEngine/Scene/GameObject.h>
 #include <RTBEngine/Scene/NavAgentComponent.h>
 #include <RTBEngine/Scene/NetworkIdentity.h>
@@ -30,22 +31,7 @@ namespace {
 
     RoundManager* FindRoundManagerInScene()
     {
-        RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
-        if (!scene) {
-            return nullptr;
-        }
-
-        for (const auto& gameObject : scene->GetGameObjects()) {
-            if (!gameObject) {
-                continue;
-            }
-
-            if (RoundManager* roundManager = gameObject->GetComponent<RoundManager>()) {
-                return roundManager;
-            }
-        }
-
-        return nullptr;
+        return RTBEngine::ECS::ComponentQuery::FindFirst<RoundManager>();
     }
 
 }

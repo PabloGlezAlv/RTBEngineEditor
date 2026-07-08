@@ -5,6 +5,7 @@
 #include "CharacterBase.h"
 #include "CharacterCombatOrigins.h"
 #include "PlayerAmmoSystem.h"
+#include "PlayerRegistry.h"
 #include "ProjectileComponent.h"
 
 #include <RTBEngine/Core/ResourceManager.h>
@@ -330,23 +331,7 @@ bool ProjectileAttackAbility::SpawnProjectile(RTBEngine::ECS::GameObject* instig
 
 RTBEngine::ECS::GameObject* ProjectileAttackAbility::FindPawnByPlayerSlot(int playerSlot)
 {
-    RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
-    if (!scene || playerSlot < 0) {
-        return nullptr;
-    }
-
-    for (const auto& gameObject : scene->GetGameObjects()) {
-        if (!gameObject) {
-            continue;
-        }
-
-        RTBEngine::ECS::NetworkIdentity* identity = gameObject->GetComponent<RTBEngine::ECS::NetworkIdentity>();
-        if (identity && identity->networkPlayerSlot == playerSlot) {
-            return gameObject.get();
-        }
-    }
-
-    return nullptr;
+    return PlayerRegistry::GetInstance().FindBySlot(playerSlot);
 }
 
 RTBEngine::Math::Vector3 ProjectileAttackAbility::GetLaunchOrigin(

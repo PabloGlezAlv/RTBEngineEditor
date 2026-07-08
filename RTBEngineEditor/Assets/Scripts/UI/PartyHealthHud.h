@@ -1,5 +1,6 @@
 #pragma once
 
+#include <RTBEngine/Core/Event.h>
 #include <RTBEngine/Scene/NetworkIdentity.h>
 #include <RTBEngine/Scene/Component.h>
 #include <RTBEngine/Scene/GameObject.h>
@@ -28,7 +29,6 @@ public:
     RTB_COMPONENT(PartyHealthHud)
 
     void OnStart() override;
-    void OnUpdate(float deltaTime) override;
     void OnDestroy() override;
 
 private:
@@ -41,7 +41,9 @@ private:
 
     std::unique_ptr<RTBEngine::ECS::Prefab> entryPrefab;
     std::unordered_map<std::string, PartyEntry> activeEntries;
-    float refreshTimer = 0.0f;
+
+    RTBEngine::Core::EventSubscription pawnSpawnedSubscription;
+    RTBEngine::Core::EventSubscription pawnDestroyedSubscription;
 
     void RefreshEntries();
     void ClearSpawnedEntries();
@@ -49,4 +51,5 @@ private:
     PartyEntry* FindOrCreateEntry(const std::string& ownerKey);
     void BindEntry(PartyEntry& entry, RTBEngine::ECS::GameObject* pawn, RTBEngine::ECS::NetworkIdentity* identity);
     void SetEntryVisible(PartyEntry& entry, bool visible);
+    void RemoveEntryForPawn(RTBEngine::ECS::GameObject* pawn);
 };

@@ -1,6 +1,7 @@
 #include "MeleeSphereAttackAbility.h"
 
 #include "CharacterBase.h"
+#include "CharacterCombatUtils.h"
 
 #include <RTBEngine/Scene/AudioSourceComponent.h>
 #include <RTBEngine/Scene/GameObject.h>
@@ -33,21 +34,6 @@ namespace {
         }
 
         return false;
-    }
-
-    int ResolveCharacterTeam(RTBEngine::ECS::GameObject* gameObject)
-    {
-        if (!gameObject) {
-            return static_cast<int>(CharacterTeam::Neutral);
-        }
-
-        for (RTBEngine::ECS::GameObject* current = gameObject; current; current = current->GetParent()) {
-            if (auto* character = current->GetComponent<CharacterBase>()) {
-                return character->GetTeam();
-            }
-        }
-
-        return static_cast<int>(CharacterTeam::Neutral);
     }
 
     bool IsLocallyControlledCharacter(RTBEngine::ECS::GameObject* root)
@@ -114,14 +100,6 @@ bool MeleeSphereAttackAbility::ApplySphereHit(
         return false;
     }
 
-    const int instigatorTeam = ResolveCharacterTeam(instigator);
-    const int targetTeam = ResolveCharacterTeam(targetRoot);
-    if (ignoreSameTeam &&
-        instigatorTeam != static_cast<int>(CharacterTeam::Neutral) &&
-        instigatorTeam == targetTeam) {
-        return false;
-    }
-
     RTBEngine::Math::Vector3 castStart =
         instigator->GetWorldPosition() + (instigator->GetWorldRotation() * attackOriginOffset);
     RTBEngine::Math::Vector3 castDirection =
@@ -137,38 +115,39 @@ bool MeleeSphereAttackAbility::ApplySphereHit(
         castDirection.Normalize();
     }
 
-    RTBEngine::Physics::PhysicsQueryHit hit;
-    RTBEngine::Physics::PhysicsQueryOptions queryOptions;
-    queryOptions.ignoredObject = instigator;
-    queryOptions.ignoreIgnoredObjectHierarchy = true;
-    queryOptions.ignoreTriggers = true;
+    CharacterCombatUtils::HostileOverlapQuery overlapQuery;
+    overlapQuery.physicsWorld = physicsWorld;
+    overlapQuery.instigator = instigator;
+    overlapQuery.origin = castStart;
+    overlapQuery.direction = castDirection;
+    overlapQuery.distance = sphereDistance;
+    overlapQuery.radius = sphereRadius;
+    overlapQuery.ignoreSameTeam = ignoreSameTeam;
 
-    if (!physicsWorld->SphereCastClosest(
-            castStart,
-            castStart + castDirection * sphereDistance,
-            sphereRadius,
-            hit,
-            queryOptions)) {
-        return false;
+    const std::vector<CharacterCombatUtils::HostileOverlapHit> hits =
+        CharacterCombatUtils::OverlapHostileTargets(overlapQuery);
+
+    for (const CharacterCombatUtils::HostileOverlapHit& hit : hits) {
+        if (!IsWithinHierarchy(targetRoot, hit.targetRoot) || !hit.health) {
+            continue;
+        }
+
+        HealthComponent::DamageContext damageContext;
+        damageContext.amount = damage;
+        damageContext.instigator = instigator;
+        damageContext.hitPoint = hit.hitPoint;
+        damageContext.hitDirection = castDirection;
+        damageContext.knockbackStrength = knockbackStrength;
+        targetHealth->TakeDamage(damage, damageContext);
+
+        if (hitAudio && IsLocallyControlledCharacter(targetRoot)) {
+            hitAudio->PlayOneShot();
+        }
+
+        return true;
     }
 
-    if (!IsWithinHierarchy(targetRoot, hit.gameObject)) {
-        return false;
-    }
-
-    HealthComponent::DamageContext damageContext;
-    damageContext.amount = damage;
-    damageContext.instigator = instigator;
-    damageContext.hitPoint = hit.point;
-    damageContext.hitDirection = castDirection;
-    damageContext.knockbackStrength = knockbackStrength;
-    targetHealth->TakeDamage(damage, damageContext);
-
-    if (hitAudio && IsLocallyControlledCharacter(targetRoot)) {
-        hitAudio->PlayOneShot();
-    }
-
-    return true;
+    return false;
 }
 
 bool MeleeSphereAttackAbility::CanActivateAbility(

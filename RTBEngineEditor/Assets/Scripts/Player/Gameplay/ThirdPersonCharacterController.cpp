@@ -8,6 +8,7 @@
 #include <RTBEngine/Online/OnlineGameplayNet.h>
 #include "PauseMenuController.h"
 #include "PlayerAmmoSystem.h"
+#include "PlayerRegistry.h"
 #include "CharacterAbility.h"
 #include "CharacterCombatOrigins.h"
 
@@ -124,30 +125,25 @@ namespace {
         const std::size_t memberCount = members.size();
         for (std::size_t offset = 1; offset < memberCount; ++offset) {
             const int candidateSlot = static_cast<int>((static_cast<std::size_t>(localPlayerSlot) + offset) % memberCount);
-            for (const auto& gameObject : scene->GetGameObjects()) {
-                if (!gameObject || gameObject.get() == localOwner) {
-                    continue;
-                }
+            RTBEngine::ECS::GameObject* candidatePawn =
+                PlayerRegistry::GetInstance().FindBySlot(candidateSlot);
+            if (!candidatePawn || candidatePawn == localOwner) {
+                continue;
+            }
 
-                const RTBEngine::ECS::NetworkIdentity* identity =
-                    gameObject->GetComponent<RTBEngine::ECS::NetworkIdentity>();
-                if (!identity || identity->networkPlayerSlot != candidateSlot) {
-                    continue;
-                }
+            ThirdPersonCharacterController* controller =
+                candidatePawn->GetComponent<ThirdPersonCharacterController>();
+            if (!controller || controller->team != static_cast<int>(CharacterTeam::Player)) {
+                continue;
+            }
 
-                ThirdPersonCharacterController* controller = gameObject->GetComponent<ThirdPersonCharacterController>();
-                if (!controller || controller->team != static_cast<int>(CharacterTeam::Player)) {
-                    continue;
-                }
+            HealthComponent* health = candidatePawn->GetComponent<HealthComponent>();
+            if (!health) {
+                health = candidatePawn->GetComponentInChildren<HealthComponent>();
+            }
 
-                HealthComponent* health = gameObject->GetComponent<HealthComponent>();
-                if (!health) {
-                    health = gameObject->GetComponentInChildren<HealthComponent>();
-                }
-
-                if (health && !health->IsDead()) {
-                    return gameObject.get();
-                }
+            if (health && !health->IsDead()) {
+                return candidatePawn;
             }
         }
 

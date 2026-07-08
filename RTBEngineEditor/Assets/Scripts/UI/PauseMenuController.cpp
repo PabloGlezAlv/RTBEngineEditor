@@ -6,6 +6,7 @@
 #include <RTBEngine/Core/Time.h>
 #include <RTBEngine/Input/InputManager.h>
 #include <RTBEngine/Input/KeyCode.h>
+#include <RTBEngine/Scene/ComponentQuery.h>
 #include <RTBEngine/Scene/SceneManager.h>
 #include <RTBEngine/UI/Elements/UIButton.h>
 #include <RTBEngine/UI/Elements/UIText.h>
@@ -236,19 +237,8 @@ bool PauseMenuController::IsAnyMenuOpen()
 
 void PauseMenuController::ApplyGameplayMouseMode()
 {
-    RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
-    if (!scene) {
-        return;
-    }
-
-    for (const auto& gameObject : scene->GetGameObjects()) {
-        if (!gameObject) {
-            continue;
-        }
-
-        if (auto* controller = gameObject->GetComponent<PauseMenuController>()) {
-            controller->ApplyMouseModeForMenuState();
-            return;
-        }
+    if (PauseMenuController* controller =
+            RTBEngine::ECS::ComponentQuery::FindFirst<PauseMenuController>()) {
+        controller->ApplyMouseModeForMenuState();
     }
 }

@@ -160,9 +160,9 @@ namespace RTBEditor {
         ImGuiID dockspaceId = ImGui::GetID("MyDockSpace");
         ImGui::DockSpace(dockspaceId, ImVec2(0.0f, 0.0f), dockspaceFlags);
 
-        // Setup default layout once
+        // Setup default layout once the main viewport has a valid size.
         static bool firstTime = true;
-        if (firstTime) {
+        if (firstTime && viewport->WorkSize.x > 0.0f && viewport->WorkSize.y > 0.0f) {
             firstTime = false;
             CreateDefaultLayout(dockspaceId);
         }
@@ -180,7 +180,7 @@ namespace RTBEditor {
 
         ImGui::DockBuilderRemoveNode(dockspaceId);
         ImGui::DockBuilderAddNode(dockspaceId, ImGuiDockNodeFlags_DockSpace);
-        ImGui::DockBuilderSetNodeSize(dockspaceId, viewport->Size);
+        ImGui::DockBuilderSetNodeSize(dockspaceId, viewport->WorkSize);
 
         // Split nodes
         ImGuiID dock_id_top = ImGui::DockBuilderSplitNode(dockspaceId, ImGuiDir_Up, 0.06f, nullptr, &dockspaceId);

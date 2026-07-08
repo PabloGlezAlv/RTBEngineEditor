@@ -3,6 +3,7 @@
 #include "HealthBarUI.h"
 #include "HealthComponent.h"
 #include "OnlineDisplayNameHelper.h"
+#include "PlayerRegistry.h"
 #include "ThirdPersonCharacterController.h"
 
 #include <RTBEngine/Scene/NetworkIdentity.h>
@@ -58,91 +59,43 @@ namespace {
         }
     }
 
-    struct PlayerPawnInfo {
-        RTBEngine::ECS::GameObject* pawn = nullptr;
-        RTBEngine::ECS::NetworkIdentity* identity = nullptr;
-        HealthComponent* health = nullptr;
-        int slot = -1;
-    };
-
-    std::vector<PlayerPawnInfo> CollectPlayerPawns()
-    {
-        std::vector<PlayerPawnInfo> pawns;
-        RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
-        if (!scene) {
-            return pawns;
-        }
-
-        for (const auto& gameObject : scene->GetGameObjects()) {
-            if (!gameObject || !gameObject->IsActive()) {
-                continue;
-            }
-
-            HealthComponent* health = gameObject->GetComponent<HealthComponent>();
-            if (!health) {
-                continue;
-            }
-
-            ThirdPersonCharacterController* controller =
-                gameObject->GetComponent<ThirdPersonCharacterController>();
-            RTBEngine::ECS::NetworkIdentity* identity =
-                gameObject->GetComponent<RTBEngine::ECS::NetworkIdentity>();
-            if (!controller && !identity) {
-                continue;
-            }
-
-            PlayerPawnInfo info;
-            info.pawn = gameObject.get();
-            info.health = health;
-            info.identity = identity;
-            info.slot = identity ? identity->networkPlayerSlot : -1;
-            pawns.push_back(info);
-        }
-
-        std::sort(pawns.begin(), pawns.end(), [](const PlayerPawnInfo& left, const PlayerPawnInfo& right) {
-            if (left.slot >= 0 && right.slot >= 0) {
-                return left.slot < right.slot;
-            }
-
-            if (left.slot >= 0) {
-                return true;
-            }
-
-            if (right.slot >= 0) {
-                return false;
-            }
-
-            return left.pawn < right.pawn;
-        });
-
-        return pawns;
-    }
-
 }
 
 void PartyHealthHud::OnStart()
 {
-    refreshTimer = 0.0f;
     if (entryTemplate) {
         SetUiVisibleRecursive(entryTemplate, false);
     }
 
-    RefreshEntries();
-}
+    pawnSpawnedSubscription = PlayerRegistry::GetInstance().SubscribePawnSpawned(
+        [this](const PawnInfo& info) {
+            RefreshEntries();
+            if (!info.pawn) {
+                return;
+            }
 
-void PartyHealthHud::OnUpdate(float deltaTime)
-{
-    refreshTimer += deltaTime;
-    if (refreshTimer < refreshInterval) {
-        return;
-    }
+            const std::string ownerKey = BuildOwnerKey(
+                info.pawn,
+                info.pawn->GetComponent<RTBEngine::ECS::NetworkIdentity>());
+            if (PartyEntry* entry = FindOrCreateEntry(ownerKey)) {
+                BindEntry(*entry, info.pawn, info.pawn->GetComponent<RTBEngine::ECS::NetworkIdentity>());
+                SetEntryVisible(*entry, true);
+            }
+        });
 
-    refreshTimer = 0.0f;
+    pawnDestroyedSubscription = PlayerRegistry::GetInstance().SubscribePawnDestroyed(
+        [this](RTBEngine::ECS::GameObject* pawn) {
+            RemoveEntryForPawn(pawn);
+            RefreshEntries();
+        });
+
     RefreshEntries();
 }
 
 void PartyHealthHud::OnDestroy()
 {
+    pawnSpawnedSubscription.Reset();
+    pawnDestroyedSubscription.Reset();
     ClearSpawnedEntries();
 }
 
@@ -152,7 +105,7 @@ void PartyHealthHud::RefreshEntries()
         return;
     }
 
-    const std::vector<PlayerPawnInfo> pawns = CollectPlayerPawns();
+    const std::vector<PawnInfo>& pawns = PlayerRegistry::GetInstance().GetAll();
     const bool showPartyHud =
         RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby() && pawns.size() >= 2;
 
@@ -162,8 +115,14 @@ void PartyHealthHud::RefreshEntries()
     }
 
     std::unordered_map<std::string, bool> desiredKeys;
-    for (const PlayerPawnInfo& pawnInfo : pawns) {
-        const std::string ownerKey = BuildOwnerKey(pawnInfo.pawn, pawnInfo.identity);
+    for (const PawnInfo& pawnInfo : pawns) {
+        if (!pawnInfo.pawn) {
+            continue;
+        }
+
+        RTBEngine::ECS::NetworkIdentity* identity =
+            pawnInfo.pawn->GetComponent<RTBEngine::ECS::NetworkIdentity>();
+        const std::string ownerKey = BuildOwnerKey(pawnInfo.pawn, identity);
         desiredKeys[ownerKey] = true;
 
         PartyEntry* entry = FindOrCreateEntry(ownerKey);
@@ -171,7 +130,7 @@ void PartyHealthHud::RefreshEntries()
             continue;
         }
 
-        BindEntry(*entry, pawnInfo.pawn, pawnInfo.identity);
+        BindEntry(*entry, pawnInfo.pawn, identity);
         SetEntryVisible(*entry, true);
     }
 
@@ -191,6 +150,31 @@ void PartyHealthHud::RefreshEntries()
         if (RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene()) {
             scene->RemoveGameObject(entryRoot);
         }
+    }
+}
+
+void PartyHealthHud::RemoveEntryForPawn(RTBEngine::ECS::GameObject* pawn)
+{
+    if (!pawn) {
+        return;
+    }
+
+    RTBEngine::ECS::NetworkIdentity* identity = pawn->GetComponent<RTBEngine::ECS::NetworkIdentity>();
+    const std::string ownerKey = BuildOwnerKey(pawn, identity);
+    const auto iterator = activeEntries.find(ownerKey);
+    if (iterator == activeEntries.end()) {
+        return;
+    }
+
+    RTBEngine::ECS::GameObject* entryRoot = iterator->second.root;
+    activeEntries.erase(iterator);
+
+    if (!entryRoot || entryRoot == entryTemplate) {
+        return;
+    }
+
+    if (RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene()) {
+        scene->RemoveGameObject(entryRoot);
     }
 }
 

@@ -5,6 +5,7 @@
 #include "CharacterStatsApplier.h"
 #include "OnlinePlayerManager.h"
 #include "PlayerCharacterSelection.h"
+#include "PlayerRegistry.h"
 #include "RoundManager.h"
 
 #include "ThirdPersonCharacterController.h"
@@ -57,18 +58,12 @@ RTBEngine::UI::UIJoystick* FindSceneAttackJoystick(RTBEngine::ECS::Scene* scene)
         return nullptr;
     }
 
-    for (const auto& gameObject : scene->GetGameObjects()) {
-        if (!gameObject || gameObject->GetName() != "AttackJoystick") {
-            continue;
-        }
-
-        if (RTBEngine::UI::UIJoystick* joystick =
-                gameObject->GetComponent<RTBEngine::UI::UIJoystick>()) {
-            return joystick;
-        }
+    RTBEngine::ECS::GameObject* joystickObject = scene->FindGameObject("AttackJoystick");
+    if (!joystickObject) {
+        return nullptr;
     }
 
-    return nullptr;
+    return joystickObject->GetComponent<RTBEngine::UI::UIJoystick>();
 }
 
 void WireSpawnedPlayerCamera(RTBEngine::ECS::GameObject* spawnedPawn)
@@ -228,6 +223,8 @@ void PlayerPawnSpawner::OnAwake()
     if (roundManager) {
         roundManager->playerObject = spawnedPawn;
     }
+
+    PlayerRegistry::GetInstance().RegisterPlayerPawn(spawnedPawn);
 
     owner->SetActive(false);
 }

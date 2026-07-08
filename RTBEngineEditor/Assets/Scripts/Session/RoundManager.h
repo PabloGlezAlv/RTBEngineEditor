@@ -1,5 +1,7 @@
 #pragma once
 
+#include "PlayerRegistry.h"
+
 #include <RTBEngine/Core/CountdownTimer.h>
 #include <RTBEngine/Core/Event.h>
 #include <RTBEngine/Scene/Component.h>
@@ -57,7 +59,6 @@ public:
         std::uint32_t networkId);
     bool CanSpawnEnemies() const;
     RTBEngine::ECS::GameObject* FindClosestPlayerTarget(RTBEngine::ECS::GameObject* requester);
-    void RefreshTrackedPlayers();
 
     size_t GetSpawnPointCount() const { return spawnPoints.size(); }
 
@@ -78,7 +79,6 @@ private:
 
     std::vector<RTBEngine::ECS::GameObject*> spawnedEnemies;
     std::vector<TrackedPlayer> trackedPlayers;
-    float trackedPlayersRefreshTimer = 0.0f;
 
     RTBEngine::ECS::Prefab* enemySpawnPrefab = nullptr;
     HealthComponent* playerHealth = nullptr;
@@ -97,6 +97,9 @@ private:
     RTBEngine::Core::EventSubscription finalSceneCountdownSecondSubscription;
     RTBEngine::Core::EventSubscription finalSceneCountdownFinishedSubscription;
 
+    RTBEngine::Core::EventSubscription playerSpawnSubscription;
+    RTBEngine::Core::EventSubscription playerDestroySubscription;
+
     bool hasRequestedEndScene = false;
     bool finalSceneLoadRequested = false;
     bool localRespawnPending = false;
@@ -104,6 +107,9 @@ private:
     void ClampSettings();
     void InitializeRuntime();
     void BindCountdownHandlers();
+    void BindPlayerRegistryHandlers();
+    void HandlePlayerPawnRegistered(const PawnInfo& info);
+    void HandlePlayerPawnUnregistered(RTBEngine::ECS::GameObject* pawn);
     bool HasAnySpawnPoint() const;
     void StartRound();
     void BeginCountdownForRound(int roundNumber);

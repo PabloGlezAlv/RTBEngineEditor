@@ -4,6 +4,7 @@
 #include "OnlineDisplayNameHelper.h"
 #include "OnlineGameNetMessages.h"
 #include "PlayerNameplateUI.h"
+#include "PlayerRegistry.h"
 #include "ProjectileAttackAbility.h"
 #include "RoundManager.h"
 #include "ThirdPersonCharacterController.h"
@@ -199,10 +200,6 @@ void OnlinePlayerManager::ConfigureOnlinePlayers()
         }
     }
 
-    if (roundManager) {
-        roundManager->RefreshTrackedPlayers();
-    }
-
     if (PlayerAmmoSystem* localAmmo = localPlayerObject->GetComponent<PlayerAmmoSystem>()) {
         localAmmo->RefreshNetworkState();
     }
@@ -345,6 +342,8 @@ void OnlinePlayerManager::ConfigurePawn(
     }
 
     rigidBodyComponent->OnValidate();
+
+    PlayerRegistry::GetInstance().RegisterPlayerPawn(pawn);
 }
 
 RTBEngine::ECS::GameObject* OnlinePlayerManager::SpawnRemotePawn(
@@ -384,6 +383,7 @@ RTBEngine::ECS::GameObject* OnlinePlayerManager::SpawnRemotePawn(
 void OnlinePlayerManager::RemovePawnFromTracking(RTBEngine::ECS::GameObject* pawn, int playerSlot)
 {
     if (pawn) {
+        PlayerRegistry::GetInstance().Unregister(pawn);
         spawnedRemotePawns.erase(
             std::remove(spawnedRemotePawns.begin(), spawnedRemotePawns.end(), pawn),
             spawnedRemotePawns.end());
