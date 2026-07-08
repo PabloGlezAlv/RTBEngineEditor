@@ -1,6 +1,7 @@
 #include "ProjectileTrailFadeLifetime.h"
 
 #include <RTBEngine/Scene/GameObject.h>
+#include <RTBEngine/Scene/ObjectPool.h>
 #include <RTBEngine/Scene/Scene.h>
 #include <RTBEngine/Scene/SceneManager.h>
 #include <RTBEngine/Scene/TrailRenderer.h>
@@ -14,6 +15,35 @@ RTB_REGISTER_COMPONENT(ProjectileTrailFadeLifetime)
     RTB_PROPERTY_RANGE(fadeDuration, 0.05f, 3.0f)
     RTB_PROPERTY_RANGE(headTrimInterval, 0.01f, 0.2f)
 RTB_END_REGISTER(ProjectileTrailFadeLifetime)
+
+void ProjectileTrailFadeLifetime::OnPoolAcquire()
+{
+    elapsed = 0.0f;
+    headTrimTimer = 0.0f;
+}
+
+void ProjectileTrailFadeLifetime::OnPoolRelease()
+{
+    elapsed = 0.0f;
+    headTrimTimer = 0.0f;
+    SetUpdateTickEnabled(false);
+    SetEnabled(false);
+    trailRenderer = nullptr;
+}
+
+void ProjectileTrailFadeLifetime::BeginFade()
+{
+    elapsed = 0.0f;
+    headTrimTimer = 0.0f;
+    SetEnabled(true);
+    SetUpdateTickEnabled(true);
+
+    trailRenderer = owner ? owner->GetComponent<RTBEngine::ECS::TrailRenderer>() : nullptr;
+    if (trailRenderer) {
+        trailRenderer->SetGlobalAlphaScale(1.0f);
+        trailRenderer->SetVisible(true);
+    }
+}
 
 void ProjectileTrailFadeLifetime::OnStart()
 {
@@ -51,11 +81,7 @@ void ProjectileTrailFadeLifetime::OnUpdate(float deltaTime)
 
 void ProjectileTrailFadeLifetime::Finish()
 {
-    RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
-    if (scene && owner) {
-        scene->RemoveGameObject(owner);
-        return;
+    if (owner) {
+        RTBEngine::ECS::ObjectPool::GetInstance().Release(owner);
     }
-
-    SetUpdateTickEnabled(false);
 }

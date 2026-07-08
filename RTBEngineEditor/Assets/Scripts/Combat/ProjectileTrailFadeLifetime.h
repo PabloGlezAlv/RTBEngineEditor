@@ -2,6 +2,7 @@
 
 #include <RTBEngine/Reflection/PropertyMacros.h>
 #include <RTBEngine/Scene/Component.h>
+#include <RTBEngine/Scene/IPoolable.h>
 
 namespace RTBEngine {
     namespace ECS {
@@ -9,7 +10,7 @@ namespace RTBEngine {
     }
 }
 
-class ProjectileTrailFadeLifetime : public RTBEngine::ECS::Component
+class ProjectileTrailFadeLifetime : public RTBEngine::ECS::Component, public RTBEngine::ECS::IPoolable
 {
 public:
     ProjectileTrailFadeLifetime() = default;
@@ -20,8 +21,14 @@ public:
 
     RTB_COMPONENT(ProjectileTrailFadeLifetime)
 
+public:
     void OnStart() override;
     void OnUpdate(float deltaTime) override;
+
+    void OnPoolAcquire() override;
+    void OnPoolRelease() override;
+
+    void BeginFade();
 
 private:
     RTBEngine::ECS::TrailRenderer* trailRenderer = nullptr;

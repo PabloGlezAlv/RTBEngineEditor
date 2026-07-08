@@ -19,6 +19,7 @@
 
 #include <RTBEngine/Scene/AudioSourceComponent.h>
 #include <RTBEngine/Scene/GameObject.h>
+#include <RTBEngine/Scene/ObjectPool.h>
 #include <RTBEngine/Scene/PrefabRegistry.h>
 #include <RTBEngine/Scene/RigidBodyComponent.h>
 #include <RTBEngine/Math/Quaternions/Quaternion.h>
@@ -60,6 +61,9 @@ RTB_END_REGISTER(ProjectileAttackAbility)
 void ProjectileAttackAbility::OnStart()
 {
     ResolveProjectilePrefab();
+    if (!projectilePoolKey.empty()) {
+        RTBEngine::ECS::ObjectPool::GetInstance().SetMaxPoolSize(projectilePoolKey, 48);
+    }
     RefreshCachedProjectileStats();
 }
 
@@ -240,22 +244,17 @@ bool ProjectileAttackAbility::SpawnProjectile(RTBEngine::ECS::GameObject* instig
         RTBEngine::Math::Quaternion::FromEulerAngles(0.0f, projectileYaw * kDegToRad, 0.0f);
 
     RTBEngine::ECS::GameObject* projectileObject =
-        RTBEngine::ECS::SceneManager::GetInstance().Instantiate(
-            *projectileSpawnPrefab,
+        RTBEngine::ECS::ObjectPool::GetInstance().Acquire(
+            projectilePoolKey,
             spawnPosition,
             projectileRotation);
     if (!projectileObject) {
         return false;
     }
 
-    projectileObject->SetTransient(true);
-
     ProjectileComponent* projectile = projectileObject->GetComponent<ProjectileComponent>();
     if (!projectile) {
-        RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
-        if (scene) {
-            scene->RemoveGameObject(projectileObject);
-        }
+        RTBEngine::ECS::ObjectPool::GetInstance().Release(projectileObject);
         return false;
     }
 
@@ -438,14 +437,18 @@ void ProjectileAttackAbility::ClampSettings()
 void ProjectileAttackAbility::ResolveProjectilePrefab()
 {
     projectileSpawnPrefab = nullptr;
+    projectilePoolKey.clear();
 
     if (projectilePrefabRef.empty()) {
         return;
     }
 
-    const std::string resolvedPath =
-        RTBEngine::Core::ResourceManager::GetInstance().ResolvePathForRead(projectilePrefabRef);
-    projectileSpawnPrefab = RTBEngine::ECS::PrefabRegistry::GetInstance().GetByPath(resolvedPath);
+    projectilePoolKey =
+        RTBEngine::ECS::ObjectPool::ResolvePoolKey(projectilePrefabRef);
+    projectileSpawnPrefab = RTBEngine::ECS::PrefabRegistry::GetInstance().GetByPath(projectilePoolKey);
+    if (!projectileSpawnPrefab) {
+        projectileSpawnPrefab = RTBEngine::ECS::PrefabRegistry::GetInstance().Get(projectilePoolKey);
+    }
 }
 
 void ProjectileAttackAbility::RefreshCachedProjectileStats()

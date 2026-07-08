@@ -6,6 +6,7 @@
 #include <RTBEngine/Core/ResourceManager.h>
 #include <RTBEngine/Math/Quaternions/Quaternion.h>
 #include <RTBEngine/Scene/GameObject.h>
+#include <RTBEngine/Scene/ObjectPool.h>
 #include <RTBEngine/Scene/SceneManager.h>
 #include <RTBEngine/Scene/PrefabRegistry.h>
 
@@ -25,6 +26,9 @@ RTB_END_REGISTER(FloatingDamageNumberSpawner)
 void FloatingDamageNumberSpawner::OnStart()
 {
     ResolvePrefab();
+    if (!damageNumberPoolKey.empty()) {
+        RTBEngine::ECS::ObjectPool::GetInstance().SetMaxPoolSize(damageNumberPoolKey, 24);
+    }
 
     if (!health && owner) {
         health = owner->GetComponent<HealthComponent>();
@@ -41,13 +45,17 @@ void FloatingDamageNumberSpawner::OnDestroy()
 void FloatingDamageNumberSpawner::ResolvePrefab()
 {
     damageNumberPrefab = nullptr;
+    damageNumberPoolKey.clear();
     if (damageNumberPrefabRef.empty()) {
         return;
     }
 
-    const std::string resolvedPath =
-        RTBEngine::Core::ResourceManager::GetInstance().ResolvePathForRead(damageNumberPrefabRef);
-    damageNumberPrefab = RTBEngine::ECS::PrefabRegistry::GetInstance().GetByPath(resolvedPath);
+    damageNumberPoolKey =
+        RTBEngine::ECS::ObjectPool::ResolvePoolKey(damageNumberPrefabRef);
+    damageNumberPrefab = RTBEngine::ECS::PrefabRegistry::GetInstance().GetByPath(damageNumberPoolKey);
+    if (!damageNumberPrefab) {
+        damageNumberPrefab = RTBEngine::ECS::PrefabRegistry::GetInstance().Get(damageNumberPoolKey);
+    }
     if (!damageNumberPrefab) {
         RTB_WARN("[FloatingDamageNumberSpawner] Damage number prefab not found: '" + damageNumberPrefabRef + "'.");
     }
@@ -93,8 +101,8 @@ void FloatingDamageNumberSpawner::SpawnDamageNumber(float amount, const RTBEngin
     }
 
     RTBEngine::ECS::GameObject* spawnedNumber =
-        RTBEngine::ECS::SceneManager::GetInstance().Instantiate(
-            *damageNumberPrefab,
+        RTBEngine::ECS::ObjectPool::GetInstance().Acquire(
+            damageNumberPoolKey,
             worldPosition,
             RTBEngine::Math::Quaternion::Identity());
 
@@ -110,9 +118,7 @@ void FloatingDamageNumberSpawner::SpawnDamageNumber(float amount, const RTBEngin
 
     if (!lifetime) {
         RTB_WARN("[FloatingDamageNumberSpawner] Prefab is missing FloatingDamageNumberLifetime.");
-        if (RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene()) {
-            scene->RemoveGameObject(spawnedNumber);
-        }
+        RTBEngine::ECS::ObjectPool::GetInstance().Release(spawnedNumber);
         return;
     }
 

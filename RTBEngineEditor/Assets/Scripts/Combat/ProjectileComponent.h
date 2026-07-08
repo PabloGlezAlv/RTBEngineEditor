@@ -3,6 +3,7 @@
 #include "HealthComponent.h"
 
 #include <RTBEngine/Scene/Component.h>
+#include <RTBEngine/Scene/IPoolable.h>
 #include <RTBEngine/Math/Vectors/Vector3.h>
 #include <RTBEngine/Reflection/PropertyMacros.h>
 
@@ -21,7 +22,7 @@ namespace RTBEngine {
     }
 }
 
-class ProjectileComponent : public RTBEngine::ECS::Component
+class ProjectileComponent : public RTBEngine::ECS::Component, public RTBEngine::ECS::IPoolable
 {
 public:
     struct ProjectileRuntimeContext {
@@ -80,6 +81,10 @@ public:
     std::string impactParticlePrefabRef;
 
     RTB_COMPONENT(ProjectileComponent)
+
+public:
+    void OnPoolAcquire() override;
+    void OnPoolRelease() override;
 
 private:
     RTBEngine::ECS::GameObject* instigator = nullptr;

@@ -7,6 +7,7 @@
 
 #include <RTBEngine/Scene/AudioSourceComponent.h>
 #include <RTBEngine/Scene/GameObject.h>
+#include <RTBEngine/Scene/ObjectPool.h>
 #include <RTBEngine/Scene/RigidBodyComponent.h>
 #include "ProjectileTrailFadeLifetime.h"
 
@@ -155,6 +156,36 @@ RTB_REGISTER_COMPONENT(ProjectileComponent)
     RTB_PROPERTY_ASSET_PATH(impactParticlePrefabRef, "prefab")
 RTB_END_REGISTER(ProjectileComponent)
 
+void ProjectileComponent::OnPoolAcquire()
+{
+    SetEnabled(true);
+    SetUpdateTickEnabled(true);
+    pendingDestroy = false;
+    initialized = false;
+    appliedHitCount = 0;
+    distanceTravelled = 0.0f;
+    hitTargets.clear();
+}
+
+void ProjectileComponent::OnPoolRelease()
+{
+    SetEnabled(false);
+    instigator = nullptr;
+    physicsWorld = nullptr;
+    hitAudio = nullptr;
+    hitTargets.clear();
+    appliedHitCount = 0;
+    distanceTravelled = 0.0f;
+    pendingDestroy = false;
+    initialized = false;
+
+    if (flightTrail) {
+        flightTrail->SetVisible(false);
+        flightTrail->ClearPoints();
+        flightTrail = nullptr;
+    }
+}
+
 void ProjectileComponent::OnStart()
 {
     if (!initialized) {
@@ -247,6 +278,7 @@ void ProjectileComponent::BeginFlight(const ProjectileRuntimeContext& context)
 
     ClampSettings();
 
+    SetEnabled(true);
     fixedHeight = context.origin.y;
     distanceTravelled = 0.0f;
     appliedHitCount = 0;
@@ -365,30 +397,34 @@ void ProjectileComponent::ReleaseTrailForFadeout()
     const float trailWidth = flightTrail->width;
 
     RTBEngine::ECS::GameObject* trailGhost =
-        RTBEngine::ECS::SceneManager::GetInstance().Instantiate("Projectile Trail Fade");
+        RTBEngine::ECS::ObjectPool::GetInstance().Acquire(
+            RTBEngine::ECS::ObjectPool::ResolvePoolKey("Projectile Trail Fade"),
+            trailPoints.back(),
+            RTBEngine::Math::Quaternion::Identity());
     if (!trailGhost) {
         return;
     }
 
-    trailGhost->SetTransient(true);
+    RTBEngine::ECS::TrailRenderer* ghostTrail = trailGhost->GetComponent<RTBEngine::ECS::TrailRenderer>();
+    if (!ghostTrail) {
+        ghostTrail = new RTBEngine::ECS::TrailRenderer();
+        trailGhost->AddComponent(ghostTrail);
+    }
 
-    auto* ghostTrail = new RTBEngine::ECS::TrailRenderer();
+    ProjectileTrailFadeLifetime* fadeLifetime = trailGhost->GetComponent<ProjectileTrailFadeLifetime>();
+    if (!fadeLifetime) {
+        fadeLifetime = new ProjectileTrailFadeLifetime();
+        trailGhost->AddComponent(fadeLifetime);
+    }
+
     ghostTrail->width = trailWidth;
     ghostTrail->color = RTBEngine::Math::Vector4(1.0f, 1.0f, 1.0f, 1.0f);
     ghostTrail->fadeAlphaAlongLength = true;
     ghostTrail->SetGlobalAlphaScale(1.0f);
     ghostTrail->SetPoints(trailPoints);
     ghostTrail->SetVisible(true);
-    trailGhost->AddComponent(ghostTrail);
 
-    auto* fadeLifetime = new ProjectileTrailFadeLifetime();
-    trailGhost->AddComponent(fadeLifetime);
-
-    for (const auto& component : trailGhost->GetComponents()) {
-        if (component) {
-            component->TryInvokeStart();
-        }
-    }
+    fadeLifetime->BeginFade();
 
     flightTrail->SetVisible(false);
     flightTrail->ClearPoints();
@@ -397,18 +433,14 @@ void ProjectileComponent::ReleaseTrailForFadeout()
 
 void ProjectileComponent::SpawnImpactParticles()
 {
-    if (impactParticlePrefabRef.empty() || !owner) {
+    if (!owner) {
         return;
     }
 
-    const std::string resolvedPath =
-        RTBEngine::Core::ResourceManager::GetInstance().ResolvePathForRead(impactParticlePrefabRef);
-    const RTBEngine::ECS::Prefab* prefab =
-        RTBEngine::ECS::PrefabRegistry::GetInstance().GetByPath(resolvedPath);
-    if (!prefab) {
-        prefab = RTBEngine::ECS::PrefabRegistry::GetInstance().Get("Arrow Impact Sparks");
-    }
-    if (!prefab) {
+    const std::string impactPoolKey = !impactParticlePrefabRef.empty()
+        ? RTBEngine::ECS::ObjectPool::ResolvePoolKey(impactParticlePrefabRef)
+        : RTBEngine::ECS::ObjectPool::ResolvePoolKey("Arrow Impact Sparks");
+    if (impactPoolKey.empty()) {
         return;
     }
 
@@ -416,20 +448,12 @@ void ProjectileComponent::SpawnImpactParticles()
     impactPosition.y = fixedHeight;
 
     RTBEngine::ECS::GameObject* impactEffect =
-        RTBEngine::ECS::SceneManager::GetInstance().Instantiate(
-            *prefab,
+        RTBEngine::ECS::ObjectPool::GetInstance().Acquire(
+            impactPoolKey,
             impactPosition,
             BuildSplashRotation(direction));
     if (!impactEffect) {
         return;
-    }
-
-    impactEffect->SetTransient(true);
-
-    for (const auto& component : impactEffect->GetComponents()) {
-        if (component) {
-            component->TryInvokeStart();
-        }
     }
 }
 
@@ -594,12 +618,10 @@ void ProjectileComponent::DestroyProjectile()
     }
 
     pendingDestroy = true;
-    SetEnabled(false);
     ReleaseTrailForFadeout();
     SpawnImpactParticles();
 
-    RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
-    if (scene && owner) {
-        scene->RemoveGameObject(owner);
+    if (owner) {
+        RTBEngine::ECS::ObjectPool::GetInstance().Release(owner);
     }
 }

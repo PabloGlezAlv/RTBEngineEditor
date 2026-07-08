@@ -84,6 +84,7 @@ protected:
 
 private:
     RTBEngine::ECS::Prefab* projectileSpawnPrefab = nullptr;
+    std::string projectilePoolKey;
     float cachedTravelDistance = 0.0f;
     float cachedProjectileRadius = 0.05f;
     float cachedDamage = 0.0f;

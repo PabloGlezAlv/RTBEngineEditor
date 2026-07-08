@@ -6,6 +6,7 @@
 #include <RTBEngine/Rendering/Camera.h>
 #include <RTBEngine/Scene/CameraComponent.h>
 #include <RTBEngine/Scene/GameObject.h>
+#include <RTBEngine/Scene/ObjectPool.h>
 #include <RTBEngine/Scene/Scene.h>
 #include <RTBEngine/Scene/SceneManager.h>
 #include <RTBEngine/UI/Canvas.h>
@@ -31,6 +32,22 @@ RTB_REGISTER_COMPONENT(FloatingDamageNumberLifetime)
     RTB_PROPERTY_RANGE(holdScale, 0.25f, 3.0f)
     RTB_PROPERTY_COLOR(textColor)
 RTB_END_REGISTER(FloatingDamageNumberLifetime)
+
+void FloatingDamageNumberLifetime::OnPoolAcquire()
+{
+    elapsed = 0.0f;
+    isPlaying = false;
+}
+
+void FloatingDamageNumberLifetime::OnPoolRelease()
+{
+    elapsed = 0.0f;
+    isPlaying = false;
+
+    if (damageText) {
+        damageText->SetVisible(false);
+    }
+}
 
 void FloatingDamageNumberLifetime::ResolveDamageText()
 {
@@ -194,12 +211,7 @@ void FloatingDamageNumberLifetime::Finish()
 {
     isPlaying = false;
 
-    RTBEngine::ECS::GameObject* root = owner;
-    if (!root) {
-        return;
-    }
-
-    if (RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene()) {
-        scene->RemoveGameObject(root);
+    if (owner) {
+        RTBEngine::ECS::ObjectPool::GetInstance().Release(owner);
     }
 }

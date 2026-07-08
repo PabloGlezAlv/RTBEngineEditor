@@ -38,6 +38,7 @@ public:
 
 private:
     RTBEngine::ECS::Prefab* damageNumberPrefab = nullptr;
+    std::string damageNumberPoolKey;
     RTBEngine::Core::EventSubscription damageSubscription;
 
     void ResolvePrefab();

@@ -3,6 +3,7 @@
 #include <RTBEngine/Math/Vectors/Vector3.h>
 #include <RTBEngine/Math/Vectors/Vector4.h>
 #include <RTBEngine/Scene/Component.h>
+#include <RTBEngine/Scene/IPoolable.h>
 #include <RTBEngine/Reflection/PropertyMacros.h>
 
 namespace RTBEngine {
@@ -12,7 +13,7 @@ namespace RTBEngine {
     }
 }
 
-class FloatingDamageNumberLifetime : public RTBEngine::ECS::Component
+class FloatingDamageNumberLifetime : public RTBEngine::ECS::Component, public RTBEngine::ECS::IPoolable
 {
 public:
     FloatingDamageNumberLifetime() = default;
@@ -30,6 +31,9 @@ public:
 
 public:
     void OnUpdate(float deltaTime) override;
+
+    void OnPoolAcquire() override;
+    void OnPoolRelease() override;
 
     void Play(float damageAmount, const RTBEngine::Math::Vector3& worldPosition);
 
