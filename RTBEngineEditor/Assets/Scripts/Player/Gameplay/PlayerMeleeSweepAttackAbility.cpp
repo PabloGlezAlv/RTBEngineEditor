@@ -1,6 +1,7 @@
 #include "PlayerMeleeSweepAttackAbility.h"
 
 #include "CharacterCombatUtils.h"
+#include "CharacterDefinition.h"
 #include "HealthComponent.h"
 #include "PlayerAmmoSystem.h"
 
@@ -73,6 +74,17 @@ RTB_END_REGISTER(PlayerMeleeSweepAttackAbility)
 void PlayerMeleeSweepAttackAbility::OnValidate()
 {
     ClampSettings();
+}
+
+void PlayerMeleeSweepAttackAbility::ApplyCharacterStats(const CharacterDefinition& definition)
+{
+    SetMeleeCombatOverrides(
+        definition.projectileDamage,
+        definition.meleeRange,
+        definition.meleeRadius,
+        definition.meleeTickInterval,
+        definition.meleeTickCount,
+        definition.meleeKnockback);
 }
 
 void PlayerMeleeSweepAttackAbility::SetMeleeCombatOverrides(

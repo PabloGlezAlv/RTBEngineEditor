@@ -1,5 +1,7 @@
 #pragma once
 
+#include "ICharacterStatReceiver.h"
+
 #include <RTBEngine/Math/Vectors/Vector4.h>
 #include <RTBEngine/Reflection/PropertyMacros.h>
 #include <RTBEngine/Scene/Component.h>
@@ -11,7 +13,9 @@ namespace RTBEngine {
     }
 }
 
-class PlayerAmmoSystem : public RTBEngine::ECS::Component
+class CharacterDefinition;
+
+class PlayerAmmoSystem : public RTBEngine::ECS::Component, public ICharacterStatReceiver
 {
 public:
     PlayerAmmoSystem() = default;
@@ -29,6 +33,8 @@ public:
     void RefillAmmo();
     void RefreshNetworkState();
     float GetNormalizedAmmo() const { return normalizedAmmo; }
+
+    void ApplyCharacterStats(const CharacterDefinition& definition) override;
 
     RTB_COMPONENT(PlayerAmmoSystem)
 

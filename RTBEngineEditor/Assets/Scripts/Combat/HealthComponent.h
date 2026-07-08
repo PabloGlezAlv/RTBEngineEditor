@@ -1,5 +1,7 @@
 #pragma once
 
+#include "ICharacterStatReceiver.h"
+
 #include <RTBEngine/Core/Event.h>
 #include <RTBEngine/Scene/Component.h>
 #include <RTBEngine/Math/Vectors/Vector3.h>
@@ -11,7 +13,9 @@ namespace RTBEngine {
     }
 }
 
-class HealthComponent : public RTBEngine::ECS::Component
+class CharacterDefinition;
+
+class HealthComponent : public RTBEngine::ECS::Component, public ICharacterStatReceiver
 {
 public:
     struct DamageContext {
@@ -66,6 +70,8 @@ public:
     void Revive();
     void TakeDamage(float amount);
     void TakeDamage(float amount, const DamageContext& context);
+
+    void ApplyCharacterStats(const CharacterDefinition& definition) override;
 
     RTBEngine::Core::EventSubscription SubscribeToHealthChanged(HealthChangedCallback callback);
     RTBEngine::Core::EventSubscription SubscribeToDamageTaken(DamageTakenCallback callback);

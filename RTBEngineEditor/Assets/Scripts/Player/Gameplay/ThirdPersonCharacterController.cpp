@@ -1,5 +1,6 @@
 #include "ThirdPersonCharacterController.h"
 
+#include "CharacterDefinition.h"
 #include "HealthComponent.h"
 #include <RTBEngine/Scene/NetworkIdentity.h>
 #include "OnlineGameNetMessages.h"
@@ -1660,6 +1661,17 @@ void ThirdPersonCharacterController::ApplyCombatAnimationOverrides(
     }
 
     RebindAnimatorKeySubscriptions();
+}
+
+void ThirdPersonCharacterController::ApplyCharacterStats(const CharacterDefinition& definition)
+{
+    moveSpeed = definition.moveSpeed;
+    sprintMultiplier = definition.sprintMultiplier;
+    turnSpeed = definition.turnSpeed;
+    ApplyCombatAnimationOverrides(
+        definition.aimDrawAnimationFbx,
+        definition.aimLoopAnimationFbx,
+        definition.attackAnimationFbx);
 }
 
 void ThirdPersonCharacterController::RefreshAfterSpawn()

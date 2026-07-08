@@ -1,6 +1,8 @@
 #include "ProjectileAttackAbility.h"
 
+#include "CharacterDefinition.h"
 #include "CharacterCombatUtils.h"
+#include "PlayerMeleeSweepAttackAbility.h"
 #include "ThirdPersonCharacterController.h"
 #include "CharacterBase.h"
 #include "CharacterCombatOrigins.h"
@@ -74,6 +76,25 @@ void ProjectileAttackAbility::OnStart()
 {
     ResolveProjectilePrefab();
     RefreshCachedProjectileStats();
+}
+
+void ProjectileAttackAbility::ApplyCharacterStats(const CharacterDefinition& definition)
+{
+    RTBEngine::ECS::GameObject* owner = GetOwner();
+    if (owner && owner->GetComponent<PlayerMeleeSweepAttackAbility>()) {
+        return;
+    }
+
+    if (!definition.projectilePrefabRef.empty()) {
+        SetProjectilePrefabRef(definition.projectilePrefabRef);
+    }
+
+    SetProjectileCombatOverrides(
+        definition.projectileDamage,
+        definition.projectileSpeed,
+        definition.projectileKnockback,
+        definition.projectileBurstCount,
+        definition.projectileBurstInterval);
 }
 
 void ProjectileAttackAbility::SetProjectileCombatOverrides(

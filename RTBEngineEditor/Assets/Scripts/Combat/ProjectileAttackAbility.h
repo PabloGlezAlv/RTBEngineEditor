@@ -1,6 +1,8 @@
 #pragma once
 
 #include "CharacterAbility.h"
+#include "CharacterDefinition.h"
+#include "ICharacterStatReceiver.h"
 
 #include <RTBEngine/Math/Vectors/Vector3.h>
 #include <RTBEngine/Reflection/PropertyMacros.h>
@@ -23,7 +25,7 @@ namespace RTBEngine {
     }
 }
 
-class ProjectileAttackAbility : public CharacterAbility
+class ProjectileAttackAbility : public CharacterAbility, public ICharacterStatReceiver
 {
 public:
     ProjectileAttackAbility() = default;
@@ -66,6 +68,8 @@ public:
                                     int burstCount = 1,
                                     float burstInterval = 0.0f);
     void SetProjectilePrefabRef(const std::string& prefabRef);
+
+    void ApplyCharacterStats(const CharacterDefinition& definition) override;
 
 protected:
     float GetCooldownDuration() const override { return 0.0f; }

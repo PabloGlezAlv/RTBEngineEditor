@@ -1,5 +1,7 @@
 #include "HealthComponent.h"
 
+#include "CharacterDefinition.h"
+
 #include <algorithm>
 #include <cmath>
 
@@ -31,6 +33,12 @@ void HealthComponent::OnDestroy()
     hasLastNotifiedEvent = false;
     hasLastDamageTakenEvent = false;
     hasLastDeathEvent = false;
+}
+
+void HealthComponent::ApplyCharacterStats(const CharacterDefinition& definition)
+{
+    SetMaxHealth(definition.maxHealth);
+    SetCurrentHealth(definition.maxHealth);
 }
 
 void HealthComponent::SetMaxHealth(float value)

@@ -2,16 +2,13 @@
 
 #include "CharacterCatalog.h"
 #include "CharacterDefinition.h"
-#include "HealthComponent.h"
-#include "PlayerAmmoSystem.h"
-#include "PlayerCharacterSelection.h"
-#include "PlayerMeleeSweepAttackAbility.h"
-#include "ProjectileAttackAbility.h"
-#include "ThirdPersonCharacterController.h"
+#include "ICharacterStatReceiver.h"
 
 #include <RTBEngine/Core/Logger.h>
 #include <RTBEngine/Core/ResourceManager.h>
 #include <RTBEngine/Scene/GameObject.h>
+
+#include "PlayerCharacterSelection.h"
 
 using ThisClass = CharacterStatsApplier;
 
@@ -73,52 +70,17 @@ bool CharacterStatsApplier::ApplyDefinition(
     }
 
     bool appliedAny = false;
-
-    auto* controller = pawn->GetComponent<ThirdPersonCharacterController>();
-    if (controller) {
-        controller->moveSpeed = definition.moveSpeed;
-        controller->sprintMultiplier = definition.sprintMultiplier;
-        controller->turnSpeed = definition.turnSpeed;
-        controller->ApplyCombatAnimationOverrides(
-            definition.aimDrawAnimationFbx,
-            definition.aimLoopAnimationFbx,
-            definition.attackAnimationFbx);
-        appliedAny = true;
-    }
-
-    if (auto* health = pawn->GetComponent<HealthComponent>()) {
-        health->SetMaxHealth(definition.maxHealth);
-        health->SetCurrentHealth(definition.maxHealth);
-        appliedAny = true;
-    }
-
-    if (auto* ammo = pawn->GetComponent<PlayerAmmoSystem>()) {
-        ammo->maxShots = definition.maxShots;
-        ammo->fullReloadDuration = definition.fullReloadDuration;
-        appliedAny = true;
-    }
-
-    if (auto* meleeAttack = pawn->GetComponent<PlayerMeleeSweepAttackAbility>()) {
-        meleeAttack->SetMeleeCombatOverrides(
-            definition.projectileDamage,
-            definition.meleeRange,
-            definition.meleeRadius,
-            definition.meleeTickInterval,
-            definition.meleeTickCount,
-            definition.meleeKnockback);
-        appliedAny = true;
-    }
-    else if (auto* rangedAttack = pawn->GetComponent<ProjectileAttackAbility>()) {
-        if (!definition.projectilePrefabRef.empty()) {
-            rangedAttack->SetProjectilePrefabRef(definition.projectilePrefabRef);
+    const std::size_t componentCount = pawn->GetComponentCount();
+    for (std::size_t index = 0; index < componentCount; ++index) {
+        RTBEngine::ECS::Component* component = pawn->GetComponentAt(index);
+        if (!component) {
+            continue;
         }
-        rangedAttack->SetProjectileCombatOverrides(
-            definition.projectileDamage,
-            definition.projectileSpeed,
-            definition.projectileKnockback,
-            definition.projectileBurstCount,
-            definition.projectileBurstInterval);
-        appliedAny = true;
+
+        if (auto* receiver = dynamic_cast<ICharacterStatReceiver*>(component)) {
+            receiver->ApplyCharacterStats(definition);
+            appliedAny = true;
+        }
     }
 
     return appliedAny;

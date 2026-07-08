@@ -2,6 +2,7 @@
 
 #include "CharacterBase.h"
 #include "HealthComponent.h"
+#include "ICharacterStatReceiver.h"
 
 #include <RTBEngine/Core/Event.h>
 #include <RTBEngine/Scene/Component.h>
@@ -34,7 +35,9 @@ namespace RTBEngine {
 
 class CharacterAbility;
 
-class ThirdPersonCharacterController : public PlayableCharacterController
+class CharacterDefinition;
+
+class ThirdPersonCharacterController : public PlayableCharacterController, public ICharacterStatReceiver
 {
 public:
     ThirdPersonCharacterController() = default;
@@ -54,6 +57,7 @@ public:
     void ApplyCombatAnimationOverrides(const std::string& aimDrawFbx,
                                        const std::string& aimLoopFbx,
                                        const std::string& attackFbx);
+    void ApplyCharacterStats(const CharacterDefinition& definition) override;
     void RefreshAfterSpawn();
 
     RTBEngine::ECS::GameObject* cameraObject = nullptr;

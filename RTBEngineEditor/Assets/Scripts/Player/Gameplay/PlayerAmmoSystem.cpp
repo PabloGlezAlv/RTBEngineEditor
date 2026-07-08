@@ -1,5 +1,7 @@
 #include "PlayerAmmoSystem.h"
 
+#include "CharacterDefinition.h"
+
 #include <RTBEngine/Scene/GameObject.h>
 #include <RTBEngine/Scene/NetworkIdentity.h>
 #include <RTBEngine/UI/Elements/UISlider.h>
@@ -33,6 +35,12 @@ RTB_REGISTER_COMPONENT(PlayerAmmoSystem)
     RTB_PROPERTY_COLOR(fullAmmoColor)
     RTB_PROPERTY_COLOR(partialAmmoColor)
 RTB_END_REGISTER(PlayerAmmoSystem)
+
+void PlayerAmmoSystem::ApplyCharacterStats(const CharacterDefinition& definition)
+{
+    maxShots = definition.maxShots;
+    fullReloadDuration = definition.fullReloadDuration;
+}
 
 float PlayerAmmoSystem::GetShotCost() const
 {

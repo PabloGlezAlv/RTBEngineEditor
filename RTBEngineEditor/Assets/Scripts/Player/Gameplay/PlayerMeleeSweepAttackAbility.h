@@ -1,7 +1,9 @@
 #pragma once
 
 #include "CharacterAbility.h"
+#include "CharacterDefinition.h"
 #include "HealthComponent.h"
+#include "ICharacterStatReceiver.h"
 
 #include <RTBEngine/Math/Vectors/Vector3.h>
 #include <RTBEngine/Reflection/PropertyMacros.h>
@@ -17,7 +19,7 @@ namespace RTBEngine {
     }
 }
 
-class PlayerMeleeSweepAttackAbility : public CharacterAbility
+class PlayerMeleeSweepAttackAbility : public CharacterAbility, public ICharacterStatReceiver
 {
 public:
     PlayerMeleeSweepAttackAbility() = default;
@@ -47,6 +49,8 @@ public:
                                  float tickSeconds,
                                  int definitionTickCount,
                                  float knockback);
+
+    void ApplyCharacterStats(const CharacterDefinition& definition) override;
 
     float GetDamageAmount() const { return damage; }
     float GetMeleeRange() const { return sphereDistance; }
