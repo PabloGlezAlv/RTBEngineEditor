@@ -6,8 +6,9 @@ return {
         {
             type = "MeshRenderer",
             meshRef = "Default/Models/sphere.obj",
-            textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/ranger_texture.png",
-            colorRef = Color(1.00, 1.00, 1.00, 1.00),
+            colorRef = Color(0.37, 0.77, 0.00, 1.00),
+            shaderRef = "Assets/Shaders/EmberOrb.shader",
+            shaderPropertyOverrides = "uPulseSpeed=1.960000|uGlowIntensity=2.295000",
             meshIndex = 0,
             multiMesh = false
         },
