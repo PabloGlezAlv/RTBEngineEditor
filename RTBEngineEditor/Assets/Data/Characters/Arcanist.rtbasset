@@ -16,7 +16,7 @@ return {
     modelRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Mage.fbx",
     previewPrefabRef = "Assets/Prefabs/Player/Preview/Character Preview Arcanist.prefab",
     gameplayPrefabRef = "Assets/Prefabs/Player/Gameplay/Player Arcanist.prefab",
-    projectilePrefabRef = "Assets/Prefabs/Combat/Projectiles/Sphere Projectile.prefab",
+    projectilePrefabRef = "Assets/Prefabs/Combat/Projectiles/Arcanist Orb Projectile.prefab",
     aimDrawAnimationFbx = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_CombatRanged.fbx|Ranged_Bow_Draw",
     aimLoopAnimationFbx = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_CombatRanged.fbx|Ranged_Bow_Aiming_Idle",
     attackAnimationFbx = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_CombatRanged.fbx|Ranged_Bow_Release",

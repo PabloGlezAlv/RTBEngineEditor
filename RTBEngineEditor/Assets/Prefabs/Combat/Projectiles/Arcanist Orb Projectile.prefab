@@ -1,0 +1,34 @@
+return {
+    name = "Arcanist Orb Projectile",
+    collisionLayer = "Projectiles",
+    position = Vector3(0.00, 0.00, 0.00),
+    components = {
+        {
+            type = "MeshRenderer",
+            meshRef = "Default/Models/sphere.obj",
+            colorRef = Color(0.33, 0.05, 0.29, 1.00),
+            shaderRef = "Assets/Shaders/MagicOrb.shader",
+            shaderPropertyOverrides = "uPulseSpeed=0.500000|uGlowIntensity=1.040000",
+            meshIndex = 0,
+            multiMesh = false
+        },
+        {
+            type = "SphereColliderComponent",
+            radius = 0.06,
+            centerOffset = Vector3(0.00, 0.00, 0.00),
+            isTrigger = true
+        },
+        {
+            type = "ProjectileComponent",
+            speed = 14.00,
+            lifetime = 0.85,
+            radius = 0.06,
+            damage = 25.00,
+            ignoreSameTeam = true,
+            destroyOnHit = true,
+            maxHits = 1,
+            enableFlightTrail = false,
+            impactParticlePrefabRef = "Assets/Prefabs/Combat/Effects/Arrow Impact Sparks.prefab"
+        },
+    }
+}

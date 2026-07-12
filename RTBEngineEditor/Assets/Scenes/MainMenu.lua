@@ -39,7 +39,7 @@ function CreateScene()
             {
                 name = "Directional Light",
                 uuid = "48103FD7-E1F1-4AAB-8127-C0C2ED5B4111",
-                rotation = Quaternion.FromEulerAngles(-43.72, -32.05, 11.88),
+                rotation = Quaternion.FromEulerAngles(-27.65, -46.25, 37.02),
                 components = {
                     {
                         type = "LightComponent",
@@ -57,7 +57,7 @@ function CreateScene()
             {
                 name = "Fill Light",
                 uuid = "MM-FILL-0001-4000-8000-000000000001",
-                rotation = Quaternion.FromEulerAngles(-24.24, 142.50, 14.46),
+                rotation = Quaternion.FromEulerAngles(9.40, 137.16, -26.49),
                 components = {
                     {
                         type = "LightComponent",
@@ -296,7 +296,7 @@ function CreateScene()
                                 name = "wall_corner_ne",
                                 uuid = "MM-ENV-WAL-0005-4000-8000-000000000001",
                                 position = Vector3(2.20, 0.00, 6.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
@@ -365,7 +365,7 @@ function CreateScene()
                                 name = "wall_n_w",
                                 uuid = "MM-ENV-WAL-0009-4000-8000-000000000001",
                                 position = Vector3(-7.80, 0.00, 6.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
@@ -383,7 +383,7 @@ function CreateScene()
                                 name = "wall_n_c",
                                 uuid = "MM-ENV-WAL-0010-4000-8000-000000000001",
                                 position = Vector3(-3.80, 0.00, 6.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
@@ -401,7 +401,7 @@ function CreateScene()
                                 name = "wall_n_e",
                                 uuid = "MM-ENV-WAL-0011-4000-8000-000000000001",
                                 position = Vector3(0.20, 0.00, 6.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
@@ -2423,6 +2423,23 @@ function CreateScene()
                                 }
                             },
                         }
+                    },
+                }
+            },
+            {
+                name = "Sphere",
+                uuid = "F22EE283-FA8C-44A3-AE92-AC141E95E625",
+                position = Vector3(-2.68, 1.74, 0.00),
+                components = {
+                    {
+                        type = "MeshRenderer",
+                        meshRef = "Default/Models/sphere.obj",
+                        textureRef = nil,
+                        colorRef = Color(0.33, 0.05, 0.29, 1.00),
+                        shaderRef = "Assets/Shaders/MagicOrb.shader",
+                        shaderPropertyOverrides = "uPulseSpeed=0.500000|uGlowIntensity=1.040000",
+                        meshIndex = 0,
+                        multiMesh = false
                     },
                 }
             },
