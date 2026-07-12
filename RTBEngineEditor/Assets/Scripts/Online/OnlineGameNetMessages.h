@@ -63,6 +63,7 @@ namespace GameNet {
         int playerSlot = -1;
         std::string ownerUserIdKey;
         std::string displayName;
+        std::string characterId;
     };
 
     struct PlayerHealthSnapshot {
@@ -103,8 +104,14 @@ namespace GameNet {
 
         static bool BroadcastPlayerSessionSnapshot(const PlayerSessionSnapshot& snapshot);
         static void ApplyPlayerSessionSnapshot(const PlayerSessionSnapshot& snapshot);
-        static bool SendPlayerSessionProfileToHost(const std::string& displayName);
-        static void HostMergePlayerSessionProfile(const PlayerSessionSnapshot& snapshot);
+        static void MergePlayerSessionSnapshot(const PlayerSessionSnapshot& snapshot);
+        static bool TryGetPlayerSessionSnapshot(int playerSlot, PlayerSessionSnapshot& outSnapshot);
+        static void ClearPlayerSessionSnapshots();
+        static bool SendPlayerSessionProfileToHost(
+            const std::string& displayName,
+            const std::string& characterId);
+        static void BroadcastAllKnownPlayerSessionProfiles();
+        static void HostSyncAuthoritativeRemotePlayers();
 
         static void TrySyncPlayerHealthFromComponent(::HealthComponent* health, float normalizedHealth);
 

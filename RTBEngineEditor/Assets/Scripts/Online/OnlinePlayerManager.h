@@ -2,13 +2,14 @@
 
 #include <RTBEngine/Scene/Component.h>
 #include <RTBEngine/Scene/GameObject.h>
-#include <RTBEngine/Scene/Prefab.h>
 #include <RTBEngine/Online/OnlineUser.h>
 #include <RTBEngine/Reflection/PropertyMacros.h>
+#include <RTBEngine/Core/Event.h>
 
 #include "OnlineGameNetMessages.h"
 
-#include <memory>
+#include <string>
+#include <unordered_map>
 #include <vector>
 
 class RoundManager;
@@ -31,19 +32,27 @@ public:
     void OnFixedUpdate(float fixedDeltaTime) override;
 
     void RemovePawnFromTracking(RTBEngine::ECS::GameObject* pawn, int playerSlot);
-    void MergeAuthoritativeSessionProfile(const GameNet::PlayerSessionSnapshot& snapshot);
+    void SyncAuthoritativeRemotePlayers();
+    void RequestRemotePawnSync();
 
 private:
-    std::unique_ptr<RTBEngine::ECS::Prefab> playerPrefab;
     std::vector<RTBEngine::ECS::GameObject*> spawnedRemotePawns;
     std::vector<GameNet::PlayerNetworkBindSnapshot> authoritativePlayerBinds;
-    std::vector<GameNet::PlayerSessionSnapshot> authoritativePlayerSessionProfiles;
+    std::unordered_map<int, std::string> spawnedCharacterIdsBySlot;
+    RTBEngine::Core::EventSubscription sessionProfileSubscription;
 
     void RegisterPlayerSessionProfiles(
         const std::vector<RTBEngine::Online::OnlineUserId>& members);
     void SendLocalPlayerSessionProfile();
 
     void ConfigureOnlinePlayers();
+    void EnsureRemotePawnsSpawned();
+    void DespawnRemotePawnForSlot(int playerSlot);
+
+    std::string ResolveCharacterIdForSlot(
+        int playerSlot,
+        const RTBEngine::Online::OnlineUserId& ownerUserId) const;
+
     void ConfigurePawn(
         RTBEngine::ECS::GameObject* pawn,
         const RTBEngine::Online::OnlineUserId& ownerUserId,
@@ -51,5 +60,6 @@ private:
     RTBEngine::ECS::GameObject* SpawnRemotePawn(
         const RTBEngine::Online::OnlineUserId& ownerUserId,
         int playerSlot,
+        const std::string& characterId,
         float spawnOffsetX);
 };

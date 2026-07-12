@@ -32,14 +32,14 @@ function CreateScene()
                         type = "MainMenuCharacterPreview",
                         previewOffset = Vector3(0.00, 0.00, 0.00),
                         previewYawDegrees = 0.00,
-                        previewScale = 0.85,
+                        previewScale = 0.85
                     },
                 }
             },
             {
                 name = "Directional Light",
                 uuid = "48103FD7-E1F1-4AAB-8127-C0C2ED5B4111",
-                rotation = Quaternion.FromEulerAngles(44.85, -30.24, 4.10),
+                rotation = Quaternion.FromEulerAngles(40.07, -36.83, -22.47),
                 components = {
                     {
                         type = "LightComponent",
@@ -57,7 +57,7 @@ function CreateScene()
             {
                 name = "Fill Light",
                 uuid = "MM-FILL-0001-4000-8000-000000000001",
-                rotation = Quaternion.FromEulerAngles(-27.08, 144.33, 7.42),
+                rotation = Quaternion.FromEulerAngles(16.94, 139.13, -22.63),
                 components = {
                     {
                         type = "LightComponent",
@@ -272,7 +272,7 @@ function CreateScene()
                                 name = "wall_corner_ne",
                                 uuid = "MM-ENV-WAL-0005-4000-8000-000000000001",
                                 position = Vector3(2.20, 0.00, 6.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
@@ -333,7 +333,7 @@ function CreateScene()
                                 name = "wall_n_w",
                                 uuid = "MM-ENV-WAL-0009-4000-8000-000000000001",
                                 position = Vector3(-7.80, 0.00, 6.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
@@ -349,7 +349,7 @@ function CreateScene()
                                 name = "wall_n_c",
                                 uuid = "MM-ENV-WAL-0010-4000-8000-000000000001",
                                 position = Vector3(-3.80, 0.00, 6.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
@@ -365,7 +365,7 @@ function CreateScene()
                                 name = "wall_n_e",
                                 uuid = "MM-ENV-WAL-0011-4000-8000-000000000001",
                                 position = Vector3(0.20, 0.00, 6.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
@@ -1157,10 +1157,14 @@ function CreateScene()
                                 clickTextColor = Color(0.86, 0.84, 0.78, 1.00),
                                 clickImageTint = Color(0.92, 0.92, 0.92, 1.00),
                                 clickScaleBoost = 0.97,
+                                disabledTextColor = Color(0.55, 0.54, 0.50, 1.00),
+                                disabledImageTint = Color(0.45, 0.45, 0.45, 1.00),
                                 hoverInTimeSec = 0.12,
                                 hoverOutTimeSec = 0.18,
                                 pressInTimeSec = 0.08,
-                                pressOutTimeSec = 0.12
+                                pressOutTimeSec = 0.12,
+                                playClickSound = true,
+                                clickAudio = nil
                             },
                         },
                         children = {
@@ -1255,10 +1259,14 @@ function CreateScene()
                                 clickTextColor = Color(0.86, 0.84, 0.78, 1.00),
                                 clickImageTint = Color(0.92, 0.92, 0.92, 1.00),
                                 clickScaleBoost = 0.97,
+                                disabledTextColor = Color(0.55, 0.54, 0.50, 1.00),
+                                disabledImageTint = Color(0.45, 0.45, 0.45, 1.00),
                                 hoverInTimeSec = 0.12,
                                 hoverOutTimeSec = 0.18,
                                 pressInTimeSec = 0.08,
-                                pressOutTimeSec = 0.12
+                                pressOutTimeSec = 0.12,
+                                playClickSound = true,
+                                clickAudio = nil
                             },
                         },
                         children = {
@@ -1353,10 +1361,14 @@ function CreateScene()
                                 clickTextColor = Color(0.86, 0.84, 0.78, 1.00),
                                 clickImageTint = Color(0.92, 0.92, 0.92, 1.00),
                                 clickScaleBoost = 0.97,
+                                disabledTextColor = Color(0.55, 0.54, 0.50, 1.00),
+                                disabledImageTint = Color(0.45, 0.45, 0.45, 1.00),
                                 hoverInTimeSec = 0.12,
                                 hoverOutTimeSec = 0.18,
                                 pressInTimeSec = 0.08,
-                                pressOutTimeSec = 0.12
+                                pressOutTimeSec = 0.12,
+                                playClickSound = true,
+                                clickAudio = nil
                             },
                             {
                                 type = "ApplicationQuitButton"
@@ -1454,10 +1466,14 @@ function CreateScene()
                                 clickTextColor = Color(0.86, 0.84, 0.78, 1.00),
                                 clickImageTint = Color(0.92, 0.92, 0.92, 1.00),
                                 clickScaleBoost = 0.97,
+                                disabledTextColor = Color(0.55, 0.54, 0.50, 1.00),
+                                disabledImageTint = Color(0.45, 0.45, 0.45, 1.00),
                                 hoverInTimeSec = 0.12,
                                 hoverOutTimeSec = 0.18,
                                 pressInTimeSec = 0.08,
-                                pressOutTimeSec = 0.12
+                                pressOutTimeSec = 0.12,
+                                playClickSound = true,
+                                clickAudio = nil
                             },
                         },
                         children = {
@@ -1667,10 +1683,14 @@ function CreateScene()
                                         clickTextColor = Color(0.86, 0.84, 0.78, 1.00),
                                         clickImageTint = Color(0.92, 0.92, 0.92, 1.00),
                                         clickScaleBoost = 0.97,
+                                        disabledTextColor = Color(0.55, 0.54, 0.50, 1.00),
+                                        disabledImageTint = Color(0.45, 0.45, 0.45, 1.00),
                                         hoverInTimeSec = 0.12,
                                         hoverOutTimeSec = 0.18,
                                         pressInTimeSec = 0.08,
-                                        pressOutTimeSec = 0.12
+                                        pressOutTimeSec = 0.12,
+                                        playClickSound = true,
+                                        clickAudio = nil
                                     },
                                 },
                                 children = {
@@ -1765,10 +1785,14 @@ function CreateScene()
                                         clickTextColor = Color(0.86, 0.84, 0.78, 1.00),
                                         clickImageTint = Color(0.92, 0.92, 0.92, 1.00),
                                         clickScaleBoost = 0.97,
+                                        disabledTextColor = Color(0.55, 0.54, 0.50, 1.00),
+                                        disabledImageTint = Color(0.45, 0.45, 0.45, 1.00),
                                         hoverInTimeSec = 0.12,
                                         hoverOutTimeSec = 0.18,
                                         pressInTimeSec = 0.08,
-                                        pressOutTimeSec = 0.12
+                                        pressOutTimeSec = 0.12,
+                                        playClickSound = true,
+                                        clickAudio = nil
                                     },
                                 },
                                 children = {

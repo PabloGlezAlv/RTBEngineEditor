@@ -2,6 +2,7 @@
 
 #include "CharacterCatalog.h"
 #include "CharacterDefinition.h"
+#include "CharacterGameplaySpawner.h"
 #include "CharacterStatsApplier.h"
 #include "OnlinePlayerManager.h"
 #include "PlayerCharacterSelection.h"
@@ -12,24 +13,14 @@
 
 #include <RTBEngine/Animation/Animator.h>
 #include <RTBEngine/Core/Logger.h>
-#include <RTBEngine/Core/ResourceManager.h>
 #include <RTBEngine/Input/InputManager.h>
 #include <RTBEngine/Scene/CameraComponent.h>
-#include <RTBEngine/Scene/PrefabRegistry.h>
 #include <RTBEngine/Scene/SceneManager.h>
 #include <RTBEngine/UI/Elements/UIJoystick.h>
 
-#include <filesystem>
 #include <string>
 
 namespace {
-
-std::string GetPrefabNameFromAssetPath(const std::string& assetPath)
-{
-    const std::filesystem::path filePath(assetPath);
-    const std::string stem = filePath.stem().string();
-    return stem.empty() ? assetPath : stem;
-}
 
 RTBEngine::ECS::GameObject* FindChildByNameRecursive(
     RTBEngine::ECS::GameObject* root,
@@ -183,30 +174,13 @@ void PlayerPawnSpawner::OnAwake()
         return;
     }
 
-    const std::string resolvedPath =
-        RTBEngine::Core::ResourceManager::GetInstance().ResolvePathForRead(
-            definition->gameplayPrefabRef);
-    RTBEngine::ECS::Prefab* prefab =
-        RTBEngine::ECS::PrefabRegistry::GetInstance().GetByPath(resolvedPath);
-    if (!prefab) {
-        prefab = RTBEngine::ECS::PrefabRegistry::GetInstance().Get(
-            GetPrefabNameFromAssetPath(definition->gameplayPrefabRef));
-    }
-    if (!prefab) {
-        RTB_WARN("[PlayerPawnSpawner] Gameplay prefab not found: '" +
-                 definition->gameplayPrefabRef + "'.");
-        return;
-    }
-
     const RTBEngine::Math::Vector3 spawnPosition = owner->GetWorldPosition();
     const RTBEngine::Math::Quaternion spawnRotation = owner->GetWorldRotation();
 
-    spawnedPawn = RTBEngine::ECS::SceneManager::GetInstance().Instantiate(
-        *prefab,
+    spawnedPawn = CharacterGameplaySpawner::InstantiateFromDefinition(
+        *definition,
         spawnPosition,
-        spawnRotation,
-        nullptr,
-        false);
+        spawnRotation);
     if (!spawnedPawn) {
         RTB_WARN("[PlayerPawnSpawner] Failed to instantiate gameplay prefab for '" +
                  definition->characterId + "'.");

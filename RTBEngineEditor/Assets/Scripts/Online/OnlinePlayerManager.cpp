@@ -1,8 +1,13 @@
 #include "OnlinePlayerManager.h"
 #include "PlayerAmmoSystem.h"
 
+#include "CharacterCatalog.h"
+#include "CharacterDefinition.h"
+#include "CharacterGameplaySpawner.h"
+#include "CharacterStatsApplier.h"
 #include "OnlineDisplayNameHelper.h"
 #include "OnlineGameNetMessages.h"
+#include "PlayerCharacterSelection.h"
 #include "PlayerNameplateUI.h"
 #include "PlayerRegistry.h"
 #include "ProjectileAttackAbility.h"
@@ -21,7 +26,6 @@
 #include <RTBEngine/Online/IOnlineIdentity.h>
 #include <RTBEngine/Online/IOnlineLobby.h>
 #include <RTBEngine/Scene/RigidBodyComponent.h>
-#include <RTBEngine/Scene/SceneManager.h>
 #include <RTBEngine/Math/Vectors/Vector3.h>
 #include <RTBEngine/Physics/RigidBody.h>
 
@@ -54,7 +58,6 @@ namespace {
                 continue;
             }
 
-            // Remote pawn may not exist yet; keep the bind until ConfigureOnlinePlayers finishes.
             GameNet::OnlineGameNetSubsystem::RequeuePlayerNetworkBind(bind);
             break;
         }
@@ -114,6 +117,42 @@ namespace {
         return "Player " + std::to_string(playerSlot + 1);
     }
 
+    std::string ResolveLocalCharacterId()
+    {
+        PlayerCharacterSelection& selection = PlayerCharacterSelection::GetInstance();
+        selection.EnsureSelectionFromCatalog();
+        return CharacterGameplaySpawner::SanitizeCharacterId(selection.GetSelectedCharacterId());
+    }
+
+    RTBEngine::ECS::GameObject* FindRemotePawnBySlot(int playerSlot)
+    {
+        RTBEngine::ECS::GameObject* pawn = PlayerRegistry::GetInstance().FindBySlot(playerSlot);
+        if (!pawn) {
+            return nullptr;
+        }
+
+        if (RTBEngine::ECS::NetworkIdentity* identity = pawn->GetComponent<RTBEngine::ECS::NetworkIdentity>()) {
+            if (identity->IsLocallyControlled()) {
+                return nullptr;
+            }
+        }
+
+        return pawn;
+    }
+
+    void DisableLocalOnlyControllerFeatures(ThirdPersonCharacterController* controller)
+    {
+        if (!controller) {
+            return;
+        }
+
+        controller->attackJoystick = nullptr;
+        if (controller->cameraObject) {
+            controller->cameraObject->SetActive(false);
+            controller->cameraObject = nullptr;
+        }
+    }
+
 }
 
 RTB_REGISTER_COMPONENT(OnlinePlayerManager)
@@ -130,9 +169,17 @@ void OnlinePlayerManager::OnStart()
 
     GameNet::OnlineGameNetSubsystem::Init();
     RTBEngine::Online::OnlineGameplayNet::ResetNetworkSession();
-    RTBEngine::Online::OnlineSystem::GetInstance().ClearPlayerSessionProfiles();
     authoritativePlayerBinds.clear();
-    authoritativePlayerSessionProfiles.clear();
+    spawnedCharacterIdsBySlot.clear();
+
+    sessionProfileSubscription =
+        RTBEngine::Online::OnlineSystem::GetInstance().SubscribeToPlayerSessionProfileChanged(
+            [this](const RTBEngine::Online::PlayerSessionProfileChangedEvent& event) {
+                if (!event.removed) {
+                    EnsureRemotePawnsSpawned();
+                }
+            });
+
     ConfigureOnlinePlayers();
 }
 
@@ -142,6 +189,7 @@ void OnlinePlayerManager::OnUpdate(float deltaTime)
         return;
     }
 
+    EnsureRemotePawnsSpawned();
     ProcessPlayerNetworkBinds();
     ProcessNetworkRoundEvents(this);
     GameNet::OnlineGameNetSubsystem::DetectAndDespawnDisconnectedPlayers();
@@ -149,8 +197,9 @@ void OnlinePlayerManager::OnUpdate(float deltaTime)
 
 void OnlinePlayerManager::OnDestroy()
 {
+    sessionProfileSubscription.Reset();
     authoritativePlayerBinds.clear();
-    authoritativePlayerSessionProfiles.clear();
+    spawnedCharacterIdsBySlot.clear();
 }
 
 void OnlinePlayerManager::OnFixedUpdate(float /*fixedDeltaTime*/)
@@ -185,31 +234,15 @@ void OnlinePlayerManager::ConfigureOnlinePlayers()
     ConfigurePawn(localPlayerObject, members[localPlayerIndex], static_cast<int>(localPlayerIndex));
     SendLocalPlayerSessionProfile();
 
-    for (std::size_t memberIndex = 0; memberIndex < members.size(); ++memberIndex) {
-        const RTBEngine::Online::OnlineUserId& member = members[memberIndex];
-        if (member == localUserId) {
-            continue;
-        }
-
-        RTBEngine::ECS::GameObject* remotePawn = SpawnRemotePawn(
-            member,
-            static_cast<int>(memberIndex),
-            remoteSpawnOffsetX * static_cast<float>(memberIndex));
-        if (remotePawn) {
-            spawnedRemotePawns.push_back(remotePawn);
-        }
-    }
-
     if (PlayerAmmoSystem* localAmmo = localPlayerObject->GetComponent<PlayerAmmoSystem>()) {
         localAmmo->RefreshNetworkState();
     }
 
     if (RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
-        for (const GameNet::PlayerNetworkBindSnapshot& bind : authoritativePlayerBinds) {
-            GameNet::OnlineGameNetSubsystem::BroadcastPlayerNetworkBind(bind);
-        }
+        SyncAuthoritativeRemotePlayers();
     } else {
         ProcessPlayerNetworkBinds();
+        EnsureRemotePawnsSpawned();
     }
 }
 
@@ -221,6 +254,10 @@ void OnlinePlayerManager::RegisterPlayerSessionProfiles(
     }
 
     RTBEngine::Online::OnlineSystem& online = RTBEngine::Online::OnlineSystem::GetInstance();
+    const std::string localCharacterId = ResolveLocalCharacterId();
+    if (localCharacterId.empty()) {
+        RTB_WARN("[OnlinePlayerManager] Host has no valid local character selection to sync.");
+    }
 
     for (std::size_t memberIndex = 0; memberIndex < members.size(); ++memberIndex) {
         const RTBEngine::Online::OnlineUserId& member = members[memberIndex];
@@ -237,9 +274,29 @@ void OnlinePlayerManager::RegisterPlayerSessionProfiles(
         snapshot.playerSlot = playerSlot;
         snapshot.ownerUserIdKey = member.ToString();
         snapshot.displayName = displayName;
-        authoritativePlayerSessionProfiles.push_back(snapshot);
-        GameNet::OnlineGameNetSubsystem::BroadcastPlayerSessionSnapshot(snapshot);
+
+        if (member == online.GetLocalUserId()) {
+            if (localCharacterId.empty()) {
+                continue;
+            }
+
+            snapshot.characterId = localCharacterId;
+            GameNet::OnlineGameNetSubsystem::MergePlayerSessionSnapshot(snapshot);
+            continue;
+        }
+
+        GameNet::PlayerSessionSnapshot existingSnapshot;
+        if (!GameNet::OnlineGameNetSubsystem::TryGetPlayerSessionSnapshot(playerSlot, existingSnapshot) ||
+            existingSnapshot.characterId.empty()) {
+            continue;
+        }
+
+        existingSnapshot.displayName = displayName;
+        existingSnapshot.ownerUserIdKey = member.ToString();
+        GameNet::OnlineGameNetSubsystem::MergePlayerSessionSnapshot(existingSnapshot);
     }
+
+    GameNet::OnlineGameNetSubsystem::BroadcastAllKnownPlayerSessionProfiles();
 }
 
 void OnlinePlayerManager::SendLocalPlayerSessionProfile()
@@ -259,6 +316,12 @@ void OnlinePlayerManager::SendLocalPlayerSessionProfile()
         return;
     }
 
+    const std::string characterId = ResolveLocalCharacterId();
+    if (characterId.empty()) {
+        RTB_WARN("[OnlinePlayerManager] Client has no valid local character selection to sync.");
+        return;
+    }
+
     RTBEngine::Online::OnlineSystem& online = RTBEngine::Online::OnlineSystem::GetInstance();
     RTBEngine::Online::OnlinePlayerProfile profile;
     profile.userId = online.GetLocalUserId();
@@ -266,24 +329,134 @@ void OnlinePlayerManager::SendLocalPlayerSessionProfile()
     profile.displayName = displayName;
     online.SetPlayerSessionProfile(profile);
 
-    GameNet::OnlineGameNetSubsystem::SendPlayerSessionProfileToHost(displayName);
+    GameNet::OnlineGameNetSubsystem::SendPlayerSessionProfileToHost(displayName, characterId);
 }
 
-void OnlinePlayerManager::MergeAuthoritativeSessionProfile(
-    const GameNet::PlayerSessionSnapshot& snapshot)
+void OnlinePlayerManager::RequestRemotePawnSync()
 {
-    if (snapshot.playerSlot < 0 || snapshot.displayName.empty()) {
+    EnsureRemotePawnsSpawned();
+    ProcessPlayerNetworkBinds();
+}
+
+void OnlinePlayerManager::SyncAuthoritativeRemotePlayers()
+{
+    EnsureRemotePawnsSpawned();
+
+    if (!RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
         return;
     }
 
-    for (GameNet::PlayerSessionSnapshot& profile : authoritativePlayerSessionProfiles) {
-        if (profile.playerSlot == snapshot.playerSlot) {
-            profile = snapshot;
-            return;
+    for (const GameNet::PlayerNetworkBindSnapshot& bind : authoritativePlayerBinds) {
+        GameNet::OnlineGameNetSubsystem::BroadcastPlayerNetworkBind(bind);
+    }
+}
+
+std::string OnlinePlayerManager::ResolveCharacterIdForSlot(
+    int playerSlot,
+    const RTBEngine::Online::OnlineUserId& ownerUserId) const
+{
+    GameNet::PlayerSessionSnapshot snapshot;
+    if (GameNet::OnlineGameNetSubsystem::TryGetPlayerSessionSnapshot(playerSlot, snapshot)) {
+        if (const std::string resolved =
+                CharacterGameplaySpawner::SanitizeCharacterId(snapshot.characterId);
+            !resolved.empty()) {
+            return resolved;
         }
     }
 
-    authoritativePlayerSessionProfiles.push_back(snapshot);
+    if (ownerUserId == RTBEngine::Online::OnlineGameplayNet::GetLocalUserId()) {
+        return ResolveLocalCharacterId();
+    }
+
+    return {};
+}
+
+void OnlinePlayerManager::EnsureRemotePawnsSpawned()
+{
+    if (!localPlayerObject) {
+        return;
+    }
+
+    const std::vector<RTBEngine::Online::OnlineUserId> members =
+        RTBEngine::Online::OnlineGameplayNet::GetOrderedLobbyMembers();
+    if (members.size() < 2) {
+        return;
+    }
+
+    const RTBEngine::Online::OnlineUserId localUserId =
+        RTBEngine::Online::OnlineGameplayNet::GetLocalUserId();
+
+    bool spawnedAnyRemotePawn = false;
+
+    for (std::size_t memberIndex = 0; memberIndex < members.size(); ++memberIndex) {
+        const RTBEngine::Online::OnlineUserId& member = members[memberIndex];
+        if (member == localUserId) {
+            continue;
+        }
+
+        const int playerSlot = static_cast<int>(memberIndex);
+        const std::string characterId = ResolveCharacterIdForSlot(playerSlot, member);
+        if (characterId.empty()) {
+            continue;
+        }
+
+        const auto trackedIt = spawnedCharacterIdsBySlot.find(playerSlot);
+        RTBEngine::ECS::GameObject* existingPawn = FindRemotePawnBySlot(playerSlot);
+        if (trackedIt != spawnedCharacterIdsBySlot.end() &&
+            trackedIt->second == characterId &&
+            existingPawn) {
+            continue;
+        }
+
+        if (existingPawn) {
+            DespawnRemotePawnForSlot(playerSlot);
+        }
+
+        RTBEngine::ECS::GameObject* remotePawn = SpawnRemotePawn(
+            member,
+            playerSlot,
+            characterId,
+            remoteSpawnOffsetX * static_cast<float>(memberIndex));
+        if (!remotePawn) {
+            continue;
+        }
+
+        spawnedRemotePawns.push_back(remotePawn);
+        spawnedCharacterIdsBySlot[playerSlot] = characterId;
+        spawnedAnyRemotePawn = true;
+    }
+
+    if (spawnedAnyRemotePawn) {
+        ProcessPlayerNetworkBinds();
+    }
+}
+
+void OnlinePlayerManager::DespawnRemotePawnForSlot(int playerSlot)
+{
+    RTBEngine::ECS::GameObject* pawn = FindRemotePawnBySlot(playerSlot);
+    if (!pawn) {
+        spawnedCharacterIdsBySlot.erase(playerSlot);
+        return;
+    }
+
+    PlayerRegistry::GetInstance().Unregister(pawn);
+    spawnedRemotePawns.erase(
+        std::remove(spawnedRemotePawns.begin(), spawnedRemotePawns.end(), pawn),
+        spawnedRemotePawns.end());
+    spawnedCharacterIdsBySlot.erase(playerSlot);
+
+    authoritativePlayerBinds.erase(
+        std::remove_if(
+            authoritativePlayerBinds.begin(),
+            authoritativePlayerBinds.end(),
+            [playerSlot](const GameNet::PlayerNetworkBindSnapshot& bind) {
+                return bind.playerSlot == playerSlot;
+            }),
+        authoritativePlayerBinds.end());
+
+    if (RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene()) {
+        scene->RemoveGameObject(pawn);
+    }
 }
 
 void OnlinePlayerManager::ConfigurePawn(
@@ -331,10 +504,10 @@ void OnlinePlayerManager::ConfigurePawn(
 
     auto* rigidBodyComponent = pawn->GetComponent<RTBEngine::ECS::RigidBodyComponent>();
     if (!rigidBodyComponent) {
+        PlayerRegistry::GetInstance().RegisterPlayerPawn(pawn);
         return;
     }
 
-    // Host runs Bullet simulation for all pawns; clients are kinematic display proxies.
     if (RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
         rigidBodyComponent->bodyType = RTBEngine::Physics::RigidBodyType::Dynamic;
     } else {
@@ -349,30 +522,39 @@ void OnlinePlayerManager::ConfigurePawn(
 RTBEngine::ECS::GameObject* OnlinePlayerManager::SpawnRemotePawn(
     const RTBEngine::Online::OnlineUserId& ownerUserId,
     int playerSlot,
+    const std::string& characterId,
     float spawnOffsetX)
 {
-    if (!localPlayerObject) {
+    if (!localPlayerObject || characterId.empty()) {
         return nullptr;
     }
 
-    if (!playerPrefab) {
-        playerPrefab = RTBEngine::ECS::Prefab::CreateFromGameObject(localPlayerObject);
-        if (!playerPrefab) {
-            RTB_WARN("[OnlinePlayerManager] Failed to create player prefab from localPlayerObject.");
-            return nullptr;
-        }
+    const std::string resolvedCharacterId = CharacterGameplaySpawner::SanitizeCharacterId(characterId);
+    CharacterDefinition* definition = CharacterCatalog::GetInstance().GetById(resolvedCharacterId);
+    if (!definition) {
+        RTB_WARN("[OnlinePlayerManager] Unknown character id '" + resolvedCharacterId +
+                 "' for remote player slot " + std::to_string(playerSlot) + ".");
+        return nullptr;
     }
 
     const RTBEngine::Math::Vector3 spawnPosition =
         localPlayerObject->GetWorldPosition() + RTBEngine::Math::Vector3(spawnOffsetX, 0.0f, 0.0f);
 
-    RTBEngine::ECS::GameObject* spawnedPawn = RTBEngine::ECS::SceneManager::GetInstance().Instantiate(
-        *playerPrefab,
+    RTBEngine::ECS::GameObject* spawnedPawn = CharacterGameplaySpawner::InstantiateFromDefinition(
+        *definition,
         spawnPosition,
         localPlayerObject->GetWorldRotation());
     if (!spawnedPawn) {
-        RTB_WARN("[OnlinePlayerManager] Failed to instantiate remote player pawn.");
+        RTB_WARN("[OnlinePlayerManager] Failed to instantiate remote player pawn for '" +
+                 resolvedCharacterId + "'.");
         return nullptr;
+    }
+
+    CharacterStatsApplier::ApplyDefinition(spawnedPawn, *definition);
+
+    if (ThirdPersonCharacterController* controller =
+            spawnedPawn->GetComponent<ThirdPersonCharacterController>()) {
+        DisableLocalOnlyControllerFeatures(controller);
     }
 
     spawnedPawn->SetName(playerSlot == 0 ? "Remote Host Player" : "Remote Client Player");
@@ -389,6 +571,8 @@ void OnlinePlayerManager::RemovePawnFromTracking(RTBEngine::ECS::GameObject* paw
             spawnedRemotePawns.end());
     }
 
+    spawnedCharacterIdsBySlot.erase(playerSlot);
+
     authoritativePlayerBinds.erase(
         std::remove_if(
             authoritativePlayerBinds.begin(),
@@ -397,13 +581,4 @@ void OnlinePlayerManager::RemovePawnFromTracking(RTBEngine::ECS::GameObject* paw
                 return bind.playerSlot == playerSlot;
             }),
         authoritativePlayerBinds.end());
-
-    authoritativePlayerSessionProfiles.erase(
-        std::remove_if(
-            authoritativePlayerSessionProfiles.begin(),
-            authoritativePlayerSessionProfiles.end(),
-            [playerSlot](const GameNet::PlayerSessionSnapshot& profile) {
-                return profile.playerSlot == playerSlot;
-            }),
-        authoritativePlayerSessionProfiles.end());
 }

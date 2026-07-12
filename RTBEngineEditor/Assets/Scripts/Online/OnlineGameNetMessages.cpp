@@ -1,5 +1,6 @@
 #include "OnlineGameNetMessages.h"
 
+#include "CharacterGameplaySpawner.h"
 #include "EnemyMeleeAI.h"
 #include "HealthComponent.h"
 #include "OnlineDisplayNameHelper.h"
@@ -13,6 +14,7 @@
 #include <RTBEngine/Scene/NetworkTransform.h>
 #include <RTBEngine/Scene/Scene.h>
 #include <RTBEngine/Scene/SceneManager.h>
+#include <RTBEngine/Core/Logger.h>
 #include <RTBEngine/Core/Time.h>
 #include <RTBEngine/Online/IOnlineLobby.h>
 #include <RTBEngine/Online/OnlineGameplayNet.h>
@@ -38,6 +40,7 @@ namespace GameNet {
         std::deque<RoundStartSnapshot> pendingRoundStarts;
         std::deque<RoundCountdownSnapshot> pendingRoundCountdowns;
         std::deque<PlayerNetworkBindSnapshot> pendingPlayerNetworkBinds;
+        std::unordered_map<int, PlayerSessionSnapshot> playerSessionSnapshotsBySlot;
         std::unordered_map<int, float> lastBroadcastPlayerHealth;
         std::string pendingMainMenuMessage;
         std::string activeMatchNotification;
@@ -503,6 +506,21 @@ namespace GameNet {
                 return;
             }
 
+            std::string characterId;
+            if (!RTBEngine::Online::OnlineMessageCodec::ReadString(
+                    context.payload,
+                    context.payloadSize,
+                    offset,
+                    characterId)) {
+                return;
+            }
+
+            characterId = CharacterGameplaySpawner::SanitizeCharacterId(characterId);
+            if (characterId.empty()) {
+                RTB_WARN("[OnlineGameNet] Ignoring player session report with invalid character id.");
+                return;
+            }
+
             const int playerSlot = ResolvePlayerSlotForUser(context.senderUserId);
             if (playerSlot < 0) {
                 return;
@@ -512,9 +530,11 @@ namespace GameNet {
             snapshot.playerSlot = playerSlot;
             snapshot.ownerUserIdKey = context.senderUserId.ToString();
             snapshot.displayName = displayName;
-            OnlineGameNetSubsystem::HostMergePlayerSessionProfile(snapshot);
-            OnlineGameNetSubsystem::ApplyPlayerSessionSnapshot(snapshot);
+            snapshot.characterId = characterId;
+            OnlineGameNetSubsystem::MergePlayerSessionSnapshot(snapshot);
             OnlineGameNetSubsystem::BroadcastPlayerSessionSnapshot(snapshot);
+            OnlineGameNetSubsystem::BroadcastAllKnownPlayerSessionProfiles();
+            OnlineGameNetSubsystem::HostSyncAuthoritativeRemotePlayers();
         }
 
         void HandleEnemyDeathState(const RTBEngine::Online::OnlineMessageContext& context)
@@ -588,6 +608,20 @@ namespace GameNet {
                     snapshot.displayName) ||
                 snapshot.playerSlot < 0 ||
                 snapshot.displayName.empty()) {
+                return;
+            }
+
+            if (!RTBEngine::Online::OnlineMessageCodec::ReadString(
+                    context.payload,
+                    context.payloadSize,
+                    offset,
+                    snapshot.characterId) ||
+                snapshot.characterId.empty()) {
+                return;
+            }
+
+            snapshot.characterId = CharacterGameplaySpawner::SanitizeCharacterId(snapshot.characterId);
+            if (snapshot.characterId.empty()) {
                 return;
             }
 
@@ -716,6 +750,7 @@ namespace GameNet {
         pendingRoundStarts.clear();
         pendingRoundCountdowns.clear();
         pendingPlayerNetworkBinds.clear();
+        playerSessionSnapshotsBySlot.clear();
         lastBroadcastPlayerHealth.clear();
         RTBEngine::Online::OnlineSystem::GetInstance().ClearPlayerSessionProfiles();
         RTBEngine::Online::OnlineGameplayNet::ResetNetworkSession();
@@ -891,7 +926,8 @@ namespace GameNet {
     {
         if (!RTBEngine::Online::OnlineGameplayNet::IsLobbyHost() ||
             snapshot.playerSlot < 0 ||
-            snapshot.displayName.empty()) {
+            snapshot.displayName.empty() ||
+            snapshot.characterId.empty()) {
             return false;
         }
 
@@ -900,6 +936,7 @@ namespace GameNet {
         RTBEngine::Online::OnlineMessageCodec::AppendValue(payload, snapshot.playerSlot);
         RTBEngine::Online::OnlineMessageCodec::AppendString(payload, snapshot.ownerUserIdKey);
         RTBEngine::Online::OnlineMessageCodec::AppendString(payload, snapshot.displayName);
+        RTBEngine::Online::OnlineMessageCodec::AppendString(payload, snapshot.characterId);
         return RTBEngine::Online::OnlineMessageBus::BroadcastToClients(
             kPlayerSessionSnapshot,
             payload,
@@ -909,22 +946,90 @@ namespace GameNet {
 
     void OnlineGameNetSubsystem::ApplyPlayerSessionSnapshot(const PlayerSessionSnapshot& snapshot)
     {
-        if (snapshot.playerSlot < 0 || snapshot.displayName.empty()) {
+        if (snapshot.playerSlot < 0 || snapshot.displayName.empty() || snapshot.characterId.empty()) {
             return;
         }
 
-        RTBEngine::Online::OnlinePlayerProfile profile;
-        profile.playerSlot = snapshot.playerSlot;
-        profile.displayName = snapshot.displayName;
-
-        if (!snapshot.ownerUserIdKey.empty()) {
-            TryParseOnlineUserId(snapshot.ownerUserIdKey, profile.userId);
+        PlayerSessionSnapshot sanitized = snapshot;
+        sanitized.characterId = CharacterGameplaySpawner::SanitizeCharacterId(snapshot.characterId);
+        if (sanitized.characterId.empty()) {
+            return;
         }
 
-        RTBEngine::Online::OnlineSystem::GetInstance().SetPlayerSessionProfile(profile);
+        MergePlayerSessionSnapshot(sanitized);
     }
 
-    bool OnlineGameNetSubsystem::SendPlayerSessionProfileToHost(const std::string& displayName)
+    void OnlineGameNetSubsystem::MergePlayerSessionSnapshot(const PlayerSessionSnapshot& snapshot)
+    {
+        if (snapshot.playerSlot < 0 || snapshot.displayName.empty() || snapshot.characterId.empty()) {
+            return;
+        }
+
+        const std::string characterId =
+            CharacterGameplaySpawner::SanitizeCharacterId(snapshot.characterId);
+        if (characterId.empty()) {
+            return;
+        }
+
+        PlayerSessionSnapshot stored = snapshot;
+        stored.characterId = characterId;
+        playerSessionSnapshotsBySlot[stored.playerSlot] = stored;
+
+        RTBEngine::Online::OnlineSystem& online = RTBEngine::Online::OnlineSystem::GetInstance();
+        RTBEngine::Online::OnlinePlayerProfile profile;
+        if (online.TryGetPlayerSessionProfile(stored.playerSlot, profile)) {
+            profile.displayName = stored.displayName;
+            if (!stored.ownerUserIdKey.empty()) {
+                TryParseOnlineUserId(stored.ownerUserIdKey, profile.userId);
+            }
+        } else {
+            profile.playerSlot = stored.playerSlot;
+            profile.displayName = stored.displayName;
+            if (!stored.ownerUserIdKey.empty()) {
+                TryParseOnlineUserId(stored.ownerUserIdKey, profile.userId);
+            }
+        }
+
+        online.SetPlayerSessionProfile(profile);
+
+        OnlinePlayerManager* manager =
+            RTBEngine::ECS::ComponentQuery::FindFirst<OnlinePlayerManager>();
+        if (!manager) {
+            return;
+        }
+
+        if (RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
+            manager->SyncAuthoritativeRemotePlayers();
+        } else {
+            manager->RequestRemotePawnSync();
+        }
+    }
+
+    bool OnlineGameNetSubsystem::TryGetPlayerSessionSnapshot(
+        int playerSlot,
+        PlayerSessionSnapshot& outSnapshot)
+    {
+        if (playerSlot < 0) {
+            return false;
+        }
+
+        const auto it = playerSessionSnapshotsBySlot.find(playerSlot);
+        if (it == playerSessionSnapshotsBySlot.end()) {
+            return false;
+        }
+
+        outSnapshot = it->second;
+        return true;
+    }
+
+    void OnlineGameNetSubsystem::ClearPlayerSessionSnapshots()
+    {
+        playerSessionSnapshotsBySlot.clear();
+    }
+
+    bool OnlineGameNetSubsystem::SendPlayerSessionProfileToHost(
+        const std::string& displayName,
+        const std::string& characterId)
     {
         if (RTBEngine::Online::OnlineGameplayNet::IsLobbyHost() ||
             !RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby() ||
@@ -932,9 +1037,15 @@ namespace GameNet {
             return false;
         }
 
+        const std::string sanitizedCharacterId = CharacterGameplaySpawner::SanitizeCharacterId(characterId);
+        if (sanitizedCharacterId.empty()) {
+            return false;
+        }
+
         Init();
         std::vector<std::uint8_t> payload;
         RTBEngine::Online::OnlineMessageCodec::AppendString(payload, displayName);
+        RTBEngine::Online::OnlineMessageCodec::AppendString(payload, sanitizedCharacterId);
         return RTBEngine::Online::OnlineMessageBus::SendToHost(
             kPlayerSessionReport,
             payload,
@@ -942,11 +1053,29 @@ namespace GameNet {
             RTBEngine::Online::OnlinePacketReliability::Reliable);
     }
 
-    void OnlineGameNetSubsystem::HostMergePlayerSessionProfile(const PlayerSessionSnapshot& snapshot)
+    void OnlineGameNetSubsystem::BroadcastAllKnownPlayerSessionProfiles()
     {
-        if (!RTBEngine::Online::OnlineGameplayNet::IsLobbyHost() ||
-            snapshot.playerSlot < 0 ||
-            snapshot.displayName.empty()) {
+        if (!RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
+            return;
+        }
+
+        Init();
+
+        for (const auto& entry : playerSessionSnapshotsBySlot) {
+            const PlayerSessionSnapshot& snapshot = entry.second;
+            if (snapshot.playerSlot < 0 ||
+                snapshot.displayName.empty() ||
+                snapshot.characterId.empty()) {
+                continue;
+            }
+
+            BroadcastPlayerSessionSnapshot(snapshot);
+        }
+    }
+
+    void OnlineGameNetSubsystem::HostSyncAuthoritativeRemotePlayers()
+    {
+        if (!RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
             return;
         }
 
@@ -956,7 +1085,7 @@ namespace GameNet {
             return;
         }
 
-        manager->MergeAuthoritativeSessionProfile(snapshot);
+        manager->SyncAuthoritativeRemotePlayers();
     }
 
     bool OnlineGameNetSubsystem::TryConsumePlayerNetworkBind(PlayerNetworkBindSnapshot& outSnapshot)
@@ -1228,6 +1357,7 @@ namespace GameNet {
         }
 
         lastBroadcastPlayerHealth.erase(playerSlot);
+        playerSessionSnapshotsBySlot.erase(playerSlot);
 
         RTBEngine::Online::OnlineSystem::GetInstance().RemovePlayerSessionProfile(playerSlot);
 

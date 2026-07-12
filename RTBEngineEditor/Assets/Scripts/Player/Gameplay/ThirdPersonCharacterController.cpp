@@ -275,7 +275,6 @@ void ThirdPersonCharacterController::OnFixedUpdate(float fixedDeltaTime)
             UpdateAimingMovement(fixedDeltaTime);
         }
         SendNetworkInput();
-        UpdateAnimatorFromLocalInput();
         return;
     }
 
@@ -437,6 +436,9 @@ void ThirdPersonCharacterController::OnLateUpdate(float deltaTime)
             usingMouseAim = false;
 
             if (state == State::Locomotion) {
+                if (UsesReplicatedAnimator()) {
+                    UpdateAnimatorFromReplicatedMotion(deltaTime);
+                }
                 return;
             }
 
@@ -1214,9 +1216,10 @@ void ThirdPersonCharacterController::UpdateMovement(float deltaTime)
 
 bool ThirdPersonCharacterController::UsesReplicatedAnimator() const
 {
+    // Online clients drive locomotion visuals from replicated transforms (host-authoritative),
+    // including the local pawn on this machine.
     return RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby() &&
-        !HasSimulationAuthority() &&
-        !IsLocallyControlled();
+        !HasSimulationAuthority();
 }
 
 void ThirdPersonCharacterController::UpdateAnimatorFromLocalInput()
