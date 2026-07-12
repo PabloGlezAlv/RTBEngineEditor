@@ -4,6 +4,14 @@ A visual game editor for **RTBEngine**, built in **C++17** using **ImGui** for t
 
 > **Note:** Engine scene types live in `Engine/Scene/` under namespace `RTBEngine::ECS` (legacy name). That is the GameObject–Component layer, not a data-oriented ECS. Hybrid ECS support is planned for a future engine release.
 
+**Version:** `0.8.1` — requires **RTBEngine SDK 0.8.0+**. See [`CHANGELOG.md`](CHANGELOG.md).
+
+| Constant | Value | Header |
+|----------|-------|--------|
+| Editor semver | `0.8.1` | `Source/Core/EditorVersion.h` → `RTBEngineEditor::Core::EditorVersionInfo` |
+| Required engine SDK | `0.8.0` | `RTBEngine_SDK` (generated with `BuildSDK.bat`) |
+| ImGuizmo | `1.83` | `ThirdParty/ImGuizmo-1.83/` |
+
 ---
 
 ## Table of Contents
@@ -2262,7 +2270,7 @@ See [§27 Prefab Edit Mode](#27-prefab-edit-mode) for the full pipeline.
 5. Add `NavAgentComponent` to enemies or NPCs; gameplay scripts call `SetDestination()`.
 6. **Window → Navigation Debug** → enable overlay to visualize the grid and agent paths in **Scene View** only.
 
-See engine README [§19](../../RTBEngine/RTBEngine/README.md#19-navigation-subsystem) for runtime API details.
+See engine README [§19](../RTBEngine/README.md#19-navigation-subsystem) for runtime API details.
 
 ### Exporting a Build
 
@@ -2312,7 +2320,7 @@ See [§25 Online and Multiplayer](#25-online-and-multiplayer) for scripts, scene
 
 ## 25. Online and Multiplayer
 
-Game multiplayer uses the engine stack via `RTBEngine_SDK` (see engine README [§18](../../RTBEngine/RTBEngine/README.md#18-online-subsystem)). Logic lives in **`Assets/Scripts/`** → `GameScripts.dll`. The editor **Online** panel sets ports and relay URL only; **LAN vs Online** is chosen in-game from `MultiplayerMenu.lua`.
+Game multiplayer uses the engine stack via `RTBEngine_SDK` (see engine README [§18](../RTBEngine/README.md#18-online-subsystem)). Logic lives in **`Assets/Scripts/`** → `GameScripts.dll`. The editor **Online** panel sets ports and relay URL only; **LAN vs Online** is chosen in-game from `MultiplayerMenu.lua`.
 
 ### 25.1 Menu Navigation
 
@@ -2474,7 +2482,7 @@ Loaded in `EditorLayer` constructor; saved on editor shutdown, Window menu chang
 
 ### 26.4 Navigation Debug Panel
 
-`NavigationDebugPanel` does **not** bake the grid — use **Inspector → NavGridComponent → Bake** for that (see engine README [§19](../../RTBEngine/RTBEngine/README.md#19-navigation-subsystem)).
+`NavigationDebugPanel` does **not** bake the grid — use **Inspector → NavGridComponent → Bake** for that (see engine README [§19](../RTBEngine/README.md#19-navigation-subsystem)).
 
 Panel controls:
 

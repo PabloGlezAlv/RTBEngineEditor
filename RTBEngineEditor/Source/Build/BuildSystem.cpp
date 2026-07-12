@@ -86,7 +86,7 @@ namespace {
     }
 
     constexpr const char* kDefaultOnlineProductName = "RTBEngine";
-    constexpr const char* kDefaultOnlineProductVersion = "0.1.0";
+    constexpr const char* kDefaultOnlineProductVersion = "0.8.0";
 }
 
 namespace RTBEditor {
