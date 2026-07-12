@@ -3,6 +3,7 @@
 #include "EditorPanel.h"
 #include <RTBEngine/Math/Vectors/Vector3.h>
 #include <RTBEngine/Math/Quaternions/Quaternion.h>
+#include <RTBEngine/Rendering/ShaderProperties.h>
 #include <memory>
 #include <string>
 #include <array>
@@ -63,6 +64,10 @@ namespace RTBEditor {
         void DrawFbxAssetInspector(const std::filesystem::path& fbxPath);
         void DrawTextureAssetInspector(const std::filesystem::path& texturePath);
         void SaveTextureAsset(const std::filesystem::path& texturePath);
+        void DrawMeshRendererComponent(RTBEngine::ECS::MeshRenderer* meshRenderer);
+        void DrawMeshShaderProperties(RTBEngine::ECS::MeshRenderer* meshRenderer, bool& changed);
+        void DrawShaderAssetInspector(const std::filesystem::path& shaderPath);
+        void SaveShaderAssetInspector();
         void DrawDataAssetInspector(const std::filesystem::path& dataAssetPath);
         void DrawPrefabAssetInspector(EditorContext& context);
         void SaveDataAssetInspector();
@@ -91,6 +96,11 @@ namespace RTBEditor {
         std::filesystem::path textureEditorPath;
         std::string textureAssetImage;
         bool textureAssetFlip = true;
+
+        std::filesystem::path shaderEditorPath;
+        std::string shaderAssetVertex;
+        std::string shaderAssetFragment;
+        std::vector<RTBEngine::Rendering::ShaderPropertyDefinition> shaderAssetProperties;
 
         std::filesystem::path dataAssetEditorPath;
         RTBEngine::Data::DataAsset* dataAssetEditorInstance = nullptr;

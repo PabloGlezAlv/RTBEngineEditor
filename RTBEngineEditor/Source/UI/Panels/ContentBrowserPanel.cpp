@@ -9,6 +9,7 @@
 #include <RTBEngine/Scene/Scene.h>
 #include <RTBEngine/Scripting/SceneSaver.h>
 #include <RTBEngine/Rendering/ModelLoader.h>
+#include <RTBEngine/Rendering/ShaderAsset.h>
 #include "../../Project/Project.h"
 #include "../DragDropPayloads.h"
 
@@ -142,6 +143,7 @@ namespace RTBEditor {
         if (ext == ".obj" || ext == ".fbx") return icons[IconType::Model];
         if (ext == ".png" || ext == ".jpg" || ext == ".tga") return icons[IconType::Image];
         if (ext == ".glsl" || ext == ".vert" || ext == ".frag") return icons[IconType::Shader];
+        if (ext == ".shader") return icons[IconType::Shader];
         if (ext == ".prefab") return icons[IconType::Prefab];
         if (ext == ".texture") return icons[IconType::Image];
         if (ext == ".rtbasset") return icons[IconType::Lua];
@@ -306,7 +308,7 @@ namespace RTBEditor {
                     // Expose asset files to the Inspector via context
                     std::string clickedExt = path.extension().string();
                     for (auto& c : clickedExt) c = std::tolower(c);
-                    if (clickedExt == ".cubemap" || clickedExt == ".texture" || clickedExt == ".h" || clickedExt == ".cpp" ||
+                    if (clickedExt == ".cubemap" || clickedExt == ".texture" || clickedExt == ".shader" || clickedExt == ".h" || clickedExt == ".cpp" ||
                         clickedExt == ".fbx" || clickedExt == ".obj" || clickedExt == ".gltf" || clickedExt == ".glb" ||
                         clickedExt == ".rtbasset" || clickedExt == ".prefab") {
                         context.selectedAssetPath = path;
@@ -820,6 +822,29 @@ namespace RTBEditor {
                     selectedPath = newFile;
                     renamingPath = newFile;
                     strncpy_s(renameBuffer, newFile.stem().string().c_str(), sizeof(renameBuffer) - 1);
+                }
+
+                if (ImGui::MenuItem("Shader Asset")) {
+                    std::filesystem::path shadersDirectory = currentDirectory / "Shaders";
+                    if (!std::filesystem::exists(shadersDirectory)) {
+                        shadersDirectory = currentDirectory;
+                    }
+
+                    std::filesystem::path newFile = shadersDirectory / "NewShader.shader";
+                    int suffix = 1;
+                    while (std::filesystem::exists(newFile)) {
+                        newFile = shadersDirectory / ("NewShader" + std::to_string(suffix++) + ".shader");
+                    }
+
+                    Project* project = Project::GetActiveProject();
+                    const std::filesystem::path assetRoot =
+                        project ? project->GetAssetRootPath() : GetAssetRootPath();
+                    if (RTBEngine::Rendering::ShaderAsset::CreateTemplate(newFile, assetRoot)) {
+                        RTBEngine::Core::ResourceManager::GetInstance().ScanShaderAssets(assetRoot);
+                        selectedPath = newFile;
+                        renamingPath = newFile;
+                        strncpy_s(renameBuffer, newFile.stem().string().c_str(), sizeof(renameBuffer) - 1);
+                    }
                 }
 
                 if (ImGui::MenuItem("Texture Asset")) {

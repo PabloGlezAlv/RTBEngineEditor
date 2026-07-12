@@ -78,6 +78,7 @@ public:
     bool destroyOnHit = true;
     int maxHits = 1;
     bool applyDamage = true;
+    bool enableFlightTrail = true;
     std::string impactParticlePrefabRef;
 
     RTB_COMPONENT(ProjectileComponent)

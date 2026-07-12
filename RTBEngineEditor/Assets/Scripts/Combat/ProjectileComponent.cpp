@@ -153,6 +153,7 @@ RTB_REGISTER_COMPONENT(ProjectileComponent)
     RTB_PROPERTY(ignoreSameTeam)
     RTB_PROPERTY(destroyOnHit)
     RTB_PROPERTY_RANGE(maxHits, 0, 100)
+    RTB_PROPERTY(enableFlightTrail)
     RTB_PROPERTY_ASSET_PATH(impactParticlePrefabRef, "prefab")
 RTB_END_REGISTER(ProjectileComponent)
 
@@ -229,7 +230,9 @@ void ProjectileComponent::OnUpdate(float deltaTime)
     RTBEngine::Math::Vector3 resolvedPosition = shouldStop ? hitPosition : nextPosition;
     resolvedPosition.y = fixedHeight;
     owner->GetTransform().SetPosition(resolvedPosition);
-    UpdateFlightTrail(resolvedPosition);
+    if (enableFlightTrail) {
+        UpdateFlightTrail(resolvedPosition);
+    }
 
     distanceTravelled = std::min(maxDistance, distanceTravelled + stepDistance);
 
@@ -290,8 +293,10 @@ void ProjectileComponent::BeginFlight(const ProjectileRuntimeContext& context)
         owner->GetTransform().SetPosition(context.origin);
     }
 
-    EnsureFlightTrail();
-    UpdateFlightTrail(context.origin);
+    if (enableFlightTrail) {
+        EnsureFlightTrail();
+        UpdateFlightTrail(context.origin);
+    }
 }
 
 void ProjectileComponent::Initialize(const ProjectileConfig& config)
@@ -336,7 +341,7 @@ void ProjectileComponent::ClampSettings()
 
 void ProjectileComponent::EnsureFlightTrail()
 {
-    if (!owner || flightTrail) {
+    if (!enableFlightTrail || !owner || flightTrail) {
         return;
     }
 
@@ -356,7 +361,7 @@ void ProjectileComponent::EnsureFlightTrail()
 
 void ProjectileComponent::UpdateFlightTrail(const RTBEngine::Math::Vector3& position)
 {
-    if (!flightTrail) {
+    if (!enableFlightTrail || !flightTrail) {
         return;
     }
 
@@ -383,7 +388,7 @@ void ProjectileComponent::UpdateFlightTrail(const RTBEngine::Math::Vector3& posi
 
 void ProjectileComponent::ReleaseTrailForFadeout()
 {
-    if (!flightTrail || flightTrail->GetPointCount() < 2) {
+    if (!enableFlightTrail || !flightTrail || flightTrail->GetPointCount() < 2) {
         flightTrail = nullptr;
         return;
     }

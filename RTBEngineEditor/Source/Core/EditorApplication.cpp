@@ -134,6 +134,8 @@ namespace RTBEditor {
 
         if (project->Load(projectFilePath)) {
             resources.SetAssetRootPath(project->GetAssetRootPath());
+            resources.ScanShaderAssets(project->GetAssetRootPath());
+            resources.ReloadAllShaderAssets();
             const char* buildConfiguration = GetEditorBuildConfiguration();
             fs::path scriptsDllPath = project->GetGameScriptsDllPath(buildConfiguration);
 

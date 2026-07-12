@@ -22,6 +22,8 @@
 #include <RTBEngine/Scene/BoxColliderComponent.h>
 #include <RTBEngine/Reflection/TypeInfo.h>
 #include <RTBEngine/Core/ResourceManager.h>
+#include <RTBEngine/Rendering/ShaderAsset.h>
+#include <RTBEngine/Rendering/ShaderProperties.h>
 #include <RTBEngine/Data/DataAsset.h>
 #include <RTBEngine/Scripting/DataAssetSaver.h>
 #include <RTBEngine/UI/UIElement.h>
@@ -53,6 +55,63 @@ namespace RTBEditor {
                 return project->GetAssetReferencePath(relativePath);
             }
             return (std::filesystem::path("Assets") / relativePath).lexically_normal().generic_string();
+        }
+
+        std::filesystem::path GetProjectAssetRoot() {
+            Project* project = Project::GetActiveProject();
+            if (project) {
+                return project->GetAssetRootPath();
+            }
+            return std::filesystem::path("Assets");
+        }
+
+        std::string FormatShaderOptionLabel(const std::string& shaderRef) {
+            if (shaderRef.empty()) {
+                return "basic";
+            }
+
+            if (RTBEngine::Core::ResourceManager::IsShaderAssetRef(shaderRef)) {
+                return std::filesystem::path(shaderRef).stem().string() + " (Shader Asset)";
+            }
+
+            if (shaderRef == "basic") {
+                return "Basic (Built-in)";
+            }
+
+            return shaderRef;
+        }
+
+        std::string CreateShaderAssetInDirectory(const std::filesystem::path& directory) {
+            const std::filesystem::path assetRoot = GetProjectAssetRoot();
+            std::filesystem::path targetDirectory = directory;
+            if (targetDirectory.empty()) {
+                targetDirectory = assetRoot / "Shaders";
+            }
+
+            std::error_code ec;
+            std::filesystem::create_directories(targetDirectory, ec);
+
+            std::filesystem::path assetPath = targetDirectory / "NewShader.shader";
+            int suffix = 1;
+            while (std::filesystem::exists(assetPath)) {
+                assetPath = targetDirectory / ("NewShader" + std::to_string(suffix++) + ".shader");
+            }
+
+            if (!RTBEngine::Rendering::ShaderAsset::CreateTemplate(assetPath, assetRoot)) {
+                return {};
+            }
+
+            std::filesystem::path relativePath =
+                std::filesystem::relative(assetPath, assetRoot, ec);
+            if (ec) {
+                return {};
+            }
+
+            const std::string assetRef = MakeAssetReference(relativePath);
+            auto& resources = RTBEngine::Core::ResourceManager::GetInstance();
+            resources.ScanShaderAssets(assetRoot);
+            resources.LoadShaderAsset(assetRef, true);
+            return assetRef;
         }
 
         std::string ToLowerCopy(std::string value) {
@@ -344,6 +403,9 @@ namespace RTBEditor {
             if (assetType == "texture") {
                 return "Drop a texture asset here.";
             }
+            if (assetType == "shader") {
+                return "Drop a .shader asset here.";
+            }
             return "Drop a compatible asset here.";
         }
 
@@ -360,6 +422,9 @@ namespace RTBEditor {
             }
             if (assetType == "texture") {
                 return AssetType::Texture;
+            }
+            if (assetType == "shader") {
+                return AssetType::Shader;
             }
             if (assetType == "lua") {
                 return AssetType::Scene;
@@ -677,6 +742,8 @@ namespace RTBEditor {
                 DrawCubemapAssetInspector(context.selectedAssetPath);
             } else if (ext == ".texture") {
                 DrawTextureAssetInspector(context.selectedAssetPath);
+            } else if (ext == ".shader") {
+                DrawShaderAssetInspector(context.selectedAssetPath);
             } else if (ext == ".h" || ext == ".cpp") {
                 DrawScriptPreview(context.selectedAssetPath);
             } else if (ext == ".fbx" || ext == ".obj" || ext == ".gltf" || ext == ".glb") {
@@ -863,6 +930,8 @@ namespace RTBEditor {
                     DrawAnimatorComponent(static_cast<RTBEngine::Animation::Animator*>(component.get()));
                 } else if (std::string(typeName) == "ParticleSystem") {
                     DrawParticleSystemComponent(static_cast<RTBEngine::ECS::ParticleSystem*>(component.get()));
+                } else if (std::string(typeName) == "MeshRenderer") {
+                    DrawMeshRendererComponent(static_cast<RTBEngine::ECS::MeshRenderer*>(component.get()));
                 } else if (std::string(typeName) == "NavGridComponent") {
                     DrawNavGridComponent(static_cast<RTBEngine::ECS::NavGridComponent*>(component.get()), context);
                 } else if (typeInfo) {
@@ -1925,6 +1994,256 @@ namespace RTBEditor {
         ImGui::PopID();
     }
 
+    void InspectorPanel::DrawMeshShaderProperties(RTBEngine::ECS::MeshRenderer* meshRenderer, bool& changed) {
+        if (!meshRenderer) {
+            return;
+        }
+
+        const std::string shaderRef = meshRenderer->shaderRef.empty() ? "basic" : meshRenderer->shaderRef;
+        auto& resources = RTBEngine::Core::ResourceManager::GetInstance();
+        if (RTBEngine::Core::ResourceManager::IsShaderAssetRef(shaderRef)) {
+            resources.LoadShaderAsset(shaderRef);
+        }
+
+        const std::vector<RTBEngine::Rendering::ShaderPropertyDefinition> properties =
+            RTBEngine::Rendering::ShaderProperties::GetDefinitions(shaderRef);
+
+        ImGui::Spacing();
+        ImGui::Separator();
+        ImGui::TextUnformatted("Shader Properties");
+        ImGui::Spacing();
+
+        if (properties.empty()) {
+            ImGui::TextWrapped("This shader does not declare any editable parameters.");
+            return;
+        }
+
+        for (const RTBEngine::Rendering::ShaderPropertyDefinition& property : properties) {
+            ImGui::PushID(property.uniformName.c_str());
+            const char* label = property.displayName.empty()
+                ? property.uniformName.c_str()
+                : property.displayName.c_str();
+
+            switch (property.type) {
+            case RTBEngine::Rendering::ShaderPropertyType::Color: {
+                RTBEngine::Math::Vector4 colorValue =
+                    RTBEngine::Rendering::ShaderProperties::ResolveColorValue(
+                        property,
+                        meshRenderer->colorRef,
+                        meshRenderer->shaderPropertyOverrides);
+
+                if (property.uniformName == "uColor") {
+                    BeginInspectorRow(label);
+                    float colorComponents[4] = { colorValue.x, colorValue.y, colorValue.z, colorValue.w };
+                    if (ImGui::ColorEdit4("##shaderColor", colorComponents)) {
+                        meshRenderer->colorRef = RTBEngine::Math::Vector4(
+                            colorComponents[0],
+                            colorComponents[1],
+                            colorComponents[2],
+                            colorComponents[3]);
+                        changed = true;
+                    }
+                    EndInspectorRow();
+                } else {
+                    BeginInspectorRow(label);
+                    float colorComponents[4] = { colorValue.x, colorValue.y, colorValue.z, colorValue.w };
+                    if (ImGui::ColorEdit4("##shaderColorOverride", colorComponents)) {
+                        RTBEngine::Rendering::ShaderProperties::SetColorOverride(
+                            meshRenderer->shaderPropertyOverrides,
+                            property.uniformName,
+                            RTBEngine::Math::Vector4(
+                                colorComponents[0],
+                                colorComponents[1],
+                                colorComponents[2],
+                                colorComponents[3]));
+                        changed = true;
+                    }
+                    EndInspectorRow();
+                }
+                break;
+            }
+            case RTBEngine::Rendering::ShaderPropertyType::Texture: {
+                if (property.uniformName == "uTexture") {
+                    RTBEngine::Reflection::PropertyInfo textureProp;
+                    textureProp.name = "textureRef";
+                    textureProp.displayName = label;
+                    textureProp.type = RTBEngine::Reflection::PropertyType::TextureRef;
+                    DrawProperty(meshRenderer, textureProp);
+                } else {
+                    BeginInspectorRow(label);
+                    ImGui::TextDisabled("Custom texture uniforms are not supported yet.");
+                    EndInspectorRow();
+                }
+                break;
+            }
+            case RTBEngine::Rendering::ShaderPropertyType::Float: {
+                float floatValue = RTBEngine::Rendering::ShaderProperties::ResolveFloatValue(
+                    property,
+                    meshRenderer->shaderPropertyOverrides);
+                BeginInspectorRow(label);
+                if (property.hasRange) {
+                    if (ImGui::SliderFloat(
+                            "##shaderFloat",
+                            &floatValue,
+                            property.minValue,
+                            property.maxValue)) {
+                        RTBEngine::Rendering::ShaderProperties::SetFloatOverride(
+                            meshRenderer->shaderPropertyOverrides,
+                            property.uniformName,
+                            floatValue);
+                        changed = true;
+                    }
+                } else if (ImGui::DragFloat("##shaderFloat", &floatValue, 0.01f)) {
+                    RTBEngine::Rendering::ShaderProperties::SetFloatOverride(
+                        meshRenderer->shaderPropertyOverrides,
+                        property.uniformName,
+                        floatValue);
+                    changed = true;
+                }
+                EndInspectorRow();
+                break;
+            }
+            case RTBEngine::Rendering::ShaderPropertyType::Vector2: {
+                RTBEngine::Math::Vector4 vectorValue =
+                    RTBEngine::Rendering::ShaderProperties::ResolveVectorValue(
+                        property,
+                        meshRenderer->shaderPropertyOverrides);
+                float components[2] = { vectorValue.x, vectorValue.y };
+                BeginInspectorRow(label);
+                if (ImGui::DragFloat2("##shaderVec2", components, 0.01f)) {
+                    RTBEngine::Rendering::ShaderProperties::SetVectorOverride(
+                        meshRenderer->shaderPropertyOverrides,
+                        property.uniformName,
+                        RTBEngine::Math::Vector4(components[0], components[1], 0.0f, 0.0f),
+                        2);
+                    changed = true;
+                }
+                EndInspectorRow();
+                break;
+            }
+            case RTBEngine::Rendering::ShaderPropertyType::Vector3: {
+                RTBEngine::Math::Vector4 vectorValue =
+                    RTBEngine::Rendering::ShaderProperties::ResolveVectorValue(
+                        property,
+                        meshRenderer->shaderPropertyOverrides);
+                float components[3] = { vectorValue.x, vectorValue.y, vectorValue.z };
+                BeginInspectorRow(label);
+                if (ImGui::DragFloat3("##shaderVec3", components, 0.01f)) {
+                    RTBEngine::Rendering::ShaderProperties::SetVectorOverride(
+                        meshRenderer->shaderPropertyOverrides,
+                        property.uniformName,
+                        RTBEngine::Math::Vector4(components[0], components[1], components[2], 0.0f),
+                        3);
+                    changed = true;
+                }
+                EndInspectorRow();
+                break;
+            }
+            case RTBEngine::Rendering::ShaderPropertyType::Vector4: {
+                RTBEngine::Math::Vector4 vectorValue =
+                    RTBEngine::Rendering::ShaderProperties::ResolveVectorValue(
+                        property,
+                        meshRenderer->shaderPropertyOverrides);
+                float components[4] = { vectorValue.x, vectorValue.y, vectorValue.z, vectorValue.w };
+                BeginInspectorRow(label);
+                if (ImGui::DragFloat4("##shaderVec4", components, 0.01f)) {
+                    RTBEngine::Rendering::ShaderProperties::SetVectorOverride(
+                        meshRenderer->shaderPropertyOverrides,
+                        property.uniformName,
+                        RTBEngine::Math::Vector4(
+                            components[0],
+                            components[1],
+                            components[2],
+                            components[3]),
+                        4);
+                    changed = true;
+                }
+                EndInspectorRow();
+                break;
+            }
+            }
+
+            ImGui::PopID();
+        }
+    }
+
+    void InspectorPanel::DrawMeshRendererComponent(RTBEngine::ECS::MeshRenderer* meshRenderer) {
+        if (!meshRenderer) {
+            return;
+        }
+
+        bool changed = false;
+        const RTBEngine::Reflection::TypeInfo* typeInfo = meshRenderer->GetTypeInfo();
+        if (typeInfo) {
+            for (const RTBEngine::Reflection::PropertyInfo* prop : typeInfo->GetInspectorProperties()) {
+                if (!prop
+                    || prop->name == "shaderRef"
+                    || prop->name == "colorRef"
+                    || prop->name == "textureRef"
+                    || prop->name == "shaderPropertyOverrides") {
+                    continue;
+                }
+                DrawProperty(meshRenderer, *prop);
+            }
+        }
+
+        auto& resources = RTBEngine::Core::ResourceManager::GetInstance();
+        resources.ScanShaderAssets(GetProjectAssetRoot());
+
+        std::vector<std::string> shaderOptions = resources.GetMeshShaderOptions();
+        if (meshRenderer->shaderRef.empty()) {
+            meshRenderer->shaderRef = "basic";
+        }
+
+        if (std::find(shaderOptions.begin(), shaderOptions.end(), meshRenderer->shaderRef) ==
+            shaderOptions.end()) {
+            shaderOptions.push_back(meshRenderer->shaderRef);
+        }
+
+        const std::string previewLabel = FormatShaderOptionLabel(meshRenderer->shaderRef);
+        BeginInspectorRow("Shader");
+        if (ImGui::BeginCombo("##meshRendererShader", previewLabel.c_str())) {
+            for (const std::string& option : shaderOptions) {
+                const bool isSelected = option == meshRenderer->shaderRef;
+                if (ImGui::Selectable(FormatShaderOptionLabel(option).c_str(), isSelected)) {
+                    meshRenderer->shaderRef = option;
+                    meshRenderer->OnValidate();
+                    RTBEngine::Core::ResourceManager::GetInstance().ResolveShader(option);
+                    changed = true;
+                }
+                if (isSelected) {
+                    ImGui::SetItemDefaultFocus();
+                }
+            }
+            ImGui::EndCombo();
+        }
+        EndInspectorRow();
+
+        if (ImGui::Button("Create Shader...##MeshRendererCreateShader")) {
+            const std::string createdShaderRef =
+                CreateShaderAssetInDirectory(GetProjectAssetRoot() / "Shaders");
+            if (!createdShaderRef.empty()) {
+                meshRenderer->shaderRef = createdShaderRef;
+                changed = true;
+            }
+        }
+
+        if (RTBEngine::Core::ResourceManager::IsShaderAssetRef(meshRenderer->shaderRef)) {
+            if (ImGui::Button("Reload Shader##MeshRendererReloadShader")) {
+                resources.LoadShaderAsset(meshRenderer->shaderRef, true);
+                meshRenderer->OnValidate();
+                changed = true;
+            }
+        }
+
+        DrawMeshShaderProperties(meshRenderer, changed);
+
+        if (changed) {
+            meshRenderer->OnValidate();
+            MarkDirtyFromInspector();
+        }
+    }
+
     void InspectorPanel::DrawAnimatorComponent(RTBEngine::Animation::Animator* animator) {
         bool changed = false;
 
@@ -2366,6 +2685,228 @@ namespace RTBEditor {
         for (int i = 0; i < 6; ++i) {
             file << faceKeys[i] << "=" << cubemapFaces[i] << "\n";
         }
+    }
+
+    void InspectorPanel::DrawShaderAssetInspector(const std::filesystem::path& shaderPath) {
+        if (shaderEditorPath != shaderPath) {
+            shaderEditorPath = shaderPath;
+            shaderAssetVertex.clear();
+            shaderAssetFragment.clear();
+            shaderAssetProperties.clear();
+
+            Project* project = Project::GetActiveProject();
+            const std::string assetRef = project
+                ? project->GetAssetReferencePath(shaderPath)
+                : shaderPath.generic_string();
+
+            RTBEngine::Rendering::ShaderAssetData assetData;
+            if (RTBEngine::Rendering::ShaderAsset::ParseFile(assetRef, assetData)) {
+                shaderAssetVertex = assetData.vertexPath;
+                shaderAssetFragment = assetData.fragmentPath;
+                shaderAssetProperties = assetData.properties;
+            }
+        }
+
+        ImGui::Text("Shader Asset");
+        ImGui::Text("%s", shaderPath.filename().string().c_str());
+        ImGui::Separator();
+        ImGui::Spacing();
+
+        bool changed = false;
+
+        auto drawShaderSourceField = [&](const char* label,
+                                         const char* browseId,
+                                         const char* clearId,
+                                         std::string& targetPath) {
+            ImGui::Text("%s", label);
+            ImGui::SameLine();
+
+            const bool hasPath = !targetPath.empty();
+            ImGui::PushStyleColor(
+                ImGuiCol_Text,
+                hasPath ? ImVec4(0.4f, 0.8f, 0.4f, 1.0f) : ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.2f, 0.5f, 0.8f, 0.3f));
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.2f, 0.5f, 0.8f, 0.5f));
+
+            const std::string buttonLabel = (hasPath
+                ? std::filesystem::path(targetPath).filename().string()
+                : std::string("[None]")) + browseId;
+            ImGui::Button(buttonLabel.c_str(), ImVec2(ImGui::GetContentRegionAvail().x - 52.0f, 0));
+            ImGui::PopStyleColor(4);
+
+            ImGui::SameLine();
+            if (ImGui::SmallButton(browseId)) {
+                assetBrowserModal->Open(
+                    AssetType::Any,
+                    [this, &targetPath, &changed](const std::string& path) {
+                        std::string extension = std::filesystem::path(path).extension().string();
+                        for (char& character : extension) {
+                            character = static_cast<char>(std::tolower(static_cast<unsigned char>(character)));
+                        }
+                        if (extension == ".vert" || extension == ".frag" || extension == ".glsl") {
+                            targetPath = MakeAssetReference(path);
+                            changed = true;
+                        }
+                    });
+            }
+
+            ImGui::SameLine();
+            if (ImGui::SmallButton(clearId)) {
+                targetPath.clear();
+                changed = true;
+            }
+        };
+
+        drawShaderSourceField(
+            "Vertex:",
+            "...##BrowseShaderVertex",
+            "X##ClearShaderVertex",
+            shaderAssetVertex);
+        ImGui::Spacing();
+        drawShaderSourceField(
+            "Fragment:",
+            "...##BrowseShaderFragment",
+            "X##ClearShaderFragment",
+            shaderAssetFragment);
+
+        ImGui::Spacing();
+        ImGui::Separator();
+        ImGui::Text("Properties");
+        ImGui::Spacing();
+
+        static const char* propertyTypeLabels[] = {
+            "Color", "Float", "Vector2", "Vector3", "Vector4", "Texture"
+        };
+
+        std::vector<size_t> propertyIndicesToRemove;
+        for (size_t propertyIndex = 0; propertyIndex < shaderAssetProperties.size(); ++propertyIndex) {
+            RTBEngine::Rendering::ShaderPropertyDefinition& property = shaderAssetProperties[propertyIndex];
+            ImGui::PushID(static_cast<int>(propertyIndex));
+
+            char uniformBuffer[128] = {};
+            strncpy_s(uniformBuffer, sizeof(uniformBuffer), property.uniformName.c_str(), _TRUNCATE);
+            if (ImGui::InputText("Uniform", uniformBuffer, sizeof(uniformBuffer))) {
+                property.uniformName = uniformBuffer;
+                changed = true;
+            }
+
+            int typeIndex = static_cast<int>(property.type);
+            if (ImGui::Combo("Type", &typeIndex, propertyTypeLabels, IM_ARRAYSIZE(propertyTypeLabels))) {
+                property.type = static_cast<RTBEngine::Rendering::ShaderPropertyType>(typeIndex);
+                changed = true;
+            }
+
+            float defaultComponents[4] = {
+                property.defaultValue.x,
+                property.defaultValue.y,
+                property.defaultValue.z,
+                property.defaultValue.w
+            };
+
+            switch (property.type) {
+            case RTBEngine::Rendering::ShaderPropertyType::Color:
+            case RTBEngine::Rendering::ShaderPropertyType::Vector4:
+                if (ImGui::DragFloat4("Default", defaultComponents, 0.01f)) {
+                    property.defaultValue = RTBEngine::Math::Vector4(
+                        defaultComponents[0],
+                        defaultComponents[1],
+                        defaultComponents[2],
+                        defaultComponents[3]);
+                    changed = true;
+                }
+                break;
+            case RTBEngine::Rendering::ShaderPropertyType::Float:
+                if (ImGui::DragFloat("Default", &defaultComponents[0], 0.01f)) {
+                    property.defaultValue.x = defaultComponents[0];
+                    changed = true;
+                }
+                if (ImGui::Checkbox("Range", &property.hasRange)) {
+                    changed = true;
+                }
+                if (property.hasRange) {
+                    if (ImGui::DragFloat("Min", &property.minValue, 0.01f)) {
+                        changed = true;
+                    }
+                    if (ImGui::DragFloat("Max", &property.maxValue, 0.01f)) {
+                        changed = true;
+                    }
+                }
+                break;
+            case RTBEngine::Rendering::ShaderPropertyType::Vector2:
+                if (ImGui::DragFloat2("Default", defaultComponents, 0.01f)) {
+                    property.defaultValue.x = defaultComponents[0];
+                    property.defaultValue.y = defaultComponents[1];
+                    changed = true;
+                }
+                break;
+            case RTBEngine::Rendering::ShaderPropertyType::Vector3:
+                if (ImGui::DragFloat3("Default", defaultComponents, 0.01f)) {
+                    property.defaultValue.x = defaultComponents[0];
+                    property.defaultValue.y = defaultComponents[1];
+                    property.defaultValue.z = defaultComponents[2];
+                    changed = true;
+                }
+                break;
+            case RTBEngine::Rendering::ShaderPropertyType::Texture:
+                ImGui::TextDisabled("No default value");
+                break;
+            }
+
+            if (ImGui::Button("Remove##ShaderProperty")) {
+                propertyIndicesToRemove.push_back(propertyIndex);
+            }
+
+            ImGui::Separator();
+            ImGui::PopID();
+        }
+
+        for (auto it = propertyIndicesToRemove.rbegin(); it != propertyIndicesToRemove.rend(); ++it) {
+            shaderAssetProperties.erase(shaderAssetProperties.begin() + static_cast<ptrdiff_t>(*it));
+            changed = true;
+        }
+
+        if (ImGui::Button("Add Property##ShaderAsset")) {
+            RTBEngine::Rendering::ShaderPropertyDefinition newProperty;
+            newProperty.uniformName = "uParam";
+            newProperty.displayName = "Param";
+            newProperty.type = RTBEngine::Rendering::ShaderPropertyType::Float;
+            shaderAssetProperties.push_back(newProperty);
+            changed = true;
+        }
+
+        ImGui::Spacing();
+        if (ImGui::Button("Reload Shader", ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
+            SaveShaderAssetInspector();
+        }
+
+        ImGui::Spacing();
+        if (ImGui::Button("Save", ImVec2(ImGui::GetContentRegionAvail().x, 0)) || changed) {
+            SaveShaderAssetInspector();
+        }
+    }
+
+    void InspectorPanel::SaveShaderAssetInspector() {
+        if (shaderEditorPath.empty()) {
+            return;
+        }
+
+        Project* project = Project::GetActiveProject();
+        const std::string assetRef = project
+            ? project->GetAssetReferencePath(shaderEditorPath)
+            : shaderEditorPath.generic_string();
+
+        RTBEngine::Rendering::ShaderAssetData assetData;
+        assetData.vertexPath = shaderAssetVertex;
+        assetData.fragmentPath = shaderAssetFragment;
+        assetData.properties = shaderAssetProperties;
+        if (!RTBEngine::Rendering::ShaderAsset::SaveFile(assetRef, assetData)) {
+            return;
+        }
+
+        auto& resources = RTBEngine::Core::ResourceManager::GetInstance();
+        resources.ScanShaderAssets(GetProjectAssetRoot());
+        resources.LoadShaderAsset(assetRef, true);
     }
 
     void InspectorPanel::DrawTextureAssetInspector(const std::filesystem::path& texturePath) {

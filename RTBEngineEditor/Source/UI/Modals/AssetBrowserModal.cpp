@@ -62,6 +62,15 @@ namespace RTBEditor {
                 atRoot = false;
             }
         }
+
+        if (filterType == AssetType::Shader) {
+            const std::filesystem::path shadersDirectory = assetsDirectory / "Shaders";
+            if (std::filesystem::exists(shadersDirectory) &&
+                std::filesystem::is_directory(shadersDirectory)) {
+                currentDirectory = shadersDirectory;
+                atRoot = false;
+            }
+        }
     }
 
 
@@ -83,6 +92,8 @@ namespace RTBEditor {
             return { ".prefab" };
         case AssetType::DataAsset:
             return { ".rtbasset" };
+        case AssetType::Shader:
+            return { ".shader" };
         case AssetType::Any:
         default:
             return {};
