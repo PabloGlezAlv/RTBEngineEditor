@@ -61,6 +61,7 @@ namespace RTBEditor {
         void DrawCubemapAssetInspector(const std::filesystem::path& cubemapPath);
         void SaveCubemapAsset(const std::filesystem::path& cubemapPath);
         void DrawScriptPreview(const std::filesystem::path& scriptPath);
+        void DrawSourceFileInspector(const std::filesystem::path& filePath);
         void DrawFbxAssetInspector(const std::filesystem::path& fbxPath);
         void DrawTextureAssetInspector(const std::filesystem::path& texturePath);
         void SaveTextureAsset(const std::filesystem::path& texturePath);
@@ -88,9 +89,8 @@ namespace RTBEditor {
         // face order: right, left, top, bottom, front, back
         std::array<std::string, 6> cubemapFaces;
 
-        // Cached state for the script preview
-        std::filesystem::path scriptPreviewPath;
-        std::string scriptPreviewContent;
+        std::filesystem::path sourcePreviewPath;
+        std::string sourcePreviewContent;
 
         // Cached state for the texture asset editor
         std::filesystem::path textureEditorPath;
@@ -101,6 +101,9 @@ namespace RTBEditor {
         std::string shaderAssetVertex;
         std::string shaderAssetFragment;
         std::vector<RTBEngine::Rendering::ShaderPropertyDefinition> shaderAssetProperties;
+        std::string shaderAssetVertexSource;
+        std::string shaderAssetFragmentSource;
+        std::string shaderAssetDefinitionSource;
 
         std::filesystem::path dataAssetEditorPath;
         RTBEngine::Data::DataAsset* dataAssetEditorInstance = nullptr;

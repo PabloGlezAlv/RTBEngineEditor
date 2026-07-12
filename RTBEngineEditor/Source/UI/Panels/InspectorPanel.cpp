@@ -435,6 +435,75 @@ namespace RTBEditor {
             return AssetType::Any;
         }
 
+        std::string LoadTextFileContent(const std::filesystem::path& filePath)
+        {
+            if (filePath.empty()) {
+                return {};
+            }
+
+            auto& resources = RTBEngine::Core::ResourceManager::GetInstance();
+            std::vector<std::filesystem::path> candidates;
+            candidates.push_back(filePath);
+
+            const std::string pathString = filePath.generic_string();
+            const std::string resolved = resources.ResolvePathForRead(pathString);
+            if (!resolved.empty()) {
+                candidates.emplace_back(resolved);
+            }
+
+            Project* project = Project::GetActiveProject();
+            if (project) {
+                std::error_code ec;
+                const std::filesystem::path relative =
+                    std::filesystem::relative(filePath, project->GetAssetRootPath(), ec);
+                if (!ec && !relative.empty()) {
+                    const std::string assetRef = project->GetAssetReferencePath(relative);
+                    const std::string assetResolved = resources.ResolvePathForRead(assetRef);
+                    if (!assetResolved.empty()) {
+                        candidates.emplace_back(assetResolved);
+                    }
+                }
+            }
+
+            for (const std::filesystem::path& candidate : candidates) {
+                std::ifstream file(candidate);
+                if (!file.is_open()) {
+                    continue;
+                }
+
+                std::ostringstream stream;
+                stream << file.rdbuf();
+                return stream.str();
+            }
+
+            return {};
+        }
+
+        void DrawSourceCodeViewer(const std::string& content, float height)
+        {
+            if (height <= 0.0f) {
+                height = ImMax(ImGui::GetContentRegionAvail().y - 4.0f, 120.0f);
+            }
+
+            ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.12f, 0.12f, 0.12f, 1.0f));
+            ImGui::BeginChild(
+                "##SourceCodeViewer",
+                ImVec2(0.0f, height),
+                true,
+                ImGuiWindowFlags_HorizontalScrollbar);
+
+            if (content.empty()) {
+                ImGui::TextDisabled("(empty or unreadable file)");
+            } else {
+                ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
+                ImGui::TextUnformatted(content.c_str(), content.c_str() + content.size());
+                ImGui::PopStyleVar();
+            }
+
+            ImGui::EndChild();
+            ImGui::PopStyleColor();
+        }
+
         void OpenGameScriptsProjectOrFile(const std::filesystem::path& fileToOpen) {
             Project* project = Project::GetActiveProject();
             const std::filesystem::path scriptsProjectPath =
@@ -746,6 +815,8 @@ namespace RTBEditor {
                 DrawShaderAssetInspector(context.selectedAssetPath);
             } else if (ext == ".h" || ext == ".cpp") {
                 DrawScriptPreview(context.selectedAssetPath);
+            } else if (ext == ".vert" || ext == ".frag" || ext == ".glsl" || ext == ".lua") {
+                DrawSourceFileInspector(context.selectedAssetPath);
             } else if (ext == ".fbx" || ext == ".obj" || ext == ".gltf" || ext == ".glb") {
                 DrawFbxAssetInspector(context.selectedAssetPath);
             } else if (ext == ".rtbasset") {
@@ -2693,6 +2764,9 @@ namespace RTBEditor {
             shaderAssetVertex.clear();
             shaderAssetFragment.clear();
             shaderAssetProperties.clear();
+            shaderAssetVertexSource.clear();
+            shaderAssetFragmentSource.clear();
+            shaderAssetDefinitionSource.clear();
 
             Project* project = Project::GetActiveProject();
             const std::string assetRef = project
@@ -2704,6 +2778,14 @@ namespace RTBEditor {
                 shaderAssetVertex = assetData.vertexPath;
                 shaderAssetFragment = assetData.fragmentPath;
                 shaderAssetProperties = assetData.properties;
+            }
+
+            shaderAssetDefinitionSource = LoadTextFileContent(shaderPath);
+            if (!shaderAssetVertex.empty()) {
+                shaderAssetVertexSource = LoadTextFileContent(std::filesystem::path(shaderAssetVertex));
+            }
+            if (!shaderAssetFragment.empty()) {
+                shaderAssetFragmentSource = LoadTextFileContent(std::filesystem::path(shaderAssetFragment));
             }
         }
 
@@ -2772,7 +2854,28 @@ namespace RTBEditor {
 
         ImGui::Spacing();
         ImGui::Separator();
-        ImGui::Text("Properties");
+        ImGui::TextUnformatted("Source");
+        ImGui::Spacing();
+
+        if (ImGui::BeginTabBar("##ShaderSourceTabs")) {
+            if (ImGui::BeginTabItem("Vertex")) {
+                DrawSourceCodeViewer(shaderAssetVertexSource, 260.0f);
+                ImGui::EndTabItem();
+            }
+            if (ImGui::BeginTabItem("Fragment")) {
+                DrawSourceCodeViewer(shaderAssetFragmentSource, 260.0f);
+                ImGui::EndTabItem();
+            }
+            if (ImGui::BeginTabItem("Definition")) {
+                DrawSourceCodeViewer(shaderAssetDefinitionSource, 260.0f);
+                ImGui::EndTabItem();
+            }
+            ImGui::EndTabBar();
+        }
+
+        ImGui::Spacing();
+        ImGui::Separator();
+        if (ImGui::CollapsingHeader("Properties", ImGuiTreeNodeFlags_DefaultOpen)) {
         ImGui::Spacing();
 
         static const char* propertyTypeLabels[] = {
@@ -2874,6 +2977,21 @@ namespace RTBEditor {
             shaderAssetProperties.push_back(newProperty);
             changed = true;
         }
+        }
+
+        if (changed) {
+            shaderAssetDefinitionSource = LoadTextFileContent(shaderPath);
+            if (!shaderAssetVertex.empty()) {
+                shaderAssetVertexSource = LoadTextFileContent(std::filesystem::path(shaderAssetVertex));
+            } else {
+                shaderAssetVertexSource.clear();
+            }
+            if (!shaderAssetFragment.empty()) {
+                shaderAssetFragmentSource = LoadTextFileContent(std::filesystem::path(shaderAssetFragment));
+            } else {
+                shaderAssetFragmentSource.clear();
+            }
+        }
 
         ImGui::Spacing();
         if (ImGui::Button("Reload Shader", ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
@@ -2907,6 +3025,14 @@ namespace RTBEditor {
         auto& resources = RTBEngine::Core::ResourceManager::GetInstance();
         resources.ScanShaderAssets(GetProjectAssetRoot());
         resources.LoadShaderAsset(assetRef, true);
+
+        shaderAssetDefinitionSource = LoadTextFileContent(shaderEditorPath);
+        shaderAssetVertexSource = shaderAssetVertex.empty()
+            ? std::string()
+            : LoadTextFileContent(std::filesystem::path(shaderAssetVertex));
+        shaderAssetFragmentSource = shaderAssetFragment.empty()
+            ? std::string()
+            : LoadTextFileContent(std::filesystem::path(shaderAssetFragment));
     }
 
     void InspectorPanel::DrawTextureAssetInspector(const std::filesystem::path& texturePath) {
@@ -3036,21 +3162,47 @@ namespace RTBEditor {
         file << "flip=" << (textureAssetFlip ? "true" : "false") << "\n";
     }
 
+    void InspectorPanel::DrawSourceFileInspector(const std::filesystem::path& filePath) {
+        if (sourcePreviewPath != filePath) {
+            sourcePreviewPath = filePath;
+            sourcePreviewContent = LoadTextFileContent(filePath);
+        }
+
+        std::string ext = filePath.extension().string();
+        for (char& character : ext) {
+            character = static_cast<char>(std::tolower(static_cast<unsigned char>(character)));
+        }
+
+        const char* typeLabel = "Source";
+        if (ext == ".vert") {
+            typeLabel = "Vertex Shader";
+        } else if (ext == ".frag") {
+            typeLabel = "Fragment Shader";
+        } else if (ext == ".glsl") {
+            typeLabel = "GLSL";
+        } else if (ext == ".lua") {
+            typeLabel = "Lua Script";
+        }
+
+        ImGui::Text("%s", filePath.filename().string().c_str());
+        ImGui::SameLine();
+        ImGui::TextDisabled("(%s)", typeLabel);
+        ImGui::Separator();
+        ImGui::Spacing();
+
+        DrawSourceCodeViewer(sourcePreviewContent, 0.0f);
+    }
+
     void InspectorPanel::DrawScriptPreview(const std::filesystem::path& scriptPath) {
-        // Reload file content when selection changes
-        if (scriptPreviewPath != scriptPath) {
-            scriptPreviewPath = scriptPath;
-            scriptPreviewContent.clear();
-            std::ifstream file(scriptPath);
-            if (file.is_open()) {
-                std::ostringstream ss;
-                ss << file.rdbuf();
-                scriptPreviewContent = ss.str();
-            }
+        if (sourcePreviewPath != scriptPath) {
+            sourcePreviewPath = scriptPath;
+            sourcePreviewContent = LoadTextFileContent(scriptPath);
         }
 
         std::string ext = scriptPath.extension().string();
-        for (auto& c : ext) c = std::tolower(c);
+        for (char& character : ext) {
+            character = static_cast<char>(std::tolower(static_cast<unsigned char>(character)));
+        }
 
         ImGui::Text("%s", scriptPath.filename().string().c_str());
         ImGui::SameLine();
@@ -3058,24 +3210,15 @@ namespace RTBEditor {
         ImGui::Separator();
         ImGui::Spacing();
 
-        // Open script in the associated C++ project/solution so that includes and
-        // IntelliSense work correctly, falling back to just the file if needed.
         if (ImGui::Button("Open in Editor")) {
             OpenGameScriptsProjectOrFile(scriptPath);
         }
 
         ImGui::Spacing();
         ImGui::Separator();
+        ImGui::Spacing();
 
-        // Read-only scrollable code preview
-        ImVec2 available = ImGui::GetContentRegionAvail();
-        ImGui::InputTextMultiline(
-            "##ScriptPreview",
-            const_cast<char*>(scriptPreviewContent.c_str()),
-            scriptPreviewContent.size() + 1,
-            ImVec2(available.x, available.y - 4.0f),
-            ImGuiInputTextFlags_ReadOnly
-        );
+        DrawSourceCodeViewer(sourcePreviewContent, 0.0f);
     }
 
     void InspectorPanel::DrawFbxAssetInspector(const std::filesystem::path& fbxPath)

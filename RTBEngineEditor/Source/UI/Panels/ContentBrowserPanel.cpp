@@ -308,9 +308,11 @@ namespace RTBEditor {
                     // Expose asset files to the Inspector via context
                     std::string clickedExt = path.extension().string();
                     for (auto& c : clickedExt) c = std::tolower(c);
-                    if (clickedExt == ".cubemap" || clickedExt == ".texture" || clickedExt == ".shader" || clickedExt == ".h" || clickedExt == ".cpp" ||
-                        clickedExt == ".fbx" || clickedExt == ".obj" || clickedExt == ".gltf" || clickedExt == ".glb" ||
-                        clickedExt == ".rtbasset" || clickedExt == ".prefab") {
+                    if (clickedExt == ".cubemap" || clickedExt == ".texture" || clickedExt == ".shader"
+                        || clickedExt == ".h" || clickedExt == ".cpp" || clickedExt == ".vert"
+                        || clickedExt == ".frag" || clickedExt == ".glsl" || clickedExt == ".lua"
+                        || clickedExt == ".fbx" || clickedExt == ".obj" || clickedExt == ".gltf" || clickedExt == ".glb"
+                        || clickedExt == ".rtbasset" || clickedExt == ".prefab") {
                         context.selectedAssetPath = path;
                         context.selectedGameObject = nullptr;
                         // Toggle FBX texture expansion
