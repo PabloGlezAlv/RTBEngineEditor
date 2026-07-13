@@ -18,6 +18,7 @@
 #include <backends/imgui_impl_sdl2.h>
 #include <backends/imgui_impl_opengl3.h>
 #include <RTBEngine/Scene/SceneManager.h>
+#include <RTBEngine/UI/CanvasSystem.h>
 #include <RTBEngine/Scene/Scene.h>
 #include <RTBEngine/Core/Logger.h>
 
@@ -396,6 +397,10 @@ namespace RTBEditor {
             return false;
         }
 
+        auto& canvasSystem = RTBEngine::UI::CanvasSystem::GetInstance();
+        canvasSystem.ClearState();
+        canvasSystem.Update(context.prefabEditor->GetStagingScene());
+
         ClearSelection();
         context.selectedAssetPath.clear();
         if (context.prefabEditor->GetRootObject()) {
@@ -410,6 +415,14 @@ namespace RTBEditor {
         }
         ClearSelection();
         context.selectedAssetPath.clear();
+
+        // Staging scene destruction does not go through SceneManager::onSceneUnloading,
+        // so clear stale canvas pointers before Game View runs this frame.
+        auto& canvasSystem = RTBEngine::UI::CanvasSystem::GetInstance();
+        canvasSystem.ClearState();
+        if (RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene()) {
+            canvasSystem.Update(scene);
+        }
     }
 
     bool EditorLayer::SavePrefab() {

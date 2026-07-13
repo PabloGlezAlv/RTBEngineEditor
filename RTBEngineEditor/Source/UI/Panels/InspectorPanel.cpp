@@ -16,6 +16,9 @@
 #include <RTBEngine/Scene/Scene.h>
 #include <RTBEngine/Scene/Prefab.h>
 #include <RTBEngine/Scene/PrefabRegistry.h>
+#include "../Prefab/PrefabOverrideInspector.h"
+#include <RTBEngine/Scene/PrefabInstanceResolver.h>
+#include <RTBEngine/Scene/PrefabOverrideDiff.h>
 #include <RTBEngine/Physics/PhysicsLayerSettings.h>
 #include <RTBEngine/Scene/MissingComponent.h>
 #include <RTBEngine/Scene/MeshRenderer.h>
@@ -613,6 +616,37 @@ namespace RTBEditor {
         }
     }
 
+    void InspectorPanel::BeginPrefabAwareInspectorRow(
+        const char* label,
+        RTBEngine::ECS::Component* component,
+        const RTBEngine::Reflection::PropertyInfo& prop)
+    {
+        if (hasActivePrefabContext && activePrefabGameObject &&
+            PrefabOverrideInspector::IsPropertyOverridden(activePrefabGameObject, component, prop)) {
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.45f, 0.65f, 1.0f, 1.0f));
+            BeginInspectorRow(label);
+            ImGui::PopStyleColor();
+            return;
+        }
+
+        BeginInspectorRow(label);
+    }
+
+    void InspectorPanel::EndPrefabAwareInspectorRow(
+        RTBEngine::ECS::Component* component,
+        const RTBEngine::Reflection::PropertyInfo& prop)
+    {
+        EndInspectorRow();
+        if (hasActivePrefabContext && activePrefabGameObject &&
+            PrefabOverrideInspector::IsPropertyOverridden(activePrefabGameObject, component, prop)) {
+            PrefabOverrideInspector::DrawPropertyOverrideMenu(
+                activePrefabGameObject,
+                component,
+                prop,
+                [this]() { MarkDirtyFromInspector(); });
+        }
+    }
+
     void InspectorPanel::OnUIRender(EditorContext& context) {
         dirtyContext = nullptr;
         ImGui::Begin("Inspector");
@@ -700,15 +734,15 @@ namespace RTBEditor {
                 EndInspectorRow();
             }
 
-            if (!IsPrefabEditMode(context) && context.selectedGameObject->IsPrefabInstance()) {
-                ImGui::Spacing();
-                ImGui::TextColored(ImVec4(0.4f, 0.6f, 1.0f, 1.0f), "Prefab: %s", context.selectedGameObject->GetPrefabName().c_str());
-                ImGui::SameLine();
-                if (ImGui::Button("Unlink")) {
-                    context.selectedGameObject->SetPrefabName("");
-                    MarkDirtyFromInspector();
+            if (!IsPrefabEditMode(context) && context.selectedGameObject) {
+                activePrefabContext = RTBEngine::ECS::PrefabInstanceResolver::Resolve(context.selectedGameObject);
+                if (activePrefabContext.IsValid()) {
+                    PrefabOverrideInspector::DrawInstanceHeader(
+                        activePrefabContext,
+                        context.selectedGameObject,
+                        context,
+                        [this]() { MarkDirtyFromInspector(); });
                 }
-                ImGui::Spacing();
             }
 
             ImGui::Separator();
@@ -838,6 +872,14 @@ namespace RTBEditor {
 
     void InspectorPanel::DrawComponents(RTBEngine::ECS::GameObject* gameObject, EditorContext& context) {
         dirtyContext = &context;
+        hasActivePrefabContext = false;
+        activePrefabGameObject = nullptr;
+
+        if (!IsPrefabEditMode(context) && gameObject) {
+            activePrefabContext = RTBEngine::ECS::PrefabInstanceResolver::Resolve(gameObject);
+            hasActivePrefabContext = activePrefabContext.IsValid();
+            activePrefabGameObject = hasActivePrefabContext ? gameObject : nullptr;
+        }
         // Detect if this GameObject has any UIElement — if so show Rect Transform instead of Transform
         RTBEngine::UI::UIElement* uiElement = gameObject->GetComponent<RTBEngine::UI::UIElement>();
 
@@ -912,15 +954,31 @@ namespace RTBEditor {
             // Transform Component (3D — shown for non-UI objects)
             if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen)) {
                 auto& transform = gameObject->GetTransform();
+                const bool transformOverridden = hasActivePrefabContext && activePrefabContext.baselineNode &&
+                    RTBEngine::ECS::PrefabOverrideDiff::IsTransformOverridden(
+                        gameObject,
+                        activePrefabContext.baselineNode);
 
                 // Local position — offset relative to parent
                 RTBEngine::Math::Vector3 localPos = transform.GetPosition();
+                if (transformOverridden) {
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.45f, 0.65f, 1.0f, 1.0f));
+                }
                 BeginInspectorRow("Position");
+                if (transformOverridden) {
+                    ImGui::PopStyleColor();
+                }
                 if (ImGui::DragFloat3("##transformPosition", (float*)&localPos, 0.1f)) {
                     transform.SetPosition(localPos);
                     MarkDirtyFromInspector();
                 }
                 EndInspectorRow();
+                if (hasActivePrefabContext) {
+                    PrefabOverrideInspector::DrawTransformOverrideMenu(
+                        gameObject,
+                        "PrefabTransformPositionMenu",
+                        [this]() { MarkDirtyFromInspector(); });
+                }
 
                 // Local rotation — cached euler degrees; resync when selection or gizmo changes it.
                 if (cachedRotationTarget != gameObject) {
@@ -929,7 +987,13 @@ namespace RTBEditor {
                     cachedRotationSource = transform.GetRotation().Normalized();
                 }
 
+                if (transformOverridden) {
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.45f, 0.65f, 1.0f, 1.0f));
+                }
                 BeginInspectorRow("Rotation");
+                if (transformOverridden) {
+                    ImGui::PopStyleColor();
+                }
                 if (ImGui::DragFloat3("##transformRotation", (float*)&cachedRotationDeg, 0.5f)) {
                     ApplyInspectorRotationDegrees(transform, cachedRotationDeg);
                     cachedRotationDeg = RotationDegreesFromQuaternion(transform.GetRotation());
@@ -937,6 +1001,12 @@ namespace RTBEditor {
                     MarkDirtyFromInspector();
                 }
                 EndInspectorRow();
+                if (hasActivePrefabContext) {
+                    PrefabOverrideInspector::DrawTransformOverrideMenu(
+                        gameObject,
+                        "PrefabTransformRotationMenu",
+                        [this]() { MarkDirtyFromInspector(); });
+                }
 
                 const bool rotationFieldActive = ImGui::IsItemActive() || ImGui::IsItemFocused();
                 if (!rotationFieldActive &&
@@ -947,12 +1017,24 @@ namespace RTBEditor {
 
                 // Local scale — real world scale = localScale * parent.worldScale (handled by engine)
                 RTBEngine::Math::Vector3 localScale = transform.GetScale();
+                if (transformOverridden) {
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.45f, 0.65f, 1.0f, 1.0f));
+                }
                 BeginInspectorRow("Scale");
+                if (transformOverridden) {
+                    ImGui::PopStyleColor();
+                }
                 if (ImGui::DragFloat3("##transformScale", (float*)&localScale, 0.01f)) {
                     transform.SetScale(localScale);
                     MarkDirtyFromInspector();
                 }
                 EndInspectorRow();
+                if (hasActivePrefabContext) {
+                    PrefabOverrideInspector::DrawTransformOverrideMenu(
+                        gameObject,
+                        "PrefabTransformScaleMenu",
+                        [this]() { MarkDirtyFromInspector(); });
+                }
             }
         }
 
@@ -986,7 +1068,19 @@ namespace RTBEditor {
 
             ImGui::PushID(component.get());
             std::string displayName = FormatTypeName(typeName);
+            const bool isAddedComponent = hasActivePrefabContext && activePrefabContext.baselineNode &&
+                RTBEngine::ECS::PrefabOverrideDiff::IsAddedComponent(
+                    component.get(),
+                    activePrefabContext.baselineNode);
+            if (isAddedComponent) {
+                ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.15f, 0.25f, 0.45f, 1.0f));
+                ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.2f, 0.35f, 0.55f, 1.0f));
+                ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(0.25f, 0.4f, 0.65f, 1.0f));
+            }
             bool open = ImGui::CollapsingHeader(displayName.c_str(), ImGuiTreeNodeFlags_DefaultOpen);
+            if (isAddedComponent) {
+                ImGui::PopStyleColor(3);
+            }
 
             // Context menu for component
             if (ImGui::BeginPopupContextItem("ComponentSettings")) {
@@ -995,8 +1089,18 @@ namespace RTBEditor {
                 }
                 ImGui::EndPopup();
             }
+            if (hasActivePrefabContext) {
+                PrefabOverrideInspector::DrawComponentOverrideMenu(
+                    activePrefabGameObject,
+                    component.get(),
+                    isAddedComponent,
+                    [this]() { MarkDirtyFromInspector(); });
+            }
 
             if (open) {
+                if (isAddedComponent) {
+                    ImGui::TextColored(ImVec4(0.45f, 0.65f, 1.0f, 1.0f), "Added Component (override)");
+                }
                 if (std::string(typeName) == "Animator") {
                     DrawAnimatorComponent(static_cast<RTBEngine::Animation::Animator*>(component.get()));
                 } else if (std::string(typeName) == "ParticleSystem") {
@@ -1081,6 +1185,14 @@ namespace RTBEditor {
         }
 
         EndInspectorRow();
+
+        if (hasActivePrefabContext && activePrefabGameObject) {
+            PrefabOverrideInspector::DrawPropertyOverrideMenu(
+                activePrefabGameObject,
+                component,
+                prop,
+                [this]() { MarkDirtyFromInspector(); });
+        }
 
         return changed;
     }
@@ -1172,6 +1284,13 @@ namespace RTBEditor {
 
         if (wrapInRow) {
             EndInspectorRow();
+            if (hasActivePrefabContext && activePrefabGameObject && component) {
+                PrefabOverrideInspector::DrawPropertyOverrideMenu(
+                    activePrefabGameObject,
+                    component,
+                    prop,
+                    [this]() { MarkDirtyFromInspector(); });
+            }
         }
 
         return true;
@@ -1514,59 +1633,59 @@ namespace RTBEditor {
         switch (prop.type) {
             case RTBEngine::Reflection::PropertyType::Float: {
                 float* val = (float*)data;
-                BeginInspectorRow(inspectorLabel.c_str());
+                BeginPrefabAwareInspectorRow(inspectorLabel.c_str(), component, prop);
                 if (prop.range) {
                     changed |= ImGui::SliderFloat("##value", val, prop.range->minValue, prop.range->maxValue);
                 } else {
                     changed |= ImGui::DragFloat("##value", val, 0.1f);
                 }
-                EndInspectorRow();
+                EndPrefabAwareInspectorRow(component, prop);
                 break;
             }
             case RTBEngine::Reflection::PropertyType::Int: {
                 int* val = (int*)data;
-                BeginInspectorRow(inspectorLabel.c_str());
+                BeginPrefabAwareInspectorRow(inspectorLabel.c_str(), component, prop);
                 changed |= ImGui::DragInt("##value", val, 1);
-                EndInspectorRow();
+                EndPrefabAwareInspectorRow(component, prop);
                 break;
             }
             case RTBEngine::Reflection::PropertyType::Bool: {
                 bool* val = (bool*)data;
-                BeginInspectorRow(inspectorLabel.c_str());
+                BeginPrefabAwareInspectorRow(inspectorLabel.c_str(), component, prop);
                 changed |= ImGui::Checkbox("##value", val);
-                EndInspectorRow();
+                EndPrefabAwareInspectorRow(component, prop);
                 break;
             }
             case RTBEngine::Reflection::PropertyType::Vector2: {
                 float* val = (float*)data;
-                BeginInspectorRow(inspectorLabel.c_str());
+                BeginPrefabAwareInspectorRow(inspectorLabel.c_str(), component, prop);
                 changed |= ImGui::DragFloat2("##value", val, 0.1f);
-                EndInspectorRow();
+                EndPrefabAwareInspectorRow(component, prop);
                 break;
             }
             case RTBEngine::Reflection::PropertyType::Vector3: {
                 float* val = (float*)data;
-                BeginInspectorRow(inspectorLabel.c_str());
+                BeginPrefabAwareInspectorRow(inspectorLabel.c_str(), component, prop);
                 changed |= ImGui::DragFloat3("##value", val, 0.1f);
-                EndInspectorRow();
+                EndPrefabAwareInspectorRow(component, prop);
                 break;
             }
             case RTBEngine::Reflection::PropertyType::Vector4: {
                 float* val = (float*)data;
-                BeginInspectorRow(inspectorLabel.c_str());
+                BeginPrefabAwareInspectorRow(inspectorLabel.c_str(), component, prop);
                 changed |= ImGui::DragFloat4("##value", val, 0.1f);
-                EndInspectorRow();
+                EndPrefabAwareInspectorRow(component, prop);
                 break;
             }
             case RTBEngine::Reflection::PropertyType::Color: {
                 float* val = (float*)data;
-                BeginInspectorRow(inspectorLabel.c_str());
+                BeginPrefabAwareInspectorRow(inspectorLabel.c_str(), component, prop);
                 if (prop.size == sizeof(float) * 3) {
                     changed |= ImGui::ColorEdit3("##value", val);
                 } else {
                     changed |= ImGui::ColorEdit4("##value", val);
                 }
-                EndInspectorRow();
+                EndPrefabAwareInspectorRow(component, prop);
                 break;
             }
             case RTBEngine::Reflection::PropertyType::String: {
@@ -1577,12 +1696,12 @@ namespace RTBEditor {
                     char buffer[1024];
                     memset(buffer, 0, sizeof(buffer));
                     strncpy_s(buffer, sizeof(buffer), val->c_str(), _TRUNCATE);
-                    BeginInspectorRow(inspectorLabel.c_str());
+                    BeginPrefabAwareInspectorRow(inspectorLabel.c_str(), component, prop);
                     if (ImGui::InputText("##value", buffer, sizeof(buffer))) {
                         *val = buffer;
                         changed = true;
                     }
-                    EndInspectorRow();
+                    EndPrefabAwareInspectorRow(component, prop);
                 }
                 break;
             }
@@ -1592,19 +1711,19 @@ namespace RTBEditor {
                     char buffer[1024];
                     memset(buffer, 0, sizeof(buffer));
                     strncpy_s(buffer, sizeof(buffer), val->c_str(), _TRUNCATE);
-                    BeginInspectorRow(inspectorLabel.c_str());
+                    BeginPrefabAwareInspectorRow(inspectorLabel.c_str(), component, prop);
                     if (ImGui::InputText("##value", buffer, sizeof(buffer))) {
                         *val = buffer;
                         changed = true;
                     }
-                    EndInspectorRow();
+                    EndPrefabAwareInspectorRow(component, prop);
                 }
                 break;
             }
             case RTBEngine::Reflection::PropertyType::Enum: {
                 int* val = (int*)data;
                 const char* previewValue = (size_t)*val < prop.enumNames.size() ? prop.enumNames[*val].c_str() : "Unknown";
-                BeginInspectorRow(inspectorLabel.c_str());
+                BeginPrefabAwareInspectorRow(inspectorLabel.c_str(), component, prop);
                 if (ImGui::BeginCombo("##value", previewValue)) {
                     for (int i = 0; i < (int)prop.enumNames.size(); i++) {
                         bool isSelected = (*val == i);
@@ -1616,7 +1735,7 @@ namespace RTBEditor {
                     }
                     ImGui::EndCombo();
                 }
-                EndInspectorRow();
+                EndPrefabAwareInspectorRow(component, prop);
                 break;
             }
             case RTBEngine::Reflection::PropertyType::TextureRef: {
@@ -1629,7 +1748,7 @@ namespace RTBEditor {
                     }
                     return useModelTexture ? rm.LoadModelTexture(path) : rm.LoadTexture(path);
                 };
-                BeginInspectorRow(inspectorLabel.c_str());
+                BeginPrefabAwareInspectorRow(inspectorLabel.c_str(), component, prop);
 
                 // Color del texto seg�n el estado
                 if (*texPtr) {
@@ -1700,13 +1819,13 @@ namespace RTBEditor {
                     *texPtr = nullptr;
                     changed = true;
                 }
-                EndInspectorRow();
+                EndPrefabAwareInspectorRow(component, prop);
                 break;
             }
 
             case RTBEngine::Reflection::PropertyType::AudioClipRef: {
                 void** clipPtr = (void**)data;
-                BeginInspectorRow(inspectorLabel.c_str());
+                BeginPrefabAwareInspectorRow(inspectorLabel.c_str(), component, prop);
 
                 // Color del texto seg�n el estado
                 if (*clipPtr) {
@@ -1766,13 +1885,13 @@ namespace RTBEditor {
                     *clipPtr = nullptr;
                     changed = true;
                 }
-                EndInspectorRow();
+                EndPrefabAwareInspectorRow(component, prop);
                 break;
             }
 
             case RTBEngine::Reflection::PropertyType::MeshRef: {
                 void** meshPtr = (void**)data;
-                BeginInspectorRow(inspectorLabel.c_str());
+                BeginPrefabAwareInspectorRow(inspectorLabel.c_str(), component, prop);
 
                 // Color del texto seg�n el estado
                 if (*meshPtr) {
@@ -1835,13 +1954,13 @@ namespace RTBEditor {
                     *meshPtr = nullptr;
                     changed = true;
                 }
-                EndInspectorRow();
+                EndPrefabAwareInspectorRow(component, prop);
                 break;
             }
 
             case RTBEngine::Reflection::PropertyType::FontRef: {
                 void** fontPtr = (void**)data;
-                BeginInspectorRow(inspectorLabel.c_str());
+                BeginPrefabAwareInspectorRow(inspectorLabel.c_str(), component, prop);
 
                 // Text color based on state
                 if (*fontPtr) {
@@ -1907,14 +2026,14 @@ namespace RTBEditor {
                     *fontPtr = nullptr;
                     changed = true;
                 }
-                EndInspectorRow();
+                EndPrefabAwareInspectorRow(component, prop);
                 break;
             }
             case RTBEngine::Reflection::PropertyType::GameObjectRef: {
                 RTBEngine::ECS::GameObject** goPtr = (RTBEngine::ECS::GameObject**)data;
                 RTBEngine::ECS::Scene* activeScene = dirtyContext ? GetEditingScene(*dirtyContext) : nullptr;
                 const bool hasLiveGameObject = *goPtr && IsGameObjectInScene(activeScene, *goPtr);
-                BeginInspectorRow(inspectorLabel.c_str());
+                BeginPrefabAwareInspectorRow(inspectorLabel.c_str(), component, prop);
 
                 // Text color based on state
                 if (hasLiveGameObject) {
@@ -1959,7 +2078,7 @@ namespace RTBEditor {
                     *goPtr = nullptr;
                     changed = true;
                 }
-                EndInspectorRow();
+                EndPrefabAwareInspectorRow(component, prop);
                 break;
             }
             case RTBEngine::Reflection::PropertyType::ComponentRef: {
@@ -2035,7 +2154,7 @@ namespace RTBEditor {
                     ImGui::SetTooltip("Drag a GameObject with a %s component", prop.componentTypeName.c_str());
                 }
 
-                EndInspectorRow();
+                EndPrefabAwareInspectorRow(component, prop);
                 break;
             }
             case RTBEngine::Reflection::PropertyType::List: {
@@ -2043,9 +2162,9 @@ namespace RTBEditor {
                 break;
             }
             default:
-                BeginInspectorRow(inspectorLabel.c_str());
+                BeginPrefabAwareInspectorRow(inspectorLabel.c_str(), component, prop);
                 ImGui::TextUnformatted("[Unsupported Type]");
-                EndInspectorRow();
+                EndPrefabAwareInspectorRow(component, prop);
                 break;
         }
 

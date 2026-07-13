@@ -4,7 +4,7 @@
 #include <RTBEngine/Math/Vectors/Vector3.h>
 #include <RTBEngine/Math/Quaternions/Quaternion.h>
 #include <RTBEngine/Rendering/ShaderProperties.h>
-#include <memory>
+#include <RTBEngine/Scene/PrefabInstanceResolver.h>
 #include <string>
 #include <array>
 #include <filesystem>
@@ -116,8 +116,19 @@ namespace RTBEditor {
         char addComponentSearchBuffer[128] = {};
         bool addComponentPopupWasOpen = false;
 
+        bool hasActivePrefabContext = false;
+        RTBEngine::ECS::PrefabInstanceContext activePrefabContext;
+        RTBEngine::ECS::GameObject* activePrefabGameObject = nullptr;
+
         EditorContext* dirtyContext = nullptr;
         void MarkDirtyFromInspector();
+        void BeginPrefabAwareInspectorRow(
+            const char* label,
+            RTBEngine::ECS::Component* component,
+            const RTBEngine::Reflection::PropertyInfo& prop);
+        void EndPrefabAwareInspectorRow(
+            RTBEngine::ECS::Component* component,
+            const RTBEngine::Reflection::PropertyInfo& prop);
 
     };
 

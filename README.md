@@ -2580,7 +2580,17 @@ Assets/Prefabs/
     Effects/      Impact Sparks, damage numbers, …
 ```
 
+### Prefab instance overrides (level scenes)
+
+When a prefab is placed in a level scene (not in Prefab Edit Mode), the Inspector shows:
+
+- **Prefab** header with asset name, **Select Root**, **Revert All**, and **Unlink**
+- Bold blue property labels for overridden fields (right-click → **Revert** / **Apply to Prefab**, one field at a time; see RTBEngine README §6.6.1)
+- Transform rows with the same context menu when position/rotation/scale differ from the prefab
+- **Added Component** banner on components that do not exist in the baseline prefab
+
+**Apply** writes changes to the `.prefab` file on disk and reloads `PrefabRegistry`. **Revert** restores values from the registered prefab. **Revert All** on the instance root re-instantiates the prefab while preserving scene name, UUID, parent, and active state.
+
 ### Not Yet Implemented
 
-- **Apply / Revert overrides** on prefab instances placed in a level scene (phase 5).
 - `Animator::OnValidate` bone GameObjects still target the active scene — known limitation in prefab mode.

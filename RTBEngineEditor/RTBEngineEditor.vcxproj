@@ -51,7 +51,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(ProjectDir)RTBEngine_SDK\Include;$(ProjectDir)RTBEngine_SDK\Include\RTBEngine;$(ProjectDir)RTBEngine_SDK\Include\SDL2;$(ProjectDir)RTBEngine_SDK\Include\Bullet;$(ProjectDir)RTBEngine_SDK\Include\ImGui;$(ProjectDir)RTBEngine_SDK\Include\assimp;$(ProjectDir)ThirdParty\ImGuizmo-1.83;$(ProjectDir)Source;$(ProjectDir)Assets\Scripts;$(ProjectDir)Assets\Scripts\Character;$(ProjectDir)Assets\Scripts\Player;$(ProjectDir)Assets\Scripts\Player\Gameplay;$(ProjectDir)Assets\Scripts\Player\Preview;$(ProjectDir)Assets\Scripts\Online;$(ProjectDir)Assets\Scripts\Enemy;$(ProjectDir)Assets\Scripts\Combat;$(ProjectDir)Assets\Scripts\Session;$(ProjectDir)Assets\Scripts\UI;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)RTBEngine_SDK\Include;$(ProjectDir)RTBEngine_SDK\Include\RTBEngine;$(ProjectDir)RTBEngine_SDK\Include\SDL2;$(ProjectDir)RTBEngine_SDK\Include\Bullet;$(ProjectDir)RTBEngine_SDK\Include\ImGui;$(ProjectDir)RTBEngine_SDK\Include\assimp;$(ProjectDir)ThirdParty\ImGui;$(ProjectDir)ThirdParty\ImGuizmo-1.83;$(ProjectDir)Source;$(ProjectDir)Assets\Scripts;$(ProjectDir)Assets\Scripts\Character;$(ProjectDir)Assets\Scripts\Player;$(ProjectDir)Assets\Scripts\Player\Gameplay;$(ProjectDir)Assets\Scripts\Player\Preview;$(ProjectDir)Assets\Scripts\Online;$(ProjectDir)Assets\Scripts\Enemy;$(ProjectDir)Assets\Scripts\Combat;$(ProjectDir)Assets\Scripts\Session;$(ProjectDir)Assets\Scripts\UI;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -85,7 +85,7 @@ if exist "$(ProjectDir)MyProject.rtbproj" xcopy /y /d "$(ProjectDir)MyProject.rt
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(ProjectDir)RTBEngine_SDK\Include;$(ProjectDir)RTBEngine_SDK\Include\RTBEngine;$(ProjectDir)RTBEngine_SDK\Include\SDL2;$(ProjectDir)RTBEngine_SDK\Include\Bullet;$(ProjectDir)RTBEngine_SDK\Include\ImGui;$(ProjectDir)RTBEngine_SDK\Include\assimp;$(ProjectDir)ThirdParty\ImGuizmo-1.83;$(ProjectDir)Source;$(ProjectDir)Assets\Scripts;$(ProjectDir)Assets\Scripts\Character;$(ProjectDir)Assets\Scripts\Player;$(ProjectDir)Assets\Scripts\Player\Gameplay;$(ProjectDir)Assets\Scripts\Player\Preview;$(ProjectDir)Assets\Scripts\Online;$(ProjectDir)Assets\Scripts\Enemy;$(ProjectDir)Assets\Scripts\Combat;$(ProjectDir)Assets\Scripts\Session;$(ProjectDir)Assets\Scripts\UI;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)RTBEngine_SDK\Include;$(ProjectDir)RTBEngine_SDK\Include\RTBEngine;$(ProjectDir)RTBEngine_SDK\Include\SDL2;$(ProjectDir)RTBEngine_SDK\Include\Bullet;$(ProjectDir)RTBEngine_SDK\Include\ImGui;$(ProjectDir)RTBEngine_SDK\Include\assimp;$(ProjectDir)ThirdParty\ImGui;$(ProjectDir)ThirdParty\ImGuizmo-1.83;$(ProjectDir)Source;$(ProjectDir)Assets\Scripts;$(ProjectDir)Assets\Scripts\Character;$(ProjectDir)Assets\Scripts\Player;$(ProjectDir)Assets\Scripts\Player\Gameplay;$(ProjectDir)Assets\Scripts\Player\Preview;$(ProjectDir)Assets\Scripts\Online;$(ProjectDir)Assets\Scripts\Enemy;$(ProjectDir)Assets\Scripts\Combat;$(ProjectDir)Assets\Scripts\Session;$(ProjectDir)Assets\Scripts\UI;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -120,6 +120,7 @@ if exist "$(ProjectDir)MyProject.rtbproj" xcopy /y /d "$(ProjectDir)MyProject.rt
     <ClCompile Include="Source\main.cpp" />
     <ClCompile Include="Source\Project\Project.cpp" />
     <ClCompile Include="Source\UI\Prefab\PrefabEditorSession.cpp" />
+    <ClCompile Include="Source\UI\Prefab\PrefabOverrideInspector.cpp" />
     <ClCompile Include="Source\UI\EditorLayer.cpp" />
     <ClCompile Include="Source\UI\EditorDockingUtils.cpp" />
     <ClCompile Include="Source\UI\EditorWindowPrefs.cpp" />
@@ -157,6 +158,7 @@ if exist "$(ProjectDir)MyProject.rtbproj" xcopy /y /d "$(ProjectDir)MyProject.rt
     <ClInclude Include="Source\Project\Project.h" />
     <ClInclude Include="Source\UI\DragDropPayloads.h" />
     <ClInclude Include="Source\UI\Prefab\PrefabEditorSession.h" />
+    <ClInclude Include="Source\UI\Prefab\PrefabOverrideInspector.h" />
     <ClInclude Include="Source\UI\EditorLayer.h" />
     <ClInclude Include="Source\UI\EditorDockingUtils.h" />
     <ClInclude Include="Source\UI\EditorWindowPrefs.h" />
