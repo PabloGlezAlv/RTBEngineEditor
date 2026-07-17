@@ -2195,7 +2195,7 @@ namespace RTBEditor {
             resources.LoadShaderAsset(shaderRef);
         }
 
-        const std::vector<RTBEngine::Rendering::ShaderPropertyDefinition> properties =
+        const std::vector<RTBEngine::Rendering::ShaderPropertyDefinition>& properties =
             RTBEngine::Rendering::ShaderProperties::GetDefinitions(shaderRef);
 
         ImGui::Spacing();
