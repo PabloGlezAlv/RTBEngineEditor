@@ -1,0 +1,52 @@
+return {
+    name = "Torch Flame",
+    uuid = "TORCH-FX-0001-4000-8000-000000000001",
+    position = Vector3(0.00, 0.42, 0.00),
+    components = {
+        {
+            type = "LightComponent",
+            lightType = "Point",
+            color = Color(1.00, 0.55, 0.20, 1.00),
+            intensity = 2.50,
+            range = 6.00,
+            spotAngle = 45.00,
+            spotInnerAngle = 30.00,
+            syncPosition = true,
+            syncDirection = true
+        },
+        {
+            type = "LightFlicker",
+            baseIntensity = 2.50,
+            amplitude = 0.20,
+            speed = 4.00
+        },
+        {
+            type = "ParticleSystem",
+            maxParticles = 64,
+            emissionRate = 30.00,
+            emitterShape = "Cone",
+            shapeRadius = 0.05,
+            coneAngle = 35.00,
+            boxSize = Vector3(1.00, 1.00, 1.00),
+            startLifetime = 0.55,
+            startSpeed = 1.20,
+            startSize = 0.28,
+            endSize = 0.04,
+            startColor = Color(1.00, 0.90, 0.35, 0.95),
+            endColor = Color(1.00, 0.25, 0.00, 0.00),
+            gravity = Vector3(0.00, -0.35, 0.00),
+            worldSimulation = false,
+            textureRef = "Assets/VFX/fuegomultitextura.png",
+            visible = true,
+            loop = true,
+            playOnAwake = true,
+            simulateInEditMode = true,
+            destroyOwnerWhenFinished = false,
+            burstCount = 0,
+            textureSheetColumns = 4,
+            textureSheetRows = 2,
+            textureSheetFrameCount = 8,
+            textureSheetFramesPerSecond = 12.00
+        },
+    }
+}
