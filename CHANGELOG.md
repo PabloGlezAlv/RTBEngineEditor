@@ -1,14 +1,29 @@
 # Changelog — RTBEngineEditor
 
-**Current version:** `0.8.1` (2 commits ahead of tag `0.8.0`)
+**Current version:** `0.9.0`
 
 API documentation: [`README.md`](README.md)
 
-**Requirements:** RTBEngine SDK **0.8.0+** (generate with `../RTBEngine/BuildSDK.bat`).
+**Requirements:** RTBEngine SDK **0.9.0** (generate with `../RTBEngine/BuildSDK.bat`).
 
 ---
 
-## [0.8.1] — 2026 (development, untagged)
+## [0.9.0] — 2026
+
+### Added
+- Game-owned ECS bootstrap (`GameEcsBootstrap` → `RTBScripts_InitializeEcs`) registering **projectile** systems from GameScripts.
+- **`ProjectileSimulation`** / **`ProjectileComponents`** in `Assets/Scripts/Combat/` (no longer in the engine SDK).
+- Swarm perf benchmark in GameScripts: `PerfSwarmBenchmark`, `PerfSwarmAgent`, `SwarmSimulation`.
+- Test scenes **`SwarmPerf_OOP`** and **`SwarmPerf_ECS`** (1500 agents; OOP MeshRenderers vs ECS + one instanced `MeshRenderer`).
+- Stats overlay: **ECS Entities** and **ECS Sim** (generic engine stats).
+- **Source code** inspector for scripts (`.h`/`.cpp`) and shaders (from 0.8.1).
+
+### Changed
+- `ProjectileComponent` creates/syncs ECS entities through GameScripts simulation APIs.
+- EmberOrb shader for Arcanist (from 0.8.1).
+- Requires engine **0.9.0** (`MeshRenderer` instancing + `InitializeGameEcs`).
+
+## [0.8.1]
 
 ### Added
 - **Source code** inspector for scripts (`.h`/`.cpp`) and shaders.

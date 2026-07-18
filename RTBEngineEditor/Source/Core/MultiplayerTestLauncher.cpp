@@ -55,7 +55,7 @@ namespace {
     }
 
     constexpr const char* kDefaultOnlineProductName = "RTBEngine";
-    constexpr const char* kDefaultOnlineProductVersion = "0.8.0";
+    constexpr const char* kDefaultOnlineProductVersion = "0.9.0";
 
     bool ContainsPlayerIndexToken(const std::string& value)
     {
