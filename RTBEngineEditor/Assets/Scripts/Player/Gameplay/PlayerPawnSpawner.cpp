@@ -126,6 +126,9 @@ void PlayerPawnSpawner::OnAwake()
         return;
     }
 
+    // Drop stale pawns left behind after Play→Stop scene reloads.
+    PlayerRegistry::GetInstance().Clear();
+
     // Avoid duplicating a scene-authored Player (editor load runs Awake on spawners).
     if (RTBEngine::ECS::Scene* activeScene =
             RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene()) {

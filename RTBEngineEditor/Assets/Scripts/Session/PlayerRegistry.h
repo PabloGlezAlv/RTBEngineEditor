@@ -21,6 +21,7 @@ public:
     static PlayerRegistry& GetInstance();
 
     void Clear();
+    void PruneInvalidPawns(RTBEngine::ECS::Scene* scene);
     void Register(const PawnInfo& info);
     void RegisterPlayerPawn(RTBEngine::ECS::GameObject* pawn);
     void Unregister(RTBEngine::ECS::GameObject* pawn);

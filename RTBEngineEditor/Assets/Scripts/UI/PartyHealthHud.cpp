@@ -67,6 +67,11 @@ void PartyHealthHud::OnStart()
         SetUiVisibleRecursive(entryTemplate, false);
     }
 
+    if (RTBEngine::ECS::Scene* scene =
+            RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene()) {
+        PlayerRegistry::GetInstance().PruneInvalidPawns(scene);
+    }
+
     pawnSpawnedSubscription = PlayerRegistry::GetInstance().SubscribePawnSpawned(
         [this](const PawnInfo& info) {
             RefreshEntries();

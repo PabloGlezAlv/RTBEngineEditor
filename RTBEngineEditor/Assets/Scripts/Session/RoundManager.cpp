@@ -291,6 +291,11 @@ void RoundManager::InitializeRuntime()
 
 void RoundManager::BindPlayerRegistryHandlers()
 {
+    if (RTBEngine::ECS::Scene* scene =
+            RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene()) {
+        PlayerRegistry::GetInstance().PruneInvalidPawns(scene);
+    }
+
     playerSpawnSubscription = PlayerRegistry::GetInstance().SubscribePawnSpawned(
         [this](const PawnInfo& info) {
             HandlePlayerPawnRegistered(info);

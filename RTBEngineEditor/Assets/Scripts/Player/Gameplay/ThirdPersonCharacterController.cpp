@@ -539,6 +539,9 @@ void ThirdPersonCharacterController::OnDestroy()
     UnsubscribeFromAttackJoystick();
     UnsubscribeFromAnimatorKeys();
     UnsubscribeFromHealth();
+    if (owner) {
+        PlayerRegistry::GetInstance().Unregister(owner);
+    }
 }
 
 void ThirdPersonCharacterController::ClampSettings()

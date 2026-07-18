@@ -1,5 +1,7 @@
 #include "PlayerRegistry.h"
 
+#include <RTBEngine/Scene/Scene.h>
+
 #include "CharacterBase.h"
 #include "HealthComponent.h"
 #include "ThirdPersonCharacterController.h"
@@ -21,6 +23,26 @@ void PlayerRegistry::Clear()
     pawnToIndex.clear();
     pawnSpawnedEvent.Clear();
     pawnDestroyedEvent.Clear();
+}
+
+void PlayerRegistry::PruneInvalidPawns(RTBEngine::ECS::Scene* scene)
+{
+    for (std::size_t index = pawns.size(); index-- > 0;) {
+        RTBEngine::ECS::GameObject* pawn = pawns[index].pawn;
+        if (!pawn) {
+            UnregisterAtIndex(index, false);
+            continue;
+        }
+
+        if (!scene) {
+            continue;
+        }
+
+        RTBEngine::ECS::GameObject* found = scene->FindGameObjectByUUID(pawn->GetUUID());
+        if (found != pawn) {
+            UnregisterAtIndex(index, false);
+        }
+    }
 }
 
 void PlayerRegistry::RebuildLookupTables()
