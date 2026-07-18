@@ -1,5 +1,7 @@
 #include "SwarmSimulation.h"
 
+#include <RTBEngine/ECS/Components/LocalTransform.h>
+#include <RTBEngine/ECS/Components/VisualLink.h>
 #include <RTBEngine/ECS/World.h>
 #include <RTBEngine/Scene/GameObject.h>
 
@@ -32,7 +34,7 @@ namespace RTBEngine {
                             + std::sin(motion.phase * motion.bobSpeed) * motion.bobAmplitude;
                         transform.fixedHeight = transform.position.y;
 
-                        if (ProjectileVisualLink* link = world.TryGet<ProjectileVisualLink>(entity)) {
+                        if (VisualLink* link = world.TryGet<VisualLink>(entity)) {
                             if (link->visual) {
                                 link->visual->GetTransform().SetPosition(transform.position);
                             }
@@ -67,7 +69,7 @@ namespace RTBEngine {
             world.Add<SwarmMotion>(entity, motion);
             world.Add<SwarmColor>(entity, color);
             if (visual) {
-                world.Add<ProjectileVisualLink>(entity, ProjectileVisualLink{ visual });
+                world.Add<VisualLink>(entity, VisualLink{ visual });
             }
             return entity;
         }

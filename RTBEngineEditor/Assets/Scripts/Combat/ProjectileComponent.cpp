@@ -4,10 +4,11 @@
 #include "CombatAuthority.h"
 #include "FloatingDamageNumberSpawner.h"
 #include "HitFlashComponent.h"
+#include "ProjectileComponents.h"
+#include "ProjectileSimulation.h"
 
-#include <RTBEngine/ECS/ProjectileSimulation.h>
+#include <RTBEngine/ECS/Components/LocalTransform.h>
 #include <RTBEngine/ECS/World.h>
-#include <RTBEngine/ECS/Components/ProjectileComponents.h>
 #include <RTBEngine/Scene/AudioSourceComponent.h>
 #include <RTBEngine/Scene/GameObject.h>
 #include <RTBEngine/Scene/ObjectPool.h>

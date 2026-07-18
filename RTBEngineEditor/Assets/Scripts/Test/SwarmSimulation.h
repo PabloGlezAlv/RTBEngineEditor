@@ -2,6 +2,7 @@
 
 #include "SwarmComponents.h"
 
+#include <RTBEngine/ECS/Components/LocalTransform.h>
 #include <RTBEngine/ECS/Entity.h>
 
 namespace RTBEngine {
@@ -12,7 +13,6 @@ namespace RTBEngine {
     namespace ECS {
 
         class World;
-        struct LocalTransform;
 
         void RegisterSwarmSystems(World& world);
 

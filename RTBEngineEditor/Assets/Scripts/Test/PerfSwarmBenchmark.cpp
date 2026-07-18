@@ -5,6 +5,7 @@
 
 #include <RTBEngine/Core/Logger.h>
 #include <RTBEngine/Core/ResourceManager.h>
+#include <RTBEngine/ECS/Components/LocalTransform.h>
 #include <RTBEngine/ECS/World.h>
 #include <RTBEngine/Math/Matrix/Matrix4.h>
 #include <RTBEngine/Scene/GameObject.h>

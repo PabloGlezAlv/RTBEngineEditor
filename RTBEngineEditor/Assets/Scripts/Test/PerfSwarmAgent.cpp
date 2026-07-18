@@ -2,6 +2,7 @@
 #include "SwarmComponents.h"
 #include "SwarmSimulation.h"
 
+#include <RTBEngine/ECS/Components/LocalTransform.h>
 #include <RTBEngine/ECS/World.h>
 #include <RTBEngine/Scene/GameObject.h>
 
