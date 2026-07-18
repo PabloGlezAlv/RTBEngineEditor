@@ -20,6 +20,7 @@
 #include <RTBEngine/Audio/AudioSystem.h>
 #include <RTBEngine/Physics/PhysicsWorld.h>
 #include <RTBEngine/Scene/ParticleSystem.h>
+#include <RTBEngine/Scene/AnimatedBillboard.h>
 #include <RTBEngine/Animation/Animator.h>
 #include <RTBEngine/UI/CanvasSystem.h>
 #include "../UI/Panels/SceneViewPanel.h"
@@ -278,6 +279,7 @@ namespace RTBEditor {
             RTBEngine::ECS::Scene* editingScene = GetEditingScene(uiLayer->GetContext());
             if (editingScene) {
                 RTBEngine::ECS::ParticleSystem::TickScenePreview(editingScene, deltaTime);
+                RTBEngine::ECS::AnimatedBillboard::TickScenePreview(editingScene, deltaTime);
                 TickAnimatorPreview(editingScene, deltaTime);
             }
         }
