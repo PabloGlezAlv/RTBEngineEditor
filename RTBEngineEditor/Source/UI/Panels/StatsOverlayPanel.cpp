@@ -41,8 +41,8 @@ namespace RTBEditor {
             ImGui::Text("Phys Bodies  %u", s.physicsBodies);
             ImGui::Text("Audio Srcs   %u", s.audioSources);
             ImGui::Separator();
-            ImGui::Text("ECS Proj     %u", s.ecsProjectileCount);
-            ImGui::Text("ECS Sim      %.3f ms", s.ecsProjectileSimMs);
+            ImGui::Text("ECS Entities %u", s.ecsEntityCount);
+            ImGui::Text("ECS Sim      %.3f ms", s.ecsSimMs);
         }
         ImGui::End();
     }

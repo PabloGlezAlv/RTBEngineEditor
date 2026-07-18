@@ -32,8 +32,8 @@ namespace RTBEditor {
         uint32_t components = 0;
         uint32_t physicsBodies = 0;
         uint32_t audioSources = 0;
-        uint32_t ecsProjectileCount = 0;
-        float ecsProjectileSimMs = 0.0f;
+        uint32_t ecsEntityCount = 0;
+        float ecsSimMs = 0.0f;
     };
 
     struct NavDebugSettings {

@@ -261,11 +261,10 @@ namespace RTBEditor {
             if (engineApp) {
                 RTBEngine::Physics::PhysicsWorld* pw = engineApp->GetPhysicsWorld();
                 stats.physicsBodies = pw ? static_cast<uint32_t>(pw->GetActiveBodyCount()) : 0u;
-                const RTBEngine::ECS::ProjectileSimulationStats& projectileStats =
-                    engineApp->GetProjectileSimulationStats();
-                stats.ecsProjectileCount = projectileStats.activeProjectileCount;
-                stats.ecsProjectileSimMs =
-                    static_cast<float>(projectileStats.lastSimulationMilliseconds);
+                const RTBEngine::ECS::EcsSimulationStats& ecsStats =
+                    engineApp->GetEcsSimulationStats();
+                stats.ecsEntityCount = ecsStats.aliveEntityCount;
+                stats.ecsSimMs = static_cast<float>(ecsStats.lastSimulationMilliseconds);
             }
 
             // Audio

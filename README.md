@@ -2,7 +2,7 @@
 
 A visual game editor for **RTBEngine**, built in **C++17** using **ImGui** for the entire UI with a docking-based multi-panel layout. The editor consumes the engine through `RTBEngine_SDK` (`RTBEngine.lib` plus `RTBEngine.dll`) and adds an additional layer of tooling on top: scene authoring, property inspection, asset browsing, real-time play testing, and game build export.
 
-> **Note:** Authoring uses `RTBEngine::Scene`. Dense simulation uses `RTBEngine::ECS` (projectiles first). GameScripts and the editor consume both via `RTBEngine_SDK`.
+> **Note:** Authoring uses `RTBEngine::Scene` (GameObject–Component). Dense simulation uses `RTBEngine::ECS` (sparse-set World; projectiles first). The editor and GameScripts consume both via `RTBEngine_SDK`. After engine ECS/API changes: rebuild engine → SDK → GameScripts → editor.
 
 **Version:** `0.8.1` — requires **RTBEngine SDK 0.8.0+**. See [`CHANGELOG.md`](CHANGELOG.md).
 
