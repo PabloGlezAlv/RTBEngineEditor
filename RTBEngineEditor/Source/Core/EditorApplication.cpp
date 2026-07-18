@@ -66,7 +66,6 @@ namespace {
                 continue;
             }
 
-            // Prefer the real editor source root when running from x64/Debug or x64/Release.
             if (fs::exists(dir / "RTBEngineEditor.vcxproj") || fs::exists(dir / "Source")) {
                 return candidate;
             }
@@ -229,6 +228,8 @@ namespace RTBEditor {
             }
 
             Update(deltaTime);
+            
+            RTBEngine::Audio::AudioSystem::GetInstance().Update();
             Render();
         }
     }
