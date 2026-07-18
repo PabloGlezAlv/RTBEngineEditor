@@ -22,27 +22,6 @@
 
 namespace {
 
-RTBEngine::ECS::GameObject* FindChildByNameRecursive(
-    RTBEngine::ECS::GameObject* root,
-    const std::string& objectName)
-{
-    if (!root) {
-        return nullptr;
-    }
-
-    if (root->GetName() == objectName) {
-        return root;
-    }
-
-    for (RTBEngine::ECS::GameObject* child : root->GetChildren()) {
-        if (RTBEngine::ECS::GameObject* match = FindChildByNameRecursive(child, objectName)) {
-            return match;
-        }
-    }
-
-    return nullptr;
-}
-
 RTBEngine::UI::UIJoystick* FindSceneAttackJoystick(RTBEngine::ECS::Scene* scene)
 {
     if (!scene) {
@@ -64,16 +43,10 @@ void WireSpawnedPlayerCamera(RTBEngine::ECS::GameObject* spawnedPawn)
     }
 
     auto* controller = spawnedPawn->GetComponent<ThirdPersonCharacterController>();
-    if (!controller) {
-        return;
-    }
-
-    if (!controller->cameraObject) {
-        controller->cameraObject = FindChildByNameRecursive(spawnedPawn, "MainCamera");
-    }
-
-    if (!controller->cameraObject) {
-        RTB_WARN("[PlayerPawnSpawner] MainCamera is not wired on spawned player pawn.");
+    if (!controller || !controller->cameraObject) {
+        if (controller && !controller->cameraObject) {
+            RTB_WARN("[PlayerPawnSpawner] cameraObject is not assigned on spawned player pawn.");
+        }
         return;
     }
 
@@ -105,12 +78,6 @@ void WireSpawnedPlayerReferences(
     auto* controller = spawnedPawn->GetComponent<ThirdPersonCharacterController>();
     if (!controller) {
         return;
-    }
-
-    if (!controller->animator) {
-        if (RTBEngine::ECS::GameObject* playerVisual = FindChildByNameRecursive(spawnedPawn, "Player")) {
-            controller->animator = playerVisual->GetComponent<RTBEngine::Animation::Animator>();
-        }
     }
 
     WireSpawnedPlayerCamera(spawnedPawn);
@@ -157,6 +124,30 @@ void PlayerPawnSpawner::OnAwake()
 {
     if (!owner) {
         return;
+    }
+
+    // Avoid duplicating a scene-authored Player (editor load runs Awake on spawners).
+    if (RTBEngine::ECS::Scene* activeScene =
+            RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene()) {
+        for (const auto& gameObjectPtr : activeScene->GetGameObjects()) {
+            RTBEngine::ECS::GameObject* candidate = gameObjectPtr.get();
+            if (!candidate || candidate->GetParent() != nullptr) {
+                continue;
+            }
+            if (candidate->GetName() == "Player") {
+                spawnedPawn = candidate;
+                WireSpawnedPlayerReferences(spawnedPawn, onlinePlayerManager);
+                if (onlinePlayerManager) {
+                    onlinePlayerManager->localPlayerObject = spawnedPawn;
+                }
+                if (roundManager) {
+                    roundManager->playerObject = spawnedPawn;
+                }
+                PlayerRegistry::GetInstance().RegisterPlayerPawn(spawnedPawn);
+                owner->SetActive(false);
+                return;
+            }
+        }
     }
 
     PlayerCharacterSelection& selection = PlayerCharacterSelection::GetInstance();

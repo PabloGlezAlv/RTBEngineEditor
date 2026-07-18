@@ -482,7 +482,7 @@ return {
                         }
                     },
 {
-                        name = "Player",
+                        name = "Avatar",
                         uuid = "5200AC9B-039A-416E-82AE-FD5FE1754C95",
                         scale = Vector3(0.85, 0.85, 0.85),
                         components = {

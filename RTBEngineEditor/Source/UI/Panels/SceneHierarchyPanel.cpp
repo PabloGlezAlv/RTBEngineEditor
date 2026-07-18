@@ -390,7 +390,7 @@ namespace RTBEditor {
 
                     if (prefab && activeScene) {
                         std::vector<RTBEngine::ECS::GameObject*> childGOs;
-                        RTBEngine::ECS::GameObject* go = prefab->Instantiate(nullptr, childGOs);
+                        RTBEngine::ECS::GameObject* go = prefab->Instantiate(nullptr, childGOs, true);
                         if (go) {
                             activeScene->AddGameObject(go, false);
                             for (auto* child : childGOs) {
@@ -639,7 +639,7 @@ namespace RTBEditor {
                     RTBEngine::ECS::Scene* scene = GetEditingScene(context);
                     if (prefab && scene) {
                         std::vector<RTBEngine::ECS::GameObject*> childGOs;
-                        RTBEngine::ECS::GameObject* go = prefab->Instantiate(gameObject, childGOs);
+                        RTBEngine::ECS::GameObject* go = prefab->Instantiate(gameObject, childGOs, true);
                         if (go) {
                             scene->AddGameObject(go, false);
                             for (auto* child : childGOs) {

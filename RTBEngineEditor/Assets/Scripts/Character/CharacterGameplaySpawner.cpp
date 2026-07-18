@@ -75,7 +75,7 @@ RTBEngine::ECS::GameObject* CharacterGameplaySpawner::InstantiateFromDefinition(
         position,
         rotation,
         nullptr,
-        false);
+        true);
 }
 
 RTBEngine::ECS::GameObject* CharacterGameplaySpawner::InstantiateFromCharacterId(

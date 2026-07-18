@@ -496,7 +496,7 @@ function CreateScene()
                 components = {
                     {
                         type = "RoundManager",
-                        playerObject = "E8682E33-50ED-45D8-BC76-B31113639F9E",
+                        playerObject = "",
                         onlinePlayerManager = "B1A2C3D4-E5F6-7890-ABCD-EF1234567891/OnlinePlayerManager",
                         uiHandler = "62E6AE07-7DC2-42B3-8F0E-AA7CA40264F0/RoundUIHandler",
                         roundCountdownDuration = 5.00,
@@ -557,8 +557,10 @@ function CreateScene()
                 position = Vector3(-3.00, 0.00, 0.00),
                 overrides = {
                     components = {
+                        { type = "EnemyTargetTracker",
+                        },
                         { type = "EnemyAnimationDriver",
-                            animator = "598826A5-78CB-4DD6-8A34-3DEAC0FFA275/Animator",
+                            animator = "E1F5A9B7-1030-4F9B-9A18-77AD11B06E20/Animator",
                         },
                         { type = "EnemyMeleeAI",
                             health = "753770D2-B00E-4859-B7D3-5ABF1249B014/HealthComponent",
@@ -568,8 +570,199 @@ function CreateScene()
                             navAgent = "753770D2-B00E-4859-B7D3-5ABF1249B014/NavAgentComponent",
                             meleeAttack = "753770D2-B00E-4859-B7D3-5ABF1249B014/MeleeSphereAttackAbility",
                         },
+                        { type = "MeleeSphereAttackAbility",
+                            hitAudio = "C0MBAT-M1LE-4001-8000-000000000001/AudioSourceComponent",
+                        },
+                        { type = "ComicOuchSpawner",
+                            health = nil,
+                            bubbleTextures = {
+                                "Assets/UI/Comic/Ouch/ouch_01.png",
+                                "Assets/UI/Comic/Ouch/ow_01.png",
+                                "Assets/UI/Comic/Ouch/ugh_01.png"                            },
+                        },
+                        { type = "HitFlashComponent",
+                            health = nil,
+                        },
+                        { type = "FloatingDamageNumberSpawner",
+                            health = nil,
+                        },
                     },
                 },
+                children = {
+                    {
+                        name = "Enemy Model",
+                        uuid = "E1F5A9B7-1030-4F9B-9A18-77AD11B06E20",
+                        scale = Vector3(0.85, 0.85, 0.85),
+                        components = {
+                            {
+                                type = "Animator",
+                                modelRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Barbarian.fbx",
+                                keyClips = {
+                                    { key = "Walk", clipFbxRef = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_MovementBasic.fbx|Walking_A", loop = true },
+                                    { key = "Attack", clipFbxRef = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_CombatMelee.fbx|Melee_2H_Attack_Chop", loop = false },
+                                    { key = "Death", clipFbxRef = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_General.fbx|Death_A", loop = false },
+                                },
+                                currentClipName = "Walk",
+                                defaultClip = "Walk",
+                                speed = 1.00,
+                                playing = false,
+                                looping = true,
+                                additionalModels = {
+                                    "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_MovementBasic.fbx",
+                                    "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_General.fbx",
+                                    "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_CombatMelee.fbx"                                }
+                            },
+                        },
+                        children = {
+                            {
+                                name = "root",
+                                uuid = "A913A790-4692-4110-A796-722BD0230BA6",
+                                children = {
+                                    {
+                                        name = "hips",
+                                        uuid = "75E2BE78-0EE1-42BE-AA7A-D3A8C29E1FB8",
+                                        children = {
+                                            {
+                                                name = "spine",
+                                                uuid = "DD98E0C1-34F9-4278-97A7-A9D387C9B7D6",
+                                                children = {
+                                                    {
+                                                        name = "chest",
+                                                        uuid = "43575E6B-BFCC-4D3C-B8CA-F2013655F36D",
+                                                        children = {
+                                                            {
+                                                                name = "upperarm.l",
+                                                                uuid = "1FCC041D-0715-42CF-91FA-2F66AC3580A2",
+                                                                children = {
+                                                                    {
+                                                                        name = "lowerarm.l",
+                                                                        uuid = "1C97F497-3C41-4D85-928F-C0A2541C8C96",
+                                                                        children = {
+                                                                            {
+                                                                                name = "wrist.l",
+                                                                                uuid = "208F9A02-2C1B-4824-8AFA-5BEDF19AAA4F",
+                                                                                children = {
+                                                                                    {
+                                                                                        name = "hand.l",
+                                                                                        uuid = "2443ACB2-27D0-4F54-9FDE-92E6851FC96E",
+                                                                                        children = {
+                                                                                            {
+                                                                                                name = "handslot.l",
+                                                                                                uuid = "885764D7-E9A8-42CE-A12F-D36FBB8544F2",
+                                                                                            },
+                                                                                        }
+                                                                                    },
+                                                                                }
+                                                                            },
+                                                                        }
+                                                                    },
+                                                                }
+                                                            },
+                                                            {
+                                                                name = "upperarm.r",
+                                                                uuid = "0E1BCC73-ACD6-437C-BF99-45FD955A92CD",
+                                                                children = {
+                                                                    {
+                                                                        name = "lowerarm.r",
+                                                                        uuid = "A8F06D92-C01A-4029-9F09-0BFBB47622C4",
+                                                                        children = {
+                                                                            {
+                                                                                name = "wrist.r",
+                                                                                uuid = "BB8FD2BC-B586-4DE6-AFC5-96CACC0874C1",
+                                                                                children = {
+                                                                                    {
+                                                                                        name = "hand.r",
+                                                                                        uuid = "EFC307FE-69E8-4CAB-8988-C013159E3EBF",
+                                                                                        children = {
+                                                                                            {
+                                                                                                name = "handslot.r",
+                                                                                                uuid = "F332D7B2-D5C8-404A-997D-33F1147A41E4",
+                                                                                                children = {
+                                                                                                    {
+                                                                                                        name = "Barbarian_Axe",
+                                                                                                        uuid = "C50212F0-226D-456B-A058-A747589E732E",
+                                                                                                        position = Vector3(0.00, 0.10, -0.06),
+                                                                                                        rotation = Quaternion.FromEulerAngles(0.00, 0.00, 90.00),
+                                                                                                        components = {
+                                                                                                            {
+                                                                                                                type = "MeshRenderer",
+                                                                                                                meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/axe_2handed.obj",
+                                                                                                                textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/barbarian_texture.png",
+                                                                                                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
+                                                                                                                meshIndex = 0,
+                                                                                                                multiMesh = false
+                                                                                                            },
+                                                                                                        }
+                                                                                                    },
+                                                                                                }
+                                                                                            },
+                                                                                        }
+                                                                                    },
+                                                                                }
+                                                                            },
+                                                                        }
+                                                                    },
+                                                                }
+                                                            },
+                                                            {
+                                                                name = "head",
+                                                                uuid = "CB92EDB4-E54D-4FCD-951D-98144EF7717D",
+                                                            },
+                                                        }
+                                                    },
+                                                }
+                                            },
+                                            {
+                                                name = "upperleg.l",
+                                                uuid = "E103DC17-6004-40E2-8F41-E7CDC03BEE48",
+                                                children = {
+                                                    {
+                                                        name = "lowerleg.l",
+                                                        uuid = "E20ED9C6-C758-46A0-A0F9-1F434C7C14C2",
+                                                        children = {
+                                                            {
+                                                                name = "foot.l",
+                                                                uuid = "13ED9E96-764C-4787-A961-BC3C38BA154C",
+                                                                children = {
+                                                                    {
+                                                                        name = "toes.l",
+                                                                        uuid = "5CC4532D-1FAC-4D94-B799-DA63988E17AC",
+                                                                    },
+                                                                }
+                                                            },
+                                                        }
+                                                    },
+                                                }
+                                            },
+                                            {
+                                                name = "upperleg.r",
+                                                uuid = "4F32A35D-7711-4952-91A4-61D10C419E4B",
+                                                children = {
+                                                    {
+                                                        name = "lowerleg.r",
+                                                        uuid = "285046BA-A1FA-4131-A7CE-79EA2A854686",
+                                                        children = {
+                                                            {
+                                                                name = "foot.r",
+                                                                uuid = "758AE098-C0C2-459F-B813-7EFBC4FD2D5E",
+                                                                children = {
+                                                                    {
+                                                                        name = "toes.r",
+                                                                        uuid = "EE957398-A104-4E17-A52C-73E31C519A6B",
+                                                                    },
+                                                                }
+                                                            },
+                                                        }
+                                                    },
+                                                }
+                                            },
+                                        }
+                                    },
+                                }
+                            },
+                        }
+                    },
+                }
             },
             {
                 name = "OnlinePlayers",
@@ -577,25 +770,25 @@ function CreateScene()
                 components = {
                     {
                         type = "OnlinePlayerManager",
-                        localPlayerObject = "E8682E33-50ED-45D8-BC76-B31113639F9E",
+                        localPlayerObject = "",
                         roundManager = "4A7C26F9-7F62-4A3A-B8F0-91A4B36C1601/RoundManager",
                         remoteSpawnOffsetX = 0.50
                     },
                 }
             },
+            
             {
                 name = "PlayerSpawnPoint",
                 uuid = "PLSP-AWN0-4000-8000-000000000001",
-                active = false,
                 collisionLayer = "Characters",
                 position = Vector3(0.90, 0.10, 0.00),
                 components = {
                     {
                         type = "PlayerPawnSpawner",
                         onlinePlayerManager = "B1A2C3D4-E5F6-7890-ABCD-EF1234567891/OnlinePlayerManager",
-                        roundManager = "4A7C26F9-7F62-4A3A-B8F0-91A4B36C1601/RoundManager"
+                        roundManager = "4A7C26F9-7F62-4A3A-B8F0-91A4B36C1601/RoundManager",
                     },
-                }
+                },
             },
             {
                 name = "Dungeon Environment",
@@ -615,8 +808,6 @@ function CreateScene()
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -647,8 +838,6 @@ function CreateScene()
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -679,8 +868,6 @@ function CreateScene()
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -711,8 +898,6 @@ function CreateScene()
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -743,8 +928,6 @@ function CreateScene()
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -775,8 +958,6 @@ function CreateScene()
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -807,8 +988,6 @@ function CreateScene()
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -839,8 +1018,6 @@ function CreateScene()
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -871,8 +1048,6 @@ function CreateScene()
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -903,8 +1078,6 @@ function CreateScene()
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -935,8 +1108,6 @@ function CreateScene()
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -967,8 +1138,6 @@ function CreateScene()
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -999,8 +1168,6 @@ function CreateScene()
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -1031,8 +1198,6 @@ function CreateScene()
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -1063,8 +1228,6 @@ function CreateScene()
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -1095,8 +1258,6 @@ function CreateScene()
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -1127,8 +1288,6 @@ function CreateScene()
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -1159,8 +1318,6 @@ function CreateScene()
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -1191,8 +1348,6 @@ function CreateScene()
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -1223,8 +1378,6 @@ function CreateScene()
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -1255,8 +1408,6 @@ function CreateScene()
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -1287,8 +1438,6 @@ function CreateScene()
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -1319,8 +1468,6 @@ function CreateScene()
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -1351,8 +1498,6 @@ function CreateScene()
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -1382,8 +1527,6 @@ function CreateScene()
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -1414,8 +1557,6 @@ function CreateScene()
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -1446,8 +1587,6 @@ function CreateScene()
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -1478,8 +1617,6 @@ function CreateScene()
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -1510,8 +1647,6 @@ function CreateScene()
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -1542,8 +1677,6 @@ function CreateScene()
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -1574,8 +1707,6 @@ function CreateScene()
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -1606,8 +1737,6 @@ function CreateScene()
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -1638,8 +1767,6 @@ function CreateScene()
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -1670,8 +1797,6 @@ function CreateScene()
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -1702,8 +1827,6 @@ function CreateScene()
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -1734,8 +1857,6 @@ function CreateScene()
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -1766,8 +1887,6 @@ function CreateScene()
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -1798,8 +1917,6 @@ function CreateScene()
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -1830,8 +1947,6 @@ function CreateScene()
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -1862,8 +1977,6 @@ function CreateScene()
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -1894,8 +2007,6 @@ function CreateScene()
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -1926,8 +2037,6 @@ function CreateScene()
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -1958,8 +2067,6 @@ function CreateScene()
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -1990,8 +2097,6 @@ function CreateScene()
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -2022,8 +2127,6 @@ function CreateScene()
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -2054,8 +2157,6 @@ function CreateScene()
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -2086,8 +2187,6 @@ function CreateScene()
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -2118,8 +2217,6 @@ function CreateScene()
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -2150,8 +2247,6 @@ function CreateScene()
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/floor_tile_large.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -2194,16 +2289,13 @@ function CreateScene()
                                 components = {
                                     {
                                         type = "Occludable",
-                                        occluderEnabled = true,
-                                        boundsPadding = 0.00
+                                        occluderEnabled = true
                                     },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall_corner.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -2232,16 +2324,13 @@ function CreateScene()
                                 components = {
                                     {
                                         type = "Occludable",
-                                        occluderEnabled = true,
-                                        boundsPadding = 0.00
+                                        occluderEnabled = true
                                     },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall_corner.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -2270,16 +2359,13 @@ function CreateScene()
                                 components = {
                                     {
                                         type = "Occludable",
-                                        occluderEnabled = true,
-                                        boundsPadding = 0.00
+                                        occluderEnabled = true
                                     },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall_corner.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -2304,20 +2390,17 @@ function CreateScene()
                                 name = "wall_corner_ne",
                                 uuid = "2511373C-D1A9-4183-AE10-3CC6C9A44409",
                                 position = Vector3(14.00, -0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
                                 components = {
                                     {
                                         type = "Occludable",
-                                        occluderEnabled = true,
-                                        boundsPadding = 0.00
+                                        occluderEnabled = true
                                     },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall_corner.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -2345,16 +2428,13 @@ function CreateScene()
                                 components = {
                                     {
                                         type = "Occludable",
-                                        occluderEnabled = true,
-                                        boundsPadding = 0.00
+                                        occluderEnabled = true
                                     },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -2382,16 +2462,13 @@ function CreateScene()
                                 components = {
                                     {
                                         type = "Occludable",
-                                        occluderEnabled = true,
-                                        boundsPadding = 0.00
+                                        occluderEnabled = true
                                     },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -2419,16 +2496,13 @@ function CreateScene()
                                 components = {
                                     {
                                         type = "Occludable",
-                                        occluderEnabled = true,
-                                        boundsPadding = 0.00
+                                        occluderEnabled = true
                                     },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -2456,16 +2530,13 @@ function CreateScene()
                                 components = {
                                     {
                                         type = "Occludable",
-                                        occluderEnabled = true,
-                                        boundsPadding = 0.00
+                                        occluderEnabled = true
                                     },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -2493,16 +2564,13 @@ function CreateScene()
                                 components = {
                                     {
                                         type = "Occludable",
-                                        occluderEnabled = true,
-                                        boundsPadding = 0.00
+                                        occluderEnabled = true
                                     },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -2530,16 +2598,13 @@ function CreateScene()
                                 components = {
                                     {
                                         type = "Occludable",
-                                        occluderEnabled = true,
-                                        boundsPadding = 0.00
+                                        occluderEnabled = true
                                     },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -2567,16 +2632,13 @@ function CreateScene()
                                 components = {
                                     {
                                         type = "Occludable",
-                                        occluderEnabled = true,
-                                        boundsPadding = 0.00
+                                        occluderEnabled = true
                                     },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -2601,20 +2663,17 @@ function CreateScene()
                                 name = "wall_n_-12",
                                 uuid = "56BF061A-D1D6-441B-B6E6-26165AEED521",
                                 position = Vector3(-12.00, 0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
                                 components = {
                                     {
                                         type = "Occludable",
-                                        occluderEnabled = true,
-                                        boundsPadding = 0.00
+                                        occluderEnabled = true
                                     },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -2639,20 +2698,17 @@ function CreateScene()
                                 name = "wall_n_-8",
                                 uuid = "0475162D-E451-45F6-90B0-551038025002",
                                 position = Vector3(-8.00, 0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
                                 components = {
                                     {
                                         type = "Occludable",
-                                        occluderEnabled = true,
-                                        boundsPadding = 0.00
+                                        occluderEnabled = true
                                     },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -2677,20 +2733,17 @@ function CreateScene()
                                 name = "wall_n_-4",
                                 uuid = "8987FEDF-75C9-4809-90E3-782CB9278901",
                                 position = Vector3(-4.00, 0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
                                 components = {
                                     {
                                         type = "Occludable",
-                                        occluderEnabled = true,
-                                        boundsPadding = 0.00
+                                        occluderEnabled = true
                                     },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -2715,20 +2768,17 @@ function CreateScene()
                                 name = "wall_n_0",
                                 uuid = "013C2A45-B1B5-4645-A8AC-EE5824F94914",
                                 position = Vector3(0.00, 0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
                                 components = {
                                     {
                                         type = "Occludable",
-                                        occluderEnabled = true,
-                                        boundsPadding = 0.00
+                                        occluderEnabled = true
                                     },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -2753,20 +2803,17 @@ function CreateScene()
                                 name = "wall_n_4",
                                 uuid = "06B97D68-350C-4301-8DE6-C714191DBF3D",
                                 position = Vector3(4.00, 0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
                                 components = {
                                     {
                                         type = "Occludable",
-                                        occluderEnabled = true,
-                                        boundsPadding = 0.00
+                                        occluderEnabled = true
                                     },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -2791,20 +2838,17 @@ function CreateScene()
                                 name = "wall_n_8",
                                 uuid = "03EA9125-FCEF-4F65-A817-7C2697593C83",
                                 position = Vector3(8.00, 0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
                                 components = {
                                     {
                                         type = "Occludable",
-                                        occluderEnabled = true,
-                                        boundsPadding = 0.00
+                                        occluderEnabled = true
                                     },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -2829,20 +2873,17 @@ function CreateScene()
                                 name = "wall_n_12",
                                 uuid = "677F63A1-66E1-4D54-9A76-C7F8BC485349",
                                 position = Vector3(12.00, 0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
                                 components = {
                                     {
                                         type = "Occludable",
-                                        occluderEnabled = true,
-                                        boundsPadding = 0.00
+                                        occluderEnabled = true
                                     },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -2871,16 +2912,13 @@ function CreateScene()
                                 components = {
                                     {
                                         type = "Occludable",
-                                        occluderEnabled = true,
-                                        boundsPadding = 0.00
+                                        occluderEnabled = true
                                     },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -2909,16 +2947,13 @@ function CreateScene()
                                 components = {
                                     {
                                         type = "Occludable",
-                                        occluderEnabled = true,
-                                        boundsPadding = 0.00
+                                        occluderEnabled = true
                                     },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -2947,16 +2982,13 @@ function CreateScene()
                                 components = {
                                     {
                                         type = "Occludable",
-                                        occluderEnabled = true,
-                                        boundsPadding = 0.00
+                                        occluderEnabled = true
                                     },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -2985,16 +3017,13 @@ function CreateScene()
                                 components = {
                                     {
                                         type = "Occludable",
-                                        occluderEnabled = true,
-                                        boundsPadding = 0.00
+                                        occluderEnabled = true
                                     },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -3023,16 +3052,13 @@ function CreateScene()
                                 components = {
                                     {
                                         type = "Occludable",
-                                        occluderEnabled = true,
-                                        boundsPadding = 0.00
+                                        occluderEnabled = true
                                     },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -3061,16 +3087,13 @@ function CreateScene()
                                 components = {
                                     {
                                         type = "Occludable",
-                                        occluderEnabled = true,
-                                        boundsPadding = 0.00
+                                        occluderEnabled = true
                                     },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -3099,16 +3122,13 @@ function CreateScene()
                                 components = {
                                     {
                                         type = "Occludable",
-                                        occluderEnabled = true,
-                                        boundsPadding = 0.00
+                                        occluderEnabled = true
                                     },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -3137,16 +3157,13 @@ function CreateScene()
                                 components = {
                                     {
                                         type = "Occludable",
-                                        occluderEnabled = true,
-                                        boundsPadding = 0.00
+                                        occluderEnabled = true
                                     },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -3175,16 +3192,13 @@ function CreateScene()
                                 components = {
                                     {
                                         type = "Occludable",
-                                        occluderEnabled = true,
-                                        boundsPadding = 0.00
+                                        occluderEnabled = true
                                     },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -3213,16 +3227,13 @@ function CreateScene()
                                 components = {
                                     {
                                         type = "Occludable",
-                                        occluderEnabled = true,
-                                        boundsPadding = 0.00
+                                        occluderEnabled = true
                                     },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -3251,16 +3262,13 @@ function CreateScene()
                                 components = {
                                     {
                                         type = "Occludable",
-                                        occluderEnabled = true,
-                                        boundsPadding = 0.00
+                                        occluderEnabled = true
                                     },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -3289,16 +3297,13 @@ function CreateScene()
                                 components = {
                                     {
                                         type = "Occludable",
-                                        occluderEnabled = true,
-                                        boundsPadding = 0.00
+                                        occluderEnabled = true
                                     },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -3327,16 +3332,13 @@ function CreateScene()
                                 components = {
                                     {
                                         type = "Occludable",
-                                        occluderEnabled = true,
-                                        boundsPadding = 0.00
+                                        occluderEnabled = true
                                     },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -3365,16 +3367,13 @@ function CreateScene()
                                 components = {
                                     {
                                         type = "Occludable",
-                                        occluderEnabled = true,
-                                        boundsPadding = 0.00
+                                        occluderEnabled = true
                                     },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -3402,16 +3401,13 @@ function CreateScene()
                                 components = {
                                     {
                                         type = "Occludable",
-                                        occluderEnabled = true,
-                                        boundsPadding = 0.00
+                                        occluderEnabled = true
                                     },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -3439,16 +3435,13 @@ function CreateScene()
                                 components = {
                                     {
                                         type = "Occludable",
-                                        occluderEnabled = true,
-                                        boundsPadding = 0.00
+                                        occluderEnabled = true
                                     },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -3476,16 +3469,13 @@ function CreateScene()
                                 components = {
                                     {
                                         type = "Occludable",
-                                        occluderEnabled = true,
-                                        boundsPadding = 0.00
+                                        occluderEnabled = true
                                     },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -3513,16 +3503,13 @@ function CreateScene()
                                 components = {
                                     {
                                         type = "Occludable",
-                                        occluderEnabled = true,
-                                        boundsPadding = 0.00
+                                        occluderEnabled = true
                                     },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -3551,16 +3538,13 @@ function CreateScene()
                                 components = {
                                     {
                                         type = "Occludable",
-                                        occluderEnabled = true,
-                                        boundsPadding = 0.00
+                                        occluderEnabled = true
                                     },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -3589,16 +3573,13 @@ function CreateScene()
                                 components = {
                                     {
                                         type = "Occludable",
-                                        occluderEnabled = true,
-                                        boundsPadding = 0.00
+                                        occluderEnabled = true
                                     },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -3627,16 +3608,13 @@ function CreateScene()
                                 components = {
                                     {
                                         type = "Occludable",
-                                        occluderEnabled = true,
-                                        boundsPadding = 0.00
+                                        occluderEnabled = true
                                     },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -3665,16 +3643,13 @@ function CreateScene()
                                 components = {
                                     {
                                         type = "Occludable",
-                                        occluderEnabled = true,
-                                        boundsPadding = 0.00
+                                        occluderEnabled = true
                                     },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/wall.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -3708,16 +3683,13 @@ function CreateScene()
                                 components = {
                                     {
                                         type = "Occludable",
-                                        occluderEnabled = true,
-                                        boundsPadding = 0.00
+                                        occluderEnabled = true
                                     },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/pillar_decorated.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -3745,16 +3717,13 @@ function CreateScene()
                                 components = {
                                     {
                                         type = "Occludable",
-                                        occluderEnabled = true,
-                                        boundsPadding = 0.00
+                                        occluderEnabled = true
                                     },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/pillar_decorated.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -3782,16 +3751,13 @@ function CreateScene()
                                 components = {
                                     {
                                         type = "Occludable",
-                                        occluderEnabled = true,
-                                        boundsPadding = 0.00
+                                        occluderEnabled = true
                                     },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/pillar_decorated.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -3819,16 +3785,13 @@ function CreateScene()
                                 components = {
                                     {
                                         type = "Occludable",
-                                        occluderEnabled = true,
-                                        boundsPadding = 0.00
+                                        occluderEnabled = true
                                     },
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/pillar_decorated.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -3859,8 +3822,6 @@ function CreateScene()
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/torch_lit.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -4022,8 +3983,6 @@ function CreateScene()
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/torch_lit.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -4179,15 +4138,13 @@ function CreateScene()
                                 name = "torch_n",
                                 uuid = "31C7F376-69C7-4C51-B45C-57D2EBB9EA73",
                                 position = Vector3(0.00, 0.00, 13.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/torch_lit.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -4195,7 +4152,7 @@ function CreateScene()
                                 children = {
                                     {
                                         name = "FlameFX",
-                                        uuid = "TORCH-FLN-0001-4000-8000-000000000001",
+                                        uuid = "TORCH-FL3-0001-4000-8000-000000000001",
                                         position = Vector3(0.00, 0.42, 0.00),
                                         components = {
                                             {
@@ -4219,7 +4176,7 @@ function CreateScene()
                                         children = {
                                             {
                                                 name = "FlameBody",
-                                                uuid = "TORCH-FLN-BODY-4000-8000-000000000001",
+                                                uuid = "TORCH-FL3-BODY-4000-8000-000000000001",
                                                 components = {
                                                     {
                                                         type = "AnimatedBillboard",
@@ -4242,7 +4199,7 @@ function CreateScene()
                                             },
                                             {
                                                 name = "FlameCore",
-                                                uuid = "TORCH-FLN-CORE-4000-8000-000000000001",
+                                                uuid = "TORCH-FL3-CORE-4000-8000-000000000001",
                                                 components = {
                                                     {
                                                         type = "AnimatedBillboard",
@@ -4265,7 +4222,7 @@ function CreateScene()
                                             },
                                             {
                                                 name = "Embers",
-                                                uuid = "TORCH-FLN-EMBR-4000-8000-000000000001",
+                                                uuid = "TORCH-FL3-EMBR-4000-8000-000000000001",
                                                 position = Vector3(0.00, 0.10, 0.00),
                                                 components = {
                                                     {
@@ -4301,7 +4258,7 @@ function CreateScene()
                                             },
                                             {
                                                 name = "Smoke",
-                                                uuid = "TORCH-FLN-SMOK-4000-8000-000000000001",
+                                                uuid = "TORCH-FL3-SMOK-4000-8000-000000000001",
                                                 position = Vector3(0.00, 0.35, 0.00),
                                                 components = {
                                                     {
@@ -4349,8 +4306,6 @@ function CreateScene()
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/barrel_large.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -4366,8 +4321,6 @@ function CreateScene()
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/barrel_large.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -4384,8 +4337,6 @@ function CreateScene()
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/chest.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
@@ -4395,279 +4346,17 @@ function CreateScene()
                                 name = "banner_1",
                                 uuid = "60FDC273-65AE-491F-A7EC-4B6E0DB54C3F",
                                 position = Vector3(0.00, 0.00, 13.50),
-                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
                                         meshRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/banner_red.obj",
                                         textureRef = "Assets/3D/KayKit_DungeonRemastered_1.1_FREE/Assets/obj/dungeon_texture.png",
                                         colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                        shaderRef = "basic",
-                                        shaderPropertyOverrides = "",
                                         meshIndex = 0,
                                         multiMesh = false
                                     },
                                 }
-                            },
-                        }
-                    },
-                }
-            },
-            {
-                name = "Player",
-                uuid = "E8682E33-50ED-45D8-BC76-B31113639F9E",
-                collisionLayer = "Characters",
-                prefab = "Player Ranger",
-                position = Vector3(0.90, 0.10, 0.00),
-                overrides = {
-                    components = {
-                    },
-                },
-                children = {
-                    {
-                        name = "PlayerNameplate",
-                        uuid = "A1000001-0001-4000-8000-000000000001",
-                        position = Vector3(0.00, 2.20, 0.00),
-                        rotation = Quaternion.FromEulerAngles(50.00, -180.00, 0.00),
-                        children = {
-                            {
-                                name = "NameplateCanvas",
-                                uuid = "A1000001-0002-4000-8000-000000000002",
-                                components = {
-                                    {
-                                        type = "Canvas",
-                                        renderMode = "WorldSpace",
-                                        canvasSize = Vector2(200.00, 24.00),
-                                        pixelsPerUnit = 100.00,
-                                        sortOrder = 25,
-                                        faceCamera = false,
-                                        faceCameraLockY = false
-                                    },
-                                    {
-                                        type = "PlayerNameplateUI",
-                                        displayNameText = "A1000001-0004-4000-8000-000000000004/UIText",
-                                        healthBarUI = "A1000001-0005-4000-8000-000000000005/HealthBarUI"
-                                    },
-                                },
-                                children = {
-                                    {
-                                        name = "NameplateRoot",
-                                        uuid = "A1000001-0003-4000-8000-000000000003",
-                                        children = {
-                                            {
-                                                name = "NameplateHealthTrack",
-                                                uuid = "A1000001-0005-4000-8000-000000000005",
-                                                components = {
-                                                    {
-                                                        type = "UIPanel",
-                                                        backgroundColor = Color(0.00, 0.00, 0.00, 0.00),
-                                                        borderColor = Color(0.00, 0.00, 0.00, 0.00),
-                                                        borderThickness = 0.00,
-                                                        hasBorder = false,
-                                                        isVisible = true,
-                                                        raycastTarget = false,
-                                                        anchorMin = Vector2(0.50, 0.24),
-                                                        anchorMax = Vector2(0.50, 0.24),
-                                                        pivot = Vector2(0.50, 0.50),
-                                                        anchoredPosition = Vector2(0.00, -2.00),
-                                                        sizeDelta = Vector2(168.00, 5.00),
-                                                        rotation = 0.00,
-                                                        scale = Vector2(1.00, 1.00)
-                                                    },
-                                                    {
-                                                        type = "UISlider",
-                                                        minValue = 0.00,
-                                                        maxValue = 1.00,
-                                                        value = 1.00,
-                                                        interactable = false,
-                                                        fillPanel = "A1000001-0006-4000-8000-000000000006/UIPanel",
-                                                        handlePanel = "A1000001-0007-4000-8000-000000000007/UIPanel"
-                                                    },
-                                                    {
-                                                        type = "HealthBarUI",
-                                                        health = "E8682E33-50ED-45D8-BC76-B31113639F9E/HealthComponent",
-                                                        fillPanel = "A1000001-0006-4000-8000-000000000006/UIPanel",
-                                                        highHealthColor = Color(0.12, 0.78, 0.24, 1.00),
-                                                        midHealthColor = Color(0.95, 0.74, 0.16, 1.00),
-                                                        lowHealthColor = Color(0.82, 0.18, 0.18, 1.00)
-                                                    },
-                                                },
-                                                children = {
-                                                    {
-                                                        name = "NameplateFill",
-                                                        uuid = "A1000001-0006-4000-8000-000000000006",
-                                                        components = {
-                                                            {
-                                                                type = "UIPanel",
-                                                                backgroundColor = Color(0.12, 0.78, 0.24, 1.00),
-                                                                borderColor = Color(0.00, 0.00, 0.00, 0.00),
-                                                                borderThickness = 0.00,
-                                                                hasBorder = false,
-                                                                isVisible = true,
-                                                                raycastTarget = false,
-                                                                anchorMin = Vector2(0.00, 0.50),
-                                                                anchorMax = Vector2(0.00, 0.50),
-                                                                pivot = Vector2(0.00, 0.50),
-                                                                anchoredPosition = Vector2(1.00, 0.00),
-                                                                sizeDelta = Vector2(168.00, 12.00),
-                                                                rotation = 0.00,
-                                                                scale = Vector2(1.00, 1.00)
-                                                            },
-                                                        }
-                                                    },
-                                                }
-                                            },
-                                        }
-                                    },
-                                }
-                            },
-                        }
-                    },
-                    {
-                        name = "Player",
-                        uuid = "5200AC9B-039A-416E-82AE-FD5FE1754C95",
-                        scale = Vector3(0.85, 0.85, 0.85),
-                        components = {
-                            {
-                                type = "Animator",
-                                modelRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Ranger.fbx",
-                                currentClipName = "Idle",
-                                defaultClip = "Idle",
-                                speed = 1.00,
-                                playing = true,
-                                looping = true,
-                                additionalModels = {
-                                    "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_MovementBasic.fbx",
-                                    "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_General.fbx",
-                                    "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_CombatRanged.fbx"                                },
-                                keyClips = {
-                                        {
-                                            key = "Idle",
-                                            clipFbxRef = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_General.fbx|Idle_A",
-                                            loop = true
-                                        },
-                                        {
-                                            key = "Walk",
-                                            clipFbxRef = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_MovementBasic.fbx|Walking_A",
-                                            loop = true
-                                        },
-                                        {
-                                            key = "Run",
-                                            clipFbxRef = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_MovementBasic.fbx|Running_A",
-                                            loop = true
-                                        },
-                                        {
-                                            key = "AimDraw",
-                                            clipFbxRef = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_CombatRanged.fbx|Ranged_Bow_Draw",
-                                            loop = false
-                                        },
-                                        {
-                                            key = "AimLoop",
-                                            clipFbxRef = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_CombatRanged.fbx|Ranged_Bow_Aiming_Idle",
-                                            loop = true
-                                        },
-                                        {
-                                            key = "Attack",
-                                            clipFbxRef = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_CombatRanged.fbx|Ranged_Bow_Release",
-                                            loop = false
-                                        },
-                                        {
-                                            key = "Death",
-                                            clipFbxRef = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_General.fbx|Death_A",
-                                            loop = false
-                                        }                                }
-                            },
-                        },
-                        children = {
-                            {
-                                name = "root",
-                                uuid = "C5AD6486-1C69-44C8-8FA5-1631DCC3890A",
-                                children = {
-                                    {
-                                        name = "hips",
-                                        uuid = "69657A7D-CE8E-42BB-AE35-5AC07910643C",
-                                        children = {
-                                            {
-                                                name = "spine",
-                                                uuid = "5C4C8BA9-6DC6-4D34-B001-841D4E3DCA8B",
-                                                children = {
-                                                    {
-                                                        name = "chest",
-                                                        uuid = "C02222AD-8A4A-44A9-9568-713639DFE8FE",
-                                                        children = {
-                                                            {
-                                                                name = "upperarm.r",
-                                                                uuid = "0E0C67B4-D021-47E3-8F72-A485BFC87DC6",
-                                                                children = {
-                                                                    {
-                                                                        name = "lowerarm.r",
-                                                                        uuid = "E5B6B75F-147D-4477-8084-1D15986F517E",
-                                                                        children = {
-                                                                            {
-                                                                                name = "wrist.r",
-                                                                                uuid = "3AC8ADA2-B039-4438-92D1-4FA79F1F2F0F",
-                                                                                children = {
-                                                                                    {
-                                                                                        name = "hand.r",
-                                                                                        uuid = "0BFBA09A-04BA-4516-AA49-8F07C2032614",
-                                                                                        children = {
-                                                                                            {
-                                                                                                name = "handslot.r",
-                                                                                                uuid = "5F01E38D-E9AC-46EF-81CB-2F439BD1306F",
-                                                                                                children = {
-                                                                                                    {
-                                                                                                        name = "Ranger_Arrow",
-                                                                                                        uuid = "R4NG3R00-ARRO-4000-8000-000000000001",
-                                                                                                        active = false,
-                                                                                                        rotation = Quaternion.FromEulerAngles(-90.00, 0.00, 0.00),
-                                                                                                        components = {
-                                                                                                            {
-                                                                                                                type = "MeshRenderer",
-                                                                                                                meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/arrow_bow.obj",
-                                                                                                                textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/ranger_texture.png",
-                                                                                                                colorRef = Color(1.00, 1.00, 1.00, 1.00),
-                                                                                                                shaderRef = "basic",
-                                                                                                                shaderPropertyOverrides = "",
-                                                                                                                meshIndex = 0,
-                                                                                                                multiMesh = false
-                                                                                                            },
-                                                                                                        }
-                                                                                                    },
-                                                                                                }
-                                                                                            },
-                                                                                        }
-                                                                                    },
-                                                                                }
-                                                                            },
-                                                                        }
-                                                                    },
-                                                                }
-                                                            },
-                                                        }
-                                                    },
-                                                }
-                                            },
-                                        }
-                                    },
-                                }
-                            },
-                        }
-                    },
-                    {
-                        name = "MainCamera",
-                        uuid = "0E7CE370-7C0E-45A8-89CA-AD7A3E70C216",
-                        position = Vector3(0.00, 9.48, -7.07),
-                        rotation = Quaternion.FromEulerAngles(50.00, 0.00, 0.00),
-                        components = {
-                            {
-                                type = "CameraComponent",
-                                fov = 45.00,
-                                nearClip = 0.10,
-                                farClip = 100.00,
-                                projectionType = "Perspective",
-                                orthographicSize = 3.50,
-                                syncWithTransform = true,
-                                isMainCamera = true
                             },
                         }
                     },
