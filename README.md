@@ -2,7 +2,7 @@
 
 A visual game editor for **RTBEngine**, built in **C++17** using **ImGui** for the entire UI with a docking-based multi-panel layout. The editor consumes the engine through `RTBEngine_SDK` (`RTBEngine.lib` plus `RTBEngine.dll`) and adds an additional layer of tooling on top: scene authoring, property inspection, asset browsing, real-time play testing, and game build export.
 
-> **Note:** Engine scene types live in `Engine/Scene/` under namespace `RTBEngine::ECS` (legacy name). That is the GameObject–Component layer, not a data-oriented ECS. Hybrid ECS support is planned for a future engine release.
+> **Note:** Authoring uses `RTBEngine::Scene`. Dense simulation uses `RTBEngine::ECS` (projectiles first). GameScripts and the editor consume both via `RTBEngine_SDK`.
 
 **Version:** `0.8.1` — requires **RTBEngine SDK 0.8.0+**. See [`CHANGELOG.md`](CHANGELOG.md).
 
@@ -261,8 +261,8 @@ struct OptionalWindowState {
 };
 
 struct EditorContext {
-    RTBEngine::ECS::GameObject* selectedGameObject = nullptr;
-    std::vector<RTBEngine::ECS::GameObject*> selectedGameObjects;
+    RTBEngine::Scene::GameObject* selectedGameObject = nullptr;
+    std::vector<RTBEngine::Scene::GameObject*> selectedGameObjects;
     EditorState                 state              = EditorState::Edit;
     std::filesystem::path       selectedAssetPath;
     std::filesystem::path       pendingSceneLoad;
@@ -290,7 +290,7 @@ struct EditorContext {
 
 ```cpp
 bool IsPrefabEditMode(const EditorContext& context);
-RTBEngine::ECS::Scene* GetEditingScene(const EditorContext& context);
+RTBEngine::Scene::Scene* GetEditingScene(const EditorContext& context);
 void MarkEditingDirty(EditorContext& context);
 ```
 
@@ -494,8 +494,8 @@ Panels added after `Initialize()` are inserted into the render loop and drawn al
 ### Selected Object Accessors
 
 ```cpp
-RTBEngine::ECS::GameObject* GetSelectedGameObject() const;
-void SetSelectedGameObject(RTBEngine::ECS::GameObject* go);
+RTBEngine::Scene::GameObject* GetSelectedGameObject() const;
+void SetSelectedGameObject(RTBEngine::Scene::GameObject* go);
 ```
 
 These forward to `context.selectedGameObject`. Used by `EditorApplication` to clear selection on Stop.
@@ -646,7 +646,7 @@ Inactive GameObjects are rendered with a dimmed text color. Selected GameObjects
 ### Tree Node Rendering
 
 ```cpp
-void DrawGameObjectNode(ECS::GameObject* go, EditorContext& context);
+void DrawGameObjectNode(Scene::GameObject* go, EditorContext& context);
 ```
 
 For each node:
@@ -684,7 +684,7 @@ if (ImGui::IsMouseDown(0) &&
 When a `PAYLOAD_GAMEOBJECT` is dropped onto another node, the dragged object's parent is changed:
 
 ```cpp
-ECS::Scene* scene = SceneManager::GetInstance().GetActiveScene();
+Scene::Scene* scene = SceneManager::GetInstance().GetActiveScene();
 auto* dragged = scene->FindGameObjectByUUID(payload->gameObjectId);
 
 // Cycle detection: don't allow dropping a parent onto its own descendant
@@ -718,8 +718,8 @@ Right-clicking empty space in the Hierarchy opens a context menu with:
 ### Deletion
 
 ```cpp
-void DeleteGameObject(ECS::Scene* scene, ECS::GameObject* go);
-void CollectDescendants(ECS::GameObject* go, std::vector<ECS::GameObject*>& result);
+void DeleteGameObject(Scene::Scene* scene, Scene::GameObject* go);
+void CollectDescendants(Scene::GameObject* go, std::vector<Scene::GameObject*>& result);
 ```
 
 `Del` key on the selected object triggers deletion. `CollectDescendants` gathers all children and grandchildren. All descendants are removed before the root to avoid dangling parent pointers. Scene is marked dirty.
@@ -791,7 +791,7 @@ Converting quaternion → Euler → quaternion introduces floating-point roundin
 For each component on the selected object:
 
 ```cpp
-void DrawComponents(ECS::GameObject* go, EditorContext& context);
+void DrawComponents(Scene::GameObject* go, EditorContext& context);
 ```
 
 1. Gets `TypeInfo` via `component->GetTypeInfo()`.
@@ -802,7 +802,7 @@ void DrawComponents(ECS::GameObject* go, EditorContext& context);
 ### Property Drawers
 
 ```cpp
-void DrawProperty(ECS::Component* component,
+void DrawProperty(Scene::Component* component,
                   const Reflection::PropertyInfo& prop,
                   EditorContext& context);
 ```
@@ -852,7 +852,7 @@ For typed script asset slots, the Inspector now uses the reflected `assetType` m
 
 ```cpp
 // Display current target name or "(None)":
-ECS::GameObject** goPtr = reinterpret_cast<ECS::GameObject**>(propPtr);
+Scene::GameObject** goPtr = reinterpret_cast<Scene::GameObject**>(propPtr);
 const char* targetName = *goPtr ? (*goPtr)->GetNameCStr() : "(None)";
 ImGui::Text("%s", targetName);
 
@@ -883,7 +883,7 @@ if (ImGui::BeginPopup("ComponentSearch")) {
     for (auto& [name, typeInfo] : TypeRegistry::GetInstance().GetRegisteredTypes()) {
         if (/* name matches filter */) {
             if (ImGui::Selectable(name.c_str())) {
-                ECS::Component* comp = typeInfo->Create();
+                Scene::Component* comp = typeInfo->Create();
                 go->AddComponent(comp);   // AddComponent with raw pointer variant
                 SceneManager::GetInstance().MarkSceneDirty();
                 ImGui::CloseCurrentPopup();
@@ -1034,7 +1034,7 @@ Ray ray = RaycastUtils::ScreenPointToRay(
     *editorCamera
 );
 
-ECS::GameObject* closest = nullptr;
+Scene::GameObject* closest = nullptr;
 float            minDist = FLT_MAX;
 
 for (auto& go : scene->GetGameObjects()) {
@@ -1336,7 +1336,7 @@ When "Create C++ Component" is selected, a dialog asks for the component name, t
 #include <RTBEngine/Scene/Component.h>
 #include <RTBEngine/Reflection/PropertyMacros.h>
 
-class ComponentName : public RTBEngine::ECS::Component {
+class ComponentName : public RTBEngine::Scene::Component {
 public:
     ComponentName();
     ~ComponentName() override;
@@ -1776,7 +1776,7 @@ Alternatively, create the files manually following this template:
 #include <RTBEngine/Scene/Component.h>
 #include <RTBEngine/Reflection/PropertyMacros.h>
 
-class Rotator : public RTBEngine::ECS::Component {
+class Rotator : public RTBEngine::Scene::Component {
 public:
     Rotator();
     ~Rotator() override;
@@ -1841,7 +1841,7 @@ Script components can now expose professional Inspector fields that are more str
 Minimal example:
 
 ```cpp
-class ThirdPersonCharacterController : public RTBEngine::ECS::Component {
+class ThirdPersonCharacterController : public RTBEngine::Scene::Component {
 public:
     RTBEngine::Animation::Animator* animator = nullptr;
     std::string idleAnimationFbx;
@@ -1954,14 +1954,14 @@ SceneLoader::LoadScene():
 ```cpp
 void Rotator::OnStart() {
     // Get sibling component:
-    auto* rb = GetOwner()->GetComponent<RTBEngine::ECS::RigidBodyComponent>();
+    auto* rb = GetOwner()->GetComponent<RTBEngine::Scene::RigidBodyComponent>();
     if (rb) {
         // ...
     }
 
     // Get component on another object:
     if (targetRef) {
-        auto* mr = targetRef->GetComponent<RTBEngine::ECS::MeshRenderer>();
+        auto* mr = targetRef->GetComponent<RTBEngine::Scene::MeshRenderer>();
     }
 }
 ```
@@ -2026,7 +2026,7 @@ float snapZ = std::floor(camera->GetPosition().z / spacing) * spacing;
 
 ```cpp
 void Initialize();
-void RenderSelection(RTBEngine::ECS::GameObject* selected,
+void RenderSelection(RTBEngine::Scene::GameObject* selected,
                      RTBEngine::Rendering::Camera* camera);
 void Shutdown();
 ```
@@ -2051,8 +2051,8 @@ Wireframe color: `(0.1, 1.0, 0.0, 1.0)` (bright green).
 
 ```cpp
 void Render(RTBEngine::Rendering::Camera* camera,
-            RTBEngine::ECS::Scene* scene,
-            RTBEngine::ECS::GameObject* selectedObject,
+            RTBEngine::Scene::Scene* scene,
+            RTBEngine::Scene::GameObject* selectedObject,
             const NavDebugSettings& settings);
 ```
 
@@ -2533,8 +2533,8 @@ public:
     bool Save();
     bool IsOpen() const;
     bool IsDirty() const;
-    RTBEngine::ECS::Scene* GetStagingScene() const;
-    RTBEngine::ECS::GameObject* GetRootObject() const;
+    RTBEngine::Scene::Scene* GetStagingScene() const;
+    RTBEngine::Scene::GameObject* GetRootObject() const;
     const std::filesystem::path& GetAssetPath() const;
 };
 ```

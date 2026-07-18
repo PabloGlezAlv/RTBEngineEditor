@@ -201,12 +201,12 @@ namespace RTBEditor {
     }
 
     void ColliderRenderer::RenderSelection(RTBEngine::Rendering::Camera* camera,
-                                           RTBEngine::ECS::GameObject* selectedObject) {
+                                           RTBEngine::Scene::GameObject* selectedObject) {
         if (!camera || !selectedObject || !lineShader) return;
 
         //Box collider branch
-        RTBEngine::ECS::BoxColliderComponent* boxCollider =
-            selectedObject->GetComponent<RTBEngine::ECS::BoxColliderComponent>();
+        RTBEngine::Scene::BoxColliderComponent* boxCollider =
+            selectedObject->GetComponent<RTBEngine::Scene::BoxColliderComponent>();
         if (boxCollider) {
             RTBEngine::Math::Vector3 halfExtents = boxCollider->size * 0.5f;
             const RTBEngine::Math::Vector3 center = boxCollider->GetCenterOffset();
@@ -266,22 +266,22 @@ namespace RTBEditor {
         }
 
         //Sphere collider branch
-        RTBEngine::ECS::SphereColliderComponent* sphereCollider =
-            selectedObject->GetComponent<RTBEngine::ECS::SphereColliderComponent>();
+        RTBEngine::Scene::SphereColliderComponent* sphereCollider =
+            selectedObject->GetComponent<RTBEngine::Scene::SphereColliderComponent>();
         if (sphereCollider) {
             RenderSphereWireframe(camera, selectedObject, sphereCollider);
         }
 
-        RTBEngine::ECS::CapsuleColliderComponent* capsuleCollider =
-            selectedObject->GetComponent<RTBEngine::ECS::CapsuleColliderComponent>();
+        RTBEngine::Scene::CapsuleColliderComponent* capsuleCollider =
+            selectedObject->GetComponent<RTBEngine::Scene::CapsuleColliderComponent>();
         if (capsuleCollider) {
             RenderCapsuleWireframe(camera, selectedObject, capsuleCollider);
         }
     }
 
     void ColliderRenderer::RenderSphereWireframe(RTBEngine::Rendering::Camera* camera,
-                                                  RTBEngine::ECS::GameObject* object,
-                                                  RTBEngine::ECS::SphereColliderComponent* collider) {
+                                                  RTBEngine::Scene::GameObject* object,
+                                                  RTBEngine::Scene::SphereColliderComponent* collider) {
         const float radius = collider->radius;
         const RTBEngine::Math::Vector3 center = object->GetTransform().GetPosition() + collider->centerOffset;
         RenderSphereWireframe(camera, center, radius, RTBEngine::Math::Vector4(0.1f, 1.0f, 0.1f, 1.0f));
@@ -338,8 +338,8 @@ namespace RTBEditor {
     }
 
     void ColliderRenderer::RenderCapsuleWireframe(RTBEngine::Rendering::Camera* camera,
-                                                  RTBEngine::ECS::GameObject* object,
-                                                  RTBEngine::ECS::CapsuleColliderComponent* collider) {
+                                                  RTBEngine::Scene::GameObject* object,
+                                                  RTBEngine::Scene::CapsuleColliderComponent* collider) {
         const float r = collider->radius;
         const float cylinderHalf = std::max(0.0f, collider->height * 0.5f - r);
         const RTBEngine::Math::Vector3 localCenter = collider->centerOffset;

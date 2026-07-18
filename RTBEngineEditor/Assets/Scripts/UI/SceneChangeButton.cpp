@@ -14,7 +14,7 @@ RTB_END_REGISTER(SceneChangeButton)
 
 void SceneChangeButton::OnPointerClick(const RTBEngine::UI::PointerEventData&)
 {
-    RTBEngine::ECS::GameObject* go = GetOwner();
+    RTBEngine::Scene::GameObject* go = GetOwner();
     if (go) {
         auto* button = go->GetComponent<RTBEngine::UI::UIButton>();
         if (button && !button->IsInteractable()) {
@@ -28,5 +28,5 @@ void SceneChangeButton::OnPointerClick(const RTBEngine::UI::PointerEventData&)
     }
 
     RTBEngine::Core::Time::SetPaused(false);
-    RTBEngine::ECS::SceneManager::GetInstance().RequestSceneLoad(scenePath.c_str());
+    RTBEngine::Scene::SceneManager::GetInstance().RequestSceneLoad(scenePath.c_str());
 }

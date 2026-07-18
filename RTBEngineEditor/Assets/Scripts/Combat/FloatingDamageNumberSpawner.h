@@ -12,12 +12,12 @@
 #include <string>
 
 namespace RTBEngine {
-    namespace ECS {
+    namespace Scene {
         class GameObject;
     }
 }
 
-class FloatingDamageNumberSpawner : public RTBEngine::ECS::Component
+class FloatingDamageNumberSpawner : public RTBEngine::Scene::Component
 {
 public:
     FloatingDamageNumberSpawner() = default;
@@ -37,7 +37,7 @@ public:
     void SpawnDamageNumber(float amount, const RTBEngine::Math::Vector3& worldPosition);
 
 private:
-    RTBEngine::ECS::Prefab* damageNumberPrefab = nullptr;
+    RTBEngine::Scene::Prefab* damageNumberPrefab = nullptr;
     std::string damageNumberPoolKey;
     RTBEngine::Core::EventSubscription damageSubscription;
 

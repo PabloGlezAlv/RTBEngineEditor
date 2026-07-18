@@ -13,7 +13,7 @@ namespace RTBEngine {
     }
 }
 
-class MainMenuController : public RTBEngine::ECS::Component {
+class MainMenuController : public RTBEngine::Scene::Component {
 public:
     MainMenuController() = default;
     ~MainMenuController() override = default;

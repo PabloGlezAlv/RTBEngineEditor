@@ -11,7 +11,7 @@ RTB_END_REGISTER(ExitToMenuButton)
 
 void ExitToMenuButton::OnPointerClick(const RTBEngine::UI::PointerEventData&)
 {
-    RTBEngine::ECS::GameObject* go = GetOwner();
+    RTBEngine::Scene::GameObject* go = GetOwner();
     if (go) {
         auto* button = go->GetComponent<RTBEngine::UI::UIButton>();
         if (button && !button->IsInteractable()) {

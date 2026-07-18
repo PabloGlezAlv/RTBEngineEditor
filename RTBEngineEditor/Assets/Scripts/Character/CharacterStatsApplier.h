@@ -7,7 +7,7 @@
 
 class CharacterDefinition;
 
-class CharacterStatsApplier : public RTBEngine::ECS::Component {
+class CharacterStatsApplier : public RTBEngine::Scene::Component {
 public:
     bool usePlayerSelection = true;
     std::string characterDefinitionRef;
@@ -15,7 +15,7 @@ public:
 
     void OnAwake() override;
 
-    static bool ApplyDefinition(RTBEngine::ECS::GameObject* pawn, const CharacterDefinition& definition);
+    static bool ApplyDefinition(RTBEngine::Scene::GameObject* pawn, const CharacterDefinition& definition);
 
     RTB_COMPONENT(CharacterStatsApplier)
 

@@ -16,32 +16,32 @@ namespace RTBEditor {
         virtual void OnUIRender(EditorContext& context) override;
 
     private:
-        void DrawGameObjectNode(RTBEngine::ECS::GameObject* gameObject, EditorContext& context);
-        void DrawHierarchySearchResults(RTBEngine::ECS::Scene* scene,
+        void DrawGameObjectNode(RTBEngine::Scene::GameObject* gameObject, EditorContext& context);
+        void DrawHierarchySearchResults(RTBEngine::Scene::Scene* scene,
                                         EditorContext& context,
                                         const char* filter);
-        void UpdateHierarchyRevealTarget(RTBEngine::ECS::GameObject* gameObject);
+        void UpdateHierarchyRevealTarget(RTBEngine::Scene::GameObject* gameObject);
 
         char hierarchySearchBuffer[128] = {};
         bool hierarchyWasFiltering = false;
-        RTBEngine::ECS::GameObject* hierarchyPendingReveal = nullptr;
-        std::unordered_set<RTBEngine::ECS::GameObject*> hierarchyForceOpenNodes;
+        RTBEngine::Scene::GameObject* hierarchyPendingReveal = nullptr;
+        std::unordered_set<RTBEngine::Scene::GameObject*> hierarchyForceOpenNodes;
 
         //GameObject creation
-        void CreateSphere(RTBEngine::ECS::Scene* scene, EditorContext& context, RTBEngine::ECS::GameObject* parent = nullptr);
-        void CreateCube(RTBEngine::ECS::Scene* scene, EditorContext& context, RTBEngine::ECS::GameObject* parent = nullptr);
-        void CreatePlane(RTBEngine::ECS::Scene* scene, EditorContext& context, RTBEngine::ECS::GameObject* parent = nullptr);
+        void CreateSphere(RTBEngine::Scene::Scene* scene, EditorContext& context, RTBEngine::Scene::GameObject* parent = nullptr);
+        void CreateCube(RTBEngine::Scene::Scene* scene, EditorContext& context, RTBEngine::Scene::GameObject* parent = nullptr);
+        void CreatePlane(RTBEngine::Scene::Scene* scene, EditorContext& context, RTBEngine::Scene::GameObject* parent = nullptr);
 
         //UI creation
-        void CreateCanvas(RTBEngine::ECS::Scene* scene, EditorContext& context, RTBEngine::ECS::GameObject* parent = nullptr);
-        void CreateUIButton(RTBEngine::ECS::Scene* scene, EditorContext& context, RTBEngine::ECS::GameObject* parent = nullptr);
-        void CreateUIInputField(RTBEngine::ECS::Scene* scene, EditorContext& context, RTBEngine::ECS::GameObject* parent = nullptr);
-        void CreateUISlider(RTBEngine::ECS::Scene* scene, EditorContext& context, RTBEngine::ECS::GameObject* parent = nullptr);
-        void CreateUIText(RTBEngine::ECS::Scene* scene, EditorContext& context, RTBEngine::ECS::GameObject* parent = nullptr);
+        void CreateCanvas(RTBEngine::Scene::Scene* scene, EditorContext& context, RTBEngine::Scene::GameObject* parent = nullptr);
+        void CreateUIButton(RTBEngine::Scene::Scene* scene, EditorContext& context, RTBEngine::Scene::GameObject* parent = nullptr);
+        void CreateUIInputField(RTBEngine::Scene::Scene* scene, EditorContext& context, RTBEngine::Scene::GameObject* parent = nullptr);
+        void CreateUISlider(RTBEngine::Scene::Scene* scene, EditorContext& context, RTBEngine::Scene::GameObject* parent = nullptr);
+        void CreateUIText(RTBEngine::Scene::Scene* scene, EditorContext& context, RTBEngine::Scene::GameObject* parent = nullptr);
 
-        void CreateParticleSystem(RTBEngine::ECS::Scene* scene, EditorContext& context, RTBEngine::ECS::GameObject* parent = nullptr);
+        void CreateParticleSystem(RTBEngine::Scene::Scene* scene, EditorContext& context, RTBEngine::Scene::GameObject* parent = nullptr);
 
-        void DeleteGameObject(RTBEngine::ECS::Scene* scene, RTBEngine::ECS::GameObject* gameObject, EditorContext& context);
+        void DeleteGameObject(RTBEngine::Scene::Scene* scene, RTBEngine::Scene::GameObject* gameObject, EditorContext& context);
     };
 
 }

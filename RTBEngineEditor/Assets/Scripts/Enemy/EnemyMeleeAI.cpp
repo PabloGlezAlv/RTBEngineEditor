@@ -31,7 +31,7 @@ namespace {
 
     RoundManager* FindRoundManagerInScene()
     {
-        return RTBEngine::ECS::ComponentQuery::FindFirst<RoundManager>();
+        return RTBEngine::Scene::ComponentQuery::FindFirst<RoundManager>();
     }
 
 }
@@ -42,7 +42,7 @@ RTB_REGISTER_COMPONENT(EnemyMeleeAI)
     RTB_PROPERTY_COMPONENT(targetTracker, EnemyTargetTracker)
     RTB_PROPERTY_COMPONENT(animationDriver, EnemyAnimationDriver)
     RTB_PROPERTY_COMPONENT(locomotion, EnemyLocomotionController)
-    RTB_PROPERTY_COMPONENT(navAgent, RTBEngine::ECS::NavAgentComponent)
+    RTB_PROPERTY_COMPONENT(navAgent, RTBEngine::Scene::NavAgentComponent)
     RTB_PROPERTY_COMPONENT(meleeAttack, MeleeSphereAttackAbility)
     RTB_PROPERTY_RANGE(attackRange, 0.1f, 5.0f)
     RTB_PROPERTY_RANGE(preferredAttackDistance, 0.1f, 5.0f)
@@ -308,7 +308,7 @@ void EnemyMeleeAI::ResolveDependencies()
         locomotion = owner->GetComponent<EnemyLocomotionController>();
     }
     if (!navAgent) {
-        navAgent = owner->GetComponent<RTBEngine::ECS::NavAgentComponent>();
+        navAgent = owner->GetComponent<RTBEngine::Scene::NavAgentComponent>();
     }
     ResolveMeleeAttack();
 }
@@ -370,7 +370,7 @@ void EnemyMeleeAI::RefreshClosestTarget()
         return;
     }
 
-    RTBEngine::ECS::GameObject* closestTarget = roundManager->FindClosestPlayerTarget(owner);
+    RTBEngine::Scene::GameObject* closestTarget = roundManager->FindClosestPlayerTarget(owner);
     if (!closestTarget) {
         return;
     }
@@ -476,7 +476,7 @@ void EnemyMeleeAI::StartAttack()
     }
 
     HealthComponent* targetHealth = targetTracker->ResolveTargetHealth();
-    RTBEngine::ECS::GameObject* targetRoot = targetTracker->targetObject;
+    RTBEngine::Scene::GameObject* targetRoot = targetTracker->targetObject;
     RTBEngine::Physics::PhysicsWorld* physicsWorld = ResolvePhysicsWorld();
     RTBEngine::Math::Vector3 attackDirection = targetTracker->GetPlanarDirectionTo(owner);
 
@@ -497,7 +497,7 @@ void EnemyMeleeAI::StartAttack()
 
     if (RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby() &&
         RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
-        if (RTBEngine::ECS::NetworkIdentity* identity = owner->GetComponent<RTBEngine::ECS::NetworkIdentity>()) {
+        if (RTBEngine::Scene::NetworkIdentity* identity = owner->GetComponent<RTBEngine::Scene::NetworkIdentity>()) {
             if (identity->HasNetworkId()) {
                 ++networkAttackSequence;
                 GameNet::EnemyAttackSnapshot attackSnapshot;
@@ -590,7 +590,7 @@ RTBEngine::Physics::PhysicsWorld* EnemyMeleeAI::ResolvePhysicsWorld() const
         return nullptr;
     }
 
-    auto* rbComp = owner->GetComponent<RTBEngine::ECS::RigidBodyComponent>();
+    auto* rbComp = owner->GetComponent<RTBEngine::Scene::RigidBodyComponent>();
     if (rbComp && rbComp->HasRigidBody() && rbComp->GetRigidBody()) {
         if (RTBEngine::Physics::PhysicsWorld* world = rbComp->GetRigidBody()->GetPhysicsWorld()) {
             return world;
@@ -598,7 +598,7 @@ RTBEngine::Physics::PhysicsWorld* EnemyMeleeAI::ResolvePhysicsWorld() const
     }
 
     if (targetTracker && targetTracker->targetObject) {
-        auto* targetRigidBody = targetTracker->targetObject->GetComponent<RTBEngine::ECS::RigidBodyComponent>();
+        auto* targetRigidBody = targetTracker->targetObject->GetComponent<RTBEngine::Scene::RigidBodyComponent>();
         if (targetRigidBody && targetRigidBody->HasRigidBody() && targetRigidBody->GetRigidBody()) {
             return targetRigidBody->GetRigidBody()->GetPhysicsWorld();
         }
@@ -696,7 +696,7 @@ void EnemyMeleeAI::HandleDeath(const HealthComponent::DeathEvent& /*eventData*/)
 
     if (RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby() &&
         RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
-        if (RTBEngine::ECS::NetworkIdentity* identity = owner->GetComponent<RTBEngine::ECS::NetworkIdentity>()) {
+        if (RTBEngine::Scene::NetworkIdentity* identity = owner->GetComponent<RTBEngine::Scene::NetworkIdentity>()) {
             if (identity->HasNetworkId()) {
                 GameNet::OnlineGameNetSubsystem::BroadcastEnemyDeath(identity->GetNetworkId());
             }

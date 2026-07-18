@@ -6,7 +6,7 @@
 #include <RTBEngine/Reflection/PropertyMacros.h>
 #include <RTBEngine/UI/EventSystem/IPointerClickHandler.h>
 
-class ExitToMenuButton : public RTBEngine::ECS::Component
+class ExitToMenuButton : public RTBEngine::Scene::Component
                        , public RTBEngine::UI::IPointerClickHandler
 {
 public:

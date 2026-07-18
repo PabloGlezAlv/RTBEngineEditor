@@ -15,7 +15,7 @@ namespace RTBEngine {
 
 class CharacterDefinition;
 
-class PlayerAmmoSystem : public RTBEngine::ECS::Component, public ICharacterStatReceiver
+class PlayerAmmoSystem : public RTBEngine::Scene::Component, public ICharacterStatReceiver
 {
 public:
     PlayerAmmoSystem() = default;

@@ -6,7 +6,7 @@
 
 class HealthComponent;
 
-class PlayerHealthNetSync : public RTBEngine::ECS::Component
+class PlayerHealthNetSync : public RTBEngine::Scene::Component
 {
 public:
     PlayerHealthNetSync() = default;

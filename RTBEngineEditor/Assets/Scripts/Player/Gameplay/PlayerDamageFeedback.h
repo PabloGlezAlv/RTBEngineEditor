@@ -10,12 +10,12 @@
 #include <string>
 
 namespace RTBEngine {
-    namespace ECS {
+    namespace Scene {
         class AudioSourceComponent;
     }
 }
 
-class PlayerDamageFeedback : public RTBEngine::ECS::Component
+class PlayerDamageFeedback : public RTBEngine::Scene::Component
 {
 public:
     PlayerDamageFeedback() = default;
@@ -33,7 +33,7 @@ public:
     void OnDestroy() override;
 
 private:
-    RTBEngine::ECS::AudioSourceComponent* hurtAudio = nullptr;
+    RTBEngine::Scene::AudioSourceComponent* hurtAudio = nullptr;
     RTBEngine::Core::EventSubscription damageSubscription;
     float soundCooldownRemaining = 0.0f;
 

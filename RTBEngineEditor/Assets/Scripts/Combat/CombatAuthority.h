@@ -1,18 +1,18 @@
 #pragma once
 
 namespace RTBEngine {
-    namespace ECS {
+    namespace Scene {
         class GameObject;
     }
 }
 
 namespace CombatAuthority {
 
-    bool IsLocallyControlled(RTBEngine::ECS::GameObject* gameObject);
-    bool HasSimulationAuthority(RTBEngine::ECS::GameObject* instigator);
-    bool CanApplyDamage(RTBEngine::ECS::GameObject* instigator);
-    bool CanConsumeAmmo(RTBEngine::ECS::GameObject* instigator);
-    bool ShouldBroadcastSpawn(RTBEngine::ECS::GameObject* instigator);
+    bool IsLocallyControlled(RTBEngine::Scene::GameObject* gameObject);
+    bool HasSimulationAuthority(RTBEngine::Scene::GameObject* instigator);
+    bool CanApplyDamage(RTBEngine::Scene::GameObject* instigator);
+    bool CanConsumeAmmo(RTBEngine::Scene::GameObject* instigator);
+    bool ShouldBroadcastSpawn(RTBEngine::Scene::GameObject* instigator);
     bool ShouldProjectileApplyDamage();
 
 }

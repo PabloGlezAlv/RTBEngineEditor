@@ -5,7 +5,7 @@
 #include <memory>
 
 namespace RTBEngine {
-    namespace ECS {
+    namespace Scene {
         class GameObject;
     }
 }
@@ -15,7 +15,7 @@ namespace RTBEditor {
     class PrefabEditorSession {
     public:
         static constexpr const char* EditorUtilityLightName = "__PrefabEditorLight";
-        static bool IsEditorUtilityObject(const RTBEngine::ECS::GameObject* gameObject);
+        static bool IsEditorUtilityObject(const RTBEngine::Scene::GameObject* gameObject);
 
         bool IsOpen() const { return stagingScene != nullptr && rootObject != nullptr; }
         bool IsDirty() const { return isDirty; }
@@ -23,8 +23,8 @@ namespace RTBEditor {
         void ClearDirty() { isDirty = false; }
 
         const std::filesystem::path& GetAssetPath() const { return assetPath; }
-        RTBEngine::ECS::Scene* GetStagingScene() const { return stagingScene.get(); }
-        RTBEngine::ECS::GameObject* GetRootObject() const { return rootObject; }
+        RTBEngine::Scene::Scene* GetStagingScene() const { return stagingScene.get(); }
+        RTBEngine::Scene::GameObject* GetRootObject() const { return rootObject; }
 
         bool Open(const std::filesystem::path& absolutePath);
         void Close();
@@ -34,8 +34,8 @@ namespace RTBEditor {
         void SetupEditorLighting();
 
         std::filesystem::path assetPath;
-        std::unique_ptr<RTBEngine::ECS::Scene> stagingScene;
-        RTBEngine::ECS::GameObject* rootObject = nullptr;
+        std::unique_ptr<RTBEngine::Scene::Scene> stagingScene;
+        RTBEngine::Scene::GameObject* rootObject = nullptr;
         bool isDirty = false;
     };
 

@@ -267,7 +267,7 @@ namespace RTBEditor {
 
         const std::string& activeScenePath = RTBEditor::IsPrefabEditMode(context)
             ? context.prefabEditor->GetAssetPath().string()
-            : RTBEngine::ECS::SceneManager::GetInstance().GetActiveScenePath();
+            : RTBEngine::Scene::SceneManager::GetInstance().GetActiveScenePath();
 
         for (auto* go : context.selectedGameObjects) {
             if (!go) continue;
@@ -282,7 +282,7 @@ namespace RTBEditor {
             entry.rotation = t.GetRotation();
             entry.scale = t.GetScale();
 
-            auto prefab = RTBEngine::ECS::Prefab::CreateFromGameObject(go);
+            auto prefab = RTBEngine::Scene::Prefab::CreateFromGameObject(go);
             if (!prefab) {
                 continue;
             }
@@ -303,7 +303,7 @@ namespace RTBEditor {
             return;
         }
 
-        RTBEngine::ECS::GameObject* pasteParent = nullptr;
+        RTBEngine::Scene::GameObject* pasteParent = nullptr;
         if (context.selectedGameObject &&
             RTBEditor::IsGameObjectInScene(scene, context.selectedGameObject)) {
             pasteParent = context.selectedGameObject;
@@ -311,7 +311,7 @@ namespace RTBEditor {
 
         const std::string& activeScenePath = RTBEditor::IsPrefabEditMode(context)
             ? context.prefabEditor->GetAssetPath().string()
-            : RTBEngine::ECS::SceneManager::GetInstance().GetActiveScenePath();
+            : RTBEngine::Scene::SceneManager::GetInstance().GetActiveScenePath();
 
         RTBEditor::ClearSelection(context);
 
@@ -319,8 +319,8 @@ namespace RTBEditor {
         int index = 0;
 
         for (auto& entry : clipboardPrefabs) {
-            RTBEngine::ECS::GameObject* go = nullptr;
-            std::vector<RTBEngine::ECS::GameObject*> childGOs;
+            RTBEngine::Scene::GameObject* go = nullptr;
+            std::vector<RTBEngine::Scene::GameObject*> childGOs;
 
             if (entry.prefab) {
                 go = entry.prefab->Instantiate(pasteParent, childGOs, true);
@@ -420,7 +420,7 @@ namespace RTBEditor {
         // so clear stale canvas pointers before Game View runs this frame.
         auto& canvasSystem = RTBEngine::UI::CanvasSystem::GetInstance();
         canvasSystem.ClearState();
-        if (RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene()) {
+        if (RTBEngine::Scene::Scene* scene = RTBEngine::Scene::SceneManager::GetInstance().GetActiveScene()) {
             canvasSystem.Update(scene);
         }
     }

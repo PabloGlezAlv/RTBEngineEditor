@@ -25,10 +25,10 @@ void PlayerRegistry::Clear()
     pawnDestroyedEvent.Clear();
 }
 
-void PlayerRegistry::PruneInvalidPawns(RTBEngine::ECS::Scene* scene)
+void PlayerRegistry::PruneInvalidPawns(RTBEngine::Scene::Scene* scene)
 {
     for (std::size_t index = pawns.size(); index-- > 0;) {
-        RTBEngine::ECS::GameObject* pawn = pawns[index].pawn;
+        RTBEngine::Scene::GameObject* pawn = pawns[index].pawn;
         if (!pawn) {
             UnregisterAtIndex(index, false);
             continue;
@@ -38,7 +38,7 @@ void PlayerRegistry::PruneInvalidPawns(RTBEngine::ECS::Scene* scene)
             continue;
         }
 
-        RTBEngine::ECS::GameObject* found = scene->FindGameObjectByUUID(pawn->GetUUID());
+        RTBEngine::Scene::GameObject* found = scene->FindGameObjectByUUID(pawn->GetUUID());
         if (found != pawn) {
             UnregisterAtIndex(index, false);
         }
@@ -68,7 +68,7 @@ void PlayerRegistry::UnregisterAtIndex(std::size_t index, bool notify)
         return;
     }
 
-    RTBEngine::ECS::GameObject* removedPawn = pawns[index].pawn;
+    RTBEngine::Scene::GameObject* removedPawn = pawns[index].pawn;
     pawns.erase(pawns.begin() + static_cast<std::ptrdiff_t>(index));
     RebuildLookupTables();
 
@@ -99,7 +99,7 @@ void PlayerRegistry::Register(const PawnInfo& info)
     pawnSpawnedEvent.Invoke(pawns.back());
 }
 
-void PlayerRegistry::RegisterPlayerPawn(RTBEngine::ECS::GameObject* pawn)
+void PlayerRegistry::RegisterPlayerPawn(RTBEngine::Scene::GameObject* pawn)
 {
     if (!pawn) {
         return;
@@ -115,7 +115,7 @@ void PlayerRegistry::RegisterPlayerPawn(RTBEngine::ECS::GameObject* pawn)
         health = pawn->GetComponentInChildren<HealthComponent>();
     }
 
-    RTBEngine::ECS::NetworkIdentity* identity = pawn->GetComponent<RTBEngine::ECS::NetworkIdentity>();
+    RTBEngine::Scene::NetworkIdentity* identity = pawn->GetComponent<RTBEngine::Scene::NetworkIdentity>();
 
     PawnInfo info;
     info.pawn = pawn;
@@ -125,7 +125,7 @@ void PlayerRegistry::RegisterPlayerPawn(RTBEngine::ECS::GameObject* pawn)
     Register(info);
 }
 
-void PlayerRegistry::Unregister(RTBEngine::ECS::GameObject* pawn)
+void PlayerRegistry::Unregister(RTBEngine::Scene::GameObject* pawn)
 {
     if (!pawn) {
         return;
@@ -139,7 +139,7 @@ void PlayerRegistry::Unregister(RTBEngine::ECS::GameObject* pawn)
     UnregisterAtIndex(iterator->second, true);
 }
 
-RTBEngine::ECS::GameObject* PlayerRegistry::FindBySlot(int slot) const
+RTBEngine::Scene::GameObject* PlayerRegistry::FindBySlot(int slot) const
 {
     if (slot < 0) {
         return nullptr;
@@ -164,8 +164,8 @@ int PlayerRegistry::FindSlotByOwnerUserId(const std::string& ownerUserId) const
             continue;
         }
 
-        if (const RTBEngine::ECS::NetworkIdentity* identity =
-                info.pawn->GetComponent<RTBEngine::ECS::NetworkIdentity>()) {
+        if (const RTBEngine::Scene::NetworkIdentity* identity =
+                info.pawn->GetComponent<RTBEngine::Scene::NetworkIdentity>()) {
             if (identity->networkOwnerUserId == ownerUserId) {
                 return identity->networkPlayerSlot;
             }

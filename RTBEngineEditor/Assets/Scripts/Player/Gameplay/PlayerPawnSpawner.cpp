@@ -22,13 +22,13 @@
 
 namespace {
 
-RTBEngine::UI::UIJoystick* FindSceneAttackJoystick(RTBEngine::ECS::Scene* scene)
+RTBEngine::UI::UIJoystick* FindSceneAttackJoystick(RTBEngine::Scene::Scene* scene)
 {
     if (!scene) {
         return nullptr;
     }
 
-    RTBEngine::ECS::GameObject* joystickObject = scene->FindGameObject("AttackJoystick");
+    RTBEngine::Scene::GameObject* joystickObject = scene->FindGameObject("AttackJoystick");
     if (!joystickObject) {
         return nullptr;
     }
@@ -36,7 +36,7 @@ RTBEngine::UI::UIJoystick* FindSceneAttackJoystick(RTBEngine::ECS::Scene* scene)
     return joystickObject->GetComponent<RTBEngine::UI::UIJoystick>();
 }
 
-void WireSpawnedPlayerCamera(RTBEngine::ECS::GameObject* spawnedPawn)
+void WireSpawnedPlayerCamera(RTBEngine::Scene::GameObject* spawnedPawn)
 {
     if (!spawnedPawn) {
         return;
@@ -54,21 +54,21 @@ void WireSpawnedPlayerCamera(RTBEngine::ECS::GameObject* spawnedPawn)
         controller->cameraObject->SetParent(spawnedPawn);
     }
 
-    RTBEngine::ECS::Scene* scene =
-        RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
+    RTBEngine::Scene::Scene* scene =
+        RTBEngine::Scene::SceneManager::GetInstance().GetActiveScene();
     if (!scene) {
         return;
     }
 
     if (auto* cameraComponent =
-            controller->cameraObject->GetComponent<RTBEngine::ECS::CameraComponent>()) {
+            controller->cameraObject->GetComponent<RTBEngine::Scene::CameraComponent>()) {
         scene->SetMainCamera(cameraComponent);
         cameraComponent->SyncNow();
     }
 }
 
 void WireSpawnedPlayerReferences(
-    RTBEngine::ECS::GameObject* spawnedPawn,
+    RTBEngine::Scene::GameObject* spawnedPawn,
     OnlinePlayerManager* onlinePlayerManager)
 {
     if (!spawnedPawn) {
@@ -83,13 +83,13 @@ void WireSpawnedPlayerReferences(
     WireSpawnedPlayerCamera(spawnedPawn);
 
     if (!controller->attackJoystick) {
-        if (RTBEngine::ECS::Scene* scene =
-                RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene()) {
+        if (RTBEngine::Scene::Scene* scene =
+                RTBEngine::Scene::SceneManager::GetInstance().GetActiveScene()) {
             controller->attackJoystick = FindSceneAttackJoystick(scene);
         }
     }
 
-    RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
+    RTBEngine::Scene::Scene* scene = RTBEngine::Scene::SceneManager::GetInstance().GetActiveScene();
     if (scene) {
         if (controller->animator && !controller->animator->AreBoneGOsCreated()) {
             controller->animator->CreateBoneGameObjects(scene);
@@ -130,10 +130,10 @@ void PlayerPawnSpawner::OnAwake()
     PlayerRegistry::GetInstance().Clear();
 
     // Avoid duplicating a scene-authored Player (editor load runs Awake on spawners).
-    if (RTBEngine::ECS::Scene* activeScene =
-            RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene()) {
+    if (RTBEngine::Scene::Scene* activeScene =
+            RTBEngine::Scene::SceneManager::GetInstance().GetActiveScene()) {
         for (const auto& gameObjectPtr : activeScene->GetGameObjects()) {
-            RTBEngine::ECS::GameObject* candidate = gameObjectPtr.get();
+            RTBEngine::Scene::GameObject* candidate = gameObjectPtr.get();
             if (!candidate || candidate->GetParent() != nullptr) {
                 continue;
             }

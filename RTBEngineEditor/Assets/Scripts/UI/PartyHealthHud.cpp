@@ -25,7 +25,7 @@ RTB_END_REGISTER(PartyHealthHud)
 namespace {
 
     template<typename T>
-    T* FindComponentInChildren(RTBEngine::ECS::GameObject* root)
+    T* FindComponentInChildren(RTBEngine::Scene::GameObject* root)
     {
         if (!root) {
             return nullptr;
@@ -35,7 +35,7 @@ namespace {
             return component;
         }
 
-        for (RTBEngine::ECS::GameObject* child : root->GetChildren()) {
+        for (RTBEngine::Scene::GameObject* child : root->GetChildren()) {
             if (T* found = FindComponentInChildren<T>(child)) {
                 return found;
             }
@@ -44,7 +44,7 @@ namespace {
         return nullptr;
     }
 
-    void SetUiVisibleRecursive(RTBEngine::ECS::GameObject* root, bool visible)
+    void SetUiVisibleRecursive(RTBEngine::Scene::GameObject* root, bool visible)
     {
         if (!root) {
             return;
@@ -54,7 +54,7 @@ namespace {
             uiElement->SetVisible(visible);
         }
 
-        for (RTBEngine::ECS::GameObject* child : root->GetChildren()) {
+        for (RTBEngine::Scene::GameObject* child : root->GetChildren()) {
             SetUiVisibleRecursive(child, visible);
         }
     }
@@ -67,8 +67,8 @@ void PartyHealthHud::OnStart()
         SetUiVisibleRecursive(entryTemplate, false);
     }
 
-    if (RTBEngine::ECS::Scene* scene =
-            RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene()) {
+    if (RTBEngine::Scene::Scene* scene =
+            RTBEngine::Scene::SceneManager::GetInstance().GetActiveScene()) {
         PlayerRegistry::GetInstance().PruneInvalidPawns(scene);
     }
 
@@ -81,15 +81,15 @@ void PartyHealthHud::OnStart()
 
             const std::string ownerKey = BuildOwnerKey(
                 info.pawn,
-                info.pawn->GetComponent<RTBEngine::ECS::NetworkIdentity>());
+                info.pawn->GetComponent<RTBEngine::Scene::NetworkIdentity>());
             if (PartyEntry* entry = FindOrCreateEntry(ownerKey)) {
-                BindEntry(*entry, info.pawn, info.pawn->GetComponent<RTBEngine::ECS::NetworkIdentity>());
+                BindEntry(*entry, info.pawn, info.pawn->GetComponent<RTBEngine::Scene::NetworkIdentity>());
                 SetEntryVisible(*entry, true);
             }
         });
 
     pawnDestroyedSubscription = PlayerRegistry::GetInstance().SubscribePawnDestroyed(
-        [this](RTBEngine::ECS::GameObject* pawn) {
+        [this](RTBEngine::Scene::GameObject* pawn) {
             RemoveEntryForPawn(pawn);
             RefreshEntries();
         });
@@ -125,8 +125,8 @@ void PartyHealthHud::RefreshEntries()
             continue;
         }
 
-        RTBEngine::ECS::NetworkIdentity* identity =
-            pawnInfo.pawn->GetComponent<RTBEngine::ECS::NetworkIdentity>();
+        RTBEngine::Scene::NetworkIdentity* identity =
+            pawnInfo.pawn->GetComponent<RTBEngine::Scene::NetworkIdentity>();
         const std::string ownerKey = BuildOwnerKey(pawnInfo.pawn, identity);
         desiredKeys[ownerKey] = true;
 
@@ -145,49 +145,49 @@ void PartyHealthHud::RefreshEntries()
             continue;
         }
 
-        RTBEngine::ECS::GameObject* entryRoot = iterator->second.root;
+        RTBEngine::Scene::GameObject* entryRoot = iterator->second.root;
         iterator = activeEntries.erase(iterator);
 
         if (!entryRoot || entryRoot == entryTemplate) {
             continue;
         }
 
-        if (RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene()) {
+        if (RTBEngine::Scene::Scene* scene = RTBEngine::Scene::SceneManager::GetInstance().GetActiveScene()) {
             scene->RemoveGameObject(entryRoot);
         }
     }
 }
 
-void PartyHealthHud::RemoveEntryForPawn(RTBEngine::ECS::GameObject* pawn)
+void PartyHealthHud::RemoveEntryForPawn(RTBEngine::Scene::GameObject* pawn)
 {
     if (!pawn) {
         return;
     }
 
-    RTBEngine::ECS::NetworkIdentity* identity = pawn->GetComponent<RTBEngine::ECS::NetworkIdentity>();
+    RTBEngine::Scene::NetworkIdentity* identity = pawn->GetComponent<RTBEngine::Scene::NetworkIdentity>();
     const std::string ownerKey = BuildOwnerKey(pawn, identity);
     const auto iterator = activeEntries.find(ownerKey);
     if (iterator == activeEntries.end()) {
         return;
     }
 
-    RTBEngine::ECS::GameObject* entryRoot = iterator->second.root;
+    RTBEngine::Scene::GameObject* entryRoot = iterator->second.root;
     activeEntries.erase(iterator);
 
     if (!entryRoot || entryRoot == entryTemplate) {
         return;
     }
 
-    if (RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene()) {
+    if (RTBEngine::Scene::Scene* scene = RTBEngine::Scene::SceneManager::GetInstance().GetActiveScene()) {
         scene->RemoveGameObject(entryRoot);
     }
 }
 
 void PartyHealthHud::ClearSpawnedEntries()
 {
-    if (RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene()) {
+    if (RTBEngine::Scene::Scene* scene = RTBEngine::Scene::SceneManager::GetInstance().GetActiveScene()) {
         for (auto& pair : activeEntries) {
-            RTBEngine::ECS::GameObject* entryRoot = pair.second.root;
+            RTBEngine::Scene::GameObject* entryRoot = pair.second.root;
             if (!entryRoot || entryRoot == entryTemplate) {
                 continue;
             }
@@ -200,8 +200,8 @@ void PartyHealthHud::ClearSpawnedEntries()
 }
 
 std::string PartyHealthHud::BuildOwnerKey(
-    RTBEngine::ECS::GameObject* pawn,
-    RTBEngine::ECS::NetworkIdentity* identity) const
+    RTBEngine::Scene::GameObject* pawn,
+    RTBEngine::Scene::NetworkIdentity* identity) const
 {
     if (identity && !identity->networkOwnerUserId.empty()) {
         return identity->networkOwnerUserId;
@@ -222,14 +222,14 @@ PartyHealthHud::PartyEntry* PartyHealthHud::FindOrCreateEntry(const std::string&
     }
 
     if (!entryPrefab) {
-        entryPrefab = RTBEngine::ECS::Prefab::CreateFromGameObject(entryTemplate);
+        entryPrefab = RTBEngine::Scene::Prefab::CreateFromGameObject(entryTemplate);
         if (!entryPrefab) {
             return nullptr;
         }
     }
 
-    RTBEngine::ECS::GameObject* spawnedEntry =
-        RTBEngine::ECS::SceneManager::GetInstance().Instantiate(*entryPrefab, entriesRoot);
+    RTBEngine::Scene::GameObject* spawnedEntry =
+        RTBEngine::Scene::SceneManager::GetInstance().Instantiate(*entryPrefab, entriesRoot);
     if (!spawnedEntry) {
         return nullptr;
     }
@@ -246,8 +246,8 @@ PartyHealthHud::PartyEntry* PartyHealthHud::FindOrCreateEntry(const std::string&
 
 void PartyHealthHud::BindEntry(
     PartyEntry& entry,
-    RTBEngine::ECS::GameObject* pawn,
-    RTBEngine::ECS::NetworkIdentity* identity)
+    RTBEngine::Scene::GameObject* pawn,
+    RTBEngine::Scene::NetworkIdentity* identity)
 {
     if (entry.nameLabel) {
         entry.nameLabel->SetText(GameNet::ResolvePlayerDisplayName(identity));

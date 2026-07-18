@@ -9,7 +9,7 @@ namespace RTBEngine {
     }
 }
 
-class EnemyAnimationDriver : public RTBEngine::ECS::Component
+class EnemyAnimationDriver : public RTBEngine::Scene::Component
 {
 public:
     EnemyAnimationDriver() = default;

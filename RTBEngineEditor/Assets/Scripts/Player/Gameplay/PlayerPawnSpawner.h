@@ -7,7 +7,7 @@
 class OnlinePlayerManager;
 class RoundManager;
 
-class PlayerPawnSpawner : public RTBEngine::ECS::Component {
+class PlayerPawnSpawner : public RTBEngine::Scene::Component {
 public:
     PlayerPawnSpawner() = default;
     ~PlayerPawnSpawner() override = default;
@@ -20,5 +20,5 @@ public:
     void OnAwake() override;
 
 private:
-    RTBEngine::ECS::GameObject* spawnedPawn = nullptr;
+    RTBEngine::Scene::GameObject* spawnedPawn = nullptr;
 };

@@ -12,11 +12,11 @@ class CharacterGameplaySpawner {
 public:
     static std::string SanitizeCharacterId(const std::string& characterId);
 
-    static RTBEngine::ECS::GameObject* InstantiateFromDefinition(
+    static RTBEngine::Scene::GameObject* InstantiateFromDefinition(
         const CharacterDefinition& definition,
         const RTBEngine::Math::Vector3& position,
         const RTBEngine::Math::Quaternion& rotation);
-    static RTBEngine::ECS::GameObject* InstantiateFromCharacterId(
+    static RTBEngine::Scene::GameObject* InstantiateFromCharacterId(
         const std::string& characterId,
         const RTBEngine::Math::Vector3& position,
         const RTBEngine::Math::Quaternion& rotation);

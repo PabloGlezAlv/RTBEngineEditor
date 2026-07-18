@@ -78,17 +78,17 @@ void FloatingDamageNumberLifetime::EnsureWorldSpaceBillboard()
     damageCanvas->SetFaceCamera(true);
     damageCanvas->MarkHierarchyDirty();
 
-    RTBEngine::ECS::GameObject* canvasObject = damageCanvas->GetOwner();
+    RTBEngine::Scene::GameObject* canvasObject = damageCanvas->GetOwner();
     if (!canvasObject) {
         return;
     }
 
-    RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
+    RTBEngine::Scene::Scene* scene = RTBEngine::Scene::SceneManager::GetInstance().GetActiveScene();
     if (!scene) {
         return;
     }
 
-    RTBEngine::ECS::CameraComponent* cameraComponent = scene->GetMainCamera();
+    RTBEngine::Scene::CameraComponent* cameraComponent = scene->GetMainCamera();
     if (!cameraComponent) {
         return;
     }
@@ -212,6 +212,6 @@ void FloatingDamageNumberLifetime::Finish()
     isPlaying = false;
 
     if (owner) {
-        RTBEngine::ECS::ObjectPool::GetInstance().Release(owner);
+        RTBEngine::Scene::ObjectPool::GetInstance().Release(owner);
     }
 }

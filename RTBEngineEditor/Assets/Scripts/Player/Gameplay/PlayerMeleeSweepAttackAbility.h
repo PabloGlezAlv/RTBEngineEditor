@@ -9,7 +9,7 @@
 #include <RTBEngine/Reflection/PropertyMacros.h>
 
 namespace RTBEngine {
-    namespace ECS {
+    namespace Scene {
         class AudioSourceComponent;
         class GameObject;
     }
@@ -38,7 +38,7 @@ public:
     int tickCount = 1;
     float knockbackStrength = 0.0f;
     bool ignoreSameTeam = true;
-    RTBEngine::ECS::AudioSourceComponent* hitAudio = nullptr;
+    RTBEngine::Scene::AudioSourceComponent* hitAudio = nullptr;
 
     RTB_COMPONENT(PlayerMeleeSweepAttackAbility)
 
@@ -66,7 +66,7 @@ protected:
     float GetRecoveryDuration() const override { return recoveryDuration; }
     float GetTickInterval() const override { return tickInterval; }
     int GetTickCount() const override;
-    bool CanActivateAbility(RTBEngine::ECS::GameObject* instigator,
+    bool CanActivateAbility(RTBEngine::Scene::GameObject* instigator,
                             const RTBEngine::Math::Vector3& direction) const override;
     void OnAbilityStarted() override;
     void ExecuteAbilityHit() override;
@@ -74,7 +74,7 @@ protected:
 private:
     void ClampSettings();
     float GetDamagePerHit() const;
-    bool ApplySweepHits(RTBEngine::ECS::GameObject* instigator,
+    bool ApplySweepHits(RTBEngine::Scene::GameObject* instigator,
                         const RTBEngine::Math::Vector3& attackDirection,
                         float hitDamage);
 

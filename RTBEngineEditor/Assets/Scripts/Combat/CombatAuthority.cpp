@@ -6,14 +6,14 @@
 
 namespace CombatAuthority {
 
-    bool IsLocallyControlled(RTBEngine::ECS::GameObject* gameObject)
+    bool IsLocallyControlled(RTBEngine::Scene::GameObject* gameObject)
     {
         if (!gameObject) {
             return false;
         }
 
-        const RTBEngine::ECS::NetworkIdentity* identity =
-            gameObject->GetComponent<RTBEngine::ECS::NetworkIdentity>();
+        const RTBEngine::Scene::NetworkIdentity* identity =
+            gameObject->GetComponent<RTBEngine::Scene::NetworkIdentity>();
         if (!identity) {
             return true;
         }
@@ -21,14 +21,14 @@ namespace CombatAuthority {
         return identity->IsLocallyControlled();
     }
 
-    bool HasSimulationAuthority(RTBEngine::ECS::GameObject* instigator)
+    bool HasSimulationAuthority(RTBEngine::Scene::GameObject* instigator)
     {
         if (!instigator) {
             return false;
         }
 
-        const RTBEngine::ECS::NetworkIdentity* identity =
-            instigator->GetComponent<RTBEngine::ECS::NetworkIdentity>();
+        const RTBEngine::Scene::NetworkIdentity* identity =
+            instigator->GetComponent<RTBEngine::Scene::NetworkIdentity>();
         if (!identity) {
             return true;
         }
@@ -40,17 +40,17 @@ namespace CombatAuthority {
         return true;
     }
 
-    bool CanApplyDamage(RTBEngine::ECS::GameObject* instigator)
+    bool CanApplyDamage(RTBEngine::Scene::GameObject* instigator)
     {
         return HasSimulationAuthority(instigator);
     }
 
-    bool CanConsumeAmmo(RTBEngine::ECS::GameObject* instigator)
+    bool CanConsumeAmmo(RTBEngine::Scene::GameObject* instigator)
     {
         return IsLocallyControlled(instigator);
     }
 
-    bool ShouldBroadcastSpawn(RTBEngine::ECS::GameObject* instigator)
+    bool ShouldBroadcastSpawn(RTBEngine::Scene::GameObject* instigator)
     {
         if (!RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby() ||
             !RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
@@ -61,8 +61,8 @@ namespace CombatAuthority {
             return false;
         }
 
-        const RTBEngine::ECS::NetworkIdentity* identity =
-            instigator->GetComponent<RTBEngine::ECS::NetworkIdentity>();
+        const RTBEngine::Scene::NetworkIdentity* identity =
+            instigator->GetComponent<RTBEngine::Scene::NetworkIdentity>();
         return identity && identity->networkPlayerSlot >= 0;
     }
 

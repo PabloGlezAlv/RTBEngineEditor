@@ -16,14 +16,14 @@ namespace RTBEditor {
 
     GameViewPanel::~GameViewPanel() {}
 
-    void GameViewPanel::ResolveReferenceResolution(RTBEngine::ECS::Scene* scene) {
+    void GameViewPanel::ResolveReferenceResolution(RTBEngine::Scene::Scene* scene) {
         referenceResolution = RTBEngine::Math::Vector2(1920.0f, 1080.0f);
         if (!scene) {
             return;
         }
 
         for (const auto& objPtr : scene->GetGameObjects()) {
-            RTBEngine::ECS::GameObject* obj = objPtr.get();
+            RTBEngine::Scene::GameObject* obj = objPtr.get();
             if (!obj) {
                 continue;
             }
@@ -77,7 +77,7 @@ namespace RTBEditor {
         isFocused = ImGui::IsWindowFocused();
         isHovered = ImGui::IsWindowHovered();
 
-        RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
+        RTBEngine::Scene::Scene* scene = RTBEngine::Scene::SceneManager::GetInstance().GetActiveScene();
         ResolveReferenceResolution(scene);
 
         ImGui::PopStyleVar();

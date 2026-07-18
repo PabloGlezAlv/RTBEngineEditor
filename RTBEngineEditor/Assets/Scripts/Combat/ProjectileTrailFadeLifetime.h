@@ -5,12 +5,12 @@
 #include <RTBEngine/Scene/IPoolable.h>
 
 namespace RTBEngine {
-    namespace ECS {
+    namespace Scene {
         class TrailRenderer;
     }
 }
 
-class ProjectileTrailFadeLifetime : public RTBEngine::ECS::Component, public RTBEngine::ECS::IPoolable
+class ProjectileTrailFadeLifetime : public RTBEngine::Scene::Component, public RTBEngine::Scene::IPoolable
 {
 public:
     ProjectileTrailFadeLifetime() = default;
@@ -31,7 +31,7 @@ public:
     void BeginFade();
 
 private:
-    RTBEngine::ECS::TrailRenderer* trailRenderer = nullptr;
+    RTBEngine::Scene::TrailRenderer* trailRenderer = nullptr;
     float elapsed = 0.0f;
     float headTrimTimer = 0.0f;
 

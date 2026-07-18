@@ -34,7 +34,7 @@ void EnemyLocomotionController::MoveTowards(const RTBEngine::Math::Vector3& targ
         return;
     }
 
-    auto* rbComp = owner->GetComponent<RTBEngine::ECS::RigidBodyComponent>();
+    auto* rbComp = owner->GetComponent<RTBEngine::Scene::RigidBodyComponent>();
     RTBEngine::Physics::RigidBody* rigidBody =
         (rbComp && rbComp->HasRigidBody()) ? rbComp->GetRigidBody() : nullptr;
     const bool useDynamicRigidBody =
@@ -83,7 +83,7 @@ void EnemyLocomotionController::StopPlanarMotion() const
         return;
     }
 
-    auto* rbComp = owner->GetComponent<RTBEngine::ECS::RigidBodyComponent>();
+    auto* rbComp = owner->GetComponent<RTBEngine::Scene::RigidBodyComponent>();
     if (!rbComp || !rbComp->HasRigidBody()) {
         return;
     }
@@ -108,7 +108,7 @@ void EnemyLocomotionController::ApplyKnockback(const RTBEngine::Math::Vector3& h
         return;
     }
 
-    auto* rbComp = owner->GetComponent<RTBEngine::ECS::RigidBodyComponent>();
+    auto* rbComp = owner->GetComponent<RTBEngine::Scene::RigidBodyComponent>();
     if (!rbComp || !rbComp->HasRigidBody()) {
         return;
     }

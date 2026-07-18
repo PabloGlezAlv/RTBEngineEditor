@@ -9,7 +9,7 @@
 
 class CharacterDefinition;
 
-class MainMenuCharacterPreview : public RTBEngine::ECS::Component {
+class MainMenuCharacterPreview : public RTBEngine::Scene::Component {
 public:
     MainMenuCharacterPreview() = default;
     ~MainMenuCharacterPreview() override = default;
@@ -25,7 +25,7 @@ public:
     void ShowCharacterById(const std::string& characterId);
 
 private:
-    RTBEngine::ECS::GameObject* previewInstance = nullptr;
+    RTBEngine::Scene::GameObject* previewInstance = nullptr;
     std::string currentCharacterId;
 
     void ClearPreviewInstance();

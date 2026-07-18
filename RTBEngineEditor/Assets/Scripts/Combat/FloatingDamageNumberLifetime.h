@@ -13,7 +13,7 @@ namespace RTBEngine {
     }
 }
 
-class FloatingDamageNumberLifetime : public RTBEngine::ECS::Component, public RTBEngine::ECS::IPoolable
+class FloatingDamageNumberLifetime : public RTBEngine::Scene::Component, public RTBEngine::Scene::IPoolable
 {
 public:
     FloatingDamageNumberLifetime() = default;

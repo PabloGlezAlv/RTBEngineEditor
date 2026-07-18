@@ -16,7 +16,7 @@ namespace RTBEngine {
     }
 }
 
-class LobbyMenuController : public RTBEngine::ECS::Component {
+class LobbyMenuController : public RTBEngine::Scene::Component {
 public:
     LobbyMenuController() = default;
     ~LobbyMenuController() override = default;

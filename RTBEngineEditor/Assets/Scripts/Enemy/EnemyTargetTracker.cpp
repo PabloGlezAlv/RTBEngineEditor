@@ -20,12 +20,12 @@ void EnemyTargetTracker::OnValidate()
     SanitizeTarget();
 }
 
-bool EnemyTargetTracker::HasValidTarget(const RTBEngine::ECS::GameObject* requester) const
+bool EnemyTargetTracker::HasValidTarget(const RTBEngine::Scene::GameObject* requester) const
 {
     return targetObject != nullptr && targetObject != requester;
 }
 
-bool EnemyTargetTracker::IsTargetAlive(const RTBEngine::ECS::GameObject* requester) const
+bool EnemyTargetTracker::IsTargetAlive(const RTBEngine::Scene::GameObject* requester) const
 {
     if (!HasValidTarget(requester)) {
         return false;
@@ -51,7 +51,7 @@ HealthComponent* EnemyTargetTracker::ResolveTargetHealth() const
     return targetObject->GetComponentInChildren<HealthComponent>();
 }
 
-float EnemyTargetTracker::GetPlanarDistanceTo(const RTBEngine::ECS::GameObject* requester) const
+float EnemyTargetTracker::GetPlanarDistanceTo(const RTBEngine::Scene::GameObject* requester) const
 {
     if (!requester || !HasValidTarget(requester)) {
         return 0.0f;
@@ -62,7 +62,7 @@ float EnemyTargetTracker::GetPlanarDistanceTo(const RTBEngine::ECS::GameObject* 
     return direction.Length();
 }
 
-RTBEngine::Math::Vector3 EnemyTargetTracker::GetPlanarDirectionTo(const RTBEngine::ECS::GameObject* requester) const
+RTBEngine::Math::Vector3 EnemyTargetTracker::GetPlanarDirectionTo(const RTBEngine::Scene::GameObject* requester) const
 {
     if (!requester || !HasValidTarget(requester)) {
         return RTBEngine::Math::Vector3::Zero();
@@ -79,14 +79,14 @@ RTBEngine::Math::Vector3 EnemyTargetTracker::GetPlanarDirectionTo(const RTBEngin
     return direction;
 }
 
-bool EnemyTargetTracker::IsWithinTargetHierarchy(const RTBEngine::ECS::GameObject* requester,
-                                                 RTBEngine::ECS::GameObject* candidate) const
+bool EnemyTargetTracker::IsWithinTargetHierarchy(const RTBEngine::Scene::GameObject* requester,
+                                                 RTBEngine::Scene::GameObject* candidate) const
 {
     if (!candidate || !HasValidTarget(requester)) {
         return false;
     }
 
-    for (RTBEngine::ECS::GameObject* current = candidate; current; current = current->GetParent()) {
+    for (RTBEngine::Scene::GameObject* current = candidate; current; current = current->GetParent()) {
         if (current == targetObject) {
             return true;
         }
@@ -95,7 +95,7 @@ bool EnemyTargetTracker::IsWithinTargetHierarchy(const RTBEngine::ECS::GameObjec
     return false;
 }
 
-void EnemyTargetTracker::SetTarget(RTBEngine::ECS::GameObject* target)
+void EnemyTargetTracker::SetTarget(RTBEngine::Scene::GameObject* target)
 {
     targetObject = (target != owner) ? target : nullptr;
 }

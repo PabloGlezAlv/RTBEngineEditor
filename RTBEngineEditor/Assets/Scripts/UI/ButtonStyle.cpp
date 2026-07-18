@@ -87,7 +87,7 @@ void ButtonStyle::OnAwake()
 
 {
 
-    SetTimeMode(RTBEngine::ECS::ComponentTimeMode::Unscaled);
+    SetTimeMode(RTBEngine::Scene::ComponentTimeMode::Unscaled);
 
     currentState = State::Normal;
 
@@ -186,7 +186,7 @@ void ButtonStyle::CaptureHitPanelAppearance()
 
 
 
-    RTBEngine::ECS::GameObject* go = GetOwner();
+    RTBEngine::Scene::GameObject* go = GetOwner();
 
     if (!go) {
 
@@ -218,7 +218,7 @@ bool ButtonStyle::ShouldMutateVisuals() const
 
 {
 
-    return !isDestroying && !RTBEngine::ECS::SceneManager::GetInstance().IsSceneUnloading();
+    return !isDestroying && !RTBEngine::Scene::SceneManager::GetInstance().IsSceneUnloading();
 
 }
 
@@ -266,7 +266,7 @@ void ButtonStyle::RefreshBindings()
 
 {
 
-    RTBEngine::ECS::GameObject* go = GetOwner();
+    RTBEngine::Scene::GameObject* go = GetOwner();
 
     if (!go) {
 
@@ -334,7 +334,7 @@ bool ButtonStyle::IsButtonInteractable() const
 
 {
 
-    RTBEngine::ECS::GameObject* go = GetOwner();
+    RTBEngine::Scene::GameObject* go = GetOwner();
 
     if (!go) {
 

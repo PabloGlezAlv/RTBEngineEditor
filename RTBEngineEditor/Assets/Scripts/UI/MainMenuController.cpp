@@ -98,7 +98,7 @@ void MainMenuController::GoToGame()
     }
 
     RTBEngine::Core::Time::SetPaused(false);
-    RTBEngine::ECS::SceneManager::GetInstance().RequestSceneLoad(gameScenePath.c_str());
+    RTBEngine::Scene::SceneManager::GetInstance().RequestSceneLoad(gameScenePath.c_str());
 }
 
 void MainMenuController::GoToMultiplayer()
@@ -115,5 +115,5 @@ void MainMenuController::GoToMultiplayer()
     }
 
     RTBEngine::Core::Time::SetPaused(false);
-    RTBEngine::ECS::SceneManager::GetInstance().RequestSceneLoad(multiplayerMenuScenePath.c_str());
+    RTBEngine::Scene::SceneManager::GetInstance().RequestSceneLoad(multiplayerMenuScenePath.c_str());
 }

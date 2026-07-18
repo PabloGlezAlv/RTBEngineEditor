@@ -5,7 +5,7 @@
 #include <RTBEngine/UI/EventSystem/IPointerClickHandler.h>
 #include <string>
 
-class SceneChangeButton : public RTBEngine::ECS::Component
+class SceneChangeButton : public RTBEngine::Scene::Component
                         , public RTBEngine::UI::IPointerClickHandler
 {
 public:

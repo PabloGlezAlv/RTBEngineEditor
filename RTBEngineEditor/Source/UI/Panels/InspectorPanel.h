@@ -13,7 +13,7 @@ namespace RTBEngine {
     namespace Data {
         class DataAsset;
     }
-    namespace ECS {
+    namespace Scene {
         class GameObject;
         class Component;
         class ParticleSystem;
@@ -41,13 +41,13 @@ namespace RTBEditor {
         virtual void OnUIRender(EditorContext& context) override;
 
     private:
-        void DrawComponents(RTBEngine::ECS::GameObject* gameObject, EditorContext& context);
-        void DrawProperty(RTBEngine::ECS::Component* component, const RTBEngine::Reflection::PropertyInfo& prop);
-        bool DrawListProperty(RTBEngine::ECS::Component* component, const RTBEngine::Reflection::PropertyInfo& prop);
-        bool DrawSceneStringProperty(RTBEngine::ECS::Component* component,
+        void DrawComponents(RTBEngine::Scene::GameObject* gameObject, EditorContext& context);
+        void DrawProperty(RTBEngine::Scene::Component* component, const RTBEngine::Reflection::PropertyInfo& prop);
+        bool DrawListProperty(RTBEngine::Scene::Component* component, const RTBEngine::Reflection::PropertyInfo& prop);
+        bool DrawSceneStringProperty(RTBEngine::Scene::Component* component,
                                      const RTBEngine::Reflection::PropertyInfo& prop,
                                      std::string* value);
-        bool DrawAssetRefProperty(RTBEngine::ECS::Component* component,
+        bool DrawAssetRefProperty(RTBEngine::Scene::Component* component,
                                   const RTBEngine::Reflection::PropertyInfo& prop,
                                   std::string* value,
                                   bool& changed,
@@ -56,8 +56,8 @@ namespace RTBEditor {
 
         void DrawAnimatorComponent(RTBEngine::Animation::Animator* animator);
         void DrawAnimatorKeyClips(RTBEngine::Animation::Animator* animator, bool& changed);
-        void DrawParticleSystemComponent(RTBEngine::ECS::ParticleSystem* particleSystem);
-        void DrawNavGridComponent(RTBEngine::ECS::NavGridComponent* navGridComponent, EditorContext& context);
+        void DrawParticleSystemComponent(RTBEngine::Scene::ParticleSystem* particleSystem);
+        void DrawNavGridComponent(RTBEngine::Scene::NavGridComponent* navGridComponent, EditorContext& context);
         void DrawCubemapAssetInspector(const std::filesystem::path& cubemapPath);
         void SaveCubemapAsset(const std::filesystem::path& cubemapPath);
         void DrawScriptPreview(const std::filesystem::path& scriptPath);
@@ -65,8 +65,8 @@ namespace RTBEditor {
         void DrawFbxAssetInspector(const std::filesystem::path& fbxPath);
         void DrawTextureAssetInspector(const std::filesystem::path& texturePath);
         void SaveTextureAsset(const std::filesystem::path& texturePath);
-        void DrawMeshRendererComponent(RTBEngine::ECS::MeshRenderer* meshRenderer);
-        void DrawMeshShaderProperties(RTBEngine::ECS::MeshRenderer* meshRenderer, bool& changed);
+        void DrawMeshRendererComponent(RTBEngine::Scene::MeshRenderer* meshRenderer);
+        void DrawMeshShaderProperties(RTBEngine::Scene::MeshRenderer* meshRenderer, bool& changed);
         void DrawShaderAssetInspector(const std::filesystem::path& shaderPath);
         void SaveShaderAssetInspector();
         void DrawDataAssetInspector(const std::filesystem::path& dataAssetPath);
@@ -76,11 +76,11 @@ namespace RTBEditor {
                                    const RTBEngine::Reflection::PropertyInfo& prop,
                                    bool& changed);
 
-        std::vector<RTBEngine::ECS::Component*> componentsToRemove;
+        std::vector<RTBEngine::Scene::Component*> componentsToRemove;
         std::unique_ptr<AssetBrowserModal> assetBrowserModal;
 
         // Cached euler angles in degrees to avoid quaternion round-trip every frame
-        RTBEngine::ECS::GameObject* cachedRotationTarget = nullptr;
+        RTBEngine::Scene::GameObject* cachedRotationTarget = nullptr;
         RTBEngine::Math::Vector3 cachedRotationDeg;
         RTBEngine::Math::Quaternion cachedRotationSource = RTBEngine::Math::Quaternion::Identity();
 
@@ -117,17 +117,17 @@ namespace RTBEditor {
         bool addComponentPopupWasOpen = false;
 
         bool hasActivePrefabContext = false;
-        RTBEngine::ECS::PrefabInstanceContext activePrefabContext;
-        RTBEngine::ECS::GameObject* activePrefabGameObject = nullptr;
+        RTBEngine::Scene::PrefabInstanceContext activePrefabContext;
+        RTBEngine::Scene::GameObject* activePrefabGameObject = nullptr;
 
         EditorContext* dirtyContext = nullptr;
         void MarkDirtyFromInspector();
         void BeginPrefabAwareInspectorRow(
             const char* label,
-            RTBEngine::ECS::Component* component,
+            RTBEngine::Scene::Component* component,
             const RTBEngine::Reflection::PropertyInfo& prop);
         void EndPrefabAwareInspectorRow(
-            RTBEngine::ECS::Component* component,
+            RTBEngine::Scene::Component* component,
             const RTBEngine::Reflection::PropertyInfo& prop);
 
     };

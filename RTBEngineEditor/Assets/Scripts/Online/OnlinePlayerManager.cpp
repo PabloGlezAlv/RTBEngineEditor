@@ -35,7 +35,7 @@ using ThisClass = OnlinePlayerManager;
 
 namespace {
 
-    void RefreshNameplatesForPawn(RTBEngine::ECS::GameObject* pawn)
+    void RefreshNameplatesForPawn(RTBEngine::Scene::GameObject* pawn)
     {
         if (!pawn) {
             return;
@@ -124,14 +124,14 @@ namespace {
         return CharacterGameplaySpawner::SanitizeCharacterId(selection.GetSelectedCharacterId());
     }
 
-    RTBEngine::ECS::GameObject* FindRemotePawnBySlot(int playerSlot)
+    RTBEngine::Scene::GameObject* FindRemotePawnBySlot(int playerSlot)
     {
-        RTBEngine::ECS::GameObject* pawn = PlayerRegistry::GetInstance().FindBySlot(playerSlot);
+        RTBEngine::Scene::GameObject* pawn = PlayerRegistry::GetInstance().FindBySlot(playerSlot);
         if (!pawn) {
             return nullptr;
         }
 
-        if (RTBEngine::ECS::NetworkIdentity* identity = pawn->GetComponent<RTBEngine::ECS::NetworkIdentity>()) {
+        if (RTBEngine::Scene::NetworkIdentity* identity = pawn->GetComponent<RTBEngine::Scene::NetworkIdentity>()) {
             if (identity->IsLocallyControlled()) {
                 return nullptr;
             }
@@ -401,7 +401,7 @@ void OnlinePlayerManager::EnsureRemotePawnsSpawned()
         }
 
         const auto trackedIt = spawnedCharacterIdsBySlot.find(playerSlot);
-        RTBEngine::ECS::GameObject* existingPawn = FindRemotePawnBySlot(playerSlot);
+        RTBEngine::Scene::GameObject* existingPawn = FindRemotePawnBySlot(playerSlot);
         if (trackedIt != spawnedCharacterIdsBySlot.end() &&
             trackedIt->second == characterId &&
             existingPawn) {
@@ -412,7 +412,7 @@ void OnlinePlayerManager::EnsureRemotePawnsSpawned()
             DespawnRemotePawnForSlot(playerSlot);
         }
 
-        RTBEngine::ECS::GameObject* remotePawn = SpawnRemotePawn(
+        RTBEngine::Scene::GameObject* remotePawn = SpawnRemotePawn(
             member,
             playerSlot,
             characterId,
@@ -433,7 +433,7 @@ void OnlinePlayerManager::EnsureRemotePawnsSpawned()
 
 void OnlinePlayerManager::DespawnRemotePawnForSlot(int playerSlot)
 {
-    RTBEngine::ECS::GameObject* pawn = FindRemotePawnBySlot(playerSlot);
+    RTBEngine::Scene::GameObject* pawn = FindRemotePawnBySlot(playerSlot);
     if (!pawn) {
         spawnedCharacterIdsBySlot.erase(playerSlot);
         return;
@@ -454,13 +454,13 @@ void OnlinePlayerManager::DespawnRemotePawnForSlot(int playerSlot)
             }),
         authoritativePlayerBinds.end());
 
-    if (RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene()) {
+    if (RTBEngine::Scene::Scene* scene = RTBEngine::Scene::SceneManager::GetInstance().GetActiveScene()) {
         scene->RemoveGameObject(pawn);
     }
 }
 
 void OnlinePlayerManager::ConfigurePawn(
-    RTBEngine::ECS::GameObject* pawn,
+    RTBEngine::Scene::GameObject* pawn,
     const RTBEngine::Online::OnlineUserId& ownerUserId,
     int playerSlot)
 {
@@ -468,7 +468,7 @@ void OnlinePlayerManager::ConfigurePawn(
         return;
     }
 
-    RTBEngine::ECS::NetworkIdentity* identity = pawn->GetComponent<RTBEngine::ECS::NetworkIdentity>();
+    RTBEngine::Scene::NetworkIdentity* identity = pawn->GetComponent<RTBEngine::Scene::NetworkIdentity>();
     if (!identity) {
         RTB_WARN("[OnlinePlayerManager] Pawn '" + pawn->GetName() + "' is missing NetworkIdentity.");
         return;
@@ -483,8 +483,8 @@ void OnlinePlayerManager::ConfigurePawn(
         if (networkId != RTBEngine::Online::OnlineGameplayNet::kInvalidNetworkObjectId) {
             identity->SetNetworkId(networkId);
 
-            if (RTBEngine::ECS::NetworkTransform* networkTransform =
-                    pawn->GetComponent<RTBEngine::ECS::NetworkTransform>()) {
+            if (RTBEngine::Scene::NetworkTransform* networkTransform =
+                    pawn->GetComponent<RTBEngine::Scene::NetworkTransform>()) {
                 networkTransform->OnValidate();
             }
 
@@ -502,7 +502,7 @@ void OnlinePlayerManager::ConfigurePawn(
 
     RefreshNameplatesForPawn(pawn);
 
-    auto* rigidBodyComponent = pawn->GetComponent<RTBEngine::ECS::RigidBodyComponent>();
+    auto* rigidBodyComponent = pawn->GetComponent<RTBEngine::Scene::RigidBodyComponent>();
     if (!rigidBodyComponent) {
         PlayerRegistry::GetInstance().RegisterPlayerPawn(pawn);
         return;
@@ -519,7 +519,7 @@ void OnlinePlayerManager::ConfigurePawn(
     PlayerRegistry::GetInstance().RegisterPlayerPawn(pawn);
 }
 
-RTBEngine::ECS::GameObject* OnlinePlayerManager::SpawnRemotePawn(
+RTBEngine::Scene::GameObject* OnlinePlayerManager::SpawnRemotePawn(
     const RTBEngine::Online::OnlineUserId& ownerUserId,
     int playerSlot,
     const std::string& characterId,
@@ -540,7 +540,7 @@ RTBEngine::ECS::GameObject* OnlinePlayerManager::SpawnRemotePawn(
     const RTBEngine::Math::Vector3 spawnPosition =
         localPlayerObject->GetWorldPosition() + RTBEngine::Math::Vector3(spawnOffsetX, 0.0f, 0.0f);
 
-    RTBEngine::ECS::GameObject* spawnedPawn = CharacterGameplaySpawner::InstantiateFromDefinition(
+    RTBEngine::Scene::GameObject* spawnedPawn = CharacterGameplaySpawner::InstantiateFromDefinition(
         *definition,
         spawnPosition,
         localPlayerObject->GetWorldRotation());
@@ -562,7 +562,7 @@ RTBEngine::ECS::GameObject* OnlinePlayerManager::SpawnRemotePawn(
     return spawnedPawn;
 }
 
-void OnlinePlayerManager::RemovePawnFromTracking(RTBEngine::ECS::GameObject* pawn, int playerSlot)
+void OnlinePlayerManager::RemovePawnFromTracking(RTBEngine::Scene::GameObject* pawn, int playerSlot)
 {
     if (pawn) {
         PlayerRegistry::GetInstance().Unregister(pawn);

@@ -5,7 +5,7 @@
 #include <RTBEngine/UI/Elements/UIText.h>
 #include <string>
 
-class FinalSceneController : public RTBEngine::ECS::Component
+class FinalSceneController : public RTBEngine::Scene::Component
 {
 public:
     FinalSceneController() = default;

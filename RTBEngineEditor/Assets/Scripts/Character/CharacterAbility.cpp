@@ -103,7 +103,7 @@ void CharacterAbility::OnDestroy()
     CancelAbility();
 }
 
-bool CharacterAbility::TryActivate(RTBEngine::ECS::GameObject* instigator,
+bool CharacterAbility::TryActivate(RTBEngine::Scene::GameObject* instigator,
                                    const RTBEngine::Math::Vector3& direction)
 {
     RTBEngine::Math::Vector3 planarDirection = direction;
@@ -138,7 +138,7 @@ void CharacterAbility::CancelAbility()
     abilityActive = false;
 }
 
-bool CharacterAbility::CanActivateAbility(RTBEngine::ECS::GameObject* /*instigator*/,
+bool CharacterAbility::CanActivateAbility(RTBEngine::Scene::GameObject* /*instigator*/,
                                           const RTBEngine::Math::Vector3& /*direction*/) const
 {
     return true;

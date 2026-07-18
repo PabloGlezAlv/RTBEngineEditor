@@ -9,7 +9,7 @@ class CharacterBase;
 class HealthComponent;
 
 namespace RTBEngine {
-    namespace ECS {
+    namespace Scene {
         class GameObject;
     }
 
@@ -20,14 +20,14 @@ namespace RTBEngine {
 
 namespace CharacterCombatUtils {
 
-    int ResolveCharacterTeam(RTBEngine::ECS::GameObject* gameObject);
+    int ResolveCharacterTeam(RTBEngine::Scene::GameObject* gameObject);
 
-    RTBEngine::ECS::GameObject* ResolveHealthRoot(RTBEngine::ECS::GameObject* gameObject);
+    RTBEngine::Scene::GameObject* ResolveHealthRoot(RTBEngine::Scene::GameObject* gameObject);
 
-    RTBEngine::Physics::PhysicsWorld* ResolvePhysicsWorld(RTBEngine::ECS::GameObject* gameObject);
+    RTBEngine::Physics::PhysicsWorld* ResolvePhysicsWorld(RTBEngine::Scene::GameObject* gameObject);
 
     struct HostileOverlapHit {
-        RTBEngine::ECS::GameObject* targetRoot = nullptr;
+        RTBEngine::Scene::GameObject* targetRoot = nullptr;
         HealthComponent* health = nullptr;
         RTBEngine::Math::Vector3 hitPoint;
         RTBEngine::Math::Vector3 hitNormal;
@@ -35,7 +35,7 @@ namespace CharacterCombatUtils {
 
     struct HostileOverlapQuery {
         RTBEngine::Physics::PhysicsWorld* physicsWorld = nullptr;
-        RTBEngine::ECS::GameObject* instigator = nullptr;
+        RTBEngine::Scene::GameObject* instigator = nullptr;
         RTBEngine::Math::Vector3 origin = RTBEngine::Math::Vector3(0.0f, 0.0f, 0.0f);
         RTBEngine::Math::Vector3 direction = RTBEngine::Math::Vector3(0.0f, 0.0f, 1.0f);
         float distance = 0.0f;

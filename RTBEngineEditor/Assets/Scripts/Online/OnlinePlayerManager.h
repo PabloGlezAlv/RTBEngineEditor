@@ -14,12 +14,12 @@
 
 class RoundManager;
 
-class OnlinePlayerManager : public RTBEngine::ECS::Component {
+class OnlinePlayerManager : public RTBEngine::Scene::Component {
 public:
     OnlinePlayerManager() = default;
     ~OnlinePlayerManager() override = default;
 
-    RTBEngine::ECS::GameObject* localPlayerObject = nullptr;
+    RTBEngine::Scene::GameObject* localPlayerObject = nullptr;
     RoundManager* roundManager = nullptr;
     float remoteSpawnOffsetX = 2.5f;
 
@@ -31,12 +31,12 @@ public:
     void OnDestroy() override;
     void OnFixedUpdate(float fixedDeltaTime) override;
 
-    void RemovePawnFromTracking(RTBEngine::ECS::GameObject* pawn, int playerSlot);
+    void RemovePawnFromTracking(RTBEngine::Scene::GameObject* pawn, int playerSlot);
     void SyncAuthoritativeRemotePlayers();
     void RequestRemotePawnSync();
 
 private:
-    std::vector<RTBEngine::ECS::GameObject*> spawnedRemotePawns;
+    std::vector<RTBEngine::Scene::GameObject*> spawnedRemotePawns;
     std::vector<GameNet::PlayerNetworkBindSnapshot> authoritativePlayerBinds;
     std::unordered_map<int, std::string> spawnedCharacterIdsBySlot;
     RTBEngine::Core::EventSubscription sessionProfileSubscription;
@@ -54,10 +54,10 @@ private:
         const RTBEngine::Online::OnlineUserId& ownerUserId) const;
 
     void ConfigurePawn(
-        RTBEngine::ECS::GameObject* pawn,
+        RTBEngine::Scene::GameObject* pawn,
         const RTBEngine::Online::OnlineUserId& ownerUserId,
         int playerSlot);
-    RTBEngine::ECS::GameObject* SpawnRemotePawn(
+    RTBEngine::Scene::GameObject* SpawnRemotePawn(
         const RTBEngine::Online::OnlineUserId& ownerUserId,
         int playerSlot,
         const std::string& characterId,

@@ -5,6 +5,9 @@
 #include "FloatingDamageNumberSpawner.h"
 #include "HitFlashComponent.h"
 
+#include <RTBEngine/ECS/ProjectileSimulation.h>
+#include <RTBEngine/ECS/World.h>
+#include <RTBEngine/ECS/Components/ProjectileComponents.h>
 #include <RTBEngine/Scene/AudioSourceComponent.h>
 #include <RTBEngine/Scene/GameObject.h>
 #include <RTBEngine/Scene/ObjectPool.h>
@@ -64,10 +67,10 @@ namespace {
         return RTBEngine::Math::Quaternion(axis, std::acos(dot));
     }
 
-    bool IsSameOrDescendant(const RTBEngine::ECS::GameObject* candidate,
-                            const RTBEngine::ECS::GameObject* root)
+    bool IsSameOrDescendant(const RTBEngine::Scene::GameObject* candidate,
+                            const RTBEngine::Scene::GameObject* root)
     {
-        for (const RTBEngine::ECS::GameObject* current = candidate; current; current = current->GetParent()) {
+        for (const RTBEngine::Scene::GameObject* current = candidate; current; current = current->GetParent()) {
             if (current == root) {
                 return true;
             }
@@ -76,13 +79,13 @@ namespace {
         return false;
     }
 
-    int ResolveCharacterTeam(RTBEngine::ECS::GameObject* gameObject)
+    int ResolveCharacterTeam(RTBEngine::Scene::GameObject* gameObject)
     {
         if (!gameObject) {
             return static_cast<int>(CharacterTeam::Neutral);
         }
 
-        for (RTBEngine::ECS::GameObject* current = gameObject; current; current = current->GetParent()) {
+        for (RTBEngine::Scene::GameObject* current = gameObject; current; current = current->GetParent()) {
             if (auto* character = current->GetComponent<CharacterBase>()) {
                 return character->GetTeam();
             }
@@ -91,8 +94,8 @@ namespace {
         return static_cast<int>(CharacterTeam::Neutral);
     }
 
-    bool IsOtherPlayer(RTBEngine::ECS::GameObject* hitObject,
-                       const RTBEngine::ECS::GameObject* instigator)
+    bool IsOtherPlayer(RTBEngine::Scene::GameObject* hitObject,
+                       const RTBEngine::Scene::GameObject* instigator)
     {
         if (!hitObject || !instigator) {
             return false;
@@ -102,7 +105,7 @@ namespace {
             return false;
         }
 
-        for (RTBEngine::ECS::GameObject* current = hitObject; current; current = current->GetParent()) {
+        for (RTBEngine::Scene::GameObject* current = hitObject; current; current = current->GetParent()) {
             if (current == instigator) {
                 return false;
             }
@@ -115,9 +118,9 @@ namespace {
         return false;
     }
 
-    void TryTriggerHitFlash(RTBEngine::ECS::GameObject* hitObject)
+    void TryTriggerHitFlash(RTBEngine::Scene::GameObject* hitObject)
     {
-        for (RTBEngine::ECS::GameObject* current = hitObject; current; current = current->GetParent()) {
+        for (RTBEngine::Scene::GameObject* current = hitObject; current; current = current->GetParent()) {
             if (auto* hitFlash = current->GetComponent<HitFlashComponent>()) {
                 hitFlash->TriggerFlash();
                 return;
@@ -125,7 +128,7 @@ namespace {
         }
     }
 
-    void TryTriggerDamageNumber(RTBEngine::ECS::GameObject* hitObject,
+    void TryTriggerDamageNumber(RTBEngine::Scene::GameObject* hitObject,
                                 float amount,
                                 const RTBEngine::Math::Vector3& hitPoint)
     {
@@ -133,7 +136,7 @@ namespace {
             return;
         }
 
-        for (RTBEngine::ECS::GameObject* current = hitObject; current; current = current->GetParent()) {
+        for (RTBEngine::Scene::GameObject* current = hitObject; current; current = current->GetParent()) {
             if (auto* spawner = current->GetComponent<FloatingDamageNumberSpawner>()) {
                 spawner->SpawnDamageNumber(amount, hitPoint);
                 return;
@@ -166,11 +169,13 @@ void ProjectileComponent::OnPoolAcquire()
     appliedHitCount = 0;
     distanceTravelled = 0.0f;
     hitTargets.clear();
+    DestroyEcsEntity();
 }
 
 void ProjectileComponent::OnPoolRelease()
 {
     SetEnabled(false);
+    DestroyEcsEntity();
     instigator = nullptr;
     physicsWorld = nullptr;
     hitAudio = nullptr;
@@ -197,6 +202,10 @@ void ProjectileComponent::OnStart()
 void ProjectileComponent::OnUpdate(float deltaTime)
 {
     if (!owner || pendingDestroy) {
+        return;
+    }
+
+    if (ecsEntity.IsValid()) {
         return;
     }
 
@@ -241,6 +250,15 @@ void ProjectileComponent::OnUpdate(float deltaTime)
     }
 }
 
+void ProjectileComponent::OnLateUpdate(float deltaTime)
+{
+    if (!ecsEntity.IsValid() || pendingDestroy) {
+        return;
+    }
+
+    SyncEcsSimulation(deltaTime);
+}
+
 void ProjectileComponent::OnValidate()
 {
     ClampSettings();
@@ -248,6 +266,7 @@ void ProjectileComponent::OnValidate()
 
 void ProjectileComponent::OnDestroy()
 {
+    DestroyEcsEntity();
     if (flightTrail) {
         flightTrail->SetVisible(false);
         flightTrail->ClearPoints();
@@ -297,6 +316,8 @@ void ProjectileComponent::BeginFlight(const ProjectileRuntimeContext& context)
         EnsureFlightTrail();
         UpdateFlightTrail(context.origin);
     }
+
+    CreateEcsEntity();
 }
 
 void ProjectileComponent::Initialize(const ProjectileConfig& config)
@@ -345,9 +366,9 @@ void ProjectileComponent::EnsureFlightTrail()
         return;
     }
 
-    flightTrail = owner->GetComponent<RTBEngine::ECS::TrailRenderer>();
+    flightTrail = owner->GetComponent<RTBEngine::Scene::TrailRenderer>();
     if (!flightTrail) {
-        flightTrail = new RTBEngine::ECS::TrailRenderer();
+        flightTrail = new RTBEngine::Scene::TrailRenderer();
         owner->AddComponent(flightTrail);
     }
 
@@ -393,7 +414,7 @@ void ProjectileComponent::ReleaseTrailForFadeout()
         return;
     }
 
-    RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
+    RTBEngine::Scene::Scene* scene = RTBEngine::Scene::SceneManager::GetInstance().GetActiveScene();
     if (!scene) {
         return;
     }
@@ -401,18 +422,18 @@ void ProjectileComponent::ReleaseTrailForFadeout()
     const std::vector<RTBEngine::Math::Vector3> trailPoints = flightTrail->GetPoints();
     const float trailWidth = flightTrail->width;
 
-    RTBEngine::ECS::GameObject* trailGhost =
-        RTBEngine::ECS::ObjectPool::GetInstance().Acquire(
-            RTBEngine::ECS::ObjectPool::ResolvePoolKey("Projectile Trail Fade"),
+    RTBEngine::Scene::GameObject* trailGhost =
+        RTBEngine::Scene::ObjectPool::GetInstance().Acquire(
+            RTBEngine::Scene::ObjectPool::ResolvePoolKey("Projectile Trail Fade"),
             trailPoints.back(),
             RTBEngine::Math::Quaternion::Identity());
     if (!trailGhost) {
         return;
     }
 
-    RTBEngine::ECS::TrailRenderer* ghostTrail = trailGhost->GetComponent<RTBEngine::ECS::TrailRenderer>();
+    RTBEngine::Scene::TrailRenderer* ghostTrail = trailGhost->GetComponent<RTBEngine::Scene::TrailRenderer>();
     if (!ghostTrail) {
-        ghostTrail = new RTBEngine::ECS::TrailRenderer();
+        ghostTrail = new RTBEngine::Scene::TrailRenderer();
         trailGhost->AddComponent(ghostTrail);
     }
 
@@ -443,8 +464,8 @@ void ProjectileComponent::SpawnImpactParticles()
     }
 
     const std::string impactPoolKey = !impactParticlePrefabRef.empty()
-        ? RTBEngine::ECS::ObjectPool::ResolvePoolKey(impactParticlePrefabRef)
-        : RTBEngine::ECS::ObjectPool::ResolvePoolKey("Arrow Impact Sparks");
+        ? RTBEngine::Scene::ObjectPool::ResolvePoolKey(impactParticlePrefabRef)
+        : RTBEngine::Scene::ObjectPool::ResolvePoolKey("Arrow Impact Sparks");
     if (impactPoolKey.empty()) {
         return;
     }
@@ -452,8 +473,8 @@ void ProjectileComponent::SpawnImpactParticles()
     RTBEngine::Math::Vector3 impactPosition = owner->GetWorldPosition();
     impactPosition.y = fixedHeight;
 
-    RTBEngine::ECS::GameObject* impactEffect =
-        RTBEngine::ECS::ObjectPool::GetInstance().Acquire(
+    RTBEngine::Scene::GameObject* impactEffect =
+        RTBEngine::Scene::ObjectPool::GetInstance().Acquire(
             impactPoolKey,
             impactPosition,
             BuildSplashRotation(direction));
@@ -492,12 +513,12 @@ RTBEngine::Physics::PhysicsWorld* ProjectileComponent::ResolvePhysicsWorld() con
         return physicsWorld;
     }
 
-    auto resolveFromObject = [](RTBEngine::ECS::GameObject* gameObject) -> RTBEngine::Physics::PhysicsWorld* {
+    auto resolveFromObject = [](RTBEngine::Scene::GameObject* gameObject) -> RTBEngine::Physics::PhysicsWorld* {
         if (!gameObject) {
             return nullptr;
         }
 
-        auto* rbComp = gameObject->GetComponent<RTBEngine::ECS::RigidBodyComponent>();
+        auto* rbComp = gameObject->GetComponent<RTBEngine::Scene::RigidBodyComponent>();
         if (!rbComp || !rbComp->HasRigidBody() || !rbComp->GetRigidBody()) {
             return nullptr;
         }
@@ -512,7 +533,7 @@ RTBEngine::Physics::PhysicsWorld* ProjectileComponent::ResolvePhysicsWorld() con
     return resolveFromObject(instigator);
 }
 
-HealthComponent* ProjectileComponent::ResolveHitHealth(RTBEngine::ECS::GameObject* hitObject) const
+HealthComponent* ProjectileComponent::ResolveHitHealth(RTBEngine::Scene::GameObject* hitObject) const
 {
     if (!hitObject) {
         return nullptr;
@@ -522,7 +543,7 @@ HealthComponent* ProjectileComponent::ResolveHitHealth(RTBEngine::ECS::GameObjec
         return nullptr;
     }
 
-    for (RTBEngine::ECS::GameObject* current = hitObject; current; current = current->GetParent()) {
+    for (RTBEngine::Scene::GameObject* current = hitObject; current; current = current->GetParent()) {
         if (instigator && current == instigator) {
             return nullptr;
         }
@@ -616,6 +637,125 @@ bool ProjectileComponent::HandleSweepHit(const RTBEngine::Math::Vector3& previou
     return destroyOnHit;
 }
 
+void ProjectileComponent::CreateEcsEntity()
+{
+    DestroyEcsEntity();
+
+    RTBEngine::ECS::World* world = RTBEngine::ECS::World::GetActive();
+    if (!world || !owner) {
+        return;
+    }
+
+    RTBEngine::ECS::LocalTransform transform;
+    transform.position = owner->GetWorldPosition();
+    transform.fixedHeight = fixedHeight;
+
+    RTBEngine::ECS::ProjectileFlight flight;
+    flight.direction = direction;
+    flight.speed = speed;
+    flight.maxDistance = maxDistance;
+    flight.radius = radius;
+    flight.distanceTravelled = distanceTravelled;
+
+    RTBEngine::ECS::ProjectilePhysicsContext physicsContext;
+    physicsContext.physicsWorld = ResolvePhysicsWorld();
+    physicsContext.instigator = instigator;
+
+    ecsEntity = RTBEngine::ECS::CreateProjectileEntity(
+        *world,
+        owner,
+        transform,
+        flight,
+        physicsContext);
+}
+
+void ProjectileComponent::DestroyEcsEntity()
+{
+    if (!ecsEntity.IsValid()) {
+        return;
+    }
+
+    if (RTBEngine::ECS::World* world = RTBEngine::ECS::World::GetActive()) {
+        RTBEngine::ECS::DestroyProjectileEntity(*world, ecsEntity);
+    }
+
+    ecsEntity = RTBEngine::ECS::kNullEntity;
+}
+
+bool ProjectileComponent::ProcessEcsHit(RTBEngine::Scene::GameObject* hitObject,
+                                      const RTBEngine::Math::Vector3& hitPoint)
+{
+    if (IsOtherPlayer(hitObject, instigator)) {
+        return false;
+    }
+
+    HealthComponent* targetHealth = ResolveHitHealth(hitObject);
+    if (targetHealth && !HasAlreadyHit(targetHealth)) {
+        TryTriggerHitFlash(hitObject);
+        if (!applyDamage && CombatAuthority::IsLocallyControlled(instigator)) {
+            TryTriggerDamageNumber(hitObject, damage, hitPoint);
+        }
+    }
+
+    if (applyDamage) {
+        if (targetHealth && !HasAlreadyHit(targetHealth)) {
+            HealthComponent::DamageContext damageContext;
+            damageContext.amount = damage;
+            damageContext.instigator = instigator;
+            damageContext.hitPoint = hitPoint;
+            damageContext.hitDirection = direction;
+            damageContext.knockbackStrength = knockbackStrength;
+            targetHealth->TakeDamage(damage, damageContext);
+
+            if (CombatAuthority::IsLocallyControlled(instigator) && hitAudio) {
+                hitAudio->PlayOneShot();
+            }
+
+            hitTargets.push_back(targetHealth);
+            ++appliedHitCount;
+
+            if (!destroyOnHit) {
+                return maxHits > 0 && appliedHitCount >= maxHits;
+            }
+        }
+    }
+
+    return destroyOnHit;
+}
+
+void ProjectileComponent::SyncEcsSimulation(float /*deltaTime*/)
+{
+    RTBEngine::ECS::World* world = RTBEngine::ECS::World::GetActive();
+    if (!world || !world->IsAlive(ecsEntity)) {
+        return;
+    }
+
+    RTBEngine::ECS::ProjectileFlight* flight = world->TryGet<RTBEngine::ECS::ProjectileFlight>(ecsEntity);
+    RTBEngine::ECS::LocalTransform* transform = world->TryGet<RTBEngine::ECS::LocalTransform>(ecsEntity);
+    RTBEngine::ECS::ProjectilePendingHit* pendingHit =
+        world->TryGet<RTBEngine::ECS::ProjectilePendingHit>(ecsEntity);
+
+    if (transform && enableFlightTrail) {
+        UpdateFlightTrail(transform->position);
+    }
+
+    if (pendingHit && pendingHit->active) {
+        const bool shouldStop = ProcessEcsHit(pendingHit->hitObject, pendingHit->hitPoint);
+        pendingHit->active = false;
+        if (shouldStop && flight) {
+            flight->pendingDestroy = true;
+        }
+    }
+
+    if (flight) {
+        distanceTravelled = flight->distanceTravelled;
+        if (flight->pendingDestroy) {
+            DestroyEcsEntity();
+            DestroyProjectile();
+        }
+    }
+}
+
 void ProjectileComponent::DestroyProjectile()
 {
     if (pendingDestroy) {
@@ -623,10 +763,11 @@ void ProjectileComponent::DestroyProjectile()
     }
 
     pendingDestroy = true;
+    DestroyEcsEntity();
     ReleaseTrailForFadeout();
     SpawnImpactParticles();
 
     if (owner) {
-        RTBEngine::ECS::ObjectPool::GetInstance().Release(owner);
+        RTBEngine::Scene::ObjectPool::GetInstance().Release(owner);
     }
 }

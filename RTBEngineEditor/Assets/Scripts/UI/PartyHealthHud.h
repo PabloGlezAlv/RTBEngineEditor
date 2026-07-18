@@ -16,14 +16,14 @@
 class HealthBarUI;
 class HealthComponent;
 
-class PartyHealthHud : public RTBEngine::ECS::Component
+class PartyHealthHud : public RTBEngine::Scene::Component
 {
 public:
     PartyHealthHud() = default;
     ~PartyHealthHud() override = default;
 
-    RTBEngine::ECS::GameObject* entriesRoot = nullptr;
-    RTBEngine::ECS::GameObject* entryTemplate = nullptr;
+    RTBEngine::Scene::GameObject* entriesRoot = nullptr;
+    RTBEngine::Scene::GameObject* entryTemplate = nullptr;
     float refreshInterval = 0.35f;
 
     RTB_COMPONENT(PartyHealthHud)
@@ -33,13 +33,13 @@ public:
 
 private:
     struct PartyEntry {
-        RTBEngine::ECS::GameObject* root = nullptr;
+        RTBEngine::Scene::GameObject* root = nullptr;
         RTBEngine::UI::UIText* nameLabel = nullptr;
         HealthBarUI* healthBar = nullptr;
         std::string ownerKey;
     };
 
-    std::unique_ptr<RTBEngine::ECS::Prefab> entryPrefab;
+    std::unique_ptr<RTBEngine::Scene::Prefab> entryPrefab;
     std::unordered_map<std::string, PartyEntry> activeEntries;
 
     RTBEngine::Core::EventSubscription pawnSpawnedSubscription;
@@ -47,9 +47,9 @@ private:
 
     void RefreshEntries();
     void ClearSpawnedEntries();
-    std::string BuildOwnerKey(RTBEngine::ECS::GameObject* pawn, RTBEngine::ECS::NetworkIdentity* identity) const;
+    std::string BuildOwnerKey(RTBEngine::Scene::GameObject* pawn, RTBEngine::Scene::NetworkIdentity* identity) const;
     PartyEntry* FindOrCreateEntry(const std::string& ownerKey);
-    void BindEntry(PartyEntry& entry, RTBEngine::ECS::GameObject* pawn, RTBEngine::ECS::NetworkIdentity* identity);
+    void BindEntry(PartyEntry& entry, RTBEngine::Scene::GameObject* pawn, RTBEngine::Scene::NetworkIdentity* identity);
     void SetEntryVisible(PartyEntry& entry, bool visible);
-    void RemoveEntryForPawn(RTBEngine::ECS::GameObject* pawn);
+    void RemoveEntryForPawn(RTBEngine::Scene::GameObject* pawn);
 };

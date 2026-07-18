@@ -13,7 +13,7 @@ namespace RTBEngine {
     }
 }
 
-class PauseMenuController : public RTBEngine::ECS::Component
+class PauseMenuController : public RTBEngine::Scene::Component
 {
 public:
     PauseMenuController() = default;
@@ -25,7 +25,7 @@ public:
     void OnValidate() override;
     void OnDestroy() override;
 
-    RTBEngine::ECS::GameObject* menuRoot = nullptr;
+    RTBEngine::Scene::GameObject* menuRoot = nullptr;
     RTBEngine::UI::UIButton* resumeButton = nullptr;
     RTBEngine::UI::UIButton* exitButton = nullptr;
     RTBEngine::UI::UIText* notificationText = nullptr;
@@ -60,7 +60,7 @@ private:
     void BindButtons();
     void RefreshMatchNotification();
     void CaptureMenuElementStates();
-    void CaptureMenuElementStatesRecursive(RTBEngine::ECS::GameObject* root);
+    void CaptureMenuElementStatesRecursive(RTBEngine::Scene::GameObject* root);
     void SetMenuVisible(bool visible);
     void ApplyMouseModeForMenuState();
 };

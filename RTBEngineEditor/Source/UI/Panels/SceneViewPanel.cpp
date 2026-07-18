@@ -222,24 +222,24 @@ namespace RTBEditor {
         RTBEngine::Math::Vector2 viewportSize((float)viewportWidth, (float)viewportHeight);
         Ray ray = Ray::ScreenPointToRay(localMousePos, viewportSize, &editorCamera);
 
-        RTBEngine::ECS::Scene* scene = GetEditingScene(context);
+        RTBEngine::Scene::Scene* scene = GetEditingScene(context);
         if (!scene) {
             return;
         }
 
-        RTBEngine::ECS::GameObject* closestObject = nullptr;
+        RTBEngine::Scene::GameObject* closestObject = nullptr;
         float closestDistance = std::numeric_limits<float>::max();
 
         const auto& gameObjects = scene->GetGameObjects();
 
         for (const auto& goPtr : gameObjects) {
-            RTBEngine::ECS::GameObject* obj = goPtr.get();
+            RTBEngine::Scene::GameObject* obj = goPtr.get();
             if (!obj) continue;
             if (IsPrefabEditMode(context) && PrefabEditorSession::IsEditorUtilityObject(obj)) {
                 continue;
             }
 
-            RTBEngine::ECS::MeshRenderer* meshRenderer = obj->GetComponent<RTBEngine::ECS::MeshRenderer>();
+            RTBEngine::Scene::MeshRenderer* meshRenderer = obj->GetComponent<RTBEngine::Scene::MeshRenderer>();
             if (!meshRenderer) continue;
 
             // Collect all meshes to test (multi-mesh or single)
@@ -315,7 +315,7 @@ namespace RTBEditor {
         RTBEngine::Math::Matrix4 projMatrix = editorCamera.GetProjectionMatrix();
 
         // Get transform of selected object — gizmo always works in world space
-        RTBEngine::ECS::Transform& transform = context.selectedGameObject->GetTransform();
+        RTBEngine::Scene::Transform& transform = context.selectedGameObject->GetTransform();
         RTBEngine::Math::Matrix4 worldMatrix = context.selectedGameObject->GetWorldMatrix();
 
         // Determine operation
@@ -341,7 +341,7 @@ namespace RTBEditor {
 
         // If the gizmo was manipulated, convert world result back to local space
         if (manipulated) {
-            RTBEngine::ECS::GameObject* parentGO = context.selectedGameObject->GetParent();
+            RTBEngine::Scene::GameObject* parentGO = context.selectedGameObject->GetParent();
             RTBEngine::Math::Matrix4 localMatrix = worldMatrix;
 
             if (parentGO) {

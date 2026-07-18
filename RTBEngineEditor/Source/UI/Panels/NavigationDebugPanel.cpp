@@ -14,25 +14,25 @@
 namespace RTBEditor {
     namespace {
 
-        RTBEngine::ECS::NavGridComponent* FindFirstNavGrid(RTBEngine::ECS::Scene* scene)
+        RTBEngine::Scene::NavGridComponent* FindFirstNavGrid(RTBEngine::Scene::Scene* scene)
         {
             if (!scene) {
                 return nullptr;
             }
 
-            RTBEngine::ECS::NavGridComponent* found = nullptr;
-            std::function<void(RTBEngine::ECS::GameObject*)> visit =
-                [&](RTBEngine::ECS::GameObject* gameObject) {
+            RTBEngine::Scene::NavGridComponent* found = nullptr;
+            std::function<void(RTBEngine::Scene::GameObject*)> visit =
+                [&](RTBEngine::Scene::GameObject* gameObject) {
                     if (!gameObject || found) {
                         return;
                     }
 
-                    if (auto* navGrid = gameObject->GetComponent<RTBEngine::ECS::NavGridComponent>()) {
+                    if (auto* navGrid = gameObject->GetComponent<RTBEngine::Scene::NavGridComponent>()) {
                         found = navGrid;
                         return;
                     }
 
-                    for (RTBEngine::ECS::GameObject* child : gameObject->GetChildren()) {
+                    for (RTBEngine::Scene::GameObject* child : gameObject->GetChildren()) {
                         visit(child);
                     }
                 };
@@ -97,8 +97,8 @@ namespace RTBEditor {
         ImGui::Separator();
         ImGui::TextUnformatted("Scene status");
 
-        RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
-        RTBEngine::ECS::NavGridComponent* navGrid = FindFirstNavGrid(scene);
+        RTBEngine::Scene::Scene* scene = RTBEngine::Scene::SceneManager::GetInstance().GetActiveScene();
+        RTBEngine::Scene::NavGridComponent* navGrid = FindFirstNavGrid(scene);
         if (!navGrid) {
             ImGui::TextColored(ImVec4(0.9f, 0.6f, 0.3f, 1.0f), "No NavGridComponent in scene.");
         } else if (!navGrid->IsBaked()) {

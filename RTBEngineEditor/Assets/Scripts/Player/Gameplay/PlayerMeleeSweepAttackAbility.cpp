@@ -111,7 +111,7 @@ float PlayerMeleeSweepAttackAbility::GetDamagePerHit() const
 }
 
 bool PlayerMeleeSweepAttackAbility::CanActivateAbility(
-    RTBEngine::ECS::GameObject* instigator,
+    RTBEngine::Scene::GameObject* instigator,
     const RTBEngine::Math::Vector3& direction) const
 {
     if (!instigator || !HasValidAttack() || !HasPlanarDirection(direction)) {
@@ -135,7 +135,7 @@ bool PlayerMeleeSweepAttackAbility::CanActivateAbility(
 
 void PlayerMeleeSweepAttackAbility::OnAbilityStarted()
 {
-    RTBEngine::ECS::GameObject* instigator = GetActiveInstigator();
+    RTBEngine::Scene::GameObject* instigator = GetActiveInstigator();
     if (!instigator || !CombatAuthority::CanConsumeAmmo(instigator)) {
         return;
     }
@@ -147,7 +147,7 @@ void PlayerMeleeSweepAttackAbility::OnAbilityStarted()
 
 void PlayerMeleeSweepAttackAbility::ExecuteAbilityHit()
 {
-    RTBEngine::ECS::GameObject* instigator = GetActiveInstigator();
+    RTBEngine::Scene::GameObject* instigator = GetActiveInstigator();
     if (!instigator || !CombatAuthority::CanApplyDamage(instigator)) {
         return;
     }
@@ -156,7 +156,7 @@ void PlayerMeleeSweepAttackAbility::ExecuteAbilityHit()
 }
 
 bool PlayerMeleeSweepAttackAbility::ApplySweepHits(
-    RTBEngine::ECS::GameObject* instigator,
+    RTBEngine::Scene::GameObject* instigator,
     const RTBEngine::Math::Vector3& attackDirection,
     float hitDamage)
 {

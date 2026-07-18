@@ -8,19 +8,19 @@
 #include <RTBEngine/Reflection/PropertyMacros.h>
 
 namespace RTBEngine {
-    namespace ECS {
+    namespace Scene {
         class GameObject;
     }
 }
 
 class CharacterDefinition;
 
-class HealthComponent : public RTBEngine::ECS::Component, public ICharacterStatReceiver
+class HealthComponent : public RTBEngine::Scene::Component, public ICharacterStatReceiver
 {
 public:
     struct DamageContext {
         float amount = 0.0f;
-        RTBEngine::ECS::GameObject* instigator = nullptr;
+        RTBEngine::Scene::GameObject* instigator = nullptr;
         RTBEngine::Math::Vector3 hitPoint = RTBEngine::Math::Vector3::Zero();
         RTBEngine::Math::Vector3 hitDirection = RTBEngine::Math::Vector3::Zero();
         float knockbackStrength = 0.0f;

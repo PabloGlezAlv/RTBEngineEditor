@@ -14,7 +14,7 @@ namespace GameNet {
 }
 
 namespace RTBEngine {
-    namespace ECS {
+    namespace Scene {
         class AudioSourceComponent;
         class GameObject;
         class Prefab;
@@ -41,17 +41,17 @@ public:
     float recoveryDuration = 0.0f;
     float tickInterval = 0.0f;
     int tickCount = 1;
-    RTBEngine::ECS::AudioSourceComponent* fireAudio = nullptr;
-    RTBEngine::ECS::AudioSourceComponent* hitAudio = nullptr;
+    RTBEngine::Scene::AudioSourceComponent* fireAudio = nullptr;
+    RTBEngine::Scene::AudioSourceComponent* hitAudio = nullptr;
 
     RTB_COMPONENT(ProjectileAttackAbility)
 
 public:
-    bool FireNow(RTBEngine::ECS::GameObject* instigator,
+    bool FireNow(RTBEngine::Scene::GameObject* instigator,
                  const RTBEngine::Math::Vector3& attackDirection,
                  RTBEngine::Physics::PhysicsWorld* physicsWorld = nullptr);
     static bool SpawnFromNetworkSnapshot(const GameNet::ProjectileSpawnSnapshot& snapshot);
-    RTBEngine::Math::Vector3 GetLaunchOrigin(RTBEngine::ECS::GameObject* instigator,
+    RTBEngine::Math::Vector3 GetLaunchOrigin(RTBEngine::Scene::GameObject* instigator,
                                              const RTBEngine::Math::Vector3& attackDirection) const;
     float GetTravelDistance() const;
     float GetDamageAmount() const { return cachedDamage; }
@@ -77,13 +77,13 @@ protected:
     float GetRecoveryDuration() const override { return recoveryDuration; }
     float GetTickInterval() const override { return tickInterval; }
     int GetTickCount() const override;
-    bool CanActivateAbility(RTBEngine::ECS::GameObject* instigator,
+    bool CanActivateAbility(RTBEngine::Scene::GameObject* instigator,
                             const RTBEngine::Math::Vector3& direction) const override;
     void OnAbilityStarted() override;
     void ExecuteAbilityHit() override;
 
 private:
-    RTBEngine::ECS::Prefab* projectileSpawnPrefab = nullptr;
+    RTBEngine::Scene::Prefab* projectileSpawnPrefab = nullptr;
     std::string projectilePoolKey;
     float cachedTravelDistance = 0.0f;
     float cachedProjectileRadius = 0.05f;
@@ -100,12 +100,12 @@ private:
     void ClampSettings();
     void ResolveProjectilePrefab();
     void RefreshCachedProjectileStats();
-    bool SpawnProjectile(RTBEngine::ECS::GameObject* instigator,
+    bool SpawnProjectile(RTBEngine::Scene::GameObject* instigator,
                          const RTBEngine::Math::Vector3& attackDirection,
                          RTBEngine::Physics::PhysicsWorld* physicsWorld,
                          bool broadcastOnlineSpawn,
                          const RTBEngine::Math::Vector3* spawnOriginOverride = nullptr,
                          const GameNet::ProjectileSpawnSnapshot* networkSnapshot = nullptr);
-    RTBEngine::Physics::PhysicsWorld* ResolvePhysicsWorld(RTBEngine::ECS::GameObject* instigator) const;
-    static RTBEngine::ECS::GameObject* FindPawnByPlayerSlot(int playerSlot);
+    RTBEngine::Physics::PhysicsWorld* ResolvePhysicsWorld(RTBEngine::Scene::GameObject* instigator) const;
+    static RTBEngine::Scene::GameObject* FindPawnByPlayerSlot(int playerSlot);
 };

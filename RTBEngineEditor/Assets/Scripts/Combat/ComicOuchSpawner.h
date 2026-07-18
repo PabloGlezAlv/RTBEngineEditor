@@ -12,12 +12,12 @@
 #include <vector>
 
 namespace RTBEngine {
-    namespace ECS {
+    namespace Scene {
         class GameObject;
     }
 }
 
-class ComicOuchSpawner : public RTBEngine::ECS::Component
+class ComicOuchSpawner : public RTBEngine::Scene::Component
 {
 public:
     ComicOuchSpawner() = default;
@@ -41,7 +41,7 @@ public:
     void OnDestroy() override;
 
 private:
-    RTBEngine::ECS::Prefab* bubblePrefab = nullptr;
+    RTBEngine::Scene::Prefab* bubblePrefab = nullptr;
     RTBEngine::Core::EventSubscription damageSubscription;
     float cooldownRemaining = 0.0f;
     size_t nextTextureIndex = 0;

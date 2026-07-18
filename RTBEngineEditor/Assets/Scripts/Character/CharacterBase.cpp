@@ -51,7 +51,7 @@ bool CharacterBase::HasSimulationAuthority() const
         return true;
     }
 
-    const RTBEngine::ECS::NetworkIdentity* identity = owner->GetComponent<RTBEngine::ECS::NetworkIdentity>();
+    const RTBEngine::Scene::NetworkIdentity* identity = owner->GetComponent<RTBEngine::Scene::NetworkIdentity>();
     if (!identity) {
         return true;
     }
@@ -66,7 +66,7 @@ bool CharacterBase::IsLocallyControlled() const
         return true;
     }
 
-    const RTBEngine::ECS::NetworkIdentity* identity = owner->GetComponent<RTBEngine::ECS::NetworkIdentity>();
+    const RTBEngine::Scene::NetworkIdentity* identity = owner->GetComponent<RTBEngine::Scene::NetworkIdentity>();
     if (!identity) {
         return true;
     }

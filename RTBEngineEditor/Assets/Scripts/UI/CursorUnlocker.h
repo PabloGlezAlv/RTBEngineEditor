@@ -3,7 +3,7 @@
 #include <RTBEngine/Scene/Component.h>
 #include <RTBEngine/Reflection/PropertyMacros.h>
 
-class CursorUnlocker : public RTBEngine::ECS::Component
+class CursorUnlocker : public RTBEngine::Scene::Component
 {
 public:
     CursorUnlocker() = default;

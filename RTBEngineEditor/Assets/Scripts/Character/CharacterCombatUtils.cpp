@@ -31,8 +31,8 @@ namespace CharacterCombatUtils {
         }
 
         bool PassesTeamFilter(
-            RTBEngine::ECS::GameObject* instigator,
-            RTBEngine::ECS::GameObject* targetRoot,
+            RTBEngine::Scene::GameObject* instigator,
+            RTBEngine::Scene::GameObject* targetRoot,
             bool ignoreSameTeam)
         {
             if (!instigator || !targetRoot || instigator == targetRoot) {
@@ -47,13 +47,13 @@ namespace CharacterCombatUtils {
         }
     }
 
-    int ResolveCharacterTeam(RTBEngine::ECS::GameObject* gameObject)
+    int ResolveCharacterTeam(RTBEngine::Scene::GameObject* gameObject)
     {
         if (!gameObject) {
             return static_cast<int>(CharacterTeam::Neutral);
         }
 
-        for (RTBEngine::ECS::GameObject* current = gameObject; current; current = current->GetParent()) {
+        for (RTBEngine::Scene::GameObject* current = gameObject; current; current = current->GetParent()) {
             if (auto* character = current->GetComponent<CharacterBase>()) {
                 return character->GetTeam();
             }
@@ -62,13 +62,13 @@ namespace CharacterCombatUtils {
         return static_cast<int>(CharacterTeam::Neutral);
     }
 
-    RTBEngine::ECS::GameObject* ResolveHealthRoot(RTBEngine::ECS::GameObject* gameObject)
+    RTBEngine::Scene::GameObject* ResolveHealthRoot(RTBEngine::Scene::GameObject* gameObject)
     {
         if (!gameObject) {
             return nullptr;
         }
 
-        for (RTBEngine::ECS::GameObject* current = gameObject; current; current = current->GetParent()) {
+        for (RTBEngine::Scene::GameObject* current = gameObject; current; current = current->GetParent()) {
             if (current->GetComponent<HealthComponent>()) {
                 return current;
             }
@@ -77,9 +77,9 @@ namespace CharacterCombatUtils {
         return nullptr;
     }
 
-    RTBEngine::Physics::PhysicsWorld* ResolvePhysicsWorld(RTBEngine::ECS::GameObject* gameObject)
+    RTBEngine::Physics::PhysicsWorld* ResolvePhysicsWorld(RTBEngine::Scene::GameObject* gameObject)
     {
-        return RTBEngine::ECS::ResolvePhysicsWorldFromGameObject(gameObject, true);
+        return RTBEngine::Scene::ResolvePhysicsWorldFromGameObject(gameObject, true);
     }
 
     std::vector<HostileOverlapHit> OverlapHostileTargets(const HostileOverlapQuery& query)
@@ -110,7 +110,7 @@ namespace CharacterCombatUtils {
                 query.layerMask,
                 physicsOptions);
 
-        std::unordered_set<RTBEngine::ECS::GameObject*> seenTargets;
+        std::unordered_set<RTBEngine::Scene::GameObject*> seenTargets;
         seenTargets.reserve(physicsHits.size());
 
         for (const RTBEngine::Physics::OverlapSphereHit& physicsHit : physicsHits) {
@@ -126,7 +126,7 @@ namespace CharacterCombatUtils {
                 continue;
             }
 
-            RTBEngine::ECS::GameObject* targetRoot = ResolveHealthRoot(targetHealth->GetOwner());
+            RTBEngine::Scene::GameObject* targetRoot = ResolveHealthRoot(targetHealth->GetOwner());
             if (!targetRoot || !PassesTeamFilter(query.instigator, targetRoot, query.ignoreSameTeam)) {
                 continue;
             }

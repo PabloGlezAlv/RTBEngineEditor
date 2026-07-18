@@ -5,7 +5,7 @@
 #include <RTBEngine/UI/Elements/UIText.h>
 #include <string>
 
-class RoundUIHandler : public RTBEngine::ECS::Component
+class RoundUIHandler : public RTBEngine::Scene::Component
 {
 public:
     RoundUIHandler() = default;

@@ -9,7 +9,7 @@
 #include <RTBEngine/Reflection/PropertyMacros.h>
 
 namespace RTBEngine {
-    namespace ECS {
+    namespace Scene {
         class GameObject;
         class NavAgentComponent;
     }
@@ -44,7 +44,7 @@ public:
     EnemyAnimationDriver* animationDriver = nullptr;
     EnemyLocomotionController* locomotion = nullptr;
     MeleeSphereAttackAbility* meleeAttack = nullptr;
-    RTBEngine::ECS::NavAgentComponent* navAgent = nullptr;
+    RTBEngine::Scene::NavAgentComponent* navAgent = nullptr;
     float attackRange = 1.35f;
     float preferredAttackDistance = 1.05f;
     float hitReactDuration = 0.4f;

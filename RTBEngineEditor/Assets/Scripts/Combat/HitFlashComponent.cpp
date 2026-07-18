@@ -85,13 +85,13 @@ void HitFlashComponent::CollectFlashTargets()
         return;
     }
 
-    const std::function<void(RTBEngine::ECS::GameObject*)> collectFromObject =
-        [&](RTBEngine::ECS::GameObject* object) {
+    const std::function<void(RTBEngine::Scene::GameObject*)> collectFromObject =
+        [&](RTBEngine::Scene::GameObject* object) {
             if (!object) {
                 return;
             }
 
-            if (auto* renderer = object->GetComponent<RTBEngine::ECS::MeshRenderer>()) {
+            if (auto* renderer = object->GetComponent<RTBEngine::Scene::MeshRenderer>()) {
                 FlashTarget target;
                 target.renderer = renderer;
                 target.baseColor = renderer->colorRef;
@@ -105,7 +105,7 @@ void HitFlashComponent::CollectFlashTargets()
                 return;
             }
 
-            for (RTBEngine::ECS::GameObject* child : object->GetChildren()) {
+            for (RTBEngine::Scene::GameObject* child : object->GetChildren()) {
                 collectFromObject(child);
             }
         };

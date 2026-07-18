@@ -243,7 +243,7 @@ RTBEngine::Online::IOnlineLobby* LobbyMenuController::GetSessionLobby() const
 
 void LobbyMenuController::OnStart()
 {
-    SetTimeMode(RTBEngine::ECS::ComponentTimeMode::Unscaled);
+    SetTimeMode(RTBEngine::Scene::ComponentTimeMode::Unscaled);
     SetUpdateTickEnabled(true);
     maxMembers = std::clamp(maxMembers, 2, 6);
     previousLobbyState = RTBEngine::Online::OnlineLobbyState::NotInLobby;
@@ -262,7 +262,7 @@ void LobbyMenuController::OnUpdate(float)
         SetStatus("Host started the match.");
         GameNet::OnlineGameNetSubsystem::Init();
         RTBEngine::Core::Time::SetPaused(false);
-        RTBEngine::ECS::SceneManager::GetInstance().RequestSceneLoad(requestedScenePath.c_str());
+        RTBEngine::Scene::SceneManager::GetInstance().RequestSceneLoad(requestedScenePath.c_str());
         return;
     }
 
@@ -837,7 +837,7 @@ void LobbyMenuController::GoBack()
     }
 
     RTBEngine::Core::Time::SetPaused(false);
-    RTBEngine::ECS::SceneManager::GetInstance().RequestSceneLoad(multiplayerMenuScenePath.c_str());
+    RTBEngine::Scene::SceneManager::GetInstance().RequestSceneLoad(multiplayerMenuScenePath.c_str());
 }
 
 void LobbyMenuController::StartGame()
@@ -876,7 +876,7 @@ void LobbyMenuController::StartGame()
 
     GameNet::OnlineGameNetSubsystem::Init();
     RTBEngine::Core::Time::SetPaused(false);
-    RTBEngine::ECS::SceneManager::GetInstance().RequestSceneLoad(gameScenePath.c_str());
+    RTBEngine::Scene::SceneManager::GetInstance().RequestSceneLoad(gameScenePath.c_str());
 }
 
 void LobbyMenuController::SetStatus(const std::string& message)

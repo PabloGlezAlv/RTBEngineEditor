@@ -35,7 +35,7 @@ void MainMenuCharacterPreview::ClearPreviewInstance()
         return;
     }
 
-    RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
+    RTBEngine::Scene::Scene* scene = RTBEngine::Scene::SceneManager::GetInstance().GetActiveScene();
     if (scene) {
         scene->RemoveGameObject(previewInstance);
     }
@@ -105,8 +105,8 @@ void MainMenuCharacterPreview::ShowCharacterById(const std::string& characterId)
 
     RTBEngine::Core::ResourceManager& resources = RTBEngine::Core::ResourceManager::GetInstance();
     const std::string resolvedPath = resources.ResolvePathForRead(definition->previewPrefabRef);
-    RTBEngine::ECS::Prefab* prefab =
-        RTBEngine::ECS::PrefabRegistry::GetInstance().GetByPath(resolvedPath);
+    RTBEngine::Scene::Prefab* prefab =
+        RTBEngine::Scene::PrefabRegistry::GetInstance().GetByPath(resolvedPath);
     if (!prefab) {
         RTB_WARN("MainMenuCharacterPreview: Preview prefab not found: '" + definition->previewPrefabRef + "'.");
         return;
@@ -114,7 +114,7 @@ void MainMenuCharacterPreview::ShowCharacterById(const std::string& characterId)
 
     ClearPreviewInstance();
 
-    previewInstance = RTBEngine::ECS::SceneManager::GetInstance().Instantiate(*prefab, owner, true);
+    previewInstance = RTBEngine::Scene::SceneManager::GetInstance().Instantiate(*prefab, owner, true);
     if (!previewInstance) {
         RTB_WARN("MainMenuCharacterPreview: Failed to instantiate preview for '" + characterId + "'.");
         return;

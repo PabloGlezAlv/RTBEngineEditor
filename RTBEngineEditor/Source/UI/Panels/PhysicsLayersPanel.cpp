@@ -86,7 +86,7 @@ namespace RTBEditor {
 
     void PhysicsLayersPanel::RefreshActivePhysicsFilters()
     {
-        RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
+        RTBEngine::Scene::Scene* scene = RTBEngine::Scene::SceneManager::GetInstance().GetActiveScene();
         if (!scene) {
             return;
         }

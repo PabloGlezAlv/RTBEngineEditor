@@ -10,7 +10,7 @@
 #include <vector>
 
 namespace RTBEngine {
-    namespace ECS {
+    namespace Scene {
         class AudioSourceComponent;
     }
     namespace UI {
@@ -23,14 +23,14 @@ namespace RTBEngine {
 class CharacterDefinition;
 class MainMenuCharacterPreview;
 
-class CharacterSelectMenuController : public RTBEngine::ECS::Component {
+class CharacterSelectMenuController : public RTBEngine::Scene::Component {
 public:
     static constexpr int kMaxCharacterCards = 5;
 
     CharacterSelectMenuController() = default;
     ~CharacterSelectMenuController() override = default;
 
-    RTBEngine::ECS::GameObject* characterSelectRoot = nullptr;
+    RTBEngine::Scene::GameObject* characterSelectRoot = nullptr;
     RTBEngine::UI::UIText* overlayStatsText = nullptr;
     RTBEngine::UI::UIText* summaryStatsText = nullptr;
     RTBEngine::UI::UIText* summaryNameText = nullptr;
@@ -38,11 +38,11 @@ public:
     RTBEngine::UI::UIButton* backButton = nullptr;
     RTBEngine::UI::UIButton* confirmButton = nullptr;
 
-    RTBEngine::ECS::GameObject* characterCard0 = nullptr;
-    RTBEngine::ECS::GameObject* characterCard1 = nullptr;
-    RTBEngine::ECS::GameObject* characterCard2 = nullptr;
-    RTBEngine::ECS::GameObject* characterCard3 = nullptr;
-    RTBEngine::ECS::GameObject* characterCard4 = nullptr;
+    RTBEngine::Scene::GameObject* characterCard0 = nullptr;
+    RTBEngine::Scene::GameObject* characterCard1 = nullptr;
+    RTBEngine::Scene::GameObject* characterCard2 = nullptr;
+    RTBEngine::Scene::GameObject* characterCard3 = nullptr;
+    RTBEngine::Scene::GameObject* characterCard4 = nullptr;
 
     RTBEngine::UI::UIPanel* characterCardFrame0 = nullptr;
     RTBEngine::UI::UIPanel* characterCardFrame1 = nullptr;
@@ -81,7 +81,7 @@ public:
     RTBEngine::UI::UIText* quickSelectLabel4 = nullptr;
 
     MainMenuCharacterPreview* characterPreview = nullptr;
-    RTBEngine::ECS::AudioSourceComponent* clickAudio = nullptr;
+    RTBEngine::Scene::AudioSourceComponent* clickAudio = nullptr;
 
     RTB_COMPONENT(CharacterSelectMenuController)
 
@@ -90,7 +90,7 @@ public:
 
 private:
     struct CharacterCardWidgets {
-        RTBEngine::ECS::GameObject* root = nullptr;
+        RTBEngine::Scene::GameObject* root = nullptr;
         RTBEngine::UI::UIPanel* frame = nullptr;
         RTBEngine::UI::UIButton* button = nullptr;
         RTBEngine::UI::UIText* nameText = nullptr;

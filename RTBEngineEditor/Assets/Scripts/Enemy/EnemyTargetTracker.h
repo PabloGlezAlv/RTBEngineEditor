@@ -7,12 +7,12 @@
 #include <RTBEngine/Reflection/PropertyMacros.h>
 
 namespace RTBEngine {
-    namespace ECS {
+    namespace Scene {
         class GameObject;
     }
 }
 
-class EnemyTargetTracker : public RTBEngine::ECS::Component
+class EnemyTargetTracker : public RTBEngine::Scene::Component
 {
 public:
     EnemyTargetTracker() = default;
@@ -21,19 +21,19 @@ public:
     void OnStart() override;
     void OnValidate() override;
 
-    RTBEngine::ECS::GameObject* targetObject = nullptr;
+    RTBEngine::Scene::GameObject* targetObject = nullptr;
 
     RTB_COMPONENT(EnemyTargetTracker)
 
 public:
-    bool HasValidTarget(const RTBEngine::ECS::GameObject* requester) const;
-    bool IsTargetAlive(const RTBEngine::ECS::GameObject* requester) const;
+    bool HasValidTarget(const RTBEngine::Scene::GameObject* requester) const;
+    bool IsTargetAlive(const RTBEngine::Scene::GameObject* requester) const;
     HealthComponent* ResolveTargetHealth() const;
-    float GetPlanarDistanceTo(const RTBEngine::ECS::GameObject* requester) const;
-    RTBEngine::Math::Vector3 GetPlanarDirectionTo(const RTBEngine::ECS::GameObject* requester) const;
-    bool IsWithinTargetHierarchy(const RTBEngine::ECS::GameObject* requester,
-                                 RTBEngine::ECS::GameObject* candidate) const;
-    void SetTarget(RTBEngine::ECS::GameObject* target);
+    float GetPlanarDistanceTo(const RTBEngine::Scene::GameObject* requester) const;
+    RTBEngine::Math::Vector3 GetPlanarDirectionTo(const RTBEngine::Scene::GameObject* requester) const;
+    bool IsWithinTargetHierarchy(const RTBEngine::Scene::GameObject* requester,
+                                 RTBEngine::Scene::GameObject* candidate) const;
+    void SetTarget(RTBEngine::Scene::GameObject* target);
 
 private:
     void SanitizeTarget();

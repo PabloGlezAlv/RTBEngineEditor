@@ -87,7 +87,7 @@ void MultiplayerMenuController::GoToLobby(bool useRelayLobby)
             : RTBEngine::Online::OnlineBackendType::Lan);
 
     RTBEngine::Core::Time::SetPaused(false);
-    RTBEngine::ECS::SceneManager::GetInstance().RequestSceneLoad(lobbyScenePath.c_str());
+    RTBEngine::Scene::SceneManager::GetInstance().RequestSceneLoad(lobbyScenePath.c_str());
 }
 
 void MultiplayerMenuController::GoToMainMenu()
@@ -103,5 +103,5 @@ void MultiplayerMenuController::GoToMainMenu()
 
     RTBEngine::Online::OnlineSystem::GetInstance().ClearSessionLobbyBackend();
     RTBEngine::Core::Time::SetPaused(false);
-    RTBEngine::ECS::SceneManager::GetInstance().RequestSceneLoad(mainMenuScenePath.c_str());
+    RTBEngine::Scene::SceneManager::GetInstance().RequestSceneLoad(mainMenuScenePath.c_str());
 }

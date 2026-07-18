@@ -29,7 +29,7 @@ namespace RTBEditor {
         }
 
         void AppendBounds(std::vector<LineVertex>& vertices,
-                          const RTBEngine::ECS::NavGridComponent& navGridComponent,
+                          const RTBEngine::Scene::NavGridComponent& navGridComponent,
                           const RTBEngine::Math::Vector4& color,
                           float yOffset)
         {
@@ -113,7 +113,7 @@ namespace RTBEditor {
         }
 
         void AppendAgentPath(std::vector<LineVertex>& vertices,
-                             const RTBEngine::ECS::NavAgentComponent& agent,
+                             const RTBEngine::Scene::NavAgentComponent& agent,
                              const RTBEngine::Math::Vector4& pathColor,
                              const RTBEngine::Math::Vector4& waypointColor,
                              const RTBEngine::Math::Vector4& destinationColor,
@@ -150,7 +150,7 @@ namespace RTBEditor {
             }
         }
 
-        RTBEngine::ECS::NavGridComponent* FindNavGridForActiveGrid(RTBEngine::ECS::Scene* scene)
+        RTBEngine::Scene::NavGridComponent* FindNavGridForActiveGrid(RTBEngine::Scene::Scene* scene)
         {
             const RTBEngine::Navigation::NavGrid* activeGrid =
                 RTBEngine::Navigation::GetActiveNavGridForDebug();
@@ -158,21 +158,21 @@ namespace RTBEditor {
                 return nullptr;
             }
 
-            RTBEngine::ECS::NavGridComponent* found = nullptr;
-            std::function<void(RTBEngine::ECS::GameObject*)> visit =
-                [&](RTBEngine::ECS::GameObject* gameObject) {
+            RTBEngine::Scene::NavGridComponent* found = nullptr;
+            std::function<void(RTBEngine::Scene::GameObject*)> visit =
+                [&](RTBEngine::Scene::GameObject* gameObject) {
                     if (!gameObject || found) {
                         return;
                     }
 
-                    if (auto* navGrid = gameObject->GetComponent<RTBEngine::ECS::NavGridComponent>()) {
+                    if (auto* navGrid = gameObject->GetComponent<RTBEngine::Scene::NavGridComponent>()) {
                         if (&navGrid->GetGrid() == activeGrid) {
                             found = navGrid;
                             return;
                         }
                     }
 
-                    for (RTBEngine::ECS::GameObject* child : gameObject->GetChildren()) {
+                    for (RTBEngine::Scene::GameObject* child : gameObject->GetChildren()) {
                         visit(child);
                     }
                 };
@@ -222,17 +222,17 @@ namespace RTBEditor {
     }
 
     void NavGridDebugRenderer::Render(RTBEngine::Rendering::Camera* camera,
-                                      RTBEngine::ECS::Scene* scene,
-                                      RTBEngine::ECS::GameObject* selectedObject,
+                                      RTBEngine::Scene::Scene* scene,
+                                      RTBEngine::Scene::GameObject* selectedObject,
                                       const NavDebugSettings& settings)
     {
         if (!camera || !lineShader || !settings.enabled) {
             return;
         }
 
-        RTBEngine::ECS::NavGridComponent* navGridComponent = FindNavGridForActiveGrid(scene);
+        RTBEngine::Scene::NavGridComponent* navGridComponent = FindNavGridForActiveGrid(scene);
         if (!navGridComponent && selectedObject) {
-            if (auto* selectedNavGrid = selectedObject->GetComponent<RTBEngine::ECS::NavGridComponent>()) {
+            if (auto* selectedNavGrid = selectedObject->GetComponent<RTBEngine::Scene::NavGridComponent>()) {
                 navGridComponent = selectedNavGrid;
             }
         }
@@ -271,7 +271,7 @@ namespace RTBEditor {
         if (settings.showAgentPaths) {
             const auto& registeredAgents =
                 RTBEngine::Navigation::NavPathService::GetInstance().GetRegisteredAgents();
-            for (RTBEngine::ECS::NavAgentComponent* agent : registeredAgents) {
+            for (RTBEngine::Scene::NavAgentComponent* agent : registeredAgents) {
                 if (!agent || !agent->GetOwner() || !agent->GetOwner()->IsActiveInHierarchy()) {
                     continue;
                 }

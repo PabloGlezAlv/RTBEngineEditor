@@ -2,6 +2,7 @@
 
 #include "HealthComponent.h"
 
+#include <RTBEngine/ECS/Entity.h>
 #include <RTBEngine/Scene/Component.h>
 #include <RTBEngine/Scene/IPoolable.h>
 #include <RTBEngine/Math/Vectors/Vector3.h>
@@ -11,7 +12,7 @@
 #include <vector>
 
 namespace RTBEngine {
-    namespace ECS {
+    namespace Scene {
         class AudioSourceComponent;
         class GameObject;
         class TrailRenderer;
@@ -22,12 +23,12 @@ namespace RTBEngine {
     }
 }
 
-class ProjectileComponent : public RTBEngine::ECS::Component, public RTBEngine::ECS::IPoolable
+class ProjectileComponent : public RTBEngine::Scene::Component, public RTBEngine::Scene::IPoolable
 {
 public:
     struct ProjectileRuntimeContext {
-        RTBEngine::ECS::GameObject* instigator = nullptr;
-        RTBEngine::ECS::AudioSourceComponent* hitAudio = nullptr;
+        RTBEngine::Scene::GameObject* instigator = nullptr;
+        RTBEngine::Scene::AudioSourceComponent* hitAudio = nullptr;
         RTBEngine::Physics::PhysicsWorld* physicsWorld = nullptr;
         RTBEngine::Math::Vector3 origin = RTBEngine::Math::Vector3::Zero();
         RTBEngine::Math::Vector3 direction = RTBEngine::Math::Vector3::Forward();
@@ -36,8 +37,8 @@ public:
     };
 
     struct ProjectileConfig {
-        RTBEngine::ECS::GameObject* instigator = nullptr;
-        RTBEngine::ECS::AudioSourceComponent* hitAudio = nullptr;
+        RTBEngine::Scene::GameObject* instigator = nullptr;
+        RTBEngine::Scene::AudioSourceComponent* hitAudio = nullptr;
         RTBEngine::Physics::PhysicsWorld* physicsWorld = nullptr;
         RTBEngine::Math::Vector3 origin = RTBEngine::Math::Vector3::Zero();
         RTBEngine::Math::Vector3 direction = RTBEngine::Math::Vector3::Forward();
@@ -59,6 +60,7 @@ public:
 
     void OnStart() override;
     void OnUpdate(float deltaTime) override;
+    void OnLateUpdate(float deltaTime) override;
     void OnValidate() override;
     void OnDestroy() override;
 
@@ -88,8 +90,8 @@ public:
     void OnPoolRelease() override;
 
 private:
-    RTBEngine::ECS::GameObject* instigator = nullptr;
-    RTBEngine::ECS::AudioSourceComponent* hitAudio = nullptr;
+    RTBEngine::Scene::GameObject* instigator = nullptr;
+    RTBEngine::Scene::AudioSourceComponent* hitAudio = nullptr;
     RTBEngine::Physics::PhysicsWorld* physicsWorld = nullptr;
     RTBEngine::Math::Vector3 direction = RTBEngine::Math::Vector3::Forward();
     float fixedHeight = 0.0f;
@@ -97,8 +99,9 @@ private:
     int appliedHitCount = 0;
     bool initialized = false;
     bool pendingDestroy = false;
-    RTBEngine::ECS::TrailRenderer* flightTrail = nullptr;
+    RTBEngine::Scene::TrailRenderer* flightTrail = nullptr;
     std::vector<HealthComponent*> hitTargets;
+    RTBEngine::ECS::Entity ecsEntity = RTBEngine::ECS::kNullEntity;
 
     void ClampSettings();
     void InitializeFromOwnerTransform();
@@ -107,10 +110,15 @@ private:
     void ReleaseTrailForFadeout();
     void SpawnImpactParticles();
     RTBEngine::Physics::PhysicsWorld* ResolvePhysicsWorld() const;
-    HealthComponent* ResolveHitHealth(RTBEngine::ECS::GameObject* hitObject) const;
+    HealthComponent* ResolveHitHealth(RTBEngine::Scene::GameObject* hitObject) const;
     bool HasAlreadyHit(HealthComponent* target) const;
     bool HandleSweepHit(const RTBEngine::Math::Vector3& previousPosition,
                         const RTBEngine::Math::Vector3& nextPosition,
                         RTBEngine::Math::Vector3& outResolvedPosition);
+    bool ProcessEcsHit(RTBEngine::Scene::GameObject* hitObject,
+                       const RTBEngine::Math::Vector3& hitPoint);
+    void SyncEcsSimulation(float deltaTime);
+    void CreateEcsEntity();
+    void DestroyEcsEntity();
     void DestroyProjectile();
 };

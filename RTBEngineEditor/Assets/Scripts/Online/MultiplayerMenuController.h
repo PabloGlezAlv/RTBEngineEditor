@@ -11,7 +11,7 @@ namespace RTBEngine {
     }
 }
 
-class MultiplayerMenuController : public RTBEngine::ECS::Component {
+class MultiplayerMenuController : public RTBEngine::Scene::Component {
 public:
     MultiplayerMenuController() = default;
     ~MultiplayerMenuController() override = default;

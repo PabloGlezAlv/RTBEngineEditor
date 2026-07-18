@@ -24,7 +24,7 @@
 
 namespace RTBEngine {
 
-    namespace ECS {
+    namespace Scene {
         class AudioSourceComponent;
     }
 
@@ -48,7 +48,7 @@ namespace RTBEngine {
 
 
 
-class ButtonStyle : public RTBEngine::ECS::Component
+class ButtonStyle : public RTBEngine::Scene::Component
 
                   , public RTBEngine::UI::IPointerEnterHandler
 
@@ -123,7 +123,7 @@ public:
     float pressOutTimeSec = 0.12f;
 
     bool playClickSound = true;
-    RTBEngine::ECS::AudioSourceComponent* clickAudio = nullptr;
+    RTBEngine::Scene::AudioSourceComponent* clickAudio = nullptr;
 
     RTB_COMPONENT(ButtonStyle)
 

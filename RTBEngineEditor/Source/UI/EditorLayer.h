@@ -23,7 +23,7 @@
 namespace RTBEditor {
 
     struct ClipboardEntry {
-        std::unique_ptr<RTBEngine::ECS::Prefab> prefab;
+        std::unique_ptr<RTBEngine::Scene::Prefab> prefab;
         bool isPrefabInstanceSource = false;
         RTBEngine::Math::Vector3 position;
         RTBEngine::Math::Quaternion rotation;
@@ -55,8 +55,8 @@ namespace RTBEditor {
                           std::function<void()> onCompileScripts);
         void SetEditorState(EditorState s) { context.state = s; }
         void SetRenderPopupCallback(std::function<void()> cb) {renderPopupCallback = cb;}
-        RTBEngine::ECS::GameObject* GetSelectedGameObject() const { return context.selectedGameObject; }
-        void SetSelectedGameObject(RTBEngine::ECS::GameObject* go) { SetSingleSelection(context, go); }
+        RTBEngine::Scene::GameObject* GetSelectedGameObject() const { return context.selectedGameObject; }
+        void SetSelectedGameObject(RTBEngine::Scene::GameObject* go) { SetSingleSelection(context, go); }
         void ClearSelection();
         void CopySelectionToClipboard();
         void PasteClipboardIntoScene();

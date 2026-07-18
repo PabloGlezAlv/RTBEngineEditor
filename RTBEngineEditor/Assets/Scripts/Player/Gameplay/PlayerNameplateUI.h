@@ -16,7 +16,7 @@ class HealthBarUI;
 
 
 
-class PlayerNameplateUI : public RTBEngine::ECS::Component
+class PlayerNameplateUI : public RTBEngine::Scene::Component
 
 {
 

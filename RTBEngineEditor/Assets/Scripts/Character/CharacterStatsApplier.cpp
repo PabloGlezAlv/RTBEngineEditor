@@ -20,7 +20,7 @@ RTB_END_REGISTER(CharacterStatsApplier)
 
 void CharacterStatsApplier::OnAwake()
 {
-    RTBEngine::ECS::GameObject* pawn = GetOwner();
+    RTBEngine::Scene::GameObject* pawn = GetOwner();
     if (!pawn) {
         return;
     }
@@ -62,7 +62,7 @@ CharacterDefinition* CharacterStatsApplier::ResolveDefinition() const
 }
 
 bool CharacterStatsApplier::ApplyDefinition(
-    RTBEngine::ECS::GameObject* pawn,
+    RTBEngine::Scene::GameObject* pawn,
     const CharacterDefinition& definition)
 {
     if (!pawn) {
@@ -72,7 +72,7 @@ bool CharacterStatsApplier::ApplyDefinition(
     bool appliedAny = false;
     const std::size_t componentCount = pawn->GetComponentCount();
     for (std::size_t index = 0; index < componentCount; ++index) {
-        RTBEngine::ECS::Component* component = pawn->GetComponentAt(index);
+        RTBEngine::Scene::Component* component = pawn->GetComponentAt(index);
         if (!component) {
             continue;
         }

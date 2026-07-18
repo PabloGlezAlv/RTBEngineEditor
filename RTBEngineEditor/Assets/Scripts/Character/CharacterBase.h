@@ -6,7 +6,7 @@
 #include <RTBEngine/Scene/Component.h>
 
 namespace RTBEngine {
-    namespace ECS {
+    namespace Scene {
         class GameObject;
     }
 }
@@ -17,7 +17,7 @@ enum class CharacterTeam {
     Enemy = 2
 };
 
-class CharacterBase : public RTBEngine::ECS::Component
+class CharacterBase : public RTBEngine::Scene::Component
 {
 public:
     CharacterBase() = default;

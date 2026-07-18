@@ -72,7 +72,7 @@ void ComicOuchSpawner::ResolvePrefab()
 
     const std::string resolvedPath =
         RTBEngine::Core::ResourceManager::GetInstance().ResolvePathForRead(bubblePrefabRef);
-    bubblePrefab = RTBEngine::ECS::PrefabRegistry::GetInstance().GetByPath(resolvedPath);
+    bubblePrefab = RTBEngine::Scene::PrefabRegistry::GetInstance().GetByPath(resolvedPath);
     if (!bubblePrefab) {
         RTB_WARN("[ComicOuchSpawner] Bubble prefab not found: '" + bubblePrefabRef + "'.");
     }
@@ -126,8 +126,8 @@ void ComicOuchSpawner::SpawnBubble(const RTBEngine::Math::Vector3& worldPosition
     const std::string& texturePath = bubbleTextures[nextTextureIndex % bubbleTextures.size()];
     nextTextureIndex = (nextTextureIndex + 1) % bubbleTextures.size();
 
-    RTBEngine::ECS::GameObject* spawnedBubble =
-        RTBEngine::ECS::SceneManager::GetInstance().Instantiate(
+    RTBEngine::Scene::GameObject* spawnedBubble =
+        RTBEngine::Scene::SceneManager::GetInstance().Instantiate(
             *bubblePrefab,
             worldPosition,
             RTBEngine::Math::Quaternion::Identity());
@@ -144,7 +144,7 @@ void ComicOuchSpawner::SpawnBubble(const RTBEngine::Math::Vector3& worldPosition
 
     if (!lifetime) {
         RTB_WARN("[ComicOuchSpawner] Comic bubble prefab is missing ComicBubbleLifetime.");
-        if (RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene()) {
+        if (RTBEngine::Scene::Scene* scene = RTBEngine::Scene::SceneManager::GetInstance().GetActiveScene()) {
             scene->RemoveGameObject(spawnedBubble);
         }
         return;

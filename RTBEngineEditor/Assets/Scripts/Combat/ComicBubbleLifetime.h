@@ -13,7 +13,7 @@ namespace RTBEngine {
     }
 }
 
-class ComicBubbleLifetime : public RTBEngine::ECS::Component
+class ComicBubbleLifetime : public RTBEngine::Scene::Component
 {
 public:
     ComicBubbleLifetime() = default;

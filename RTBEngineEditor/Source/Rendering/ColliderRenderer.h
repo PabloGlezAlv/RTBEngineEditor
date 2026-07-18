@@ -7,7 +7,7 @@
 #include <GL/glew.h>
 
 namespace RTBEngine {
-    namespace ECS {
+    namespace Scene {
         class SphereColliderComponent;
         class CapsuleColliderComponent;
     }
@@ -25,7 +25,7 @@ namespace RTBEditor {
 
         // Renders a wireframe collider for the selected object's collider component, if it has one.
         void RenderSelection(RTBEngine::Rendering::Camera* camera,
-                             RTBEngine::ECS::GameObject* selectedObject);
+                             RTBEngine::Scene::GameObject* selectedObject);
         void RenderDebugQueries(RTBEngine::Rendering::Camera* camera);
 
     private:
@@ -48,15 +48,15 @@ namespace RTBEditor {
         RTBEngine::Rendering::Shader* lineShader = nullptr;
 
         void RenderSphereWireframe(RTBEngine::Rendering::Camera* camera,
-                                   RTBEngine::ECS::GameObject* object,
-                                   RTBEngine::ECS::SphereColliderComponent* collider);
+                                   RTBEngine::Scene::GameObject* object,
+                                   RTBEngine::Scene::SphereColliderComponent* collider);
         void RenderSphereWireframe(RTBEngine::Rendering::Camera* camera,
                                    const RTBEngine::Math::Vector3& center,
                                    float radius,
                                    const RTBEngine::Math::Vector4& color);
         void RenderCapsuleWireframe(RTBEngine::Rendering::Camera* camera,
-                                    RTBEngine::ECS::GameObject* object,
-                                    RTBEngine::ECS::CapsuleColliderComponent* collider);
+                                    RTBEngine::Scene::GameObject* object,
+                                    RTBEngine::Scene::CapsuleColliderComponent* collider);
     };
 
 }

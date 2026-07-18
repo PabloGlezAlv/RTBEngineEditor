@@ -40,7 +40,7 @@ namespace {
         return std::abs(value.x) > kDirectionEpsilon || std::abs(value.z) > kDirectionEpsilon;
     }
 
-    int ResolveCharacterTeam(RTBEngine::ECS::GameObject* gameObject)
+    int ResolveCharacterTeam(RTBEngine::Scene::GameObject* gameObject)
     {
         return CharacterCombatUtils::ResolveCharacterTeam(gameObject);
     }
@@ -62,14 +62,14 @@ void ProjectileAttackAbility::OnStart()
 {
     ResolveProjectilePrefab();
     if (!projectilePoolKey.empty()) {
-        RTBEngine::ECS::ObjectPool::GetInstance().SetMaxPoolSize(projectilePoolKey, 48);
+        RTBEngine::Scene::ObjectPool::GetInstance().SetMaxPoolSize(projectilePoolKey, 48);
     }
     RefreshCachedProjectileStats();
 }
 
 void ProjectileAttackAbility::ApplyCharacterStats(const CharacterDefinition& definition)
 {
-    RTBEngine::ECS::GameObject* owner = GetOwner();
+    RTBEngine::Scene::GameObject* owner = GetOwner();
     if (owner && owner->GetComponent<PlayerMeleeSweepAttackAbility>()) {
         return;
     }
@@ -163,7 +163,7 @@ void ProjectileAttackAbility::OnValidate()
     RefreshCachedProjectileStats();
 }
 
-bool ProjectileAttackAbility::FireNow(RTBEngine::ECS::GameObject* instigator,
+bool ProjectileAttackAbility::FireNow(RTBEngine::Scene::GameObject* instigator,
                                       const RTBEngine::Math::Vector3& attackDirection,
                                       RTBEngine::Physics::PhysicsWorld* physicsWorld)
 {
@@ -180,7 +180,7 @@ bool ProjectileAttackAbility::FireNow(RTBEngine::ECS::GameObject* instigator,
 bool ProjectileAttackAbility::SpawnFromNetworkSnapshot(
     const GameNet::ProjectileSpawnSnapshot& snapshot)
 {
-    RTBEngine::ECS::GameObject* instigator = FindPawnByPlayerSlot(snapshot.ownerPlayerSlot);
+    RTBEngine::Scene::GameObject* instigator = FindPawnByPlayerSlot(snapshot.ownerPlayerSlot);
     if (!instigator) {
         return false;
     }
@@ -215,7 +215,7 @@ bool ProjectileAttackAbility::SpawnFromNetworkSnapshot(
     return spawned;
 }
 
-bool ProjectileAttackAbility::SpawnProjectile(RTBEngine::ECS::GameObject* instigator,
+bool ProjectileAttackAbility::SpawnProjectile(RTBEngine::Scene::GameObject* instigator,
                                               const RTBEngine::Math::Vector3& attackDirection,
                                               RTBEngine::Physics::PhysicsWorld* physicsWorld,
                                               bool broadcastOnlineSpawn,
@@ -243,8 +243,8 @@ bool ProjectileAttackAbility::SpawnProjectile(RTBEngine::ECS::GameObject* instig
     const RTBEngine::Math::Quaternion projectileRotation =
         RTBEngine::Math::Quaternion::FromEulerAngles(0.0f, projectileYaw * kDegToRad, 0.0f);
 
-    RTBEngine::ECS::GameObject* projectileObject =
-        RTBEngine::ECS::ObjectPool::GetInstance().Acquire(
+    RTBEngine::Scene::GameObject* projectileObject =
+        RTBEngine::Scene::ObjectPool::GetInstance().Acquire(
             projectilePoolKey,
             spawnPosition,
             projectileRotation);
@@ -254,7 +254,7 @@ bool ProjectileAttackAbility::SpawnProjectile(RTBEngine::ECS::GameObject* instig
 
     ProjectileComponent* projectile = projectileObject->GetComponent<ProjectileComponent>();
     if (!projectile) {
-        RTBEngine::ECS::ObjectPool::GetInstance().Release(projectileObject);
+        RTBEngine::Scene::ObjectPool::GetInstance().Release(projectileObject);
         return false;
     }
 
@@ -307,8 +307,8 @@ bool ProjectileAttackAbility::SpawnProjectile(RTBEngine::ECS::GameObject* instig
     }
 
     if (broadcastOnlineSpawn && CombatAuthority::ShouldBroadcastSpawn(instigator)) {
-        RTBEngine::ECS::NetworkIdentity* identity =
-            instigator->GetComponent<RTBEngine::ECS::NetworkIdentity>();
+        RTBEngine::Scene::NetworkIdentity* identity =
+            instigator->GetComponent<RTBEngine::Scene::NetworkIdentity>();
         static std::uint32_t nextProjectileSpawnId = 1;
 
         GameNet::ProjectileSpawnSnapshot snapshot;
@@ -330,13 +330,13 @@ bool ProjectileAttackAbility::SpawnProjectile(RTBEngine::ECS::GameObject* instig
     return true;
 }
 
-RTBEngine::ECS::GameObject* ProjectileAttackAbility::FindPawnByPlayerSlot(int playerSlot)
+RTBEngine::Scene::GameObject* ProjectileAttackAbility::FindPawnByPlayerSlot(int playerSlot)
 {
     return PlayerRegistry::GetInstance().FindBySlot(playerSlot);
 }
 
 RTBEngine::Math::Vector3 ProjectileAttackAbility::GetLaunchOrigin(
-    RTBEngine::ECS::GameObject* instigator,
+    RTBEngine::Scene::GameObject* instigator,
     const RTBEngine::Math::Vector3& attackDirection) const
 {
     if (!instigator) {
@@ -377,7 +377,7 @@ float ProjectileAttackAbility::GetTravelDistance() const
 }
 
 bool ProjectileAttackAbility::CanActivateAbility(
-    RTBEngine::ECS::GameObject* instigator,
+    RTBEngine::Scene::GameObject* instigator,
     const RTBEngine::Math::Vector3& direction) const
 {
     if (!instigator || !HasValidProjectilePrefab() || !HasPlanarDirection(direction)) {
@@ -397,7 +397,7 @@ bool ProjectileAttackAbility::CanActivateAbility(
 
 void ProjectileAttackAbility::OnAbilityStarted()
 {
-    RTBEngine::ECS::GameObject* instigator = GetActiveInstigator();
+    RTBEngine::Scene::GameObject* instigator = GetActiveInstigator();
     if (!instigator || !CombatAuthority::CanConsumeAmmo(instigator)) {
         return;
     }
@@ -409,7 +409,7 @@ void ProjectileAttackAbility::OnAbilityStarted()
 
 void ProjectileAttackAbility::ExecuteAbilityHit()
 {
-    RTBEngine::ECS::GameObject* instigator = GetActiveInstigator();
+    RTBEngine::Scene::GameObject* instigator = GetActiveInstigator();
     if (!instigator) {
         return;
     }
@@ -444,10 +444,10 @@ void ProjectileAttackAbility::ResolveProjectilePrefab()
     }
 
     projectilePoolKey =
-        RTBEngine::ECS::ObjectPool::ResolvePoolKey(projectilePrefabRef);
-    projectileSpawnPrefab = RTBEngine::ECS::PrefabRegistry::GetInstance().GetByPath(projectilePoolKey);
+        RTBEngine::Scene::ObjectPool::ResolvePoolKey(projectilePrefabRef);
+    projectileSpawnPrefab = RTBEngine::Scene::PrefabRegistry::GetInstance().GetByPath(projectilePoolKey);
     if (!projectileSpawnPrefab) {
-        projectileSpawnPrefab = RTBEngine::ECS::PrefabRegistry::GetInstance().Get(projectilePoolKey);
+        projectileSpawnPrefab = RTBEngine::Scene::PrefabRegistry::GetInstance().Get(projectilePoolKey);
     }
 }
 
@@ -461,13 +461,13 @@ void ProjectileAttackAbility::RefreshCachedProjectileStats()
         return;
     }
 
-    RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
+    RTBEngine::Scene::Scene* scene = RTBEngine::Scene::SceneManager::GetInstance().GetActiveScene();
     if (!scene) {
         return;
     }
 
-    RTBEngine::ECS::GameObject* templateObject =
-        RTBEngine::ECS::SceneManager::GetInstance().Instantiate(*projectileSpawnPrefab);
+    RTBEngine::Scene::GameObject* templateObject =
+        RTBEngine::Scene::SceneManager::GetInstance().Instantiate(*projectileSpawnPrefab);
     if (!templateObject) {
         return;
     }
@@ -488,14 +488,14 @@ void ProjectileAttackAbility::RefreshCachedProjectileStats()
 }
 
 RTBEngine::Physics::PhysicsWorld* ProjectileAttackAbility::ResolvePhysicsWorld(
-    RTBEngine::ECS::GameObject* instigator) const
+    RTBEngine::Scene::GameObject* instigator) const
 {
-    auto resolveFromObject = [](RTBEngine::ECS::GameObject* gameObject) -> RTBEngine::Physics::PhysicsWorld* {
+    auto resolveFromObject = [](RTBEngine::Scene::GameObject* gameObject) -> RTBEngine::Physics::PhysicsWorld* {
         if (!gameObject) {
             return nullptr;
         }
 
-        auto* rbComp = gameObject->GetComponent<RTBEngine::ECS::RigidBodyComponent>();
+        auto* rbComp = gameObject->GetComponent<RTBEngine::Scene::RigidBodyComponent>();
         if (!rbComp || !rbComp->HasRigidBody() || !rbComp->GetRigidBody()) {
             return nullptr;
         }

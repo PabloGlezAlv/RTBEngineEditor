@@ -13,6 +13,6 @@ namespace GameNet {
 
     std::string ResolvePlayerDisplayName(int playerSlot);
 
-    std::string ResolvePlayerDisplayName(const RTBEngine::ECS::NetworkIdentity* identity);
+    std::string ResolvePlayerDisplayName(const RTBEngine::Scene::NetworkIdentity* identity);
 
 }

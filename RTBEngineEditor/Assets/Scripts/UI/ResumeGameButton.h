@@ -6,7 +6,7 @@
 #include <RTBEngine/Reflection/PropertyMacros.h>
 #include <RTBEngine/UI/EventSystem/IPointerClickHandler.h>
 
-class ResumeGameButton : public RTBEngine::ECS::Component
+class ResumeGameButton : public RTBEngine::Scene::Component
                        , public RTBEngine::UI::IPointerClickHandler
 {
 public:

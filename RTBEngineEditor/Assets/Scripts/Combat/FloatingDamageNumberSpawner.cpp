@@ -27,7 +27,7 @@ void FloatingDamageNumberSpawner::OnStart()
 {
     ResolvePrefab();
     if (!damageNumberPoolKey.empty()) {
-        RTBEngine::ECS::ObjectPool::GetInstance().SetMaxPoolSize(damageNumberPoolKey, 24);
+        RTBEngine::Scene::ObjectPool::GetInstance().SetMaxPoolSize(damageNumberPoolKey, 24);
     }
 
     if (!health && owner) {
@@ -51,10 +51,10 @@ void FloatingDamageNumberSpawner::ResolvePrefab()
     }
 
     damageNumberPoolKey =
-        RTBEngine::ECS::ObjectPool::ResolvePoolKey(damageNumberPrefabRef);
-    damageNumberPrefab = RTBEngine::ECS::PrefabRegistry::GetInstance().GetByPath(damageNumberPoolKey);
+        RTBEngine::Scene::ObjectPool::ResolvePoolKey(damageNumberPrefabRef);
+    damageNumberPrefab = RTBEngine::Scene::PrefabRegistry::GetInstance().GetByPath(damageNumberPoolKey);
     if (!damageNumberPrefab) {
-        damageNumberPrefab = RTBEngine::ECS::PrefabRegistry::GetInstance().Get(damageNumberPoolKey);
+        damageNumberPrefab = RTBEngine::Scene::PrefabRegistry::GetInstance().Get(damageNumberPoolKey);
     }
     if (!damageNumberPrefab) {
         RTB_WARN("[FloatingDamageNumberSpawner] Damage number prefab not found: '" + damageNumberPrefabRef + "'.");
@@ -100,8 +100,8 @@ void FloatingDamageNumberSpawner::SpawnDamageNumber(float amount, const RTBEngin
         return;
     }
 
-    RTBEngine::ECS::GameObject* spawnedNumber =
-        RTBEngine::ECS::ObjectPool::GetInstance().Acquire(
+    RTBEngine::Scene::GameObject* spawnedNumber =
+        RTBEngine::Scene::ObjectPool::GetInstance().Acquire(
             damageNumberPoolKey,
             worldPosition,
             RTBEngine::Math::Quaternion::Identity());
@@ -118,7 +118,7 @@ void FloatingDamageNumberSpawner::SpawnDamageNumber(float amount, const RTBEngin
 
     if (!lifetime) {
         RTB_WARN("[FloatingDamageNumberSpawner] Prefab is missing FloatingDamageNumberLifetime.");
-        RTBEngine::ECS::ObjectPool::GetInstance().Release(spawnedNumber);
+        RTBEngine::Scene::ObjectPool::GetInstance().Release(spawnedNumber);
         return;
     }
 

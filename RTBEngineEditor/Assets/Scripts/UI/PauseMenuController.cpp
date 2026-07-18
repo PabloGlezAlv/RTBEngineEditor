@@ -29,7 +29,7 @@ RTB_END_REGISTER(PauseMenuController)
 
 void PauseMenuController::OnAwake()
 {
-    SetTimeMode(RTBEngine::ECS::ComponentTimeMode::Unscaled);
+    SetTimeMode(RTBEngine::Scene::ComponentTimeMode::Unscaled);
     SetUpdateTickEnabled(true);
 }
 
@@ -180,7 +180,7 @@ void PauseMenuController::CaptureMenuElementStates()
     capturedInitialState = true;
 }
 
-void PauseMenuController::CaptureMenuElementStatesRecursive(RTBEngine::ECS::GameObject* root)
+void PauseMenuController::CaptureMenuElementStatesRecursive(RTBEngine::Scene::GameObject* root)
 {
     if (!root) {
         return;
@@ -190,7 +190,7 @@ void PauseMenuController::CaptureMenuElementStatesRecursive(RTBEngine::ECS::Game
         capturedElementStates.push_back({ element, element->IsVisible(), element->IsRaycastTarget() });
     }
 
-    for (RTBEngine::ECS::GameObject* child : root->GetChildren()) {
+    for (RTBEngine::Scene::GameObject* child : root->GetChildren()) {
         CaptureMenuElementStatesRecursive(child);
     }
 }
@@ -238,7 +238,7 @@ bool PauseMenuController::IsAnyMenuOpen()
 void PauseMenuController::ApplyGameplayMouseMode()
 {
     if (PauseMenuController* controller =
-            RTBEngine::ECS::ComponentQuery::FindFirst<PauseMenuController>()) {
+            RTBEngine::Scene::ComponentQuery::FindFirst<PauseMenuController>()) {
         controller->ApplyMouseModeForMenuState();
     }
 }

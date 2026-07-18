@@ -58,7 +58,7 @@ bool PlayerDamageFeedback::IsLocallyControlled() const
         return true;
     }
 
-    const RTBEngine::ECS::NetworkIdentity* identity = owner->GetComponent<RTBEngine::ECS::NetworkIdentity>();
+    const RTBEngine::Scene::NetworkIdentity* identity = owner->GetComponent<RTBEngine::Scene::NetworkIdentity>();
     if (!identity) {
         return true;
     }
@@ -72,7 +72,7 @@ void PlayerDamageFeedback::ResolveHurtAudio()
         return;
     }
 
-    hurtAudio = owner->GetComponent<RTBEngine::ECS::AudioSourceComponent>();
+    hurtAudio = owner->GetComponent<RTBEngine::Scene::AudioSourceComponent>();
 }
 
 void PlayerDamageFeedback::RebindDamageSubscription()
@@ -110,7 +110,7 @@ void PlayerDamageFeedback::ApplyKnockback(const HealthComponent::DamageContext& 
         return;
     }
 
-    auto* rigidBodyComponent = owner->GetComponent<RTBEngine::ECS::RigidBodyComponent>();
+    auto* rigidBodyComponent = owner->GetComponent<RTBEngine::Scene::RigidBodyComponent>();
     if (!rigidBodyComponent || !rigidBodyComponent->HasRigidBody()) {
         return;
     }

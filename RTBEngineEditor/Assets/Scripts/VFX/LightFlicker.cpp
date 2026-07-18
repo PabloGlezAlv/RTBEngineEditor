@@ -32,13 +32,13 @@ void LightFlicker::OnUpdate(float deltaTime)
 
 void LightFlicker::CacheBaseIntensity()
 {
-    RTBEngine::ECS::GameObject* owner = GetOwner();
+    RTBEngine::Scene::GameObject* owner = GetOwner();
     if (!owner) {
         lightComponent = nullptr;
         return;
     }
 
-    lightComponent = owner->GetComponent<RTBEngine::ECS::LightComponent>();
+    lightComponent = owner->GetComponent<RTBEngine::Scene::LightComponent>();
     if (lightComponent) {
         baseIntensity = lightComponent->intensity;
     }

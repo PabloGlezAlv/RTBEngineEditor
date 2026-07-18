@@ -11,12 +11,12 @@
 #include <vector>
 
 namespace RTBEngine {
-    namespace ECS {
+    namespace Scene {
         class MeshRenderer;
     }
 }
 
-class HitFlashComponent : public RTBEngine::ECS::Component
+class HitFlashComponent : public RTBEngine::Scene::Component
 {
 public:
     HitFlashComponent() = default;
@@ -39,7 +39,7 @@ public:
 
 private:
     struct FlashTarget {
-        RTBEngine::ECS::MeshRenderer* renderer = nullptr;
+        RTBEngine::Scene::MeshRenderer* renderer = nullptr;
         RTBEngine::Math::Vector4 baseColor = RTBEngine::Math::Vector4(1.0f, 1.0f, 1.0f, 1.0f);
         RTBEngine::Math::Vector3 baseDiffuseColor = RTBEngine::Math::Vector3(1.0f, 1.0f, 1.0f);
     };

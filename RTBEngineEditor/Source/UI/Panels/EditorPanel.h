@@ -32,6 +32,8 @@ namespace RTBEditor {
         uint32_t components = 0;
         uint32_t physicsBodies = 0;
         uint32_t audioSources = 0;
+        uint32_t ecsProjectileCount = 0;
+        float ecsProjectileSimMs = 0.0f;
     };
 
     struct NavDebugSettings {
@@ -51,8 +53,8 @@ namespace RTBEditor {
     };
 
     struct EditorContext {
-        RTBEngine::ECS::GameObject* selectedGameObject = nullptr;
-        std::vector<RTBEngine::ECS::GameObject*> selectedGameObjects;
+        RTBEngine::Scene::GameObject* selectedGameObject = nullptr;
+        std::vector<RTBEngine::Scene::GameObject*> selectedGameObjects;
         EditorState state = EditorState::Edit;
         std::filesystem::path selectedAssetPath;
         std::filesystem::path pendingSceneLoad;
@@ -77,21 +79,21 @@ namespace RTBEditor {
         context.selectedGameObjects.clear();
     }
 
-    inline bool IsGameObjectInScene(const RTBEngine::ECS::Scene* scene,
-                                    const RTBEngine::ECS::GameObject* gameObject) {
+    inline bool IsGameObjectInScene(const RTBEngine::Scene::Scene* scene,
+                                    const RTBEngine::Scene::GameObject* gameObject) {
         if (!scene || !gameObject) {
             return false;
         }
 
         const auto& gameObjects = scene->GetGameObjects();
         return std::any_of(gameObjects.begin(), gameObjects.end(),
-            [gameObject](const std::unique_ptr<RTBEngine::ECS::GameObject>& obj) {
+            [gameObject](const std::unique_ptr<RTBEngine::Scene::GameObject>& obj) {
                 return obj.get() == gameObject;
             });
     }
 
     inline void PruneSelectionToScene(EditorContext& context,
-                                      const RTBEngine::ECS::Scene* scene) {
+                                      const RTBEngine::Scene::Scene* scene) {
         if (!scene) {
             ClearSelection(context);
             return;
@@ -101,7 +103,7 @@ namespace RTBEditor {
             std::remove_if(
                 context.selectedGameObjects.begin(),
                 context.selectedGameObjects.end(),
-                [scene](RTBEngine::ECS::GameObject* gameObject) {
+                [scene](RTBEngine::Scene::GameObject* gameObject) {
                     return !IsGameObjectInScene(scene, gameObject);
                 }),
             context.selectedGameObjects.end());
@@ -123,7 +125,7 @@ namespace RTBEditor {
         }
     }
 
-    inline void SetSingleSelection(EditorContext& context, RTBEngine::ECS::GameObject* gameObject) {
+    inline void SetSingleSelection(EditorContext& context, RTBEngine::Scene::GameObject* gameObject) {
         context.selectedGameObjects.clear();
         context.selectedGameObject = gameObject;
         if (gameObject) {
@@ -135,11 +137,11 @@ namespace RTBEditor {
         return context.prefabEditor && context.prefabEditor->IsOpen();
     }
 
-    inline RTBEngine::ECS::Scene* GetEditingScene(const EditorContext& context) {
+    inline RTBEngine::Scene::Scene* GetEditingScene(const EditorContext& context) {
         if (IsPrefabEditMode(context)) {
             return context.prefabEditor->GetStagingScene();
         }
-        return RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
+        return RTBEngine::Scene::SceneManager::GetInstance().GetActiveScene();
     }
 
     inline void MarkEditingDirty(EditorContext& context) {
@@ -147,10 +149,10 @@ namespace RTBEditor {
             context.prefabEditor->MarkDirty();
             return;
         }
-        RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+        RTBEngine::Scene::SceneManager::GetInstance().MarkSceneDirty();
     }
 
-    inline void ToggleSelection(EditorContext& context, RTBEngine::ECS::GameObject* gameObject) {
+    inline void ToggleSelection(EditorContext& context, RTBEngine::Scene::GameObject* gameObject) {
         if (!gameObject) {
             ClearSelection(context);
             return;

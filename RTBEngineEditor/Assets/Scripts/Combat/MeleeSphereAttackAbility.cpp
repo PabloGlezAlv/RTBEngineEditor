@@ -21,13 +21,13 @@ namespace {
         return std::abs(value.x) > kDirectionEpsilon || std::abs(value.z) > kDirectionEpsilon;
     }
 
-    bool IsWithinHierarchy(RTBEngine::ECS::GameObject* root, RTBEngine::ECS::GameObject* candidate)
+    bool IsWithinHierarchy(RTBEngine::Scene::GameObject* root, RTBEngine::Scene::GameObject* candidate)
     {
         if (!root || !candidate) {
             return false;
         }
 
-        for (RTBEngine::ECS::GameObject* current = candidate; current; current = current->GetParent()) {
+        for (RTBEngine::Scene::GameObject* current = candidate; current; current = current->GetParent()) {
             if (current == root) {
                 return true;
             }
@@ -56,7 +56,7 @@ void MeleeSphereAttackAbility::OnValidate()
 }
 
 void MeleeSphereAttackAbility::SetTargetContext(
-    RTBEngine::ECS::GameObject* targetRoot,
+    RTBEngine::Scene::GameObject* targetRoot,
     HealthComponent* targetHealth,
     RTBEngine::Physics::PhysicsWorld* physicsWorld)
 {
@@ -73,8 +73,8 @@ void MeleeSphereAttackAbility::ClearTargetContext()
 }
 
 bool MeleeSphereAttackAbility::ApplySphereHit(
-    RTBEngine::ECS::GameObject* instigator,
-    RTBEngine::ECS::GameObject* targetRoot,
+    RTBEngine::Scene::GameObject* instigator,
+    RTBEngine::Scene::GameObject* targetRoot,
     HealthComponent* targetHealth,
     RTBEngine::Physics::PhysicsWorld* physicsWorld,
     const RTBEngine::Math::Vector3& fallbackDirection)
@@ -136,7 +136,7 @@ bool MeleeSphereAttackAbility::ApplySphereHit(
 }
 
 bool MeleeSphereAttackAbility::CanActivateAbility(
-    RTBEngine::ECS::GameObject* instigator,
+    RTBEngine::Scene::GameObject* instigator,
     const RTBEngine::Math::Vector3& direction) const
 {
     return instigator &&

@@ -50,7 +50,7 @@ namespace RTBEditor {
             return value;
         }
 
-        bool MatchesHierarchySearch(const RTBEngine::ECS::GameObject* gameObject, const char* filter) {
+        bool MatchesHierarchySearch(const RTBEngine::Scene::GameObject* gameObject, const char* filter) {
             if (!gameObject) {
                 return false;
             }
@@ -68,7 +68,7 @@ namespace RTBEditor {
             return !uuid.empty() && ToLowerCopy(uuid).find(needle) != std::string::npos;
         }
 
-        int CountHierarchyMatches(RTBEngine::ECS::Scene* scene, const char* filter) {
+        int CountHierarchyMatches(RTBEngine::Scene::Scene* scene, const char* filter) {
             if (!scene || !filter || filter[0] == '\0') {
                 return 0;
             }
@@ -90,7 +90,7 @@ namespace RTBEditor {
     void SceneHierarchyPanel::OnUIRender(EditorContext& context) {
         ImGui::Begin("Hierarchy");
 
-        auto& sceneManager = RTBEngine::ECS::SceneManager::GetInstance();
+        auto& sceneManager = RTBEngine::Scene::SceneManager::GetInstance();
         auto activeScene = GetEditingScene(context);
         const bool prefabEditMode = IsPrefabEditMode(context);
         if (activeScene) {
@@ -140,7 +140,7 @@ namespace RTBEditor {
 
             hierarchyForceOpenNodes.clear();
             if (!isFiltering && hierarchyPendingReveal) {
-                for (RTBEngine::ECS::GameObject* node = hierarchyPendingReveal;
+                for (RTBEngine::Scene::GameObject* node = hierarchyPendingReveal;
                     node;
                     node = node->GetParent()) {
                     hierarchyForceOpenNodes.insert(node);
@@ -243,13 +243,13 @@ namespace RTBEditor {
             if (ImGui::IsWindowFocused() && ImGui::IsKeyPressed(ImGuiKey_Delete)) {
                 if (!context.selectedGameObjects.empty() && activeScene) {
                     // Build a unique list of roots (no object is a descendant of another selected one)
-                    std::vector<RTBEngine::ECS::GameObject*> roots = context.selectedGameObjects;
+                    std::vector<RTBEngine::Scene::GameObject*> roots = context.selectedGameObjects;
 
-                    auto isDescendantOfAnyRoot = [](RTBEngine::ECS::GameObject* candidate,
-                        const std::vector<RTBEngine::ECS::GameObject*>& all) {
+                    auto isDescendantOfAnyRoot = [](RTBEngine::Scene::GameObject* candidate,
+                        const std::vector<RTBEngine::Scene::GameObject*>& all) {
                         for (auto* other : all) {
                             if (other == candidate) continue;
-                            RTBEngine::ECS::GameObject* p = candidate->GetParent();
+                            RTBEngine::Scene::GameObject* p = candidate->GetParent();
                             while (p) {
                                 if (p == other) return true;
                                 p = p->GetParent();
@@ -262,7 +262,7 @@ namespace RTBEditor {
                         std::remove_if(
                             roots.begin(),
                             roots.end(),
-                            [&](RTBEngine::ECS::GameObject* go) { return isDescendantOfAnyRoot(go, roots); }),
+                            [&](RTBEngine::Scene::GameObject* go) { return isDescendantOfAnyRoot(go, roots); }),
                         roots.end());
 
                     for (auto* go : roots) {
@@ -279,7 +279,7 @@ namespace RTBEditor {
             }
 
             // Parent for newly created objects: same parent as selected, or root if none
-            RTBEngine::ECS::GameObject* creationParent = context.selectedGameObject
+            RTBEngine::Scene::GameObject* creationParent = context.selectedGameObject
                 ? context.selectedGameObject->GetParent()
                 : nullptr;
 
@@ -310,7 +310,7 @@ namespace RTBEditor {
 
                 if (ImGui::BeginMenu("GameObject")) {
                     if (ImGui::MenuItem("Empty Object")) {
-                        auto* go = new RTBEngine::ECS::GameObject("GameObject");
+                        auto* go = new RTBEngine::Scene::GameObject("GameObject");
                         if (creationParent) go->SetParent(creationParent);
                         activeScene->AddGameObject(go);
                         context.selectedGameObject = go;
@@ -335,7 +335,7 @@ namespace RTBEditor {
                 }
                 if (ImGui::BeginMenu("UI")) {
                     if (ImGui::MenuItem("Empty")) {
-                        auto* go = new RTBEngine::ECS::GameObject("GameObject");
+                        auto* go = new RTBEngine::Scene::GameObject("GameObject");
                         auto* container = new RTBEngine::UI::UIContainer();
                         go->AddComponent(container);
                         if (creationParent) go->SetParent(creationParent);
@@ -373,7 +373,7 @@ namespace RTBEditor {
         if (ImGui::BeginDragDropTarget()) {
             if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(PAYLOAD_GAMEOBJECT)) {
                 const GameObjectPayload* data = static_cast<const GameObjectPayload*>(payload->Data);
-                RTBEngine::ECS::GameObject* dragged = reinterpret_cast<RTBEngine::ECS::GameObject*>(data->gameObjectId);
+                RTBEngine::Scene::GameObject* dragged = reinterpret_cast<RTBEngine::Scene::GameObject*>(data->gameObjectId);
                 if (dragged && dragged->GetParent()) {
                     dragged->SetParent(nullptr);
                     MarkEditingDirty(context);
@@ -386,11 +386,11 @@ namespace RTBEditor {
                     std::filesystem::path assetRoot = GetAssetRootPath();
                     std::string absolutePath = (assetRoot / data->path).string();
 
-                    RTBEngine::ECS::Prefab* prefab = RTBEngine::ECS::PrefabRegistry::GetInstance().GetByPath(absolutePath);
+                    RTBEngine::Scene::Prefab* prefab = RTBEngine::Scene::PrefabRegistry::GetInstance().GetByPath(absolutePath);
 
                     if (prefab && activeScene) {
-                        std::vector<RTBEngine::ECS::GameObject*> childGOs;
-                        RTBEngine::ECS::GameObject* go = prefab->Instantiate(nullptr, childGOs, true);
+                        std::vector<RTBEngine::Scene::GameObject*> childGOs;
+                        RTBEngine::Scene::GameObject* go = prefab->Instantiate(nullptr, childGOs, true);
                         if (go) {
                             activeScene->AddGameObject(go, false);
                             for (auto* child : childGOs) {
@@ -415,7 +415,7 @@ namespace RTBEditor {
                         RTBEngine::Rendering::ModelLoader::LoadModelWithAnimations(assetPath);
                     resources.RegisterMeshes(assetPath, modelData.meshes);
 
-                    RTBEngine::ECS::GameObject* root =
+                    RTBEngine::Scene::GameObject* root =
                         RTBEngine::Rendering::BuildFbxHierarchy(activeScene, modelData, assetPath, resources);
                     if (root) {
                         context.selectedGameObject = root;
@@ -429,13 +429,13 @@ namespace RTBEditor {
         ImGui::End();
     }
 
-    void SceneHierarchyPanel::UpdateHierarchyRevealTarget(RTBEngine::ECS::GameObject* gameObject)
+    void SceneHierarchyPanel::UpdateHierarchyRevealTarget(RTBEngine::Scene::GameObject* gameObject)
     {
         hierarchyPendingReveal = gameObject;
     }
 
     void SceneHierarchyPanel::DrawHierarchySearchResults(
-        RTBEngine::ECS::Scene* scene,
+        RTBEngine::Scene::Scene* scene,
         EditorContext& context,
         const char* filter)
     {
@@ -443,7 +443,7 @@ namespace RTBEditor {
             return;
         }
 
-        std::vector<RTBEngine::ECS::GameObject*> matches;
+        std::vector<RTBEngine::Scene::GameObject*> matches;
         matches.reserve(static_cast<size_t>(scene->GetGameObjects().size()));
 
         for (const auto& gameObject : scene->GetGameObjects()) {
@@ -454,7 +454,7 @@ namespace RTBEditor {
         }
 
         std::sort(matches.begin(), matches.end(),
-            [](const RTBEngine::ECS::GameObject* left, const RTBEngine::ECS::GameObject* right) {
+            [](const RTBEngine::Scene::GameObject* left, const RTBEngine::Scene::GameObject* right) {
                 const int nameCompare = left->GetName().compare(right->GetName());
                 if (nameCompare != 0) {
                     return nameCompare < 0;
@@ -467,7 +467,7 @@ namespace RTBEditor {
         const float listHeight = (std::min)(320.0f, (std::max)(120.0f, preferredHeight));
 
         if (ImGui::BeginChild("HierarchySearchResults", ImVec2(-FLT_MIN, listHeight), true)) {
-            for (RTBEngine::ECS::GameObject* gameObject : matches) {
+            for (RTBEngine::Scene::GameObject* gameObject : matches) {
                 const bool isSelected = std::find(
                     context.selectedGameObjects.begin(),
                     context.selectedGameObjects.end(),
@@ -508,7 +508,7 @@ namespace RTBEditor {
     }
 
     void SceneHierarchyPanel::DrawGameObjectNode(
-        RTBEngine::ECS::GameObject* gameObject,
+        RTBEngine::Scene::GameObject* gameObject,
         EditorContext& context)
     {
         auto& name = gameObject->GetName();
@@ -590,7 +590,7 @@ namespace RTBEditor {
             ImGui::Separator();
 
             if (ImGui::MenuItem("Delete", "Del")) {
-                if (RTBEngine::ECS::Scene* scene = GetEditingScene(context)) {
+                if (RTBEngine::Scene::Scene* scene = GetEditingScene(context)) {
                     DeleteGameObject(scene, gameObject, context);
                     ClearSelection(context);
                 }
@@ -612,11 +612,11 @@ namespace RTBEditor {
         if (ImGui::BeginDragDropTarget()) {
             if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(PAYLOAD_GAMEOBJECT)) {
                 const GameObjectPayload* data = static_cast<const GameObjectPayload*>(payload->Data);
-                RTBEngine::ECS::GameObject* dragged = reinterpret_cast<RTBEngine::ECS::GameObject*>(data->gameObjectId);
+                RTBEngine::Scene::GameObject* dragged = reinterpret_cast<RTBEngine::Scene::GameObject*>(data->gameObjectId);
 
                 // Prevent parenting a node to itself or one of its own descendants
                 bool isCycle = false;
-                RTBEngine::ECS::GameObject* check = gameObject;
+                RTBEngine::Scene::GameObject* check = gameObject;
                 while (check) {
                     if (check == dragged) { isCycle = true; break; }
                     check = check->GetParent();
@@ -635,11 +635,11 @@ namespace RTBEditor {
                     std::filesystem::path assetRoot = GetAssetRootPath();
                     std::string absolutePath = (assetRoot / data->path).string();
 
-                    RTBEngine::ECS::Prefab* prefab = RTBEngine::ECS::PrefabRegistry::GetInstance().GetByPath(absolutePath);
-                    RTBEngine::ECS::Scene* scene = GetEditingScene(context);
+                    RTBEngine::Scene::Prefab* prefab = RTBEngine::Scene::PrefabRegistry::GetInstance().GetByPath(absolutePath);
+                    RTBEngine::Scene::Scene* scene = GetEditingScene(context);
                     if (prefab && scene) {
-                        std::vector<RTBEngine::ECS::GameObject*> childGOs;
-                        RTBEngine::ECS::GameObject* go = prefab->Instantiate(gameObject, childGOs, true);
+                        std::vector<RTBEngine::Scene::GameObject*> childGOs;
+                        RTBEngine::Scene::GameObject* go = prefab->Instantiate(gameObject, childGOs, true);
                         if (go) {
                             scene->AddGameObject(go, false);
                             for (auto* child : childGOs) {
@@ -666,12 +666,12 @@ namespace RTBEditor {
         }
     }
 
-    void SceneHierarchyPanel::CreateSphere(RTBEngine::ECS::Scene* scene, EditorContext& context, RTBEngine::ECS::GameObject* parent) {
-        auto* go = new RTBEngine::ECS::GameObject("Sphere");
+    void SceneHierarchyPanel::CreateSphere(RTBEngine::Scene::Scene* scene, EditorContext& context, RTBEngine::Scene::GameObject* parent) {
+        auto* go = new RTBEngine::Scene::GameObject("Sphere");
         if (parent) go->SetParent(parent);
 
         auto& resources = RTBEngine::Core::ResourceManager::GetInstance();
-        auto* renderer = new RTBEngine::ECS::MeshRenderer();
+        auto* renderer = new RTBEngine::Scene::MeshRenderer();
         renderer->SetMesh(resources.GetDefaultSphere());
         renderer->SetShader(resources.GetShader("basic"));
         go->AddComponent(renderer);
@@ -681,12 +681,12 @@ namespace RTBEditor {
         MarkEditingDirty(context);
     }
 
-    void SceneHierarchyPanel::CreateCube(RTBEngine::ECS::Scene* scene, EditorContext& context, RTBEngine::ECS::GameObject* parent) {
-        auto* go = new RTBEngine::ECS::GameObject("Cube");
+    void SceneHierarchyPanel::CreateCube(RTBEngine::Scene::Scene* scene, EditorContext& context, RTBEngine::Scene::GameObject* parent) {
+        auto* go = new RTBEngine::Scene::GameObject("Cube");
         if (parent) go->SetParent(parent);
 
         auto& resources = RTBEngine::Core::ResourceManager::GetInstance();
-        auto* renderer = new RTBEngine::ECS::MeshRenderer();
+        auto* renderer = new RTBEngine::Scene::MeshRenderer();
         renderer->SetMesh(resources.GetDefaultCube());
         renderer->SetShader(resources.GetShader("basic"));
         go->AddComponent(renderer);
@@ -696,12 +696,12 @@ namespace RTBEditor {
         MarkEditingDirty(context);
     }
 
-    void SceneHierarchyPanel::CreatePlane(RTBEngine::ECS::Scene* scene, EditorContext& context, RTBEngine::ECS::GameObject* parent) {
-        auto* go = new RTBEngine::ECS::GameObject("Plane");
+    void SceneHierarchyPanel::CreatePlane(RTBEngine::Scene::Scene* scene, EditorContext& context, RTBEngine::Scene::GameObject* parent) {
+        auto* go = new RTBEngine::Scene::GameObject("Plane");
         if (parent) go->SetParent(parent);
 
         auto& resources = RTBEngine::Core::ResourceManager::GetInstance();
-        auto* renderer = new RTBEngine::ECS::MeshRenderer();
+        auto* renderer = new RTBEngine::Scene::MeshRenderer();
         renderer->SetMesh(resources.GetDefaultPlane());
         renderer->SetShader(resources.GetShader("basic"));
         go->AddComponent(renderer);
@@ -711,13 +711,13 @@ namespace RTBEditor {
         MarkEditingDirty(context);
     }
 
-    void SceneHierarchyPanel::CreateParticleSystem(RTBEngine::ECS::Scene* scene, EditorContext& context, RTBEngine::ECS::GameObject* parent) {
-        auto* go = new RTBEngine::ECS::GameObject("Particle System");
+    void SceneHierarchyPanel::CreateParticleSystem(RTBEngine::Scene::Scene* scene, EditorContext& context, RTBEngine::Scene::GameObject* parent) {
+        auto* go = new RTBEngine::Scene::GameObject("Particle System");
         if (parent) {
             go->SetParent(parent);
         }
 
-        auto* particleSystem = new RTBEngine::ECS::ParticleSystem();
+        auto* particleSystem = new RTBEngine::Scene::ParticleSystem();
         particleSystem->maxParticles = 256;
         particleSystem->emissionRate = 40.0f;
         particleSystem->emitterShape = RTBEngine::Rendering::ParticleEmitterShape::Cone;
@@ -738,8 +738,8 @@ namespace RTBEditor {
         MarkEditingDirty(context);
     }
 
-    void SceneHierarchyPanel::CreateCanvas(RTBEngine::ECS::Scene* scene, EditorContext& context, RTBEngine::ECS::GameObject* parent) {
-        auto* go = new RTBEngine::ECS::GameObject("Canvas");
+    void SceneHierarchyPanel::CreateCanvas(RTBEngine::Scene::Scene* scene, EditorContext& context, RTBEngine::Scene::GameObject* parent) {
+        auto* go = new RTBEngine::Scene::GameObject("Canvas");
         if (parent) go->SetParent(parent);
 
         auto* canvas = new RTBEngine::UI::Canvas();
@@ -751,8 +751,8 @@ namespace RTBEditor {
         MarkEditingDirty(context);
     }
 
-    void SceneHierarchyPanel::CreateUIText(RTBEngine::ECS::Scene* scene, EditorContext& context, RTBEngine::ECS::GameObject* parent) {
-        auto* go = new RTBEngine::ECS::GameObject("Text");
+    void SceneHierarchyPanel::CreateUIText(RTBEngine::Scene::Scene* scene, EditorContext& context, RTBEngine::Scene::GameObject* parent) {
+        auto* go = new RTBEngine::Scene::GameObject("Text");
         if (parent) go->SetParent(parent);
 
         auto* uiText = new RTBEngine::UI::UIText();
@@ -769,9 +769,9 @@ namespace RTBEditor {
         MarkEditingDirty(context);
     }
 
-    void SceneHierarchyPanel::CreateUIButton(RTBEngine::ECS::Scene* scene, EditorContext& context, RTBEngine::ECS::GameObject* parent) {
+    void SceneHierarchyPanel::CreateUIButton(RTBEngine::Scene::Scene* scene, EditorContext& context, RTBEngine::Scene::GameObject* parent) {
         // Button GO: UIPanel (visual + hit area) + UIButton (logic) on the same GameObject
-        auto* buttonGO = new RTBEngine::ECS::GameObject("Button");
+        auto* buttonGO = new RTBEngine::Scene::GameObject("Button");
         if (parent) buttonGO->SetParent(parent);
 
         auto* uiPanel = new RTBEngine::UI::UIPanel();
@@ -788,7 +788,7 @@ namespace RTBEditor {
         scene->AddGameObject(buttonGO);
 
         // Text GO (child): UIText centered, stretches to fill parent
-        auto* textGO = new RTBEngine::ECS::GameObject("Text");
+        auto* textGO = new RTBEngine::Scene::GameObject("Text");
         textGO->SetParent(buttonGO);
 
         auto* uiText = new RTBEngine::UI::UIText();
@@ -806,8 +806,8 @@ namespace RTBEditor {
         MarkEditingDirty(context);
     }
 
-    void SceneHierarchyPanel::CreateUIInputField(RTBEngine::ECS::Scene* scene, EditorContext& context, RTBEngine::ECS::GameObject* parent) {
-        auto* inputGO = new RTBEngine::ECS::GameObject("InputField");
+    void SceneHierarchyPanel::CreateUIInputField(RTBEngine::Scene::Scene* scene, EditorContext& context, RTBEngine::Scene::GameObject* parent) {
+        auto* inputGO = new RTBEngine::Scene::GameObject("InputField");
         if (parent) inputGO->SetParent(parent);
 
         auto* panel = new RTBEngine::UI::UIPanel();
@@ -829,7 +829,7 @@ namespace RTBEditor {
 
         scene->AddGameObject(inputGO);
 
-        auto* textGO = new RTBEngine::ECS::GameObject("Text");
+        auto* textGO = new RTBEngine::Scene::GameObject("Text");
         textGO->SetParent(inputGO);
 
         auto* uiText = new RTBEngine::UI::UIText();
@@ -852,8 +852,8 @@ namespace RTBEditor {
         MarkEditingDirty(context);
     }
 
-    void SceneHierarchyPanel::CreateUISlider(RTBEngine::ECS::Scene* scene, EditorContext& context, RTBEngine::ECS::GameObject* parent) {
-        auto* sliderGO = new RTBEngine::ECS::GameObject("Slider");
+    void SceneHierarchyPanel::CreateUISlider(RTBEngine::Scene::Scene* scene, EditorContext& context, RTBEngine::Scene::GameObject* parent) {
+        auto* sliderGO = new RTBEngine::Scene::GameObject("Slider");
         if (parent) sliderGO->SetParent(parent);
 
         auto* trackPanel = new RTBEngine::UI::UIPanel();
@@ -872,7 +872,7 @@ namespace RTBEditor {
 
         scene->AddGameObject(sliderGO);
 
-        auto* fillGO = new RTBEngine::ECS::GameObject("Fill");
+        auto* fillGO = new RTBEngine::Scene::GameObject("Fill");
         fillGO->SetParent(sliderGO);
 
         auto* fillPanel = new RTBEngine::UI::UIPanel();
@@ -886,7 +886,7 @@ namespace RTBEditor {
         fillGO->AddComponent(fillPanel);
         scene->AddGameObject(fillGO);
 
-        auto* handleGO = new RTBEngine::ECS::GameObject("Handle");
+        auto* handleGO = new RTBEngine::Scene::GameObject("Handle");
         handleGO->SetParent(sliderGO);
 
         auto* handlePanel = new RTBEngine::UI::UIPanel();
@@ -908,7 +908,7 @@ namespace RTBEditor {
         MarkEditingDirty(context);
     }
 
-    void SceneHierarchyPanel::DeleteGameObject(RTBEngine::ECS::Scene* scene, RTBEngine::ECS::GameObject* gameObject, EditorContext& context) {
+    void SceneHierarchyPanel::DeleteGameObject(RTBEngine::Scene::Scene* scene, RTBEngine::Scene::GameObject* gameObject, EditorContext& context) {
         scene->RemoveGameObject(gameObject);
         context.selectedGameObject = nullptr;
         MarkEditingDirty(context);

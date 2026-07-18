@@ -7,7 +7,7 @@
 #include <RTBEngine/Reflection/PropertyMacros.h>
 
 namespace RTBEngine {
-    namespace ECS {
+    namespace Scene {
         class AudioSourceComponent;
         class GameObject;
     }
@@ -34,12 +34,12 @@ public:
     float sphereDistance = 0.95f;
     float knockbackStrength = 0.0f;
     bool ignoreSameTeam = true;
-    RTBEngine::ECS::AudioSourceComponent* hitAudio = nullptr;
+    RTBEngine::Scene::AudioSourceComponent* hitAudio = nullptr;
 
     RTB_COMPONENT(MeleeSphereAttackAbility)
 
 public:
-    void SetTargetContext(RTBEngine::ECS::GameObject* targetRoot,
+    void SetTargetContext(RTBEngine::Scene::GameObject* targetRoot,
                           HealthComponent* targetHealth,
                           RTBEngine::Physics::PhysicsWorld* physicsWorld);
     void ClearTargetContext();
@@ -51,19 +51,19 @@ protected:
     float GetCooldownDuration() const override { return cooldown; }
     float GetHitDelayDuration() const override { return hitDelay; }
     float GetRecoveryDuration() const override { return recoveryDuration; }
-    bool CanActivateAbility(RTBEngine::ECS::GameObject* instigator,
+    bool CanActivateAbility(RTBEngine::Scene::GameObject* instigator,
                             const RTBEngine::Math::Vector3& direction) const override;
     void ExecuteAbilityHit() override;
     void OnAbilityFinished() override;
 
 private:
-    RTBEngine::ECS::GameObject* preparedTargetRoot = nullptr;
+    RTBEngine::Scene::GameObject* preparedTargetRoot = nullptr;
     HealthComponent* preparedTargetHealth = nullptr;
     RTBEngine::Physics::PhysicsWorld* preparedPhysicsWorld = nullptr;
 
     void ClampSettings();
-    bool ApplySphereHit(RTBEngine::ECS::GameObject* instigator,
-                        RTBEngine::ECS::GameObject* targetRoot,
+    bool ApplySphereHit(RTBEngine::Scene::GameObject* instigator,
+                        RTBEngine::Scene::GameObject* targetRoot,
                         HealthComponent* targetHealth,
                         RTBEngine::Physics::PhysicsWorld* physicsWorld,
                         const RTBEngine::Math::Vector3& fallbackDirection);

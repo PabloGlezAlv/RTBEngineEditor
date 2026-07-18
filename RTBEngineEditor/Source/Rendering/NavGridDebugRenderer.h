@@ -18,8 +18,8 @@ namespace RTBEditor {
         NavGridDebugRenderer& operator=(const NavGridDebugRenderer&) = delete;
 
         void Render(RTBEngine::Rendering::Camera* camera,
-                    RTBEngine::ECS::Scene* scene,
-                    RTBEngine::ECS::GameObject* selectedObject,
+                    RTBEngine::Scene::Scene* scene,
+                    RTBEngine::Scene::GameObject* selectedObject,
                     const NavDebugSettings& settings);
 
     private:

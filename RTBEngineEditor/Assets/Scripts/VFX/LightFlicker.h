@@ -4,12 +4,12 @@
 #include <RTBEngine/Reflection/PropertyMacros.h>
 
 namespace RTBEngine {
-    namespace ECS {
+    namespace Scene {
         class LightComponent;
     }
 }
 
-class LightFlicker : public RTBEngine::ECS::Component {
+class LightFlicker : public RTBEngine::Scene::Component {
 public:
     LightFlicker() = default;
     ~LightFlicker() override = default;
@@ -28,7 +28,7 @@ private:
     void CacheBaseIntensity();
     void ApplyFlicker(float deltaTime);
 
-    RTBEngine::ECS::LightComponent* lightComponent = nullptr;
+    RTBEngine::Scene::LightComponent* lightComponent = nullptr;
     float flickerTime = 0.0f;
     float phaseOffset = 0.0f;
 };

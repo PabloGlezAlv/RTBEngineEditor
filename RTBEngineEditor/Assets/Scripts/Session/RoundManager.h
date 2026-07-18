@@ -13,7 +13,7 @@
 #include <vector>
 
 namespace RTBEngine {
-    namespace ECS {
+    namespace Scene {
         class GameObject;
     }
 }
@@ -24,7 +24,7 @@ class RoundUIHandler;
 
 enum class GameResult;
 
-class RoundManager : public RTBEngine::ECS::Component
+class RoundManager : public RTBEngine::Scene::Component
 {
 public:
     RoundManager() = default;
@@ -36,7 +36,7 @@ public:
     void OnValidate() override;
     void OnDestroy() override;
 
-    RTBEngine::ECS::GameObject* playerObject = nullptr;
+    RTBEngine::Scene::GameObject* playerObject = nullptr;
     OnlinePlayerManager* onlinePlayerManager = nullptr;
     RoundUIHandler* uiHandler = nullptr;
     float roundCountdownDuration = 5.0f;
@@ -48,7 +48,7 @@ public:
     std::string finalScenePath = "Assets/Scenes/FinalScene.lua";
     std::string enemyPrefabRef = "Assets/Prefabs/Enemies/Enemy Melee.prefab";
 
-    std::vector<RTBEngine::ECS::GameObject*> spawnPoints;
+    std::vector<RTBEngine::Scene::GameObject*> spawnPoints;
 
     void ApplyNetworkRoundStart(int roundNumber, int enemyCount);
     void ApplyNetworkRoundCountdown(int roundNumber, float duration);
@@ -58,7 +58,7 @@ public:
         int spawnIndex,
         std::uint32_t networkId);
     bool CanSpawnEnemies() const;
-    RTBEngine::ECS::GameObject* FindClosestPlayerTarget(RTBEngine::ECS::GameObject* requester);
+    RTBEngine::Scene::GameObject* FindClosestPlayerTarget(RTBEngine::Scene::GameObject* requester);
 
     size_t GetSpawnPointCount() const { return spawnPoints.size(); }
 
@@ -72,15 +72,15 @@ private:
     };
 
     struct TrackedPlayer {
-        RTBEngine::ECS::GameObject* pawn = nullptr;
+        RTBEngine::Scene::GameObject* pawn = nullptr;
         HealthComponent* health = nullptr;
         RTBEngine::Core::EventSubscription deathSubscription;
     };
 
-    std::vector<RTBEngine::ECS::GameObject*> spawnedEnemies;
+    std::vector<RTBEngine::Scene::GameObject*> spawnedEnemies;
     std::vector<TrackedPlayer> trackedPlayers;
 
-    RTBEngine::ECS::Prefab* enemySpawnPrefab = nullptr;
+    RTBEngine::Scene::Prefab* enemySpawnPrefab = nullptr;
     HealthComponent* playerHealth = nullptr;
     State state = State::Stopped;
     int currentRound = 0;
@@ -109,20 +109,20 @@ private:
     void BindCountdownHandlers();
     void BindPlayerRegistryHandlers();
     void HandlePlayerPawnRegistered(const PawnInfo& info);
-    void HandlePlayerPawnUnregistered(RTBEngine::ECS::GameObject* pawn);
+    void HandlePlayerPawnUnregistered(RTBEngine::Scene::GameObject* pawn);
     bool HasAnySpawnPoint() const;
     void StartRound();
     void BeginCountdownForRound(int roundNumber);
     void SpawnRoundEnemies(int count, bool allowClientSpawn = false);
-    RTBEngine::ECS::GameObject* SpawnEnemyAt(RTBEngine::ECS::GameObject* spawnPoint);
-    RTBEngine::ECS::GameObject* SpawnEnemyAt(
-        RTBEngine::ECS::GameObject* spawnPoint,
+    RTBEngine::Scene::GameObject* SpawnEnemyAt(RTBEngine::Scene::GameObject* spawnPoint);
+    RTBEngine::Scene::GameObject* SpawnEnemyAt(
+        RTBEngine::Scene::GameObject* spawnPoint,
         int roundNumber,
         int spawnIndex,
         std::uint32_t networkId = 0);
-    void RebindSpawnedEnemy(RTBEngine::ECS::GameObject* spawnedEnemy);
-    void ConfigureOnlineEnemy(RTBEngine::ECS::GameObject* spawnedEnemy, std::uint32_t networkId);
-    RTBEngine::ECS::GameObject* FindBestEnemyTarget(RTBEngine::ECS::GameObject* requester);
+    void RebindSpawnedEnemy(RTBEngine::Scene::GameObject* spawnedEnemy);
+    void ConfigureOnlineEnemy(RTBEngine::Scene::GameObject* spawnedEnemy, std::uint32_t networkId);
+    RTBEngine::Scene::GameObject* FindBestEnemyTarget(RTBEngine::Scene::GameObject* requester);
     void CleanupSpawnedEnemies();
     void DespawnAllRoundEnemies();
     int GetEnemyCountForRound(int roundNumber) const;
@@ -130,7 +130,7 @@ private:
     void BeginLocalRespawnCountdown();
     void CancelLocalRespawnCountdown();
     void ReviveLocalPlayer();
-    void RevivePlayerPawn(RTBEngine::ECS::GameObject* pawn);
+    void RevivePlayerPawn(RTBEngine::Scene::GameObject* pawn);
     bool AreAllPlayersDead() const;
     void BeginTeamWipe();
     bool IsTrackedPlayerLocallyControlled() const;

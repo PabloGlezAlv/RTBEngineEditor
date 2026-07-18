@@ -59,17 +59,17 @@ void ComicBubbleLifetime::EnsureWorldSpaceBillboard()
     bubbleCanvas->SetFaceCamera(true);
     bubbleCanvas->MarkHierarchyDirty();
 
-    RTBEngine::ECS::GameObject* canvasObject = bubbleCanvas->GetOwner();
+    RTBEngine::Scene::GameObject* canvasObject = bubbleCanvas->GetOwner();
     if (!canvasObject) {
         return;
     }
 
-    RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
+    RTBEngine::Scene::Scene* scene = RTBEngine::Scene::SceneManager::GetInstance().GetActiveScene();
     if (!scene) {
         return;
     }
 
-    RTBEngine::ECS::CameraComponent* cameraComponent = scene->GetMainCamera();
+    RTBEngine::Scene::CameraComponent* cameraComponent = scene->GetMainCamera();
     if (!cameraComponent) {
         return;
     }
@@ -187,12 +187,12 @@ void ComicBubbleLifetime::Finish()
 {
     isPlaying = false;
 
-    RTBEngine::ECS::GameObject* root = owner;
+    RTBEngine::Scene::GameObject* root = owner;
     if (!root) {
         return;
     }
 
-    if (RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene()) {
+    if (RTBEngine::Scene::Scene* scene = RTBEngine::Scene::SceneManager::GetInstance().GetActiveScene()) {
         scene->RemoveGameObject(root);
     }
 }

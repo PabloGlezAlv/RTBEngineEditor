@@ -9,19 +9,19 @@
 namespace RTBEditor {
 
     bool PrefabOverrideInspector::IsPropertyOverridden(
-        RTBEngine::ECS::GameObject* gameObject,
-        RTBEngine::ECS::Component* component,
+        RTBEngine::Scene::GameObject* gameObject,
+        RTBEngine::Scene::Component* component,
         const RTBEngine::Reflection::PropertyInfo& property)
     {
-        return RTBEngine::ECS::PrefabOverrideOps::IsPropertyOverridden(
+        return RTBEngine::Scene::PrefabOverrideOps::IsPropertyOverridden(
             gameObject,
             component,
             &property);
     }
 
     bool PrefabOverrideInspector::DrawInstanceHeader(
-        const RTBEngine::ECS::PrefabInstanceContext& context,
-        RTBEngine::ECS::GameObject* gameObject,
+        const RTBEngine::Scene::PrefabInstanceContext& context,
+        RTBEngine::Scene::GameObject* gameObject,
         EditorContext& editorContext,
         const std::function<void()>& markDirty)
     {
@@ -51,9 +51,9 @@ namespace RTBEditor {
 
         bool acted = false;
         if (ImGui::Button("Revert All")) {
-            RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
-            RTBEngine::ECS::GameObject* replacement = nullptr;
-            if (RTBEngine::ECS::PrefabOverrideOps::RevertAll(gameObject, scene, &replacement)) {
+            RTBEngine::Scene::Scene* scene = RTBEngine::Scene::SceneManager::GetInstance().GetActiveScene();
+            RTBEngine::Scene::GameObject* replacement = nullptr;
+            if (RTBEngine::Scene::PrefabOverrideOps::RevertAll(gameObject, scene, &replacement)) {
                 if (replacement) {
                     editorContext.selectedGameObject = replacement;
                     editorContext.selectedGameObjects = { replacement };
@@ -65,13 +65,13 @@ namespace RTBEditor {
 
         ImGui::SameLine();
         if (ImGui::Button("Unlink")) {
-            std::function<void(RTBEngine::ECS::GameObject*)> clearPrefabNames =
-                [&](RTBEngine::ECS::GameObject* node) {
+            std::function<void(RTBEngine::Scene::GameObject*)> clearPrefabNames =
+                [&](RTBEngine::Scene::GameObject* node) {
                     if (!node) {
                         return;
                     }
                     node->SetPrefabName("");
-                    for (RTBEngine::ECS::GameObject* child : node->GetChildren()) {
+                    for (RTBEngine::Scene::GameObject* child : node->GetChildren()) {
                         clearPrefabNames(child);
                     }
                 };
@@ -89,8 +89,8 @@ namespace RTBEditor {
     }
 
     bool PrefabOverrideInspector::DrawPropertyOverrideMenu(
-        RTBEngine::ECS::GameObject* gameObject,
-        RTBEngine::ECS::Component* component,
+        RTBEngine::Scene::GameObject* gameObject,
+        RTBEngine::Scene::Component* component,
         const RTBEngine::Reflection::PropertyInfo& property,
         const std::function<void()>& markDirty)
     {
@@ -98,8 +98,8 @@ namespace RTBEditor {
             return false;
         }
 
-        const RTBEngine::ECS::PrefabInstanceContext context =
-            RTBEngine::ECS::PrefabInstanceResolver::Resolve(gameObject);
+        const RTBEngine::Scene::PrefabInstanceContext context =
+            RTBEngine::Scene::PrefabInstanceResolver::Resolve(gameObject);
         if (!context.IsValid()) {
             ImGui::EndPopup();
             return false;
@@ -109,7 +109,7 @@ namespace RTBEditor {
         const bool overridden = IsPropertyOverridden(gameObject, component, property);
 
         if (overridden && ImGui::MenuItem("Revert")) {
-            if (RTBEngine::ECS::PrefabOverrideOps::RevertProperty(
+            if (RTBEngine::Scene::PrefabOverrideOps::RevertProperty(
                     gameObject,
                     component,
                     &property)) {
@@ -120,7 +120,7 @@ namespace RTBEditor {
         }
 
         if (overridden && ImGui::MenuItem("Apply to Prefab")) {
-            if (RTBEngine::ECS::PrefabOverrideOps::ApplyProperty(
+            if (RTBEngine::Scene::PrefabOverrideOps::ApplyProperty(
                     gameObject,
                     component,
                     &property)) {
@@ -134,7 +134,7 @@ namespace RTBEditor {
     }
 
     bool PrefabOverrideInspector::DrawTransformOverrideMenu(
-        RTBEngine::ECS::GameObject* gameObject,
+        RTBEngine::Scene::GameObject* gameObject,
         const char* popupId,
         const std::function<void()>& markDirty)
     {
@@ -142,27 +142,27 @@ namespace RTBEditor {
             return false;
         }
 
-        const RTBEngine::ECS::PrefabInstanceContext context =
-            RTBEngine::ECS::PrefabInstanceResolver::Resolve(gameObject);
+        const RTBEngine::Scene::PrefabInstanceContext context =
+            RTBEngine::Scene::PrefabInstanceResolver::Resolve(gameObject);
         if (!context.IsValid() || !context.baselineNode) {
             ImGui::EndPopup();
             return false;
         }
 
         bool acted = false;
-        const bool overridden = RTBEngine::ECS::PrefabOverrideDiff::IsTransformOverridden(
+        const bool overridden = RTBEngine::Scene::PrefabOverrideDiff::IsTransformOverridden(
             gameObject,
             context.baselineNode);
 
         if (overridden && ImGui::MenuItem("Revert")) {
-            if (RTBEngine::ECS::PrefabOverrideOps::RevertTransform(gameObject)) {
+            if (RTBEngine::Scene::PrefabOverrideOps::RevertTransform(gameObject)) {
                 markDirty();
                 acted = true;
             }
         }
 
         if (overridden && ImGui::MenuItem("Apply to Prefab")) {
-            if (RTBEngine::ECS::PrefabOverrideOps::ApplyTransform(gameObject)) {
+            if (RTBEngine::Scene::PrefabOverrideOps::ApplyTransform(gameObject)) {
                 markDirty();
                 acted = true;
             }
@@ -173,8 +173,8 @@ namespace RTBEditor {
     }
 
     bool PrefabOverrideInspector::DrawComponentOverrideMenu(
-        RTBEngine::ECS::GameObject* gameObject,
-        RTBEngine::ECS::Component* component,
+        RTBEngine::Scene::GameObject* gameObject,
+        RTBEngine::Scene::Component* component,
         bool isAddedComponent,
         const std::function<void()>& markDirty)
     {
@@ -185,20 +185,20 @@ namespace RTBEditor {
         bool acted = false;
         if (isAddedComponent) {
             if (ImGui::MenuItem("Revert (Remove)")) {
-                if (RTBEngine::ECS::PrefabOverrideOps::RevertAddedComponent(gameObject, component)) {
+                if (RTBEngine::Scene::PrefabOverrideOps::RevertAddedComponent(gameObject, component)) {
                     markDirty();
                     acted = true;
                 }
             }
             if (ImGui::MenuItem("Apply to Prefab")) {
-                if (RTBEngine::ECS::PrefabOverrideOps::ApplyAddedComponent(gameObject, component)) {
+                if (RTBEngine::Scene::PrefabOverrideOps::ApplyAddedComponent(gameObject, component)) {
                     markDirty();
                     acted = true;
                 }
             }
         } else {
             if (ImGui::MenuItem("Revert Component")) {
-                if (RTBEngine::ECS::PrefabOverrideOps::RevertComponent(
+                if (RTBEngine::Scene::PrefabOverrideOps::RevertComponent(
                         gameObject,
                         component->GetTypeName())) {
                     markDirty();

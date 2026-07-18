@@ -15,9 +15,9 @@ using ThisClass = PlayerAmmoSystem;
 namespace {
     constexpr float kAmmoEpsilon = 0.001f;
 
-    bool IsDescendantOf(RTBEngine::ECS::GameObject* node, RTBEngine::ECS::GameObject* root)
+    bool IsDescendantOf(RTBEngine::Scene::GameObject* node, RTBEngine::Scene::GameObject* root)
     {
-        for (RTBEngine::ECS::GameObject* current = node; current; current = current->GetParent()) {
+        for (RTBEngine::Scene::GameObject* current = node; current; current = current->GetParent()) {
             if (current == root) {
                 return true;
             }
@@ -65,7 +65,7 @@ void PlayerAmmoSystem::EnsureReferences()
     }
 
     if (ammoSlider) {
-        RTBEngine::ECS::GameObject* sliderOwner = ammoSlider->GetOwner();
+        RTBEngine::Scene::GameObject* sliderOwner = ammoSlider->GetOwner();
         if (!sliderOwner || !IsDescendantOf(sliderOwner, owner)) {
             ammoSlider = nullptr;
             ammoFillPanel = nullptr;
@@ -73,7 +73,7 @@ void PlayerAmmoSystem::EnsureReferences()
     }
 
     if (ammoFillPanel) {
-        RTBEngine::ECS::GameObject* fillOwner = ammoFillPanel->GetOwner();
+        RTBEngine::Scene::GameObject* fillOwner = ammoFillPanel->GetOwner();
         if (!fillOwner || !IsDescendantOf(fillOwner, owner)) {
             ammoFillPanel = nullptr;
         }
@@ -83,8 +83,8 @@ void PlayerAmmoSystem::EnsureReferences()
         return;
     }
 
-    std::function<void(RTBEngine::ECS::GameObject*)> visit =
-        [&](RTBEngine::ECS::GameObject* gameObject) {
+    std::function<void(RTBEngine::Scene::GameObject*)> visit =
+        [&](RTBEngine::Scene::GameObject* gameObject) {
             if (!gameObject || ammoSlider) {
                 return;
             }
@@ -96,7 +96,7 @@ void PlayerAmmoSystem::EnsureReferences()
                 }
             }
 
-            for (RTBEngine::ECS::GameObject* child : gameObject->GetChildren()) {
+            for (RTBEngine::Scene::GameObject* child : gameObject->GetChildren()) {
                 visit(child);
             }
         };
@@ -104,7 +104,7 @@ void PlayerAmmoSystem::EnsureReferences()
     visit(owner);
 
     if (!ammoFillPanel && ammoSlider && ammoSlider->fillPanel) {
-        RTBEngine::ECS::GameObject* fillOwner = ammoSlider->fillPanel->GetOwner();
+        RTBEngine::Scene::GameObject* fillOwner = ammoSlider->fillPanel->GetOwner();
         if (fillOwner && IsDescendantOf(fillOwner, owner)) {
             ammoFillPanel = ammoSlider->fillPanel;
         }
@@ -179,7 +179,7 @@ bool PlayerAmmoSystem::IsLocalPlayer() const
         return false;
     }
 
-    const RTBEngine::ECS::NetworkIdentity* identity = owner->GetComponent<RTBEngine::ECS::NetworkIdentity>();
+    const RTBEngine::Scene::NetworkIdentity* identity = owner->GetComponent<RTBEngine::Scene::NetworkIdentity>();
     if (!identity) {
         return true;
     }
@@ -195,7 +195,7 @@ void PlayerAmmoSystem::SetBarVisible(bool visible)
         return;
     }
 
-    RTBEngine::ECS::GameObject* trackObject = ammoSlider->GetOwner();
+    RTBEngine::Scene::GameObject* trackObject = ammoSlider->GetOwner();
     if (!trackObject || !owner || !IsDescendantOf(trackObject, owner)) {
         return;
     }

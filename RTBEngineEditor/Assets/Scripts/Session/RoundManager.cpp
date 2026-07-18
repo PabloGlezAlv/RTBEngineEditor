@@ -205,11 +205,11 @@ void RoundManager::ApplyNetworkEnemySpawn(
         return;
     }
 
-    RTBEngine::ECS::GameObject* spawnPoint = spawnPoints[static_cast<size_t>(spawnPointIndex)];
+    RTBEngine::Scene::GameObject* spawnPoint = spawnPoints[static_cast<size_t>(spawnPointIndex)];
     if (!spawnPoint) {
         return;
     }
-    RTBEngine::ECS::GameObject* spawnedEnemy =
+    RTBEngine::Scene::GameObject* spawnedEnemy =
         SpawnEnemyAt(spawnPoint, roundNumber, spawnIndex, networkId);
     if (!spawnedEnemy) {
         return;
@@ -282,7 +282,7 @@ void RoundManager::InitializeRuntime()
     if (!enemyPrefabRef.empty()) {
         const std::string resolvedPath =
             RTBEngine::Core::ResourceManager::GetInstance().ResolvePathForRead(enemyPrefabRef);
-        enemySpawnPrefab = RTBEngine::ECS::PrefabRegistry::GetInstance().GetByPath(resolvedPath);
+        enemySpawnPrefab = RTBEngine::Scene::PrefabRegistry::GetInstance().GetByPath(resolvedPath);
         if (!enemySpawnPrefab) {
             RTB_WARN("[RoundManager] Enemy prefab asset not found: '" + enemyPrefabRef + "'.");
         }
@@ -291,8 +291,8 @@ void RoundManager::InitializeRuntime()
 
 void RoundManager::BindPlayerRegistryHandlers()
 {
-    if (RTBEngine::ECS::Scene* scene =
-            RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene()) {
+    if (RTBEngine::Scene::Scene* scene =
+            RTBEngine::Scene::SceneManager::GetInstance().GetActiveScene()) {
         PlayerRegistry::GetInstance().PruneInvalidPawns(scene);
     }
 
@@ -302,7 +302,7 @@ void RoundManager::BindPlayerRegistryHandlers()
         });
 
     playerDestroySubscription = PlayerRegistry::GetInstance().SubscribePawnDestroyed(
-        [this](RTBEngine::ECS::GameObject* pawn) {
+        [this](RTBEngine::Scene::GameObject* pawn) {
             HandlePlayerPawnUnregistered(pawn);
         });
 
@@ -338,7 +338,7 @@ void RoundManager::HandlePlayerPawnRegistered(const PawnInfo& info)
     trackedPlayers.push_back(std::move(trackedPlayer));
 }
 
-void RoundManager::HandlePlayerPawnUnregistered(RTBEngine::ECS::GameObject* pawn)
+void RoundManager::HandlePlayerPawnUnregistered(RTBEngine::Scene::GameObject* pawn)
 {
     if (!pawn) {
         return;
@@ -356,7 +356,7 @@ void RoundManager::HandlePlayerPawnUnregistered(RTBEngine::ECS::GameObject* pawn
 
 bool RoundManager::HasAnySpawnPoint() const
 {
-    for (RTBEngine::ECS::GameObject* spawnPointRef : spawnPoints) {
+    for (RTBEngine::Scene::GameObject* spawnPointRef : spawnPoints) {
         if (spawnPointRef) {
             return true;
         }
@@ -504,12 +504,12 @@ void RoundManager::SpawnRoundEnemies(int count, bool allowClientSpawn)
 
     for (int index = 0; index < count; ++index) {
         const int spawnPointIndex = static_cast<int>(index % spawnPoints.size());
-        RTBEngine::ECS::GameObject* spawnPoint = spawnPoints[static_cast<size_t>(spawnPointIndex)];
+        RTBEngine::Scene::GameObject* spawnPoint = spawnPoints[static_cast<size_t>(spawnPointIndex)];
         if (!spawnPoint) {
             continue;
         }
 
-        RTBEngine::ECS::GameObject* spawnedEnemy = SpawnEnemyAt(spawnPoint, currentRound, index);
+        RTBEngine::Scene::GameObject* spawnedEnemy = SpawnEnemyAt(spawnPoint, currentRound, index);
         if (!spawnedEnemy) {
             continue;
         }
@@ -518,8 +518,8 @@ void RoundManager::SpawnRoundEnemies(int count, bool allowClientSpawn)
 
         if (RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby() &&
             RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
-            RTBEngine::ECS::NetworkIdentity* identity =
-                spawnedEnemy->GetComponent<RTBEngine::ECS::NetworkIdentity>();
+            RTBEngine::Scene::NetworkIdentity* identity =
+                spawnedEnemy->GetComponent<RTBEngine::Scene::NetworkIdentity>();
             GameNet::EnemySpawnSnapshot snapshot;
             snapshot.networkId = identity ? identity->GetNetworkId() : 0;
             snapshot.roundNumber = currentRound;
@@ -529,23 +529,23 @@ void RoundManager::SpawnRoundEnemies(int count, bool allowClientSpawn)
         }
     }
 
-    if (RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene()) {
-        RTBEngine::ECS::NavGridComponent::ActivateAllBakedInScene(scene);
+    if (RTBEngine::Scene::Scene* scene = RTBEngine::Scene::SceneManager::GetInstance().GetActiveScene()) {
+        RTBEngine::Scene::NavGridComponent::ActivateAllBakedInScene(scene);
     }
 }
 
-RTBEngine::ECS::GameObject* RoundManager::SpawnEnemyAt(RTBEngine::ECS::GameObject* spawnPoint)
+RTBEngine::Scene::GameObject* RoundManager::SpawnEnemyAt(RTBEngine::Scene::GameObject* spawnPoint)
 {
     return SpawnEnemyAt(spawnPoint, currentRound, static_cast<int>(spawnedEnemies.size()));
 }
 
-RTBEngine::ECS::GameObject* RoundManager::SpawnEnemyAt(
-    RTBEngine::ECS::GameObject* spawnPoint,
+RTBEngine::Scene::GameObject* RoundManager::SpawnEnemyAt(
+    RTBEngine::Scene::GameObject* spawnPoint,
     int roundNumber,
     int spawnIndex,
     std::uint32_t networkId)
 {
-    RTBEngine::ECS::Prefab* spawnPrefab = enemySpawnPrefab;
+    RTBEngine::Scene::Prefab* spawnPrefab = enemySpawnPrefab;
     if (!spawnPoint || !spawnPrefab || roundNumber < 1 || spawnIndex < 0) {
         return nullptr;
     }
@@ -566,8 +566,8 @@ RTBEngine::ECS::GameObject* RoundManager::SpawnEnemyAt(
         }
     }
 
-    RTBEngine::ECS::GameObject* spawnedEnemy =
-        RTBEngine::ECS::SceneManager::GetInstance().Instantiate(
+    RTBEngine::Scene::GameObject* spawnedEnemy =
+        RTBEngine::Scene::SceneManager::GetInstance().Instantiate(
             *spawnPrefab,
             spawnPoint->GetWorldPosition(),
             spawnPoint->GetWorldRotation());
@@ -581,7 +581,7 @@ RTBEngine::ECS::GameObject* RoundManager::SpawnEnemyAt(
     return spawnedEnemy;
 }
 
-void RoundManager::RebindSpawnedEnemy(RTBEngine::ECS::GameObject* spawnedEnemy)
+void RoundManager::RebindSpawnedEnemy(RTBEngine::Scene::GameObject* spawnedEnemy)
 {
     if (!spawnedEnemy) {
         return;
@@ -590,7 +590,7 @@ void RoundManager::RebindSpawnedEnemy(RTBEngine::ECS::GameObject* spawnedEnemy)
     auto* targetTracker = spawnedEnemy->GetComponent<EnemyTargetTracker>();
     auto* animationDriver = spawnedEnemy->GetComponent<EnemyAnimationDriver>();
     auto* locomotion = spawnedEnemy->GetComponent<EnemyLocomotionController>();
-    auto* navAgent = spawnedEnemy->GetComponent<RTBEngine::ECS::NavAgentComponent>();
+    auto* navAgent = spawnedEnemy->GetComponent<RTBEngine::Scene::NavAgentComponent>();
     auto* meleeAI = spawnedEnemy->GetComponent<EnemyMeleeAI>();
     auto* meleeAttack = spawnedEnemy->GetComponent<MeleeSphereAttackAbility>();
     auto* health = spawnedEnemy->GetComponent<HealthComponent>();
@@ -626,7 +626,7 @@ void RoundManager::RebindSpawnedEnemy(RTBEngine::ECS::GameObject* spawnedEnemy)
 }
 
 void RoundManager::ConfigureOnlineEnemy(
-    RTBEngine::ECS::GameObject* spawnedEnemy,
+    RTBEngine::Scene::GameObject* spawnedEnemy,
     std::uint32_t networkId)
 {
     if (!spawnedEnemy) {
@@ -634,13 +634,13 @@ void RoundManager::ConfigureOnlineEnemy(
     }
 
     if (networkId != RTBEngine::Online::OnlineGameplayNet::kInvalidNetworkObjectId) {
-        if (RTBEngine::ECS::NetworkIdentity* identity =
-                spawnedEnemy->GetComponent<RTBEngine::ECS::NetworkIdentity>()) {
+        if (RTBEngine::Scene::NetworkIdentity* identity =
+                spawnedEnemy->GetComponent<RTBEngine::Scene::NetworkIdentity>()) {
             identity->SetNetworkId(networkId);
         }
 
-        if (RTBEngine::ECS::NetworkTransform* networkTransform =
-                spawnedEnemy->GetComponent<RTBEngine::ECS::NetworkTransform>()) {
+        if (RTBEngine::Scene::NetworkTransform* networkTransform =
+                spawnedEnemy->GetComponent<RTBEngine::Scene::NetworkTransform>()) {
             networkTransform->OnValidate();
         }
     }
@@ -649,8 +649,8 @@ void RoundManager::ConfigureOnlineEnemy(
         return;
     }
 
-    if (RTBEngine::ECS::RigidBodyComponent* rigidBody =
-            spawnedEnemy->GetComponent<RTBEngine::ECS::RigidBodyComponent>()) {
+    if (RTBEngine::Scene::RigidBodyComponent* rigidBody =
+            spawnedEnemy->GetComponent<RTBEngine::Scene::RigidBodyComponent>()) {
         rigidBody->bodyType = RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()
             ? RTBEngine::Physics::RigidBodyType::Dynamic
             : RTBEngine::Physics::RigidBodyType::Kinematic;
@@ -658,14 +658,14 @@ void RoundManager::ConfigureOnlineEnemy(
     }
 }
 
-RTBEngine::ECS::GameObject* RoundManager::FindClosestPlayerTarget(RTBEngine::ECS::GameObject* requester)
+RTBEngine::Scene::GameObject* RoundManager::FindClosestPlayerTarget(RTBEngine::Scene::GameObject* requester)
 {
     return FindBestEnemyTarget(requester);
 }
 
-RTBEngine::ECS::GameObject* RoundManager::FindBestEnemyTarget(RTBEngine::ECS::GameObject* requester)
+RTBEngine::Scene::GameObject* RoundManager::FindBestEnemyTarget(RTBEngine::Scene::GameObject* requester)
 {
-    RTBEngine::ECS::GameObject* bestTarget = nullptr;
+    RTBEngine::Scene::GameObject* bestTarget = nullptr;
     float bestDistanceSquared = std::numeric_limits<float>::max();
     const RTBEngine::Math::Vector3 requesterPosition =
         requester ? requester->GetWorldPosition() : RTBEngine::Math::Vector3::Zero();
@@ -696,7 +696,7 @@ void RoundManager::CleanupSpawnedEnemies()
     auto removeIt = std::remove_if(
         spawnedEnemies.begin(),
         spawnedEnemies.end(),
-        [](RTBEngine::ECS::GameObject* spawnedEnemy) {
+        [](RTBEngine::Scene::GameObject* spawnedEnemy) {
             if (!spawnedEnemy) {
                 return true;
             }
@@ -705,7 +705,7 @@ void RoundManager::CleanupSpawnedEnemies()
                 return false;
             }
 
-            RTBEngine::ECS::SceneManager::GetInstance().DeactivateHierarchy(spawnedEnemy);
+            RTBEngine::Scene::SceneManager::GetInstance().DeactivateHierarchy(spawnedEnemy);
             return true;
         });
 
@@ -714,9 +714,9 @@ void RoundManager::CleanupSpawnedEnemies()
 
 void RoundManager::DespawnAllRoundEnemies()
 {
-    for (RTBEngine::ECS::GameObject* spawnedEnemy : spawnedEnemies) {
+    for (RTBEngine::Scene::GameObject* spawnedEnemy : spawnedEnemies) {
         if (spawnedEnemy && spawnedEnemy->IsActive()) {
-            RTBEngine::ECS::SceneManager::GetInstance().DeactivateHierarchy(spawnedEnemy);
+            RTBEngine::Scene::SceneManager::GetInstance().DeactivateHierarchy(spawnedEnemy);
         }
     }
 
@@ -803,14 +803,14 @@ void RoundManager::ReviveLocalPlayer()
     RevivePlayerPawn(playerObject);
 }
 
-void RoundManager::RevivePlayerPawn(RTBEngine::ECS::GameObject* pawn)
+void RoundManager::RevivePlayerPawn(RTBEngine::Scene::GameObject* pawn)
 {
     if (!pawn) {
         return;
     }
 
     if (RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby()) {
-        RTBEngine::ECS::NetworkIdentity* identity = pawn->GetComponent<RTBEngine::ECS::NetworkIdentity>();
+        RTBEngine::Scene::NetworkIdentity* identity = pawn->GetComponent<RTBEngine::Scene::NetworkIdentity>();
         if (!identity || identity->networkPlayerSlot < 0) {
             return;
         }
@@ -852,8 +852,8 @@ bool RoundManager::IsTrackedPlayerLocallyControlled() const
         return false;
     }
 
-    const RTBEngine::ECS::NetworkIdentity* identity =
-        playerObject->GetComponent<RTBEngine::ECS::NetworkIdentity>();
+    const RTBEngine::Scene::NetworkIdentity* identity =
+        playerObject->GetComponent<RTBEngine::Scene::NetworkIdentity>();
     if (!identity) {
         return true;
     }
@@ -891,5 +891,5 @@ void RoundManager::RequestFinalScene()
         return;
     }
 
-    RTBEngine::ECS::SceneManager::GetInstance().RequestSceneLoad(finalScenePath.c_str());
+    RTBEngine::Scene::SceneManager::GetInstance().RequestSceneLoad(finalScenePath.c_str());
 }

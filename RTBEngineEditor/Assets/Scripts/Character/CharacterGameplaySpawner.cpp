@@ -19,7 +19,7 @@ std::string GetPrefabNameFromAssetPath(const std::string& assetPath)
     return stem.empty() ? assetPath : stem;
 }
 
-RTBEngine::ECS::Prefab* ResolveGameplayPrefab(const CharacterDefinition& definition)
+RTBEngine::Scene::Prefab* ResolveGameplayPrefab(const CharacterDefinition& definition)
 {
     if (definition.gameplayPrefabRef.empty()) {
         RTB_WARN("[CharacterGameplaySpawner] Character '" + definition.characterId +
@@ -30,10 +30,10 @@ RTBEngine::ECS::Prefab* ResolveGameplayPrefab(const CharacterDefinition& definit
     const std::string resolvedPath =
         RTBEngine::Core::ResourceManager::GetInstance().ResolvePathForRead(
             definition.gameplayPrefabRef);
-    RTBEngine::ECS::Prefab* prefab =
-        RTBEngine::ECS::PrefabRegistry::GetInstance().GetByPath(resolvedPath);
+    RTBEngine::Scene::Prefab* prefab =
+        RTBEngine::Scene::PrefabRegistry::GetInstance().GetByPath(resolvedPath);
     if (!prefab) {
-        prefab = RTBEngine::ECS::PrefabRegistry::GetInstance().Get(
+        prefab = RTBEngine::Scene::PrefabRegistry::GetInstance().Get(
             GetPrefabNameFromAssetPath(definition.gameplayPrefabRef));
     }
     if (!prefab) {
@@ -60,17 +60,17 @@ std::string CharacterGameplaySpawner::SanitizeCharacterId(const std::string& cha
     return {};
 }
 
-RTBEngine::ECS::GameObject* CharacterGameplaySpawner::InstantiateFromDefinition(
+RTBEngine::Scene::GameObject* CharacterGameplaySpawner::InstantiateFromDefinition(
     const CharacterDefinition& definition,
     const RTBEngine::Math::Vector3& position,
     const RTBEngine::Math::Quaternion& rotation)
 {
-    RTBEngine::ECS::Prefab* prefab = ResolveGameplayPrefab(definition);
+    RTBEngine::Scene::Prefab* prefab = ResolveGameplayPrefab(definition);
     if (!prefab) {
         return nullptr;
     }
 
-    return RTBEngine::ECS::SceneManager::GetInstance().Instantiate(
+    return RTBEngine::Scene::SceneManager::GetInstance().Instantiate(
         *prefab,
         position,
         rotation,
@@ -78,7 +78,7 @@ RTBEngine::ECS::GameObject* CharacterGameplaySpawner::InstantiateFromDefinition(
         true);
 }
 
-RTBEngine::ECS::GameObject* CharacterGameplaySpawner::InstantiateFromCharacterId(
+RTBEngine::Scene::GameObject* CharacterGameplaySpawner::InstantiateFromCharacterId(
     const std::string& characterId,
     const RTBEngine::Math::Vector3& position,
     const RTBEngine::Math::Quaternion& rotation)

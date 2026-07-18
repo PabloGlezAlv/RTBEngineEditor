@@ -99,20 +99,20 @@ namespace {
         return std::abs(value.x) > kDirectionEpsilon || std::abs(value.z) > kDirectionEpsilon;
     }
 
-    void SetOcclusionTargetEnabled(RTBEngine::ECS::GameObject* gameObject, bool enabled)
+    void SetOcclusionTargetEnabled(RTBEngine::Scene::GameObject* gameObject, bool enabled)
     {
         if (!gameObject) {
             return;
         }
 
-        if (RTBEngine::ECS::OcclusionTarget* target = gameObject->GetComponent<RTBEngine::ECS::OcclusionTarget>()) {
+        if (RTBEngine::Scene::OcclusionTarget* target = gameObject->GetComponent<RTBEngine::Scene::OcclusionTarget>()) {
             target->targetEnabled = enabled;
         }
     }
 
-    RTBEngine::ECS::GameObject* FindNextAliveTeammatePawn(const RTBEngine::ECS::GameObject* localOwner, int localPlayerSlot)
+    RTBEngine::Scene::GameObject* FindNextAliveTeammatePawn(const RTBEngine::Scene::GameObject* localOwner, int localPlayerSlot)
     {
-        RTBEngine::ECS::Scene* scene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
+        RTBEngine::Scene::Scene* scene = RTBEngine::Scene::SceneManager::GetInstance().GetActiveScene();
         if (!scene || localPlayerSlot < 0) {
             return nullptr;
         }
@@ -126,7 +126,7 @@ namespace {
         const std::size_t memberCount = members.size();
         for (std::size_t offset = 1; offset < memberCount; ++offset) {
             const int candidateSlot = static_cast<int>((static_cast<std::size_t>(localPlayerSlot) + offset) % memberCount);
-            RTBEngine::ECS::GameObject* candidatePawn =
+            RTBEngine::Scene::GameObject* candidatePawn =
                 PlayerRegistry::GetInstance().FindBySlot(candidateSlot);
             if (!candidatePawn || candidatePawn == localOwner) {
                 continue;
@@ -151,7 +151,7 @@ namespace {
         return nullptr;
     }
 
-    void GetPlanarMovementBasis(const RTBEngine::ECS::GameObject* referenceObject,
+    void GetPlanarMovementBasis(const RTBEngine::Scene::GameObject* referenceObject,
                                 RTBEngine::Math::Vector3& outForward,
                                 RTBEngine::Math::Vector3& outRight)
     {
@@ -347,10 +347,10 @@ void ThirdPersonCharacterController::OnLateUpdate(float deltaTime)
         DisableCompetingCameraController();
 
         if (state == State::Dead) {
-            RTBEngine::ECS::GameObject* spectateTarget = nullptr;
+            RTBEngine::Scene::GameObject* spectateTarget = nullptr;
             if (RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby() && owner) {
-                const RTBEngine::ECS::NetworkIdentity* identity =
-                    owner->GetComponent<RTBEngine::ECS::NetworkIdentity>();
+                const RTBEngine::Scene::NetworkIdentity* identity =
+                    owner->GetComponent<RTBEngine::Scene::NetworkIdentity>();
                 const int localSlot = identity ? identity->networkPlayerSlot : -1;
                 spectateTarget = FindNextAliveTeammatePawn(owner, localSlot);
             }
@@ -588,7 +588,7 @@ void ThirdPersonCharacterController::DisableCompetingCameraController() const
         return;
     }
 
-    auto* freeLook = cameraObject->GetComponent<RTBEngine::ECS::FreeLookCamera>();
+    auto* freeLook = cameraObject->GetComponent<RTBEngine::Scene::FreeLookCamera>();
     if (freeLook) {
         freeLook->SetUpdateTickEnabled(false);
     }
@@ -660,7 +660,7 @@ void ThirdPersonCharacterController::ApplyCameraFollowTransform()
     cameraObject->GetTransform().SetRotation(orbitRotation);
 }
 
-void ThirdPersonCharacterController::ApplySpectateCameraFollow(RTBEngine::ECS::GameObject* targetPawn)
+void ThirdPersonCharacterController::ApplySpectateCameraFollow(RTBEngine::Scene::GameObject* targetPawn)
 {
     if (!owner || !cameraObject || !targetPawn) {
         return;
@@ -700,8 +700,8 @@ void ThirdPersonCharacterController::EnsureAnimationReady()
         return;
     }
 
-    RTBEngine::ECS::Scene* scene =
-        RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
+    RTBEngine::Scene::Scene* scene =
+        RTBEngine::Scene::SceneManager::GetInstance().GetActiveScene();
     if (scene && animator->HasBones() && !animator->AreBoneGOsCreated()) {
         animator->CreateBoneGameObjects(scene);
     }
@@ -998,14 +998,14 @@ void ThirdPersonCharacterController::UpdateAimFacingToward(
 
     owner->GetTransform().SetRotation(nextRotation);
 
-    auto* rbComp = owner->GetComponent<RTBEngine::ECS::RigidBodyComponent>();
+    auto* rbComp = owner->GetComponent<RTBEngine::Scene::RigidBodyComponent>();
     RTBEngine::Physics::RigidBody* rigidBody =
         (rbComp && rbComp->HasRigidBody()) ? rbComp->GetRigidBody() : nullptr;
     if (rigidBody && rigidBody->GetType() == RTBEngine::Physics::RigidBodyType::Dynamic) {
         RTBEngine::Math::Vector3 centerOffset = RTBEngine::Math::Vector3::Zero();
-        if (auto* capsule = owner->GetComponent<RTBEngine::ECS::CapsuleColliderComponent>()) {
+        if (auto* capsule = owner->GetComponent<RTBEngine::Scene::CapsuleColliderComponent>()) {
             centerOffset = capsule->GetCenterOffset();
-        } else if (auto* sphere = owner->GetComponent<RTBEngine::ECS::SphereColliderComponent>()) {
+        } else if (auto* sphere = owner->GetComponent<RTBEngine::Scene::SphereColliderComponent>()) {
             centerOffset = sphere->GetCenterOffset();
         }
         rigidBody->SetWorldTransform(owner->GetWorldPosition() + (nextRotation * centerOffset), nextRotation);
@@ -1037,7 +1037,7 @@ void ThirdPersonCharacterController::UpdateAimingMovement(float deltaTime)
 
     UpdateAimFacingToward(aimFacingDirection, deltaTime);
 
-    auto* rbComp = owner->GetComponent<RTBEngine::ECS::RigidBodyComponent>();
+    auto* rbComp = owner->GetComponent<RTBEngine::Scene::RigidBodyComponent>();
     RTBEngine::Physics::RigidBody* rigidBody =
         (rbComp && rbComp->HasRigidBody()) ? rbComp->GetRigidBody() : nullptr;
     const bool useDynamicRigidBody =
@@ -1073,7 +1073,7 @@ void ThirdPersonCharacterController::SetAimArrowVisible(bool visible)
         return;
     }
 
-    for (RTBEngine::ECS::GameObject* current = aimArrowVisual; current; current = current->GetParent()) {
+    for (RTBEngine::Scene::GameObject* current = aimArrowVisual; current; current = current->GetParent()) {
         if (current == owner) {
             aimArrowVisual->SetActive(visible);
             return;
@@ -1144,7 +1144,7 @@ void ThirdPersonCharacterController::UpdateAttackFacingLock(float deltaTime)
         ? moveSpeed * (isRunning ? sprintMultiplier : 1.0f)
         : 0.0f;
 
-    auto* rbComp = owner ? owner->GetComponent<RTBEngine::ECS::RigidBodyComponent>() : nullptr;
+    auto* rbComp = owner ? owner->GetComponent<RTBEngine::Scene::RigidBodyComponent>() : nullptr;
     RTBEngine::Physics::RigidBody* rigidBody =
         (rbComp && rbComp->HasRigidBody()) ? rbComp->GetRigidBody() : nullptr;
     const bool useDynamicRigidBody =
@@ -1171,7 +1171,7 @@ void ThirdPersonCharacterController::UpdateMovement(float deltaTime)
     bool isRunning = false;
     RTBEngine::Math::Vector3 desiredMove = GetDesiredMoveDirection(isRunning);
     const bool hasMovementInput = HasMovementInput(desiredMove);
-    auto* rbComp = owner ? owner->GetComponent<RTBEngine::ECS::RigidBodyComponent>() : nullptr;
+    auto* rbComp = owner ? owner->GetComponent<RTBEngine::Scene::RigidBodyComponent>() : nullptr;
     RTBEngine::Physics::RigidBody* rigidBody =
         (rbComp && rbComp->HasRigidBody()) ? rbComp->GetRigidBody() : nullptr;
     const bool useDynamicRigidBody =
@@ -1401,8 +1401,8 @@ void ThirdPersonCharacterController::HandleDeath(const HealthComponent::DeathEve
 
     if (IsLocallyControlled() && cameraObject) {
         const bool isOnline = RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby();
-        const RTBEngine::ECS::NetworkIdentity* identity =
-            owner ? owner->GetComponent<RTBEngine::ECS::NetworkIdentity>() : nullptr;
+        const RTBEngine::Scene::NetworkIdentity* identity =
+            owner ? owner->GetComponent<RTBEngine::Scene::NetworkIdentity>() : nullptr;
         const int localSlot = identity ? identity->networkPlayerSlot : -1;
         const bool canSpectate = isOnline && FindNextAliveTeammatePawn(owner, localSlot) != nullptr;
 
@@ -1419,8 +1419,8 @@ void ThirdPersonCharacterController::HandleDeath(const HealthComponent::DeathEve
 
     if (RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby() &&
         RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
-        if (const RTBEngine::ECS::NetworkIdentity* identity =
-                owner ? owner->GetComponent<RTBEngine::ECS::NetworkIdentity>() : nullptr) {
+        if (const RTBEngine::Scene::NetworkIdentity* identity =
+                owner ? owner->GetComponent<RTBEngine::Scene::NetworkIdentity>() : nullptr) {
             if (identity && identity->networkPlayerSlot >= 0) {
                 GameNet::OnlineGameNetSubsystem::BroadcastPlayerDeath(identity->networkPlayerSlot);
             }
@@ -1531,14 +1531,14 @@ void ThirdPersonCharacterController::FaceAttackDirection(const RTBEngine::Math::
 
     owner->GetTransform().SetRotation(targetRotation);
 
-    auto* rbComp = owner->GetComponent<RTBEngine::ECS::RigidBodyComponent>();
+    auto* rbComp = owner->GetComponent<RTBEngine::Scene::RigidBodyComponent>();
     RTBEngine::Physics::RigidBody* rigidBody =
         (rbComp && rbComp->HasRigidBody()) ? rbComp->GetRigidBody() : nullptr;
     if (rigidBody && rigidBody->GetType() == RTBEngine::Physics::RigidBodyType::Dynamic) {
         RTBEngine::Math::Vector3 centerOffset = RTBEngine::Math::Vector3::Zero();
-        if (auto* capsule = owner->GetComponent<RTBEngine::ECS::CapsuleColliderComponent>()) {
+        if (auto* capsule = owner->GetComponent<RTBEngine::Scene::CapsuleColliderComponent>()) {
             centerOffset = capsule->GetCenterOffset();
-        } else if (auto* sphere = owner->GetComponent<RTBEngine::ECS::SphereColliderComponent>()) {
+        } else if (auto* sphere = owner->GetComponent<RTBEngine::Scene::SphereColliderComponent>()) {
             centerOffset = sphere->GetCenterOffset();
         }
         rigidBody->SetWorldTransform(owner->GetWorldPosition() + (targetRotation * centerOffset), targetRotation);
@@ -1552,7 +1552,7 @@ void ThirdPersonCharacterController::StopPlanarMotion() const
         return;
     }
 
-    auto* rbComp = owner->GetComponent<RTBEngine::ECS::RigidBodyComponent>();
+    auto* rbComp = owner->GetComponent<RTBEngine::Scene::RigidBodyComponent>();
     if (!rbComp || !rbComp->HasRigidBody()) {
         return;
     }
@@ -1577,7 +1577,7 @@ RTBEngine::Math::Vector3 ThirdPersonCharacterController::GetDesiredMoveDirection
         return RTBEngine::Math::Vector3::Zero();
     }
 
-    if (const RTBEngine::ECS::NetworkIdentity* identity = owner->GetComponent<RTBEngine::ECS::NetworkIdentity>()) {
+    if (const RTBEngine::Scene::NetworkIdentity* identity = owner->GetComponent<RTBEngine::Scene::NetworkIdentity>()) {
         // Host simulating a remote client's pawn: read last PlayerInput from OnlineGameplayNet.
         if (RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby() &&
             RTBEngine::Online::OnlineGameplayNet::IsLobbyHost() &&
@@ -1783,7 +1783,7 @@ void ThirdPersonCharacterController::TryProcessRemoteAttackInput()
         return;
     }
 
-    RTBEngine::ECS::NetworkIdentity* identity = owner->GetComponent<RTBEngine::ECS::NetworkIdentity>();
+    RTBEngine::Scene::NetworkIdentity* identity = owner->GetComponent<RTBEngine::Scene::NetworkIdentity>();
     if (!identity || identity->networkOwnerUserId.empty()) {
         return;
     }

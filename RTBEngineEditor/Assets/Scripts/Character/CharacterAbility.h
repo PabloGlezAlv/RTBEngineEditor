@@ -3,7 +3,7 @@
 #include <RTBEngine/Scene/Component.h>
 #include <RTBEngine/Math/Vectors/Vector3.h>
 
-class CharacterAbility : public RTBEngine::ECS::Component
+class CharacterAbility : public RTBEngine::Scene::Component
 {
 public:
     enum class AimVisualKind {
@@ -18,7 +18,7 @@ public:
     void OnUpdate(float deltaTime) override;
     void OnDestroy() override;
 
-    bool TryActivate(RTBEngine::ECS::GameObject* instigator,
+    bool TryActivate(RTBEngine::Scene::GameObject* instigator,
                      const RTBEngine::Math::Vector3& direction);
     void CancelAbility();
 
@@ -26,7 +26,7 @@ public:
     bool IsCoolingDown() const { return cooldownRemaining > 0.0f; }
     float GetCooldownRemaining() const { return cooldownRemaining; }
     RTBEngine::Math::Vector3 GetActiveDirection() const { return activeDirection; }
-    RTBEngine::ECS::GameObject* GetActiveInstigator() const { return activeInstigator; }
+    RTBEngine::Scene::GameObject* GetActiveInstigator() const { return activeInstigator; }
 
     virtual bool HasValidAttack() const { return true; }
     virtual bool ConsumesAmmo() const { return true; }
@@ -39,14 +39,14 @@ protected:
     virtual float GetRecoveryDuration() const = 0;
     virtual float GetTickInterval() const { return 0.0f; }
     virtual int GetTickCount() const { return 0; }
-    virtual bool CanActivateAbility(RTBEngine::ECS::GameObject* instigator,
+    virtual bool CanActivateAbility(RTBEngine::Scene::GameObject* instigator,
                                     const RTBEngine::Math::Vector3& direction) const;
     virtual void OnAbilityStarted() {}
     virtual void ExecuteAbilityHit() = 0;
     virtual void OnAbilityFinished() {}
 
 private:
-    RTBEngine::ECS::GameObject* activeInstigator = nullptr;
+    RTBEngine::Scene::GameObject* activeInstigator = nullptr;
     RTBEngine::Math::Vector3 activeDirection = RTBEngine::Math::Vector3::Forward();
     float cooldownRemaining = 0.0f;
     float activeElapsed = 0.0f;

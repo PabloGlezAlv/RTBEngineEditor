@@ -12,7 +12,7 @@ namespace RTBEngine {
     }
 }
 
-class HealthBarUI : public RTBEngine::ECS::Component
+class HealthBarUI : public RTBEngine::Scene::Component
 {
 public:
     HealthBarUI() = default;

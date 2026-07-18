@@ -27,7 +27,7 @@ namespace RTBEditor {
         void ReleaseMouseCapture(EditorContext& context);
         void UpdateMouseCapture(EditorContext& context);
         bool IsGameOwningMouse(const EditorContext& context) const;
-        void ResolveReferenceResolution(RTBEngine::ECS::Scene* scene);
+        void ResolveReferenceResolution(RTBEngine::Scene::Scene* scene);
         void UpdatePreviewLayout(const RTBEngine::Math::Vector2& availableSize);
 
         std::unique_ptr<RTBEngine::Rendering::Framebuffer> framebuffer;

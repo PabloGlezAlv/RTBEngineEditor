@@ -139,7 +139,7 @@ void CharacterSelectMenuController::LoadCharacterDefinitions()
 
 void CharacterSelectMenuController::BindCharacterCardWidgets()
 {
-    RTBEngine::ECS::GameObject* cardRoots[kMaxCharacterCards] = {
+    RTBEngine::Scene::GameObject* cardRoots[kMaxCharacterCards] = {
         characterCard0,
         characterCard1,
         characterCard2,

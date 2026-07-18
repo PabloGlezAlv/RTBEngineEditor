@@ -12,7 +12,7 @@
 
 namespace RTBEditor {
 
-    bool PrefabEditorSession::IsEditorUtilityObject(const RTBEngine::ECS::GameObject* gameObject)
+    bool PrefabEditorSession::IsEditorUtilityObject(const RTBEngine::Scene::GameObject* gameObject)
     {
         return gameObject && gameObject->GetName() == EditorUtilityLightName;
     }
@@ -23,11 +23,11 @@ namespace RTBEditor {
             return;
         }
 
-        auto* lightObject = new RTBEngine::ECS::GameObject(EditorUtilityLightName);
+        auto* lightObject = new RTBEngine::Scene::GameObject(EditorUtilityLightName);
         lightObject->GetTransform().SetRotation(
             RTBEngine::Math::Quaternion::FromEulerAngles(50.0f, -30.0f, 0.0f));
 
-        auto* lightComponent = new RTBEngine::ECS::LightComponent();
+        auto* lightComponent = new RTBEngine::Scene::LightComponent();
         lightComponent->lightType = RTBEngine::Rendering::LightType::Directional;
         lightComponent->color = RTBEngine::Math::Color(1.0f, 0.97f, 0.92f, 1.0f);
         lightComponent->intensity = 1.2f;
@@ -51,15 +51,15 @@ namespace RTBEditor {
             return false;
         }
 
-        RTBEngine::ECS::Prefab* prefabAsset =
-            RTBEngine::ECS::PrefabRegistry::GetInstance().GetByPath(canonicalPath.string());
+        RTBEngine::Scene::Prefab* prefabAsset =
+            RTBEngine::Scene::PrefabRegistry::GetInstance().GetByPath(canonicalPath.string());
         if (!prefabAsset) {
             RTB_ERROR("PrefabEditorSession: Prefab not registered: " + canonicalPath.string());
             return false;
         }
 
-        stagingScene = std::make_unique<RTBEngine::ECS::Scene>("Prefab Edit");
-        std::vector<RTBEngine::ECS::GameObject*> childGOs;
+        stagingScene = std::make_unique<RTBEngine::Scene::Scene>("Prefab Edit");
+        std::vector<RTBEngine::Scene::GameObject*> childGOs;
         rootObject = prefabAsset->Instantiate(nullptr, childGOs, false);
         if (!rootObject) {
             Close();
@@ -68,7 +68,7 @@ namespace RTBEditor {
         }
 
         stagingScene->AddGameObject(rootObject, false);
-        for (RTBEngine::ECS::GameObject* child : childGOs) {
+        for (RTBEngine::Scene::GameObject* child : childGOs) {
             if (child) {
                 stagingScene->AddGameObject(child, false);
             }
@@ -95,7 +95,7 @@ namespace RTBEditor {
             return false;
         }
 
-        auto prefab = RTBEngine::ECS::Prefab::CreateFromGameObject(rootObject);
+        auto prefab = RTBEngine::Scene::Prefab::CreateFromGameObject(rootObject);
         if (!prefab) {
             RTB_ERROR("PrefabEditorSession: Failed to serialize prefab from staging scene.");
             return false;
@@ -106,7 +106,7 @@ namespace RTBEditor {
             return false;
         }
 
-        RTBEngine::ECS::PrefabRegistry::GetInstance().Reload(prefab->GetName());
+        RTBEngine::Scene::PrefabRegistry::GetInstance().Reload(prefab->GetName());
         isDirty = false;
         return true;
     }

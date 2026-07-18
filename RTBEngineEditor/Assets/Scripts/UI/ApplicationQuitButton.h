@@ -4,7 +4,7 @@
 #include <RTBEngine/Reflection/PropertyMacros.h>
 #include <RTBEngine/UI/EventSystem/IPointerClickHandler.h>
 
-class ApplicationQuitButton : public RTBEngine::ECS::Component
+class ApplicationQuitButton : public RTBEngine::Scene::Component
                             , public RTBEngine::UI::IPointerClickHandler
 {
 public:

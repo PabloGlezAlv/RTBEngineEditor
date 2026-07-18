@@ -18,7 +18,7 @@ namespace RTBEngine {
         class Animator;
     }
 
-    namespace ECS {
+    namespace Scene {
         class GameObject;
         class TrailRenderer;
     }
@@ -60,7 +60,7 @@ public:
     void ApplyCharacterStats(const CharacterDefinition& definition) override;
     void RefreshAfterSpawn();
 
-    RTBEngine::ECS::GameObject* cameraObject = nullptr;
+    RTBEngine::Scene::GameObject* cameraObject = nullptr;
     HealthComponent* health = nullptr;
     int team = static_cast<int>(CharacterTeam::Player);
     float moveSpeed = 4.0f;
@@ -71,10 +71,10 @@ public:
     RTBEngine::Animation::Animator* animator = nullptr;
     CharacterAbility* attackAbility = nullptr;
     RTBEngine::UI::UIJoystick* attackJoystick = nullptr;
-    RTBEngine::ECS::TrailRenderer* attackAimTrail = nullptr;
+    RTBEngine::Scene::TrailRenderer* attackAimTrail = nullptr;
     float aimTrailForwardOffset = 0.40f;
     float aimTrailHeightOffset = 0.0f;
-    RTBEngine::ECS::GameObject* aimArrowVisual = nullptr;
+    RTBEngine::Scene::GameObject* aimArrowVisual = nullptr;
 
     RTB_COMPONENT(ThirdPersonCharacterController)
 
@@ -115,7 +115,7 @@ private:
     void ValidateRequiredReferences();
     void DisableCompetingCameraController() const;
     void ApplyCameraFollowTransform();
-    void ApplySpectateCameraFollow(RTBEngine::ECS::GameObject* targetPawn);
+    void ApplySpectateCameraFollow(RTBEngine::Scene::GameObject* targetPawn);
     void EnsureAnimationReady();
     void ForceStartLocomotionAnimation();
     void RebindHealthSubscription();

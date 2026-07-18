@@ -5,7 +5,7 @@
 #include "../Panels/EditorPanel.h"
 
 namespace RTBEngine {
-    namespace ECS {
+    namespace Scene {
         class GameObject;
         class Component;
     }
@@ -19,31 +19,31 @@ namespace RTBEditor {
     class PrefabOverrideInspector {
     public:
         static bool DrawInstanceHeader(
-            const RTBEngine::ECS::PrefabInstanceContext& context,
-            RTBEngine::ECS::GameObject* gameObject,
+            const RTBEngine::Scene::PrefabInstanceContext& context,
+            RTBEngine::Scene::GameObject* gameObject,
             EditorContext& editorContext,
             const std::function<void()>& markDirty);
 
         static bool DrawPropertyOverrideMenu(
-            RTBEngine::ECS::GameObject* gameObject,
-            RTBEngine::ECS::Component* component,
+            RTBEngine::Scene::GameObject* gameObject,
+            RTBEngine::Scene::Component* component,
             const RTBEngine::Reflection::PropertyInfo& property,
             const std::function<void()>& markDirty);
 
         static bool DrawTransformOverrideMenu(
-            RTBEngine::ECS::GameObject* gameObject,
+            RTBEngine::Scene::GameObject* gameObject,
             const char* popupId,
             const std::function<void()>& markDirty);
 
         static bool DrawComponentOverrideMenu(
-            RTBEngine::ECS::GameObject* gameObject,
-            RTBEngine::ECS::Component* component,
+            RTBEngine::Scene::GameObject* gameObject,
+            RTBEngine::Scene::Component* component,
             bool isAddedComponent,
             const std::function<void()>& markDirty);
 
         static bool IsPropertyOverridden(
-            RTBEngine::ECS::GameObject* gameObject,
-            RTBEngine::ECS::Component* component,
+            RTBEngine::Scene::GameObject* gameObject,
+            RTBEngine::Scene::Component* component,
             const RTBEngine::Reflection::PropertyInfo& property);
     };
 

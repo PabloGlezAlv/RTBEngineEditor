@@ -38,7 +38,7 @@ namespace {
     }
 
     void ReloadProjectPrefabs(const RTBEditor::Project& project) {
-        auto& prefabRegistry = RTBEngine::ECS::PrefabRegistry::GetInstance();
+        auto& prefabRegistry = RTBEngine::Scene::PrefabRegistry::GetInstance();
         prefabRegistry.Clear();
 
         const fs::path assetsPath = project.GetAssetRootPath();
@@ -79,14 +79,14 @@ namespace {
         return fs::absolute(projectFileName).lexically_normal();
     }
 
-    void TickAnimatorPreview(RTBEngine::ECS::Scene* scene, float deltaTime)
+    void TickAnimatorPreview(RTBEngine::Scene::Scene* scene, float deltaTime)
     {
         if (!scene) {
             return;
         }
 
         for (const auto& goPtr : scene->GetGameObjects()) {
-            RTBEngine::ECS::GameObject* go = goPtr.get();
+            RTBEngine::Scene::GameObject* go = goPtr.get();
             if (!go || !go->IsActiveInHierarchy()) {
                 continue;
             }
@@ -152,7 +152,7 @@ namespace RTBEditor {
 
             const std::string& lastOpen = project->GetLastOpenScene();
             const std::string& sceneToLoad = !lastOpen.empty() ? lastOpen : project->GetStartScene();
-            RTBEngine::ECS::SceneManager::GetInstance().LoadScene(sceneToLoad);
+            RTBEngine::Scene::SceneManager::GetInstance().LoadScene(sceneToLoad);
         }
 
         // Initialize UI Layer
@@ -186,7 +186,7 @@ namespace RTBEditor {
             [this]() { uiLayer->SavePrefab(); });
 
         uiLayer->GetContext().ensureScenePhysicsReady = [this]() -> bool {
-            RTBEngine::ECS::Scene* scene = GetEditingScene(uiLayer->GetContext());
+            RTBEngine::Scene::Scene* scene = GetEditingScene(uiLayer->GetContext());
             if (!scene || !engineApp) {
                 return false;
             }
@@ -196,7 +196,7 @@ namespace RTBEditor {
         };
 
         uiLayer->GetMenuBar()->SetSaveSceneCallback([this]() {
-            auto& sm = RTBEngine::ECS::SceneManager::GetInstance();
+            auto& sm = RTBEngine::Scene::SceneManager::GetInstance();
             if (RTBEngine::Scripting::SceneSaver::SaveScene(sm.GetActiveScene(), sm.GetActiveScenePath())) {
                 sm.ClearSceneDirty();
                 uiLayer->GetMenuBar()->SetSceneDirty(false);
@@ -251,7 +251,7 @@ namespace RTBEditor {
             stats.frameTimeMs = deltaTime * 1000.0f;
 
             // ECS / scene counters
-            RTBEngine::ECS::Scene* scene = GetEditingScene(uiLayer->GetContext());
+            RTBEngine::Scene::Scene* scene = GetEditingScene(uiLayer->GetContext());
             if (scene) {
                 stats.gameObjects = scene->GetActiveGameObjectCount();
                 stats.components = scene->GetActiveComponentCount();
@@ -261,6 +261,11 @@ namespace RTBEditor {
             if (engineApp) {
                 RTBEngine::Physics::PhysicsWorld* pw = engineApp->GetPhysicsWorld();
                 stats.physicsBodies = pw ? static_cast<uint32_t>(pw->GetActiveBodyCount()) : 0u;
+                const RTBEngine::ECS::ProjectileSimulationStats& projectileStats =
+                    engineApp->GetProjectileSimulationStats();
+                stats.ecsProjectileCount = projectileStats.activeProjectileCount;
+                stats.ecsProjectileSimMs =
+                    static_cast<float>(projectileStats.lastSimulationMilliseconds);
             }
 
             // Audio
@@ -270,17 +275,17 @@ namespace RTBEditor {
 
         // Sync dirty flag from SceneManager to menu bar
         uiLayer->GetMenuBar()->SetSceneDirty(
-            RTBEngine::ECS::SceneManager::GetInstance().IsSceneDirty()
+            RTBEngine::Scene::SceneManager::GetInstance().IsSceneDirty()
         );
 
         // Keep editor-side online tools alive while the game simulation is not running.
         if (state == EditorState::Edit) {
             RTBEngine::Online::OnlineSystem::GetInstance().Tick(deltaTime);
 
-            RTBEngine::ECS::Scene* editingScene = GetEditingScene(uiLayer->GetContext());
+            RTBEngine::Scene::Scene* editingScene = GetEditingScene(uiLayer->GetContext());
             if (editingScene) {
-                RTBEngine::ECS::ParticleSystem::TickScenePreview(editingScene, deltaTime);
-                RTBEngine::ECS::AnimatedBillboard::TickScenePreview(editingScene, deltaTime);
+                RTBEngine::Scene::ParticleSystem::TickScenePreview(editingScene, deltaTime);
+                RTBEngine::Scene::AnimatedBillboard::TickScenePreview(editingScene, deltaTime);
                 TickAnimatorPreview(editingScene, deltaTime);
             }
         }
@@ -327,7 +332,7 @@ namespace RTBEditor {
                     // Reload using pendingScenePath saved in OnCompileScripts before UnloadScripts
                     // cleared activeScenePath.
                     if (!pendingScenePath.empty()) {
-                        RTBEngine::ECS::SceneManager::GetInstance().LoadScene(pendingScenePath);
+                        RTBEngine::Scene::SceneManager::GetInstance().LoadScene(pendingScenePath);
                         pendingScenePath.clear();
                     }
                     // Scene was reloaded — bail out of Update now. Any component pointers
@@ -341,8 +346,8 @@ namespace RTBEditor {
         }
 
         if (state == EditorState::Play || state == EditorState::Pause) {
-            RTBEngine::ECS::Scene* sceneBeforeUpdate =
-                RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
+            RTBEngine::Scene::Scene* sceneBeforeUpdate =
+                RTBEngine::Scene::SceneManager::GetInstance().GetActiveScene();
 
             if (state == EditorState::Pause) {
                 RTBEngine::Core::Time::SetPaused(true);
@@ -359,8 +364,8 @@ namespace RTBEditor {
                 return;
             }
 
-            RTBEngine::ECS::Scene* sceneAfterUpdate =
-                RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
+            RTBEngine::Scene::Scene* sceneAfterUpdate =
+                RTBEngine::Scene::SceneManager::GetInstance().GetActiveScene();
             if (sceneBeforeUpdate != sceneAfterUpdate && uiLayer) {
                 uiLayer->ClearSelection();
             }
@@ -375,19 +380,19 @@ namespace RTBEditor {
         }
         RTBEngine::Core::Time::SetPaused(false);
 
-        auto& sm = RTBEngine::ECS::SceneManager::GetInstance();
+        auto& sm = RTBEngine::Scene::SceneManager::GetInstance();
 
         // Remember which scene was open so OnStop can restore it
         scenePathBeforePlay = sm.GetActiveScenePath();
 
         // Reset and re-initialize physics for the current scene before entering Play
-        RTBEngine::ECS::Scene* scene = sm.GetActiveScene();
+        RTBEngine::Scene::Scene* scene = sm.GetActiveScene();
         if (scene) {
             scene->PrepareForPlayMode();
         }
         if (scene && engineApp) {
             engineApp->RebuildPhysicsForScene(scene);
-            RTBEngine::ECS::NavGridComponent::ActivateAllBakedInScene(scene);
+            RTBEngine::Scene::NavGridComponent::ActivateAllBakedInScene(scene);
         }
 
         if (engineApp && engineApp->GetWindow()) {
@@ -432,7 +437,7 @@ namespace RTBEditor {
         if (engineApp) {
             RTBEngine::Core::Time::SetFixedDeltaTime(engineApp->GetConfig().physics.timeStep);
         }
-        RTBEngine::ECS::SceneManager::GetInstance().ClearPendingSceneLoad();
+        RTBEngine::Scene::SceneManager::GetInstance().ClearPendingSceneLoad();
 
         // Clear selection before scene reload to avoid dangling pointer crashes.
         if (uiLayer)
@@ -447,13 +452,13 @@ namespace RTBEditor {
             ? scenePathBeforePlay
             : (project ? project->GetStartScene() : std::string("Assets/Scenes/DefaultScene.lua"));
 
-        RTBEngine::ECS::Scene* sceneBeforeReload =
-            RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
+        RTBEngine::Scene::Scene* sceneBeforeReload =
+            RTBEngine::Scene::SceneManager::GetInstance().GetActiveScene();
         if (sceneBeforeReload) {
-            RTBEngine::ECS::NavGridComponent::SaveNavMeshForScene(sceneToRestore, sceneBeforeReload);
+            RTBEngine::Scene::NavGridComponent::SaveNavMeshForScene(sceneToRestore, sceneBeforeReload);
         }
 
-        RTBEngine::ECS::SceneManager::GetInstance().LoadScene(sceneToRestore);
+        RTBEngine::Scene::SceneManager::GetInstance().LoadScene(sceneToRestore);
         scenePathBeforePlay.clear();
     }
 
@@ -503,7 +508,7 @@ namespace RTBEditor {
     }
 
     bool EditorApplication::HasBlockingUnsavedChanges(PendingAction action) const {
-        auto& sm = RTBEngine::ECS::SceneManager::GetInstance();
+        auto& sm = RTBEngine::Scene::SceneManager::GetInstance();
 
         if (action == PendingAction::ClosePrefab) {
             return HasUnsavedPrefabChanges();
@@ -546,7 +551,7 @@ namespace RTBEditor {
         if (engineApp)
             engineApp->ResetPhysics();
 
-        RTBEngine::ECS::SceneManager::GetInstance().LoadScene(
+        RTBEngine::Scene::SceneManager::GetInstance().LoadScene(
             pendingOpenScenePath.string());
 
         pendingOpenScenePath.clear();
@@ -639,7 +644,7 @@ namespace RTBEditor {
         if (ImGui::BeginPopupModal("UnsavedChangesPopup", &popupOpen,
             ImGuiWindowFlags_AlwaysAutoResize)) {
             const bool prefabDirty = HasUnsavedPrefabChanges();
-            const bool sceneDirty = RTBEngine::ECS::SceneManager::GetInstance().IsSceneDirty();
+            const bool sceneDirty = RTBEngine::Scene::SceneManager::GetInstance().IsSceneDirty();
             const bool closingPrefab = pendingAction == PendingAction::ClosePrefab;
             const bool openingPrefab = pendingAction == PendingAction::OpenPrefab;
             const bool inPrefabMode = uiLayer && uiLayer->IsPrefabEditMode();
@@ -671,7 +676,7 @@ namespace RTBEditor {
                     saved = uiLayer->SavePrefab();
                 }
                 if (canSaveScene) {
-                    auto& sm = RTBEngine::ECS::SceneManager::GetInstance();
+                    auto& sm = RTBEngine::Scene::SceneManager::GetInstance();
                     if (RTBEngine::Scripting::SceneSaver::SaveScene(
                         sm.GetActiveScene(), sm.GetActiveScenePath())) {
                         sm.ClearSceneDirty();
@@ -716,9 +721,9 @@ namespace RTBEditor {
         // Read render stats after all draw calls have been submitted
         if (uiLayer) {
             StatsData& stats = uiLayer->GetContext().stats;
-            stats.drawCalls = RTBEngine::ECS::MeshRenderer::GetDrawCallCount();
-            stats.triangles = RTBEngine::ECS::MeshRenderer::GetTriangleCount();
-            stats.culledObjects = RTBEngine::ECS::MeshRenderer::GetCulledObjectCount();
+            stats.drawCalls = RTBEngine::Scene::MeshRenderer::GetDrawCallCount();
+            stats.triangles = RTBEngine::Scene::MeshRenderer::GetTriangleCount();
+            stats.culledObjects = RTBEngine::Scene::MeshRenderer::GetCulledObjectCount();
         }
 
         // Clear the main window
@@ -741,14 +746,14 @@ namespace RTBEditor {
         if (!uiLayer) return;
 
         EditorContext& editorContext = uiLayer->GetContext();
-        RTBEngine::ECS::Scene* sceneViewScene = GetEditingScene(editorContext);
-        RTBEngine::ECS::Scene* activeScene = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScene();
+        RTBEngine::Scene::Scene* sceneViewScene = GetEditingScene(editorContext);
+        RTBEngine::Scene::Scene* activeScene = RTBEngine::Scene::SceneManager::GetInstance().GetActiveScene();
         if (!sceneViewScene) return;
 
         PruneSelectionToScene(editorContext, sceneViewScene);
 
         // Reset per-frame render counters before any draw submissions
-        RTBEngine::ECS::MeshRenderer::ResetRenderStats();
+        RTBEngine::Scene::MeshRenderer::ResetRenderStats();
 
         RTBEngine::UI::CanvasSystem::GetInstance().Update(sceneViewScene);
 
@@ -798,7 +803,7 @@ namespace RTBEditor {
         GameViewPanel* gameView = uiLayer->GetGameViewPanel();
         if (gameView && activeScene) {
             RTBEngine::Rendering::Framebuffer* framebuffer = gameView->GetFramebuffer();
-            RTBEngine::ECS::CameraComponent* mainCamComp = activeScene->GetMainCamera();
+            RTBEngine::Scene::CameraComponent* mainCamComp = activeScene->GetMainCamera();
             int vpWidth = static_cast<int>(gameView->GetRenderWidth());
             int vpHeight = static_cast<int>(gameView->GetRenderHeight());
 
@@ -841,7 +846,7 @@ namespace RTBEditor {
         // UnloadScripts -> UnloadCurrentScene clears activeScenePath, so we must capture
         // it here while the scene is still loaded.
         {
-            auto& sm = RTBEngine::ECS::SceneManager::GetInstance();
+            auto& sm = RTBEngine::Scene::SceneManager::GetInstance();
             pendingScenePath = sm.GetActiveScenePath();
             if (!pendingScenePath.empty() && sm.GetActiveScene()) {
                 if (RTBEngine::Scripting::SceneSaver::SaveScene(sm.GetActiveScene(), pendingScenePath)) {
@@ -879,11 +884,11 @@ namespace RTBEditor {
     }
 
     void EditorApplication::Shutdown() {
-        RTBEngine::ECS::SceneManager::GetInstance().ClearPendingSceneLoad();
+        RTBEngine::Scene::SceneManager::GetInstance().ClearPendingSceneLoad();
 
         // Persist the last open scene so it reopens on next editor launch
         if (project && Project::GetActiveProject() == project.get()) {
-            const std::string& activeScenePath = RTBEngine::ECS::SceneManager::GetInstance().GetActiveScenePath();
+            const std::string& activeScenePath = RTBEngine::Scene::SceneManager::GetInstance().GetActiveScenePath();
             const std::string& lastScene =
                 (state != EditorState::Edit && !scenePathBeforePlay.empty())
                     ? scenePathBeforePlay

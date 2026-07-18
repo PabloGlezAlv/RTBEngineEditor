@@ -25,10 +25,10 @@ namespace {
     constexpr float kFixedNameplatePitchDegrees = 50.0f;
     constexpr float kFixedNameplateYawDegrees = 0.0f;
 
-    RTBEngine::ECS::GameObject* FindPlayerRoot(RTBEngine::ECS::GameObject* from)
+    RTBEngine::Scene::GameObject* FindPlayerRoot(RTBEngine::Scene::GameObject* from)
     {
-        for (RTBEngine::ECS::GameObject* current = from; current; current = current->GetParent()) {
-            if (current->GetComponent<RTBEngine::ECS::NetworkIdentity>()) {
+        for (RTBEngine::Scene::GameObject* current = from; current; current = current->GetParent()) {
+            if (current->GetComponent<RTBEngine::Scene::NetworkIdentity>()) {
                 return current;
             }
         }
@@ -36,14 +36,14 @@ namespace {
         return nullptr;
     }
 
-    RTBEngine::ECS::GameObject* FindNameplateRoot(RTBEngine::ECS::GameObject* from)
+    RTBEngine::Scene::GameObject* FindNameplateRoot(RTBEngine::Scene::GameObject* from)
     {
-        RTBEngine::ECS::GameObject* playerRoot = FindPlayerRoot(from);
+        RTBEngine::Scene::GameObject* playerRoot = FindPlayerRoot(from);
         if (!playerRoot || !from) {
             return nullptr;
         }
 
-        for (RTBEngine::ECS::GameObject* current = from; current; current = current->GetParent()) {
+        for (RTBEngine::Scene::GameObject* current = from; current; current = current->GetParent()) {
             if (current->GetParent() == playerRoot) {
                 return current;
             }
@@ -125,8 +125,8 @@ void PlayerNameplateUI::ForceRefreshDisplayName()
 
 void PlayerNameplateUI::ApplyFixedWorldOrientation() const
 {
-    RTBEngine::ECS::GameObject* playerRoot = FindPlayerRoot(owner);
-    RTBEngine::ECS::GameObject* nameplateRoot = FindNameplateRoot(owner);
+    RTBEngine::Scene::GameObject* playerRoot = FindPlayerRoot(owner);
+    RTBEngine::Scene::GameObject* nameplateRoot = FindNameplateRoot(owner);
     if (!playerRoot || !nameplateRoot) {
         return;
     }
@@ -138,13 +138,13 @@ void PlayerNameplateUI::ApplyFixedWorldOrientation() const
 
 int PlayerNameplateUI::ResolveOwnerPlayerSlot() const
 {
-    RTBEngine::ECS::GameObject* playerRoot = FindPlayerRoot(owner);
+    RTBEngine::Scene::GameObject* playerRoot = FindPlayerRoot(owner);
     if (!playerRoot) {
         return -1;
     }
 
-    if (const RTBEngine::ECS::NetworkIdentity* identity =
-            playerRoot->GetComponent<RTBEngine::ECS::NetworkIdentity>()) {
+    if (const RTBEngine::Scene::NetworkIdentity* identity =
+            playerRoot->GetComponent<RTBEngine::Scene::NetworkIdentity>()) {
         return identity->networkPlayerSlot;
     }
 
@@ -157,14 +157,14 @@ void PlayerNameplateUI::RefreshDisplayName() const
         return;
     }
 
-    RTBEngine::ECS::GameObject* playerRoot = FindPlayerRoot(owner);
+    RTBEngine::Scene::GameObject* playerRoot = FindPlayerRoot(owner);
     if (!playerRoot) {
         displayNameText->SetText(GameNet::ResolveLocalDisplayName());
         return;
     }
 
-    const RTBEngine::ECS::NetworkIdentity* identity =
-        playerRoot->GetComponent<RTBEngine::ECS::NetworkIdentity>();
+    const RTBEngine::Scene::NetworkIdentity* identity =
+        playerRoot->GetComponent<RTBEngine::Scene::NetworkIdentity>();
     const std::string resolvedName = GameNet::ResolvePlayerDisplayName(identity);
     displayNameText->SetText(resolvedName);
 }
@@ -175,7 +175,7 @@ void PlayerNameplateUI::BindHealthBar()
         return;
     }
 
-    RTBEngine::ECS::GameObject* playerRoot = FindPlayerRoot(owner);
+    RTBEngine::Scene::GameObject* playerRoot = FindPlayerRoot(owner);
     if (!playerRoot) {
         return;
     }

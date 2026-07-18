@@ -4,7 +4,7 @@
 #include <RTBEngine/Math/Vectors/Vector3.h>
 #include <RTBEngine/Reflection/PropertyMacros.h>
 
-class EnemyLocomotionController : public RTBEngine::ECS::Component
+class EnemyLocomotionController : public RTBEngine::Scene::Component
 {
 public:
     EnemyLocomotionController() = default;

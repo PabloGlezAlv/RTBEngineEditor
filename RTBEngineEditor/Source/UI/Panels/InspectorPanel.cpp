@@ -160,7 +160,7 @@ namespace RTBEditor {
         }
 
         void ApplyInspectorRotationDegrees(
-            RTBEngine::ECS::Transform& transform,
+            RTBEngine::Scene::Transform& transform,
             const RTBEngine::Math::Vector3& degrees)
         {
             const RTBEngine::Math::Vector3 radians(
@@ -174,8 +174,8 @@ namespace RTBEditor {
             return ToLowerCopy(path.extension().string()) == ".fbx";
         }
 
-        bool IsComponentInScene(const RTBEngine::ECS::Scene* scene,
-                                const RTBEngine::ECS::Component* component) {
+        bool IsComponentInScene(const RTBEngine::Scene::Scene* scene,
+                                const RTBEngine::Scene::Component* component) {
             if (!scene || !component) {
                 return false;
             }
@@ -189,7 +189,7 @@ namespace RTBEditor {
                 const bool found = std::any_of(
                     components.begin(),
                     components.end(),
-                    [component](const RTBEngine::ECS::GameObject::ComponentPtr& candidate) {
+                    [component](const RTBEngine::Scene::GameObject::ComponentPtr& candidate) {
                         return candidate.get() == component;
                     });
 
@@ -386,7 +386,7 @@ namespace RTBEditor {
             return result;
         }
 
-        bool IsScenePathProperty(RTBEngine::ECS::Component* component,
+        bool IsScenePathProperty(RTBEngine::Scene::Component* component,
                                  const RTBEngine::Reflection::PropertyInfo& prop) {
             return component &&
                 prop.name == "scenePath" &&
@@ -612,13 +612,13 @@ namespace RTBEditor {
         if (dirtyContext) {
             MarkEditingDirty(*dirtyContext);
         } else {
-            RTBEngine::ECS::SceneManager::GetInstance().MarkSceneDirty();
+            RTBEngine::Scene::SceneManager::GetInstance().MarkSceneDirty();
         }
     }
 
     void InspectorPanel::BeginPrefabAwareInspectorRow(
         const char* label,
-        RTBEngine::ECS::Component* component,
+        RTBEngine::Scene::Component* component,
         const RTBEngine::Reflection::PropertyInfo& prop)
     {
         if (hasActivePrefabContext && activePrefabGameObject &&
@@ -633,7 +633,7 @@ namespace RTBEditor {
     }
 
     void InspectorPanel::EndPrefabAwareInspectorRow(
-        RTBEngine::ECS::Component* component,
+        RTBEngine::Scene::Component* component,
         const RTBEngine::Reflection::PropertyInfo& prop)
     {
         EndInspectorRow();
@@ -654,7 +654,7 @@ namespace RTBEditor {
         // Validate that the selected GOs still exist in the active scene
         auto* scene = GetEditingScene(context);
         if (scene) {
-            auto existsInScene = [scene](RTBEngine::ECS::GameObject* go) {
+            auto existsInScene = [scene](RTBEngine::Scene::GameObject* go) {
                 if (!go) return false;
                 for (const auto& obj : scene->GetGameObjects()) {
                     if (obj.get() == go) return true;
@@ -667,7 +667,7 @@ namespace RTBEditor {
                 std::remove_if(
                     context.selectedGameObjects.begin(),
                     context.selectedGameObjects.end(),
-                    [&](RTBEngine::ECS::GameObject* go) { return !existsInScene(go); }),
+                    [&](RTBEngine::Scene::GameObject* go) { return !existsInScene(go); }),
                 context.selectedGameObjects.end());
 
             // Ensure primary selection is valid
@@ -735,7 +735,7 @@ namespace RTBEditor {
             }
 
             if (!IsPrefabEditMode(context) && context.selectedGameObject) {
-                activePrefabContext = RTBEngine::ECS::PrefabInstanceResolver::Resolve(context.selectedGameObject);
+                activePrefabContext = RTBEngine::Scene::PrefabInstanceResolver::Resolve(context.selectedGameObject);
                 if (activePrefabContext.IsValid()) {
                     PrefabOverrideInspector::DrawInstanceHeader(
                         activePrefabContext,
@@ -812,7 +812,7 @@ namespace RTBEditor {
                                     context.selectedGameObject->AddComponent(newComp);
 
                                     if (auto* boxCollider =
-                                            dynamic_cast<RTBEngine::ECS::BoxColliderComponent*>(newComp)) {
+                                            dynamic_cast<RTBEngine::Scene::BoxColliderComponent*>(newComp)) {
                                         boxCollider->FitToOwnerMesh();
                                     }
 
@@ -870,13 +870,13 @@ namespace RTBEditor {
         ImGui::End();
     }
 
-    void InspectorPanel::DrawComponents(RTBEngine::ECS::GameObject* gameObject, EditorContext& context) {
+    void InspectorPanel::DrawComponents(RTBEngine::Scene::GameObject* gameObject, EditorContext& context) {
         dirtyContext = &context;
         hasActivePrefabContext = false;
         activePrefabGameObject = nullptr;
 
         if (!IsPrefabEditMode(context) && gameObject) {
-            activePrefabContext = RTBEngine::ECS::PrefabInstanceResolver::Resolve(gameObject);
+            activePrefabContext = RTBEngine::Scene::PrefabInstanceResolver::Resolve(gameObject);
             hasActivePrefabContext = activePrefabContext.IsValid();
             activePrefabGameObject = hasActivePrefabContext ? gameObject : nullptr;
         }
@@ -955,7 +955,7 @@ namespace RTBEditor {
             if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen)) {
                 auto& transform = gameObject->GetTransform();
                 const bool transformOverridden = hasActivePrefabContext && activePrefabContext.baselineNode &&
-                    RTBEngine::ECS::PrefabOverrideDiff::IsTransformOverridden(
+                    RTBEngine::Scene::PrefabOverrideDiff::IsTransformOverridden(
                         gameObject,
                         activePrefabContext.baselineNode);
 
@@ -1044,7 +1044,7 @@ namespace RTBEditor {
             const char* typeName = component->GetTypeName();
 
             // Missing component — display warning header
-            auto* missing = dynamic_cast<RTBEngine::ECS::MissingComponent*>(component.get());
+            auto* missing = dynamic_cast<RTBEngine::Scene::MissingComponent*>(component.get());
             if (missing) {
                 ImGui::PushID(component.get());
                 std::string header = "Missing: " + missing->GetMissingTypeName();
@@ -1069,7 +1069,7 @@ namespace RTBEditor {
             ImGui::PushID(component.get());
             std::string displayName = FormatTypeName(typeName);
             const bool isAddedComponent = hasActivePrefabContext && activePrefabContext.baselineNode &&
-                RTBEngine::ECS::PrefabOverrideDiff::IsAddedComponent(
+                RTBEngine::Scene::PrefabOverrideDiff::IsAddedComponent(
                     component.get(),
                     activePrefabContext.baselineNode);
             if (isAddedComponent) {
@@ -1104,11 +1104,11 @@ namespace RTBEditor {
                 if (std::string(typeName) == "Animator") {
                     DrawAnimatorComponent(static_cast<RTBEngine::Animation::Animator*>(component.get()));
                 } else if (std::string(typeName) == "ParticleSystem") {
-                    DrawParticleSystemComponent(static_cast<RTBEngine::ECS::ParticleSystem*>(component.get()));
+                    DrawParticleSystemComponent(static_cast<RTBEngine::Scene::ParticleSystem*>(component.get()));
                 } else if (std::string(typeName) == "MeshRenderer") {
-                    DrawMeshRendererComponent(static_cast<RTBEngine::ECS::MeshRenderer*>(component.get()));
+                    DrawMeshRendererComponent(static_cast<RTBEngine::Scene::MeshRenderer*>(component.get()));
                 } else if (std::string(typeName) == "NavGridComponent") {
-                    DrawNavGridComponent(static_cast<RTBEngine::ECS::NavGridComponent*>(component.get()), context);
+                    DrawNavGridComponent(static_cast<RTBEngine::Scene::NavGridComponent*>(component.get()), context);
                 } else if (typeInfo) {
                     auto properties = typeInfo->GetInspectorProperties();
                     for (const auto* prop : properties) {
@@ -1122,7 +1122,7 @@ namespace RTBEditor {
         }
     }
 
-    bool InspectorPanel::DrawSceneStringProperty(RTBEngine::ECS::Component* component,
+    bool InspectorPanel::DrawSceneStringProperty(RTBEngine::Scene::Component* component,
                                                  const RTBEngine::Reflection::PropertyInfo& prop,
                                                  std::string* value) {
         if (!value) {
@@ -1197,7 +1197,7 @@ namespace RTBEditor {
         return changed;
     }
 
-    bool InspectorPanel::DrawAssetRefProperty(RTBEngine::ECS::Component* component,
+    bool InspectorPanel::DrawAssetRefProperty(RTBEngine::Scene::Component* component,
                                               const RTBEngine::Reflection::PropertyInfo& prop,
                                               std::string* value,
                                               bool& changed,
@@ -1296,12 +1296,12 @@ namespace RTBEditor {
         return true;
     }
 
-    bool InspectorPanel::DrawListProperty(RTBEngine::ECS::Component* component,
+    bool InspectorPanel::DrawListProperty(RTBEngine::Scene::Component* component,
                                           const RTBEngine::Reflection::PropertyInfo& prop) {
         using namespace RTBEngine::Reflection;
 
         bool changed = false;
-        RTBEngine::ECS::Scene* activeScene = dirtyContext ? GetEditingScene(*dirtyContext) : nullptr;
+        RTBEngine::Scene::Scene* activeScene = dirtyContext ? GetEditingScene(*dirtyContext) : nullptr;
 
         size_t elementCount = 0;
         switch (prop.listElementType) {
@@ -1431,7 +1431,7 @@ namespace RTBEditor {
                 for (size_t index = 0; index < values->size(); ++index) {
                     ImGui::PushID(static_cast<int>(index));
 
-                    RTBEngine::ECS::GameObject* gameObjectRef = (*values)[index];
+                    RTBEngine::Scene::GameObject* gameObjectRef = (*values)[index];
                     const bool hasLiveGameObject = gameObjectRef && IsGameObjectInScene(activeScene, gameObjectRef);
 
                     ImGui::Text("Element %zu", index);
@@ -1462,8 +1462,8 @@ namespace RTBEditor {
                     if (ImGui::BeginDragDropTarget()) {
                         if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(PAYLOAD_GAMEOBJECT)) {
                             const GameObjectPayload* payloadData = static_cast<const GameObjectPayload*>(payload->Data);
-                            RTBEngine::ECS::GameObject* draggedGameObject =
-                                reinterpret_cast<RTBEngine::ECS::GameObject*>(payloadData->gameObjectId);
+                            RTBEngine::Scene::GameObject* draggedGameObject =
+                                reinterpret_cast<RTBEngine::Scene::GameObject*>(payloadData->gameObjectId);
                             if (draggedGameObject) {
                                 (*values)[index] = draggedGameObject;
                                 changed = true;
@@ -1520,7 +1520,7 @@ namespace RTBEditor {
                 for (size_t index = 0; index < values->size(); ++index) {
                     ImGui::PushID(static_cast<int>(index));
 
-                    RTBEngine::ECS::Component* componentRef = (*values)[index];
+                    RTBEngine::Scene::Component* componentRef = (*values)[index];
                     const bool hasLiveComponent = componentRef && IsComponentInScene(activeScene, componentRef);
 
                     ImGui::Text("Element %zu", index);
@@ -1552,8 +1552,8 @@ namespace RTBEditor {
                     if (ImGui::BeginDragDropTarget()) {
                         if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(PAYLOAD_GAMEOBJECT)) {
                             const GameObjectPayload* payloadData = static_cast<const GameObjectPayload*>(payload->Data);
-                            RTBEngine::ECS::GameObject* draggedGameObject =
-                                reinterpret_cast<RTBEngine::ECS::GameObject*>(payloadData->gameObjectId);
+                            RTBEngine::Scene::GameObject* draggedGameObject =
+                                reinterpret_cast<RTBEngine::Scene::GameObject*>(payloadData->gameObjectId);
 
                             if (draggedGameObject) {
                                 bool foundComponent = false;
@@ -1620,7 +1620,7 @@ namespace RTBEditor {
         return changed;
     }
 
-    void InspectorPanel::DrawProperty(RTBEngine::ECS::Component* component, const RTBEngine::Reflection::PropertyInfo& prop) {
+    void InspectorPanel::DrawProperty(RTBEngine::Scene::Component* component, const RTBEngine::Reflection::PropertyInfo& prop) {
         void* data = prop.GetMutableData(component);
         bool changed = false;
         
@@ -1740,7 +1740,7 @@ namespace RTBEditor {
             }
             case RTBEngine::Reflection::PropertyType::TextureRef: {
                 void** texPtr = (void**)data;
-                const bool useModelTexture = dynamic_cast<RTBEngine::ECS::MeshRenderer*>(component) != nullptr;
+                const bool useModelTexture = dynamic_cast<RTBEngine::Scene::MeshRenderer*>(component) != nullptr;
                 auto loadTextureForInspector = [&](const std::string& path) -> RTBEngine::Rendering::Texture* {
                     auto& rm = RTBEngine::Core::ResourceManager::GetInstance();
                     if (path.size() > 8 && path.substr(path.size() - 8) == ".texture") {
@@ -2030,8 +2030,8 @@ namespace RTBEditor {
                 break;
             }
             case RTBEngine::Reflection::PropertyType::GameObjectRef: {
-                RTBEngine::ECS::GameObject** goPtr = (RTBEngine::ECS::GameObject**)data;
-                RTBEngine::ECS::Scene* activeScene = dirtyContext ? GetEditingScene(*dirtyContext) : nullptr;
+                RTBEngine::Scene::GameObject** goPtr = (RTBEngine::Scene::GameObject**)data;
+                RTBEngine::Scene::Scene* activeScene = dirtyContext ? GetEditingScene(*dirtyContext) : nullptr;
                 const bool hasLiveGameObject = *goPtr && IsGameObjectInScene(activeScene, *goPtr);
                 BeginPrefabAwareInspectorRow(inspectorLabel.c_str(), component, prop);
 
@@ -2064,7 +2064,7 @@ namespace RTBEditor {
                 if (ImGui::BeginDragDropTarget()) {
                     if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(PAYLOAD_GAMEOBJECT)) {
                         const GameObjectPayload* payloadData = (const GameObjectPayload*)payload->Data;
-                        RTBEngine::ECS::GameObject* draggedGameObject = reinterpret_cast<RTBEngine::ECS::GameObject*>(payloadData->gameObjectId);
+                        RTBEngine::Scene::GameObject* draggedGameObject = reinterpret_cast<RTBEngine::Scene::GameObject*>(payloadData->gameObjectId);
                         if (draggedGameObject) {
                             *goPtr = draggedGameObject;
                             changed = true;
@@ -2082,8 +2082,8 @@ namespace RTBEditor {
                 break;
             }
             case RTBEngine::Reflection::PropertyType::ComponentRef: {
-                RTBEngine::ECS::Component** compPtr = (RTBEngine::ECS::Component**)data;
-                RTBEngine::ECS::Scene* activeScene = dirtyContext ? GetEditingScene(*dirtyContext) : nullptr;
+                RTBEngine::Scene::Component** compPtr = (RTBEngine::Scene::Component**)data;
+                RTBEngine::Scene::Scene* activeScene = dirtyContext ? GetEditingScene(*dirtyContext) : nullptr;
                 const bool hasLiveComponent = *compPtr && IsComponentInScene(activeScene, *compPtr);
                 const std::string componentRefLabel = FormatComponentRefLabel(prop);
                 BeginInspectorRow(componentRefLabel.c_str());
@@ -2117,7 +2117,7 @@ namespace RTBEditor {
                 if (ImGui::BeginDragDropTarget()) {
                     if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(PAYLOAD_GAMEOBJECT)) {
                         const GameObjectPayload* payloadData = (const GameObjectPayload*)payload->Data;
-                        RTBEngine::ECS::GameObject* draggedGameObject = reinterpret_cast<RTBEngine::ECS::GameObject*>(payloadData->gameObjectId);
+                        RTBEngine::Scene::GameObject* draggedGameObject = reinterpret_cast<RTBEngine::Scene::GameObject*>(payloadData->gameObjectId);
 
                         if (draggedGameObject) {
                             // Try to find component of the specified type from GameObject
@@ -2184,7 +2184,7 @@ namespace RTBEditor {
         ImGui::PopID();
     }
 
-    void InspectorPanel::DrawMeshShaderProperties(RTBEngine::ECS::MeshRenderer* meshRenderer, bool& changed) {
+    void InspectorPanel::DrawMeshShaderProperties(RTBEngine::Scene::MeshRenderer* meshRenderer, bool& changed) {
         if (!meshRenderer) {
             return;
         }
@@ -2357,7 +2357,7 @@ namespace RTBEditor {
         }
     }
 
-    void InspectorPanel::DrawMeshRendererComponent(RTBEngine::ECS::MeshRenderer* meshRenderer) {
+    void InspectorPanel::DrawMeshRendererComponent(RTBEngine::Scene::MeshRenderer* meshRenderer) {
         if (!meshRenderer) {
             return;
         }
@@ -2642,7 +2642,7 @@ namespace RTBEditor {
         }
     }
 
-    void InspectorPanel::DrawParticleSystemComponent(RTBEngine::ECS::ParticleSystem* particleSystem) {
+    void InspectorPanel::DrawParticleSystemComponent(RTBEngine::Scene::ParticleSystem* particleSystem) {
         if (!particleSystem) {
             return;
         }
@@ -2703,7 +2703,7 @@ namespace RTBEditor {
         }
     }
 
-    void InspectorPanel::DrawNavGridComponent(RTBEngine::ECS::NavGridComponent* navGridComponent,
+    void InspectorPanel::DrawNavGridComponent(RTBEngine::Scene::NavGridComponent* navGridComponent,
                                               EditorContext& context)
     {
         if (!navGridComponent) {
@@ -3436,8 +3436,8 @@ namespace RTBEditor {
         ImGui::Text("%s", prefabPath.filename().string().c_str());
         ImGui::Separator();
 
-        RTBEngine::ECS::Prefab* prefab =
-            RTBEngine::ECS::PrefabRegistry::GetInstance().GetByPath(prefabPath.string());
+        RTBEngine::Scene::Prefab* prefab =
+            RTBEngine::Scene::PrefabRegistry::GetInstance().GetByPath(prefabPath.string());
         if (!prefab) {
             ImGui::TextColored(ImVec4(1.0f, 0.45f, 0.45f, 1.0f),
                 "Prefab is not loaded in the registry.");
