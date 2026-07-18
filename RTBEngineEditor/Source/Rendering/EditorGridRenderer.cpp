@@ -1,5 +1,6 @@
 #include "EditorGridRenderer.h"
 #include <RTBEngine/Core/ResourceManager.h>
+#include <RTBEngine/Rendering/RHI/RenderDevice.h>
 #include <vector>
 
 namespace RTBEditor {
@@ -9,9 +10,22 @@ namespace RTBEditor {
         RTBEngine::Math::Vector4 color;
     };
 
+    namespace {
+        using namespace RTBEngine::Rendering::RHI;
+
+        void SetupLineVertexArray(IRenderDevice& device, GpuId vao, GpuId vbo,
+                                  const void* data, std::size_t size, BufferUsage usage)
+        {
+            device.BindVertexArray(vao);
+            device.SetArrayBufferData(vbo, data, size, usage);
+            device.EnableVertexAttribFloat(0, 3, static_cast<int>(sizeof(LineVertex)), 0);
+            device.EnableVertexAttribFloat(
+                1, 4, static_cast<int>(sizeof(LineVertex)), offsetof(LineVertex, color));
+            device.UnbindVertexArray();
+        }
+    }
+
     EditorGridRenderer::EditorGridRenderer() {
-        gridVAO = gridVBO = 0;
-        axesVAO = axesVBO = 0;
         gridVertexCount = 0;
         axesVertexCount = 0;
 
@@ -26,10 +40,19 @@ namespace RTBEditor {
     }
 
     EditorGridRenderer::~EditorGridRenderer() {
-        if (gridVAO) glDeleteVertexArrays(1, &gridVAO);
-        if (gridVBO) glDeleteBuffers(1, &gridVBO);
-        if (axesVAO) glDeleteVertexArrays(1, &axesVAO);
-        if (axesVBO) glDeleteBuffers(1, &axesVBO);
+        auto& device = RTBEngine::Rendering::RHI::RenderDevice::Get();
+        if (gridVAO != RTBEngine::Rendering::RHI::kInvalidGpuId) {
+            device.DestroyVertexArray(gridVAO);
+        }
+        if (gridVBO != RTBEngine::Rendering::RHI::kInvalidGpuId) {
+            device.DestroyBuffer(gridVBO);
+        }
+        if (axesVAO != RTBEngine::Rendering::RHI::kInvalidGpuId) {
+            device.DestroyVertexArray(axesVAO);
+        }
+        if (axesVBO != RTBEngine::Rendering::RHI::kInvalidGpuId) {
+            device.DestroyBuffer(axesVBO);
+        }
     }
 
     void EditorGridRenderer::CreateGridMesh() {
@@ -51,20 +74,17 @@ namespace RTBEditor {
 
         gridVertexCount = (int)vertices.size();
 
-        glGenVertexArrays(1, &gridVAO);
-        glGenBuffers(1, &gridVBO);
+        auto& device = RTBEngine::Rendering::RHI::RenderDevice::Get();
+        gridVAO = device.CreateVertexArray();
+        gridVBO = device.CreateBuffer();
 
-        glBindVertexArray(gridVAO);
-        glBindBuffer(GL_ARRAY_BUFFER, gridVBO);
-        glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(LineVertex), vertices.data(), GL_STATIC_DRAW);
-
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(LineVertex), (void*)0);
-
-        glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(LineVertex), (void*)offsetof(LineVertex, color));
-
-        glBindVertexArray(0);
+        SetupLineVertexArray(
+            device,
+            gridVAO,
+            gridVBO,
+            vertices.data(),
+            vertices.size() * sizeof(LineVertex),
+            RTBEngine::Rendering::RHI::BufferUsage::Static);
     }
 
     void EditorGridRenderer::CreateAxesMesh() {
@@ -85,20 +105,17 @@ namespace RTBEditor {
 
         axesVertexCount = (int)vertices.size();
 
-        glGenVertexArrays(1, &axesVAO);
-        glGenBuffers(1, &axesVBO);
+        auto& device = RTBEngine::Rendering::RHI::RenderDevice::Get();
+        axesVAO = device.CreateVertexArray();
+        axesVBO = device.CreateBuffer();
 
-        glBindVertexArray(axesVAO);
-        glBindBuffer(GL_ARRAY_BUFFER, axesVBO);
-        glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(LineVertex), vertices.data(), GL_STATIC_DRAW);
-
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(LineVertex), (void*)0);
-
-        glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(LineVertex), (void*)offsetof(LineVertex, color));
-
-        glBindVertexArray(0);
+        SetupLineVertexArray(
+            device,
+            axesVAO,
+            axesVBO,
+            vertices.data(),
+            vertices.size() * sizeof(LineVertex),
+            RTBEngine::Rendering::RHI::BufferUsage::Static);
     }
 
     void EditorGridRenderer::Render(RTBEngine::Rendering::Camera* camera) {
@@ -106,12 +123,10 @@ namespace RTBEditor {
 
         lineShader->Bind();
 
-        // Calculate grid offset to follow camera (snapped to grid spacing)
         RTBEngine::Math::Vector3 camPos = camera->GetPosition();
         float gridX = floor(camPos.x / gridSpacing) * gridSpacing;
         float gridZ = floor(camPos.z / gridSpacing) * gridSpacing;
 
-        // Create translation matrix for grid
         RTBEngine::Math::Matrix4 gridTransform = RTBEngine::Math::Matrix4::Translate(
             RTBEngine::Math::Vector3(gridX, 0.0f, gridZ)
         );
@@ -120,28 +135,33 @@ namespace RTBEditor {
         RTBEngine::Math::Matrix4 mvp = viewProjection * gridTransform;
         lineShader->SetMatrix4("uViewProjection", mvp);
 
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glEnable(GL_DEPTH_TEST);
-        glDepthMask(GL_FALSE);
+        auto& device = RTBEngine::Rendering::RHI::RenderDevice::Get();
+        device.SetBlend(true);
+        device.SetBlendFuncSeparate(
+            RTBEngine::Rendering::RHI::BlendFactor::SrcAlpha,
+            RTBEngine::Rendering::RHI::BlendFactor::OneMinusSrcAlpha,
+            RTBEngine::Rendering::RHI::BlendFactor::SrcAlpha,
+            RTBEngine::Rendering::RHI::BlendFactor::OneMinusSrcAlpha);
+        device.SetDepthTest(true);
+        device.SetDepthWrite(false);
 
-        if (gridVAO && gridVertexCount > 0) {
-            glBindVertexArray(gridVAO);
-            glDrawArrays(GL_LINES, 0, gridVertexCount);
+        if (gridVAO != RTBEngine::Rendering::RHI::kInvalidGpuId && gridVertexCount > 0) {
+            device.BindVertexArray(gridVAO);
+            device.DrawArrays(RTBEngine::Rendering::RHI::PrimitiveTopology::Lines, 0, gridVertexCount);
+            device.UnbindVertexArray();
         }
 
-        glDepthMask(GL_TRUE);
+        device.SetDepthWrite(true);
 
-        // Render axes at world origin (no transform)
         lineShader->SetMatrix4("uViewProjection", viewProjection);
 
-        if (axesVAO && axesVertexCount > 0) {
-            glBindVertexArray(axesVAO);
-            glDrawArrays(GL_LINES, 0, axesVertexCount);
+        if (axesVAO != RTBEngine::Rendering::RHI::kInvalidGpuId && axesVertexCount > 0) {
+            device.BindVertexArray(axesVAO);
+            device.DrawArrays(RTBEngine::Rendering::RHI::PrimitiveTopology::Lines, 0, axesVertexCount);
+            device.UnbindVertexArray();
         }
 
-        glBindVertexArray(0);
-        glDisable(GL_BLEND);
+        device.SetBlend(false);
 
         lineShader->Unbind();
     }

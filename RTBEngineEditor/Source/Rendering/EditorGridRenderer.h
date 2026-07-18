@@ -2,7 +2,7 @@
 #include <RTBEngine/Math/Math.h>
 #include <RTBEngine/Rendering/Camera.h>
 #include <RTBEngine/Rendering/Shader.h>
-#include <GL/glew.h>
+#include <RTBEngine/Rendering/RHI/RenderTypes.h>
 
 namespace RTBEditor {
     class EditorGridRenderer {
@@ -20,8 +20,10 @@ namespace RTBEditor {
         void CreateGridMesh();
         void CreateAxesMesh();
 
-        GLuint gridVAO, gridVBO;
-        GLuint axesVAO, axesVBO;
+        RTBEngine::Rendering::RHI::GpuId gridVAO = RTBEngine::Rendering::RHI::kInvalidGpuId;
+        RTBEngine::Rendering::RHI::GpuId gridVBO = RTBEngine::Rendering::RHI::kInvalidGpuId;
+        RTBEngine::Rendering::RHI::GpuId axesVAO = RTBEngine::Rendering::RHI::kInvalidGpuId;
+        RTBEngine::Rendering::RHI::GpuId axesVBO = RTBEngine::Rendering::RHI::kInvalidGpuId;
         int gridVertexCount;
         int axesVertexCount;
 

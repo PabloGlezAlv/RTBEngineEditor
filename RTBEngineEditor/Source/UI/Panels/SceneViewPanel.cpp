@@ -11,7 +11,7 @@
 #include <RTBEngine/Scene/SceneManager.h>
 #include <RTBEngine/Scene/MeshRenderer.h>
 #include <RTBEngine/Rendering/Mesh.h>
-#include <GL/glew.h>
+#include <RTBEngine/Rendering/RHI/RenderDevice.h>
 #include <limits>
 
 namespace RTBEditor {
@@ -94,11 +94,12 @@ namespace RTBEditor {
         }
 
         // Display the framebuffer texture
-        GLuint textureID = framebuffer->GetColorTextureID();
+        unsigned int textureID = framebuffer->GetColorTextureID();
         if (textureID != 0 && viewportWidth > 0 && viewportHeight > 0) {
-            // Flip the texture vertically (OpenGL has origin at bottom-left)
+            const unsigned int nativeTextureID =
+                RTBEngine::Rendering::RHI::RenderDevice::Get().GetNativeTextureIdForImGui(textureID);
             ImGui::Image(
-                (ImTextureID)(intptr_t)textureID,
+                (ImTextureID)(intptr_t)nativeTextureID,
                 ImVec2((float)viewportWidth, (float)viewportHeight),
                 ImVec2(0, 1),  // UV top-left (flipped)
                 ImVec2(1, 0)   // UV bottom-right (flipped)

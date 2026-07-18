@@ -4,7 +4,7 @@
 #include <RTBEngine/Scene/GameObject.h>
 #include <RTBEngine/Math/Vectors/Vector3.h>
 #include <RTBEngine/Math/Vectors/Vector4.h>
-#include <GL/glew.h>
+#include <RTBEngine/Rendering/RHI/RenderTypes.h>
 
 namespace RTBEngine {
     namespace Scene {
@@ -23,27 +23,22 @@ namespace RTBEditor {
         ColliderRenderer(const ColliderRenderer&) = delete;
         ColliderRenderer& operator=(const ColliderRenderer&) = delete;
 
-        // Renders a wireframe collider for the selected object's collider component, if it has one.
         void RenderSelection(RTBEngine::Rendering::Camera* camera,
                              RTBEngine::Scene::GameObject* selectedObject);
         void RenderDebugQueries(RTBEngine::Rendering::Camera* camera);
 
     private:
-        //Box collider rendering
-        GLuint vao = 0;
-        GLuint vbo = 0;
+        RTBEngine::Rendering::RHI::GpuId vao = RTBEngine::Rendering::RHI::kInvalidGpuId;
+        RTBEngine::Rendering::RHI::GpuId vbo = RTBEngine::Rendering::RHI::kInvalidGpuId;
 
-        //Sphere collider rendering
-        GLuint sphereVao = 0;
-        GLuint sphereVbo = 0;
+        RTBEngine::Rendering::RHI::GpuId sphereVao = RTBEngine::Rendering::RHI::kInvalidGpuId;
+        RTBEngine::Rendering::RHI::GpuId sphereVbo = RTBEngine::Rendering::RHI::kInvalidGpuId;
 
-        //Capsule collider rendering
-        GLuint capsuleVao = 0;
-        GLuint capsuleVbo = 0;
+        RTBEngine::Rendering::RHI::GpuId capsuleVao = RTBEngine::Rendering::RHI::kInvalidGpuId;
+        RTBEngine::Rendering::RHI::GpuId capsuleVbo = RTBEngine::Rendering::RHI::kInvalidGpuId;
 
-        //Dynamic lines for debug queries
-        GLuint debugQueryVao = 0;
-        GLuint debugQueryVbo = 0;
+        RTBEngine::Rendering::RHI::GpuId debugQueryVao = RTBEngine::Rendering::RHI::kInvalidGpuId;
+        RTBEngine::Rendering::RHI::GpuId debugQueryVbo = RTBEngine::Rendering::RHI::kInvalidGpuId;
 
         RTBEngine::Rendering::Shader* lineShader = nullptr;
 

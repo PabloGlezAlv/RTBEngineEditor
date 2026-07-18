@@ -1,5 +1,6 @@
 #include "ColliderRenderer.h"
 #include <RTBEngine/Core/ResourceManager.h>
+#include <RTBEngine/Rendering/RHI/RenderDevice.h>
 #include <RTBEngine/Scene/BoxColliderComponent.h>
 #include <RTBEngine/Scene/SphereColliderComponent.h>
 #include <RTBEngine/Scene/CapsuleColliderComponent.h>
@@ -14,7 +15,6 @@
 namespace RTBEditor {
 
     static constexpr int SPHERE_SEGMENTS = 32;
-    // 3 circles (XY, XZ, YZ) × 32 segments × 2 endpoints = 192 vertices
     static constexpr int SPHERE_VERTEX_COUNT = 3 * SPHERE_SEGMENTS * 2;
     static constexpr float DEBUG_QUERY_LIFETIME_SECONDS = 5.0f;
     static constexpr std::size_t MAX_DEBUG_QUERY_RENDER_COUNT = 128;
@@ -24,6 +24,40 @@ namespace RTBEditor {
         RTBEngine::Math::Vector4 color;
     };
 
+    namespace {
+        using namespace RTBEngine::Rendering::RHI;
+
+        void SetupDynamicLineVertexArray(IRenderDevice& device, GpuId vao, GpuId vbo, std::size_t initialSize)
+        {
+            device.BindVertexArray(vao);
+            device.SetArrayBufferData(
+                vbo,
+                nullptr,
+                initialSize,
+                BufferUsage::Dynamic);
+            device.EnableVertexAttribFloat(0, 3, static_cast<int>(sizeof(LineVertex)), 0);
+            device.EnableVertexAttribFloat(
+                1, 4, static_cast<int>(sizeof(LineVertex)), offsetof(LineVertex, color));
+            device.UnbindVertexArray();
+        }
+
+        void BeginLineDraw(IRenderDevice& device)
+        {
+            device.SetBlend(true);
+            device.SetBlendFuncSeparate(
+                BlendFactor::SrcAlpha,
+                BlendFactor::OneMinusSrcAlpha,
+                BlendFactor::SrcAlpha,
+                BlendFactor::OneMinusSrcAlpha);
+            device.SetDepthTest(true);
+        }
+
+        void EndLineDraw(IRenderDevice& device)
+        {
+            device.SetBlend(false);
+        }
+    }
+
     ColliderRenderer::ColliderRenderer() {
         lineShader = RTBEngine::Core::ResourceManager::GetInstance().LoadShader(
             "EditorLineShader",
@@ -31,76 +65,53 @@ namespace RTBEditor {
             "Default/Shaders/EditorLine.frag"
         );
 
-        //Box VAO/VBO — 24 vertices (12 edges × 2 endpoints)
-        glGenVertexArrays(1, &vao);
-        glGenBuffers(1, &vbo);
+        auto& device = RTBEngine::Rendering::RHI::RenderDevice::Get();
 
-        glBindVertexArray(vao);
-        glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        glBufferData(GL_ARRAY_BUFFER, 24 * sizeof(LineVertex), nullptr, GL_DYNAMIC_DRAW);
+        vao = device.CreateVertexArray();
+        vbo = device.CreateBuffer();
+        SetupDynamicLineVertexArray(device, vao, vbo, 24 * sizeof(LineVertex));
 
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(LineVertex), (void*)0);
-        glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(LineVertex), (void*)offsetof(LineVertex, color));
+        sphereVao = device.CreateVertexArray();
+        sphereVbo = device.CreateBuffer();
+        SetupDynamicLineVertexArray(device, sphereVao, sphereVbo, SPHERE_VERTEX_COUNT * sizeof(LineVertex));
 
-        glBindVertexArray(0);
+        capsuleVao = device.CreateVertexArray();
+        capsuleVbo = device.CreateBuffer();
+        SetupDynamicLineVertexArray(device, capsuleVao, capsuleVbo, 0);
 
-        //Sphere VAO/VBO — 192 vertices (3 circles × 32 segments × 2 endpoints)
-        glGenVertexArrays(1, &sphereVao);
-        glGenBuffers(1, &sphereVbo);
-
-        glBindVertexArray(sphereVao);
-        glBindBuffer(GL_ARRAY_BUFFER, sphereVbo);
-        glBufferData(GL_ARRAY_BUFFER, SPHERE_VERTEX_COUNT * sizeof(LineVertex), nullptr, GL_DYNAMIC_DRAW);
-
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(LineVertex), (void*)0);
-        glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(LineVertex), (void*)offsetof(LineVertex, color));
-
-        glBindVertexArray(0);
-
-        glGenVertexArrays(1, &capsuleVao);
-        glGenBuffers(1, &capsuleVbo);
-
-        glBindVertexArray(capsuleVao);
-        glBindBuffer(GL_ARRAY_BUFFER, capsuleVbo);
-        glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
-
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(LineVertex), (void*)0);
-        glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(LineVertex), (void*)offsetof(LineVertex, color));
-
-        glBindVertexArray(0);
-
-        glGenVertexArrays(1, &debugQueryVao);
-        glGenBuffers(1, &debugQueryVbo);
-
-        glBindVertexArray(debugQueryVao);
-        glBindBuffer(GL_ARRAY_BUFFER, debugQueryVbo);
-        glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
-
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(LineVertex), (void*)0);
-        glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(LineVertex), (void*)offsetof(LineVertex, color));
-
-        glBindVertexArray(0);
+        debugQueryVao = device.CreateVertexArray();
+        debugQueryVbo = device.CreateBuffer();
+        SetupDynamicLineVertexArray(device, debugQueryVao, debugQueryVbo, 0);
 
         RTBEngine::Physics::SetPhysicsDebugQueriesEnabled(true);
     }
 
     ColliderRenderer::~ColliderRenderer() {
-        if (vao) glDeleteVertexArrays(1, &vao);
-        if (vbo) glDeleteBuffers(1, &vbo);
-        if (sphereVao) glDeleteVertexArrays(1, &sphereVao);
-        if (sphereVbo) glDeleteBuffers(1, &sphereVbo);
-        if (capsuleVao) glDeleteVertexArrays(1, &capsuleVao);
-        if (capsuleVbo) glDeleteBuffers(1, &capsuleVbo);
-        if (debugQueryVao) glDeleteVertexArrays(1, &debugQueryVao);
-        if (debugQueryVbo) glDeleteBuffers(1, &debugQueryVbo);
+        auto& device = RTBEngine::Rendering::RHI::RenderDevice::Get();
+        if (vao != RTBEngine::Rendering::RHI::kInvalidGpuId) {
+            device.DestroyVertexArray(vao);
+        }
+        if (vbo != RTBEngine::Rendering::RHI::kInvalidGpuId) {
+            device.DestroyBuffer(vbo);
+        }
+        if (sphereVao != RTBEngine::Rendering::RHI::kInvalidGpuId) {
+            device.DestroyVertexArray(sphereVao);
+        }
+        if (sphereVbo != RTBEngine::Rendering::RHI::kInvalidGpuId) {
+            device.DestroyBuffer(sphereVbo);
+        }
+        if (capsuleVao != RTBEngine::Rendering::RHI::kInvalidGpuId) {
+            device.DestroyVertexArray(capsuleVao);
+        }
+        if (capsuleVbo != RTBEngine::Rendering::RHI::kInvalidGpuId) {
+            device.DestroyBuffer(capsuleVbo);
+        }
+        if (debugQueryVao != RTBEngine::Rendering::RHI::kInvalidGpuId) {
+            device.DestroyVertexArray(debugQueryVao);
+        }
+        if (debugQueryVbo != RTBEngine::Rendering::RHI::kInvalidGpuId) {
+            device.DestroyBuffer(debugQueryVbo);
+        }
     }
 
     void ColliderRenderer::RenderDebugQueries(RTBEngine::Rendering::Camera* camera) {
@@ -178,25 +189,26 @@ namespace RTBEditor {
             return;
         }
 
-        glBindBuffer(GL_ARRAY_BUFFER, debugQueryVbo);
-        glBufferData(
-            GL_ARRAY_BUFFER,
-            static_cast<GLsizeiptr>(lineVertices.size() * sizeof(LineVertex)),
+        auto& device = RTBEngine::Rendering::RHI::RenderDevice::Get();
+        device.SetArrayBufferData(
+            debugQueryVbo,
             lineVertices.data(),
-            GL_DYNAMIC_DRAW);
+            lineVertices.size() * sizeof(LineVertex),
+            RTBEngine::Rendering::RHI::BufferUsage::Dynamic);
 
         lineShader->Bind();
         lineShader->SetMatrix4("uViewProjection", camera->GetViewProjectionMatrix());
 
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glEnable(GL_DEPTH_TEST);
+        BeginLineDraw(device);
 
-        glBindVertexArray(debugQueryVao);
-        glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(lineVertices.size()));
-        glBindVertexArray(0);
+        device.BindVertexArray(debugQueryVao);
+        device.DrawArrays(
+            RTBEngine::Rendering::RHI::PrimitiveTopology::Lines,
+            0,
+            static_cast<int>(lineVertices.size()));
+        device.UnbindVertexArray();
 
-        glDisable(GL_BLEND);
+        EndLineDraw(device);
         lineShader->Unbind();
     }
 
@@ -204,7 +216,6 @@ namespace RTBEditor {
                                            RTBEngine::Scene::GameObject* selectedObject) {
         if (!camera || !selectedObject || !lineShader) return;
 
-        //Box collider branch
         RTBEngine::Scene::BoxColliderComponent* boxCollider =
             selectedObject->GetComponent<RTBEngine::Scene::BoxColliderComponent>();
         if (boxCollider) {
@@ -247,25 +258,26 @@ namespace RTBEditor {
                 vertices[i * 2 + 1] = { corners[edges[i][1]], color };
             }
 
-            glBindBuffer(GL_ARRAY_BUFFER, vbo);
-            glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
+            auto& device = RTBEngine::Rendering::RHI::RenderDevice::Get();
+            device.SetArrayBufferData(
+                vbo,
+                vertices,
+                sizeof(vertices),
+                RTBEngine::Rendering::RHI::BufferUsage::Dynamic);
 
             lineShader->Bind();
             lineShader->SetMatrix4("uViewProjection", camera->GetViewProjectionMatrix());
 
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            glEnable(GL_DEPTH_TEST);
+            BeginLineDraw(device);
 
-            glBindVertexArray(vao);
-            glDrawArrays(GL_LINES, 0, 24);
-            glBindVertexArray(0);
+            device.BindVertexArray(vao);
+            device.DrawArrays(RTBEngine::Rendering::RHI::PrimitiveTopology::Lines, 0, 24);
+            device.UnbindVertexArray();
 
-            glDisable(GL_BLEND);
+            EndLineDraw(device);
             lineShader->Unbind();
         }
 
-        //Sphere collider branch
         RTBEngine::Scene::SphereColliderComponent* sphereCollider =
             selectedObject->GetComponent<RTBEngine::Scene::SphereColliderComponent>();
         if (sphereCollider) {
@@ -298,7 +310,6 @@ namespace RTBEditor {
         LineVertex vertices[SPHERE_VERTEX_COUNT];
         int idx = 0;
 
-        // Generate 3 circles: XY plane, XZ plane, YZ plane
         for (int seg = 0; seg < SPHERE_SEGMENTS; seg++) {
             float a0 = (float)seg       / SPHERE_SEGMENTS * 2.0f * 3.14159265f;
             float a1 = (float)(seg + 1) / SPHERE_SEGMENTS * 2.0f * 3.14159265f;
@@ -306,34 +317,33 @@ namespace RTBEditor {
             float c0 = std::cos(a0), s0 = std::sin(a0);
             float c1 = std::cos(a1), s1 = std::sin(a1);
 
-            //XY circle
             vertices[idx++] = { RTBEngine::Math::Vector3(center.x + radius * c0, center.y + radius * s0, center.z), color };
             vertices[idx++] = { RTBEngine::Math::Vector3(center.x + radius * c1, center.y + radius * s1, center.z), color };
 
-            //XZ circle
             vertices[idx++] = { RTBEngine::Math::Vector3(center.x + radius * c0, center.y, center.z + radius * s0), color };
             vertices[idx++] = { RTBEngine::Math::Vector3(center.x + radius * c1, center.y, center.z + radius * s1), color };
 
-            //YZ circle
             vertices[idx++] = { RTBEngine::Math::Vector3(center.x, center.y + radius * c0, center.z + radius * s0), color };
             vertices[idx++] = { RTBEngine::Math::Vector3(center.x, center.y + radius * c1, center.z + radius * s1), color };
         }
 
-        glBindBuffer(GL_ARRAY_BUFFER, sphereVbo);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
+        auto& device = RTBEngine::Rendering::RHI::RenderDevice::Get();
+        device.SetArrayBufferData(
+            sphereVbo,
+            vertices,
+            sizeof(vertices),
+            RTBEngine::Rendering::RHI::BufferUsage::Dynamic);
 
         lineShader->Bind();
         lineShader->SetMatrix4("uViewProjection", camera->GetViewProjectionMatrix());
 
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glEnable(GL_DEPTH_TEST);
+        BeginLineDraw(device);
 
-        glBindVertexArray(sphereVao);
-        glDrawArrays(GL_LINES, 0, SPHERE_VERTEX_COUNT);
-        glBindVertexArray(0);
+        device.BindVertexArray(sphereVao);
+        device.DrawArrays(RTBEngine::Rendering::RHI::PrimitiveTopology::Lines, 0, SPHERE_VERTEX_COUNT);
+        device.UnbindVertexArray();
 
-        glDisable(GL_BLEND);
+        EndLineDraw(device);
         lineShader->Unbind();
     }
 
@@ -413,21 +423,26 @@ namespace RTBEditor {
                 bottomCenter + RTBEngine::Math::Vector3(0.0f, r * std::sin(a1 + 3.14159265f), r * std::cos(a1 + 3.14159265f)));
         }
 
-        glBindBuffer(GL_ARRAY_BUFFER, capsuleVbo);
-        glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(vertices.size() * sizeof(LineVertex)), vertices.data(), GL_DYNAMIC_DRAW);
+        auto& device = RTBEngine::Rendering::RHI::RenderDevice::Get();
+        device.SetArrayBufferData(
+            capsuleVbo,
+            vertices.data(),
+            vertices.size() * sizeof(LineVertex),
+            RTBEngine::Rendering::RHI::BufferUsage::Dynamic);
 
         lineShader->Bind();
         lineShader->SetMatrix4("uViewProjection", camera->GetViewProjectionMatrix());
 
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glEnable(GL_DEPTH_TEST);
+        BeginLineDraw(device);
 
-        glBindVertexArray(capsuleVao);
-        glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(vertices.size()));
-        glBindVertexArray(0);
+        device.BindVertexArray(capsuleVao);
+        device.DrawArrays(
+            RTBEngine::Rendering::RHI::PrimitiveTopology::Lines,
+            0,
+            static_cast<int>(vertices.size()));
+        device.UnbindVertexArray();
 
-        glDisable(GL_BLEND);
+        EndLineDraw(device);
         lineShader->Unbind();
     }
 

@@ -2,12 +2,13 @@
 #include <RTBEngine/Scene/NavGridComponent.h>
 #include "EditorOnlineSettings.h"
 #include <imgui.h>
-#include <GL/glew.h>
 #include <filesystem>
 #include <vector>
 #include <RTBEngine/Scene/SceneManager.h>
 #include <RTBEngine/Scene/PrefabRegistry.h>
 #include <RTBEngine/Rendering/FrameBuffer.h>
+#include <RTBEngine/Rendering/RHI/RenderDevice.h>
+#include <RTBEngine/Rendering/RHI/RenderTypes.h>
 #include <RTBEngine/Scripting/SceneSaver.h>
 #include <RTBEngine/Scripting/ScriptManager.h>
 #include <RTBEngine/Core/Window.h>
@@ -726,8 +727,9 @@ namespace RTBEditor {
         }
 
         // Clear the main window
-        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        auto& device = RTBEngine::Rendering::RHI::RenderDevice::Get();
+        device.SetClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+        device.Clear(RTBEngine::Rendering::RHI::ClearMask::ColorDepth);
 
         // Render editor UI
         if (uiLayer) {
@@ -756,6 +758,8 @@ namespace RTBEditor {
 
         RTBEngine::UI::CanvasSystem::GetInstance().Update(sceneViewScene);
 
+        auto& device = RTBEngine::Rendering::RHI::RenderDevice::Get();
+
         // 1. Render Scene View (Editor Camera)
         SceneViewPanel* sceneView = uiLayer->GetSceneViewPanel();
         if (sceneView) {
@@ -766,10 +770,10 @@ namespace RTBEditor {
 
             if (framebuffer && editorCamera && vpWidth > 0 && vpHeight > 0) {
                 framebuffer->Bind();
-                glViewport(0, 0, vpWidth, vpHeight);
+                device.SetViewport(0, 0, vpWidth, vpHeight);
                 engineApp->RenderShadowPass(sceneViewScene);
                 framebuffer->Bind();
-                glViewport(0, 0, vpWidth, vpHeight);
+                device.SetViewport(0, 0, vpWidth, vpHeight);
                 engineApp->RenderGeometryPass(sceneViewScene, editorCamera);
 
                 // Render editor grid and axes
@@ -812,7 +816,7 @@ namespace RTBEditor {
                 RTBEngine::Rendering::Camera* mainCamera = mainCamComp->GetCamera();
                 if (mainCamera) {
                     framebuffer->Bind();
-                    glViewport(0, 0, vpWidth, vpHeight);
+                    device.SetViewport(0, 0, vpWidth, vpHeight);
                     // For now, reuse shadow maps from first pass
                     engineApp->RenderGeometryPass(activeScene, mainCamera);
 
@@ -825,7 +829,7 @@ namespace RTBEditor {
         }
 
         // Restore main viewport
-        glViewport(0, 0, engineApp->GetWindow()->GetWidth(), engineApp->GetWindow()->GetHeight());
+        device.SetViewport(0, 0, engineApp->GetWindow()->GetWidth(), engineApp->GetWindow()->GetHeight());
     }
 
     void EditorApplication::OnCompileScripts()

@@ -1,6 +1,7 @@
 #include "NavGridDebugRenderer.h"
 
 #include <RTBEngine/Core/ResourceManager.h>
+#include <RTBEngine/Rendering/RHI/RenderDevice.h>
 #include <RTBEngine/Scene/NavAgentComponent.h>
 #include <RTBEngine/Scene/NavGridComponent.h>
 #include <RTBEngine/Scene/GameObject.h>
@@ -195,29 +196,26 @@ namespace RTBEditor {
             "Default/Shaders/EditorLine.vert",
             "Default/Shaders/EditorLine.frag");
 
-        glGenVertexArrays(1, &vao);
-        glGenBuffers(1, &vbo);
+        auto& device = RTBEngine::Rendering::RHI::RenderDevice::Get();
+        vao = device.CreateVertexArray();
+        vbo = device.CreateBuffer();
 
-        glBindVertexArray(vao);
-        glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
-
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(LineVertex), reinterpret_cast<void*>(0));
-        glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(LineVertex),
-                              reinterpret_cast<void*>(offsetof(LineVertex, color)));
-
-        glBindVertexArray(0);
+        device.BindVertexArray(vao);
+        device.SetArrayBufferData(vbo, nullptr, 0, RTBEngine::Rendering::RHI::BufferUsage::Dynamic);
+        device.EnableVertexAttribFloat(0, 3, static_cast<int>(sizeof(LineVertex)), 0);
+        device.EnableVertexAttribFloat(
+            1, 4, static_cast<int>(sizeof(LineVertex)), offsetof(LineVertex, color));
+        device.UnbindVertexArray();
     }
 
     NavGridDebugRenderer::~NavGridDebugRenderer()
     {
-        if (vao) {
-            glDeleteVertexArrays(1, &vao);
+        auto& device = RTBEngine::Rendering::RHI::RenderDevice::Get();
+        if (vao != RTBEngine::Rendering::RHI::kInvalidGpuId) {
+            device.DestroyVertexArray(vao);
         }
-        if (vbo) {
-            glDeleteBuffers(1, &vbo);
+        if (vbo != RTBEngine::Rendering::RHI::kInvalidGpuId) {
+            device.DestroyBuffer(vbo);
         }
     }
 
@@ -286,21 +284,27 @@ namespace RTBEditor {
             return;
         }
 
+        auto& device = RTBEngine::Rendering::RHI::RenderDevice::Get();
+
         lineShader->Bind();
         lineShader->SetMatrix4("uViewProjection", camera->GetViewProjectionMatrix());
 
-        glBindVertexArray(vao);
-        glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        glBufferData(GL_ARRAY_BUFFER,
-                     static_cast<GLsizeiptr>(vertices.size() * sizeof(LineVertex)),
-                     vertices.data(),
-                     GL_DYNAMIC_DRAW);
+        device.SetArrayBufferData(
+            vbo,
+            vertices.data(),
+            vertices.size() * sizeof(LineVertex),
+            RTBEngine::Rendering::RHI::BufferUsage::Dynamic);
 
-        glDisable(GL_DEPTH_TEST);
-        glLineWidth(2.0f);
-        glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(vertices.size()));
-        glEnable(GL_DEPTH_TEST);
-        glBindVertexArray(0);
+        device.SetDepthTest(false);
+
+        device.BindVertexArray(vao);
+        device.DrawArrays(
+            RTBEngine::Rendering::RHI::PrimitiveTopology::Lines,
+            0,
+            static_cast<int>(vertices.size()));
+        device.UnbindVertexArray();
+
+        device.SetDepthTest(true);
         lineShader->Unbind();
     }
 
