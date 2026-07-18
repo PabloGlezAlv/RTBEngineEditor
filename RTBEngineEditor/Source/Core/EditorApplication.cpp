@@ -909,6 +909,10 @@ namespace RTBEditor {
             compileThread.join();
         }
 
+        // Destroy editor GPU resources (SceneView FBO, debug renderers) while the
+        // RenderDevice is still alive. Application::Shutdown tears the device down.
+        uiLayer.reset();
+
         if (engineApp) {
             engineApp->Shutdown();
             engineApp.reset();

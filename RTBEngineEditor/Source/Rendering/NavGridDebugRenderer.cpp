@@ -210,12 +210,20 @@ namespace RTBEditor {
 
     NavGridDebugRenderer::~NavGridDebugRenderer()
     {
+        if (!RTBEngine::Rendering::RHI::RenderDevice::HasDevice()) {
+            vao = RTBEngine::Rendering::RHI::kInvalidGpuId;
+            vbo = RTBEngine::Rendering::RHI::kInvalidGpuId;
+            return;
+        }
+
         auto& device = RTBEngine::Rendering::RHI::RenderDevice::Get();
         if (vao != RTBEngine::Rendering::RHI::kInvalidGpuId) {
             device.DestroyVertexArray(vao);
+            vao = RTBEngine::Rendering::RHI::kInvalidGpuId;
         }
         if (vbo != RTBEngine::Rendering::RHI::kInvalidGpuId) {
             device.DestroyBuffer(vbo);
+            vbo = RTBEngine::Rendering::RHI::kInvalidGpuId;
         }
     }
 

@@ -40,18 +40,27 @@ namespace RTBEditor {
     }
 
     EditorGridRenderer::~EditorGridRenderer() {
+        if (!RTBEngine::Rendering::RHI::RenderDevice::HasDevice()) {
+            gridVAO = gridVBO = axesVAO = axesVBO = RTBEngine::Rendering::RHI::kInvalidGpuId;
+            return;
+        }
+
         auto& device = RTBEngine::Rendering::RHI::RenderDevice::Get();
         if (gridVAO != RTBEngine::Rendering::RHI::kInvalidGpuId) {
             device.DestroyVertexArray(gridVAO);
+            gridVAO = RTBEngine::Rendering::RHI::kInvalidGpuId;
         }
         if (gridVBO != RTBEngine::Rendering::RHI::kInvalidGpuId) {
             device.DestroyBuffer(gridVBO);
+            gridVBO = RTBEngine::Rendering::RHI::kInvalidGpuId;
         }
         if (axesVAO != RTBEngine::Rendering::RHI::kInvalidGpuId) {
             device.DestroyVertexArray(axesVAO);
+            axesVAO = RTBEngine::Rendering::RHI::kInvalidGpuId;
         }
         if (axesVBO != RTBEngine::Rendering::RHI::kInvalidGpuId) {
             device.DestroyBuffer(axesVBO);
+            axesVBO = RTBEngine::Rendering::RHI::kInvalidGpuId;
         }
     }
 

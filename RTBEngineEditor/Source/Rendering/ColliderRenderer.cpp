@@ -87,30 +87,44 @@ namespace RTBEditor {
     }
 
     ColliderRenderer::~ColliderRenderer() {
+        if (!RTBEngine::Rendering::RHI::RenderDevice::HasDevice()) {
+            vao = vbo = sphereVao = sphereVbo = capsuleVao = capsuleVbo =
+                debugQueryVao = debugQueryVbo = RTBEngine::Rendering::RHI::kInvalidGpuId;
+            return;
+        }
+
         auto& device = RTBEngine::Rendering::RHI::RenderDevice::Get();
         if (vao != RTBEngine::Rendering::RHI::kInvalidGpuId) {
             device.DestroyVertexArray(vao);
+            vao = RTBEngine::Rendering::RHI::kInvalidGpuId;
         }
         if (vbo != RTBEngine::Rendering::RHI::kInvalidGpuId) {
             device.DestroyBuffer(vbo);
+            vbo = RTBEngine::Rendering::RHI::kInvalidGpuId;
         }
         if (sphereVao != RTBEngine::Rendering::RHI::kInvalidGpuId) {
             device.DestroyVertexArray(sphereVao);
+            sphereVao = RTBEngine::Rendering::RHI::kInvalidGpuId;
         }
         if (sphereVbo != RTBEngine::Rendering::RHI::kInvalidGpuId) {
             device.DestroyBuffer(sphereVbo);
+            sphereVbo = RTBEngine::Rendering::RHI::kInvalidGpuId;
         }
         if (capsuleVao != RTBEngine::Rendering::RHI::kInvalidGpuId) {
             device.DestroyVertexArray(capsuleVao);
+            capsuleVao = RTBEngine::Rendering::RHI::kInvalidGpuId;
         }
         if (capsuleVbo != RTBEngine::Rendering::RHI::kInvalidGpuId) {
             device.DestroyBuffer(capsuleVbo);
+            capsuleVbo = RTBEngine::Rendering::RHI::kInvalidGpuId;
         }
         if (debugQueryVao != RTBEngine::Rendering::RHI::kInvalidGpuId) {
             device.DestroyVertexArray(debugQueryVao);
+            debugQueryVao = RTBEngine::Rendering::RHI::kInvalidGpuId;
         }
         if (debugQueryVbo != RTBEngine::Rendering::RHI::kInvalidGpuId) {
             device.DestroyBuffer(debugQueryVbo);
+            debugQueryVbo = RTBEngine::Rendering::RHI::kInvalidGpuId;
         }
     }
 
