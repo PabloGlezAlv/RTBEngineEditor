@@ -183,6 +183,8 @@ namespace RTBEditor {
         windows.physicsLayers = ParseBool(ExtractJsonStringValue(json, "physicsLayers"), windows.physicsLayers);
         windows.navigationDebug =
             ParseBool(ExtractJsonStringValue(json, "navigationDebug"), windows.navigationDebug);
+        windows.projectSettings =
+            ParseBool(ExtractJsonStringValue(json, "projectSettings"), windows.projectSettings);
 
         const std::string navDebugJson = ExtractJsonObject(json, "navDebug");
         if (navDebugJson.empty()) {
@@ -220,6 +222,7 @@ namespace RTBEditor {
         WriteBool(file, "online", windows.online, true);
         WriteBool(file, "physicsLayers", windows.physicsLayers, true);
         WriteBool(file, "navigationDebug", windows.navigationDebug, true);
+        WriteBool(file, "projectSettings", windows.projectSettings, true);
         file << "  \"navDebug\": {\n";
         WriteBool(file, "enabled", navDebug.enabled, true);
         WriteBool(file, "showBounds", navDebug.showBounds, true);

@@ -50,6 +50,7 @@ namespace RTBEditor {
         bool online = false;
         bool physicsLayers = false;
         bool navigationDebug = false;
+        bool projectSettings = false;
     };
 
     struct EditorContext {

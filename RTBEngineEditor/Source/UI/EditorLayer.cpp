@@ -9,14 +9,13 @@
 #include "Panels/SceneViewPanel.h"
 #include "Panels/OnlinePanel.h"
 #include "Panels/PhysicsLayersPanel.h"
+#include "Panels/ProjectSettingsPanel.h"
 #include "Panels/NavigationDebugPanel.h"
 #include "EditorWindowPrefs.h"
 #include "MainMenuBar.h"
 #include <imgui_internal.h>
 #include <utility>
 #include <algorithm>
-#include <backends/imgui_impl_sdl2.h>
-#include <backends/imgui_impl_opengl3.h>
 #include <RTBEngine/Scene/SceneManager.h>
 #include <RTBEngine/UI/CanvasSystem.h>
 #include <RTBEngine/Scene/Scene.h>
@@ -47,6 +46,7 @@ namespace RTBEditor {
         AddPanel(std::make_unique<ConsolePanel>());
         AddPanel(std::make_unique<OnlinePanel>());
         AddPanel(std::make_unique<PhysicsLayersPanel>());
+        AddPanel(std::make_unique<ProjectSettingsPanel>());
         AddPanel(std::make_unique<NavigationDebugPanel>());
         AddPanel(std::make_unique<StatsOverlayPanel>());
 
@@ -78,12 +78,15 @@ namespace RTBEditor {
         }
         ImGuiIO& io = ImGui::GetIO();
         io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-        io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+        // Multi-viewport needs secondary swapchains; keep disabled on Vulkan for now.
+        if (RTBEngine::Rendering::RHI::RenderDevice::Get().GetAPI()
+            == RTBEngine::Rendering::RHI::GraphicsAPI::OpenGL) {
+            io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+        }
     }
 
     void EditorLayer::Begin() {
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplSDL2_NewFrame();
+        RTBEngine::Rendering::RHI::RenderDevice::Get().BeginImGuiFrame();
         ImGui::NewFrame();
     }
 
@@ -101,7 +104,8 @@ namespace RTBEditor {
         static OptionalWindowState lastPersistedWindows = context.optionalWindows;
         if (context.optionalWindows.online != lastPersistedWindows.online ||
             context.optionalWindows.physicsLayers != lastPersistedWindows.physicsLayers ||
-            context.optionalWindows.navigationDebug != lastPersistedWindows.navigationDebug) {
+            context.optionalWindows.navigationDebug != lastPersistedWindows.navigationDebug ||
+            context.optionalWindows.projectSettings != lastPersistedWindows.projectSettings) {
             PersistWindowPrefs();
             lastPersistedWindows = context.optionalWindows;
         }
@@ -119,13 +123,16 @@ namespace RTBEditor {
 
     void EditorLayer::End() {
         ImGui::Render();
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        auto& device = RTBEngine::Rendering::RHI::RenderDevice::Get();
+        device.QueueImGuiDrawData(ImGui::GetDrawData());
 
         ImGuiIO& io = ImGui::GetIO();
-        if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+        // OpenGL multi-viewport only; Vulkan secondary viewports are not configured.
+        if ((io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+            && device.GetAPI() == RTBEngine::Rendering::RHI::GraphicsAPI::OpenGL) {
             ImGui::UpdatePlatformWindows();
             ImGui::RenderPlatformWindowsDefault();
-            RTBEngine::Rendering::RHI::RenderDevice::Get().MakeCurrent();
+            device.MakeCurrent();
         }
     }
 

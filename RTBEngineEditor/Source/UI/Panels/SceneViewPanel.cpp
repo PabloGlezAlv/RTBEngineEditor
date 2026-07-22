@@ -12,6 +12,7 @@
 #include <RTBEngine/Scene/MeshRenderer.h>
 #include <RTBEngine/Rendering/Mesh.h>
 #include <RTBEngine/Rendering/RHI/RenderDevice.h>
+#include <cstdint>
 #include <limits>
 
 namespace RTBEditor {
@@ -96,10 +97,10 @@ namespace RTBEditor {
         // Display the framebuffer texture
         unsigned int textureID = framebuffer->GetColorTextureID();
         if (textureID != 0 && viewportWidth > 0 && viewportHeight > 0) {
-            const unsigned int nativeTextureID =
+            const std::uintptr_t nativeTextureID =
                 RTBEngine::Rendering::RHI::RenderDevice::Get().GetNativeTextureIdForImGui(textureID);
             ImGui::Image(
-                (ImTextureID)(intptr_t)nativeTextureID,
+                (ImTextureID)nativeTextureID,
                 ImVec2((float)viewportWidth, (float)viewportHeight),
                 ImVec2(0, 1),  // UV top-left (flipped)
                 ImVec2(1, 0)   // UV bottom-right (flipped)

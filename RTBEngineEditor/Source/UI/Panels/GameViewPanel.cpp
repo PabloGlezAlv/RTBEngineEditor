@@ -7,6 +7,7 @@
 #include <RTBEngine/UI/Canvas.h>
 #include <RTBEngine/Rendering/RHI/RenderDevice.h>
 #include <algorithm>
+#include <cstdint>
 
 namespace RTBEditor {
 
@@ -114,11 +115,11 @@ namespace RTBEditor {
 
         unsigned int textureID = framebuffer ? framebuffer->GetColorTextureID() : 0;
         if (textureID != 0 && viewportWidth > 0 && viewportHeight > 0) {
-            const unsigned int nativeTextureID =
+            const std::uintptr_t nativeTextureID =
                 RTBEngine::Rendering::RHI::RenderDevice::Get().GetNativeTextureIdForImGui(textureID);
             ImGui::SetCursorScreenPos(displayOrigin);
             ImGui::Image(
-                (void*)(intptr_t)nativeTextureID,
+                (ImTextureID)nativeTextureID,
                 ImVec2((float)viewportWidth, (float)viewportHeight),
                 ImVec2(0, 1),
                 ImVec2(1, 0)

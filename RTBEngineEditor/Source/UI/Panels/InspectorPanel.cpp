@@ -27,6 +27,7 @@
 #include <RTBEngine/Core/ResourceManager.h>
 #include <RTBEngine/Rendering/ShaderAsset.h>
 #include <RTBEngine/Rendering/ShaderProperties.h>
+#include <RTBEngine/Rendering/RHI/RenderDevice.h>
 #include <RTBEngine/Data/DataAsset.h>
 #include <RTBEngine/Scripting/DataAssetSaver.h>
 #include <RTBEngine/UI/UIElement.h>
@@ -3266,7 +3267,9 @@ namespace RTBEditor {
                 ImGui::Text("Preview:");
                 float previewSize = ImGui::GetContentRegionAvail().x;
                 float aspect = (float)tex->GetWidth() / (float)tex->GetHeight();
-                ImGui::Image((ImTextureID)(intptr_t)tex->GetID(),
+                ImGui::Image(
+                    (ImTextureID)RTBEngine::Rendering::RHI::RenderDevice::Get()
+                        .GetNativeTextureIdForImGui(tex->GetID()),
                     ImVec2(previewSize, previewSize / aspect),
                     ImVec2(0, 1), ImVec2(1, 0));
             }

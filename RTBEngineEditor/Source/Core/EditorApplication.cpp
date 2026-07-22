@@ -49,35 +49,7 @@ namespace {
     }
 
     fs::path ResolveProjectFilePath(const fs::path& projectFileName) {
-        const fs::path currentDir = fs::current_path();
-
-        std::vector<fs::path> searchDirs;
-        for (fs::path dir = currentDir;; dir = dir.parent_path()) {
-            searchDirs.push_back(dir);
-
-            const fs::path parent = dir.parent_path();
-            if (parent == dir) {
-                break;
-            }
-        }
-
-        for (const fs::path& dir : searchDirs) {
-            const fs::path candidate = (dir / projectFileName).lexically_normal();
-            if (!fs::exists(candidate)) {
-                continue;
-            }
-
-            if (fs::exists(dir / "RTBEngineEditor.vcxproj") || fs::exists(dir / "Source")) {
-                return candidate;
-            }
-        }
-
-        const fs::path localCandidate = (currentDir / projectFileName).lexically_normal();
-        if (fs::exists(localCandidate)) {
-            return localCandidate;
-        }
-
-        return fs::absolute(projectFileName).lexically_normal();
+        return RTBEditor::Project::ResolveDefaultProjectFile(projectFileName);
     }
 
     void TickAnimatorPreview(RTBEngine::Scene::Scene* scene, float deltaTime)
@@ -130,7 +102,7 @@ namespace RTBEditor {
         project = std::make_unique<Project>();
         auto& resources = RTBEngine::Core::ResourceManager::GetInstance();
         resources.SetAssetRootPath({});
-        const fs::path projectFilePath = ResolveProjectFilePath("MyProject.rtbproj");
+        const fs::path projectFilePath = RTBEditor::Project::ResolveDefaultProjectFile("MyProject.rtbproj");
         RTB_INFO("EditorApplication: Loading project from " + projectFilePath.string());
 
         if (project->Load(projectFilePath)) {
@@ -156,7 +128,6 @@ namespace RTBEditor {
             RTBEngine::Scene::SceneManager::GetInstance().LoadScene(sceneToLoad);
         }
 
-        // Initialize UI Layer
         uiLayer = std::make_unique<EditorLayer>();
         uiLayer->Initialize(engineApp->GetImGuiContext());
 
@@ -274,6 +245,10 @@ namespace RTBEditor {
         }
 
         // Sync dirty flag from SceneManager to menu bar
+        if (!uiLayer) {
+            return;
+        }
+
         uiLayer->GetMenuBar()->SetSceneDirty(
             RTBEngine::Scene::SceneManager::GetInstance().IsSceneDirty()
         );

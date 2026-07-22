@@ -58,6 +58,15 @@ namespace RTBEditor {
                     if (duplicateCallback) duplicateCallback();
                 }
 
+                ImGui::Separator();
+
+                if (ImGui::MenuItem("Project Settings...")) {
+                    context.optionalWindows.projectSettings = true;
+                    if (persistWindowPrefsCallback) {
+                        persistWindowPrefsCallback();
+                    }
+                }
+
                 ImGui::EndMenu();
             }
 
@@ -67,10 +76,12 @@ namespace RTBEditor {
                 ImGui::MenuItem("Online", nullptr, &context.optionalWindows.online);
                 ImGui::MenuItem("Physics Layers", nullptr, &context.optionalWindows.physicsLayers);
                 ImGui::MenuItem("Navigation Debug", nullptr, &context.optionalWindows.navigationDebug);
+                ImGui::MenuItem("Project Settings", nullptr, &context.optionalWindows.projectSettings);
 
                 if (context.optionalWindows.online != previousWindows.online ||
                     context.optionalWindows.physicsLayers != previousWindows.physicsLayers ||
-                    context.optionalWindows.navigationDebug != previousWindows.navigationDebug) {
+                    context.optionalWindows.navigationDebug != previousWindows.navigationDebug ||
+                    context.optionalWindows.projectSettings != previousWindows.projectSettings) {
                     if (persistWindowPrefsCallback) {
                         persistWindowPrefsCallback();
                     }

@@ -10,6 +10,7 @@
 #include <RTBEngine/Scripting/SceneSaver.h>
 #include <RTBEngine/Rendering/ModelLoader.h>
 #include <RTBEngine/Rendering/ShaderAsset.h>
+#include <RTBEngine/Rendering/RHI/RenderDevice.h>
 #include "../../Project/Project.h"
 #include "../DragDropPayloads.h"
 
@@ -294,7 +295,9 @@ namespace RTBEditor {
                 ImGui::PushID(filenameString.c_str());
                 
                 RTBEngine::Rendering::Texture* icon = GetIconForFile(path);
-                ImTextureID textureID = (ImTextureID)(intptr_t)(icon ? icon->GetID() : 0);
+                ImTextureID textureID = (ImTextureID)(icon
+                    ? RTBEngine::Rendering::RHI::RenderDevice::Get().GetNativeTextureIdForImGui(icon->GetID())
+                    : 0);
 
                 bool isSelected = (selectedPath == path);
                 ImVec4 tint = isSelected ? ImVec4(0.3f, 0.5f, 0.9f, 0.4f) : ImVec4(0, 0, 0, 0);
@@ -549,7 +552,8 @@ namespace RTBEditor {
                         ImGui::PushID(subId.c_str());
 
                         // Slightly tinted background to visually group them under the FBX
-                        ImTextureID subTexID = (ImTextureID)(intptr_t)entry.texture->GetID();
+                        ImTextureID subTexID = (ImTextureID)RTBEngine::Rendering::RHI::RenderDevice::Get()
+                            .GetNativeTextureIdForImGui(entry.texture->GetID());
                         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.15f, 0.15f, 0.25f, 1.0f));
                         ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.25f, 0.35f, 0.6f, 1.0f));
                         ImGui::ImageButton(subId.c_str(), subTexID,
