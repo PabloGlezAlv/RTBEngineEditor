@@ -1,0 +1,8 @@
+<Project>
+  <PropertyGroup>
+    <RTBAssimpToolset Condition="'$(RTBAssimpToolset)' == ''">vc145</RTBAssimpToolset>
+    <RTBAssimpLib>assimp-$(RTBAssimpToolset)-mt.lib</RTBAssimpLib>
+    <RTBAssimpLibDebug>assimp-$(RTBAssimpToolset)-mtd.lib</RTBAssimpLibDebug>
+    <RTBAssimpDll>assimp-$(RTBAssimpToolset)-mt.dll</RTBAssimpDll>
+  </PropertyGroup>
+</Project>

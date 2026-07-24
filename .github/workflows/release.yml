@@ -1,0 +1,54 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - '*.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  release-editor:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout editor
+        uses: actions/checkout@v4
+        with:
+          path: RTBEngineEditor
+          lfs: true
+
+      - name: Checkout engine (same tag)
+        uses: actions/checkout@v4
+        with:
+          repository: PabloGlezAlv/RTBEngine
+          ref: ${{ github.ref_name }}
+          path: RTBEngine
+          lfs: true
+          token: ${{ secrets.GH_PAT || github.token }}
+
+      - name: Cache vcpkg
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}\vcpkg
+          key: vcpkg-assimp-${{ runner.os }}-${{ hashFiles('RTBEngine/scripts/ci-ensure-assimp.ps1') }}
+
+      - name: Build and package editor
+        shell: pwsh
+        working-directory: RTBEngineEditor
+        run: ./scripts/ci-package-editor.ps1
+
+      - name: Create archive
+        shell: pwsh
+        working-directory: RTBEngineEditor
+        run: |
+          $zip = "RTBEngineEditor-${{ github.ref_name }}-win-x64.zip"
+          Compress-Archive -Path dist/RTBEngineEditor/* -DestinationPath $zip -Force
+          "ZIP_PATH=$zip" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: RTBEngineEditor ${{ github.ref_name }}
+          generate_release_notes: true
+          files: ${{ env.ZIP_PATH }}

@@ -58,7 +58,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(ProjectDir)RTBEngine_SDK\Lib\Debug;$(ProjectDir)RTBEngine_SDK\Lib\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>RTBEngine.lib;SDL2.lib;SDL2main.lib;lua54.lib;glew32.lib;assimp-vc145-mt.lib;fmod_vc.lib;LinearMath_Debug.lib;BulletCollision_Debug.lib;BulletDynamics_Debug.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>RTBEngine.lib;SDL2.lib;SDL2main.lib;lua54.lib;glew32.lib;$(RTBAssimpLib);fmod_vc.lib;LinearMath_Debug.lib;BulletCollision_Debug.lib;BulletDynamics_Debug.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>xcopy /y /d "$(ProjectDir)RTBEngine_SDK\Bin\*.dll" "$(OutDir)"
@@ -92,7 +92,7 @@ if exist "$(ProjectDir)MyProject.rtbproj" xcopy /y /d "$(ProjectDir)MyProject.rt
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(ProjectDir)RTBEngine_SDK\Lib\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>RTBEngine.lib;SDL2.lib;SDL2main.lib;lua54.lib;glew32.lib;assimp-vc145-mt.lib;fmod_vc.lib;LinearMath.lib;BulletCollision.lib;BulletDynamics.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>RTBEngine.lib;SDL2.lib;SDL2main.lib;lua54.lib;glew32.lib;$(RTBAssimpLib);fmod_vc.lib;LinearMath.lib;BulletCollision.lib;BulletDynamics.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>xcopy /y /d "$(ProjectDir)RTBEngine_SDK\Bin\*.dll" "$(OutDir)"

@@ -4,12 +4,12 @@ A visual game editor for **RTBEngine**, built in **C++17** using **ImGui** for t
 
 > **Note:** Authoring uses `RTBEngine::Scene` (GameObject–Component). Dense simulation uses `RTBEngine::ECS` (sparse-set World). GameScripts owns projectile/swarm systems and registers them via `RTBScripts_InitializeEcs`. After engine ECS/API changes: rebuild engine → SDK → GameScripts → editor.
 
-**Version:** `0.9.0` — requires **RTBEngine SDK 0.9.0**. See [`CHANGELOG.md`](CHANGELOG.md).
+**Version:** `0.10.0` — requires **RTBEngine SDK 0.10.0**. See [`CHANGELOG.md`](CHANGELOG.md).
 
 | Constant | Value | Header |
 |----------|-------|--------|
-| Editor semver | `0.9.0` | `Source/Core/EditorVersion.h` → `RTBEngineEditor::Core::EditorVersionInfo` |
-| Required engine SDK | `0.9.0` | `RTBEngine_SDK` (generated with `BuildSDK.bat`) |
+| Editor semver | `0.10.0` | `Source/Core/EditorVersion.h` → `RTBEngineEditor::Core::EditorVersionInfo` |
+| Required engine SDK | `0.10.0` | `RTBEngine_SDK` (generated with `BuildSDK.bat`) |
 | ImGuizmo | `1.83` | `ThirdParty/ImGuizmo-1.83/` |
 
 ---

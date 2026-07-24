@@ -1,12 +1,27 @@
 # Changelog — RTBEngineEditor
 
-**Current version:** `0.9.0`
+**Current version:** `0.10.0`
 
 API documentation: [`README.md`](README.md)
 
-**Requirements:** RTBEngine SDK **0.9.0** (generate with `../RTBEngine/BuildSDK.bat`).
+**Requirements:** RTBEngine SDK **0.10.0** (generate with `../RTBEngine/BuildSDK.bat`).
 
 ---
+
+## [0.10.0] — 2026
+
+### Added
+- **Vulkan** graphics backend support (via engine SDK / RHI).
+- **DDGI** lighting option in project settings and **Sponza** demo scene.
+- **Shadow settings** UI for project lighting (shadow map resolution).
+- **GitHub Actions** release workflow: publishes a runnable editor zip with embedded engine SDK.
+
+### Changed
+- Requires engine SDK **0.10.0** (Vulkan RHI + DDGI).
+- Directional light visualization in Scene View.
+
+### Fixed
+- Editor camera position saved between sessions.
 
 ## [0.9.0] — 2026
 
