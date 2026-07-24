@@ -24,6 +24,8 @@
 #include <RTBEngine/Scene/AnimatedBillboard.h>
 #include <RTBEngine/Animation/Animator.h>
 #include <RTBEngine/UI/CanvasSystem.h>
+#include <RTBEngine/Rendering/Lighting/LightingUBO.h>
+#include <RTBEngine/Rendering/GI/DDGISystem.h>
 #include "../UI/Panels/SceneViewPanel.h"
 #include "../Build/BuildSystem.h"
 
@@ -749,6 +751,9 @@ namespace RTBEditor {
                 engineApp->RenderShadowPass(sceneViewScene);
                 framebuffer->Bind();
                 device.SetViewport(0, 0, vpWidth, vpHeight);
+                engineApp->UploadSceneLighting(sceneViewScene);
+                RTBEngine::Rendering::LightingUBO::GetInstance().Bind();
+                RTBEngine::Rendering::GI::DDGISystem::GetInstance().Update(sceneViewScene);
                 engineApp->RenderGeometryPass(sceneViewScene, editorCamera);
 
                 // Render editor grid and axes
@@ -771,6 +776,12 @@ namespace RTBEditor {
                         sceneViewScene,
                         uiLayer->GetSelectedGameObject(),
                         editorContext.navDebug);
+                }
+
+                if (sceneView->GetDDGIDebugRenderer()) {
+                    sceneView->GetDDGIDebugRenderer()->Render(
+                        editorCamera,
+                        editorContext.ddgiDebug);
                 }
 
                 framebuffer->Unbind();

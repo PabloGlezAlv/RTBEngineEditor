@@ -46,6 +46,13 @@ namespace RTBEditor {
         float yOffset = 0.15f;
     };
 
+    struct DDGIDebugSettings {
+        bool enabled = false;
+        bool showVolumeBounds = true;
+        bool showProbeGrid = true;
+        float probeDrawRadius = 0.12f;
+    };
+
     struct OptionalWindowState {
         bool online = false;
         bool physicsLayers = false;
@@ -64,6 +71,7 @@ namespace RTBEditor {
         StatsData stats;
         bool showStatsOverlay = false;
         NavDebugSettings navDebug;
+        DDGIDebugSettings ddgiDebug;
         OptionalWindowState optionalWindows;
         RTBEngineCore::Window* window = nullptr;
 

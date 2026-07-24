@@ -1,6 +1,8 @@
 #include "Project.h"
 #include <RTBEngine/Core/Logger.h>
 #include <RTBEngine/Physics/PhysicsLayerSettings.h>
+#include <RTBEngine/Rendering/Lighting/LightingProjectSettings.h>
+#include <RTBEngine/Rendering/GI/DDGISystem.h>
 #include <fstream>
 #include <sstream>
 #include <filesystem>
@@ -175,6 +177,15 @@ namespace RTBEditor {
             physicsLayers.ResetToDefaults();
             physicsLayers.SaveToFile(physicsLayersPath);
         }
+
+        const std::filesystem::path lightingPath =
+            projectDirectory / RTBEngine::Rendering::LightingProjectSettings::GetDefaultSettingsFileName();
+        auto& lightingSettings = RTBEngine::Rendering::LightingProjectSettings::Get();
+        if (!lightingSettings.LoadFromFile(lightingPath)) {
+            lightingSettings.ResetToDefaults();
+            lightingSettings.SaveToFile(lightingPath);
+        }
+        RTBEngine::Rendering::GI::DDGISystem::GetInstance().SyncFromProjectSettings();
 
         return true;
     }

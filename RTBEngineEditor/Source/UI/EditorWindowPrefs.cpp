@@ -187,21 +187,31 @@ namespace RTBEditor {
             ParseBool(ExtractJsonStringValue(json, "projectSettings"), windows.projectSettings);
 
         const std::string navDebugJson = ExtractJsonObject(json, "navDebug");
-        if (navDebugJson.empty()) {
-            return;
+        if (!navDebugJson.empty()) {
+            NavDebugSettings& navDebug = context.navDebug;
+            navDebug.enabled = ParseBool(ExtractJsonStringValue(navDebugJson, "enabled"), navDebug.enabled);
+            navDebug.showBounds = ParseBool(ExtractJsonStringValue(navDebugJson, "showBounds"), navDebug.showBounds);
+            navDebug.showWalkableCells =
+                ParseBool(ExtractJsonStringValue(navDebugJson, "showWalkableCells"), navDebug.showWalkableCells);
+            navDebug.showBlockedCells =
+                ParseBool(ExtractJsonStringValue(navDebugJson, "showBlockedCells"), navDebug.showBlockedCells);
+            navDebug.showAgentPaths =
+                ParseBool(ExtractJsonStringValue(navDebugJson, "showAgentPaths"), navDebug.showAgentPaths);
+            navDebug.gridCellStep = ParseInt(ExtractJsonStringValue(navDebugJson, "gridCellStep"), navDebug.gridCellStep);
+            navDebug.yOffset = ParseFloat(ExtractJsonStringValue(navDebugJson, "yOffset"), navDebug.yOffset);
         }
 
-        NavDebugSettings& navDebug = context.navDebug;
-        navDebug.enabled = ParseBool(ExtractJsonStringValue(navDebugJson, "enabled"), navDebug.enabled);
-        navDebug.showBounds = ParseBool(ExtractJsonStringValue(navDebugJson, "showBounds"), navDebug.showBounds);
-        navDebug.showWalkableCells =
-            ParseBool(ExtractJsonStringValue(navDebugJson, "showWalkableCells"), navDebug.showWalkableCells);
-        navDebug.showBlockedCells =
-            ParseBool(ExtractJsonStringValue(navDebugJson, "showBlockedCells"), navDebug.showBlockedCells);
-        navDebug.showAgentPaths =
-            ParseBool(ExtractJsonStringValue(navDebugJson, "showAgentPaths"), navDebug.showAgentPaths);
-        navDebug.gridCellStep = ParseInt(ExtractJsonStringValue(navDebugJson, "gridCellStep"), navDebug.gridCellStep);
-        navDebug.yOffset = ParseFloat(ExtractJsonStringValue(navDebugJson, "yOffset"), navDebug.yOffset);
+        const std::string ddgiDebugJson = ExtractJsonObject(json, "ddgiDebug");
+        if (!ddgiDebugJson.empty()) {
+            DDGIDebugSettings& ddgiDebug = context.ddgiDebug;
+            ddgiDebug.enabled = ParseBool(ExtractJsonStringValue(ddgiDebugJson, "enabled"), ddgiDebug.enabled);
+            ddgiDebug.showVolumeBounds =
+                ParseBool(ExtractJsonStringValue(ddgiDebugJson, "showVolumeBounds"), ddgiDebug.showVolumeBounds);
+            ddgiDebug.showProbeGrid =
+                ParseBool(ExtractJsonStringValue(ddgiDebugJson, "showProbeGrid"), ddgiDebug.showProbeGrid);
+            ddgiDebug.probeDrawRadius =
+                ParseFloat(ExtractJsonStringValue(ddgiDebugJson, "probeDrawRadius"), ddgiDebug.probeDrawRadius);
+        }
     }
 
     void EditorWindowPrefs::SaveFrom(const EditorContext& context)
@@ -217,6 +227,7 @@ namespace RTBEditor {
 
         const OptionalWindowState& windows = context.optionalWindows;
         const NavDebugSettings& navDebug = context.navDebug;
+        const DDGIDebugSettings& ddgiDebug = context.ddgiDebug;
 
         file << "{\n";
         WriteBool(file, "online", windows.online, true);
@@ -231,6 +242,12 @@ namespace RTBEditor {
         WriteBool(file, "showAgentPaths", navDebug.showAgentPaths, true);
         file << "    \"gridCellStep\": " << navDebug.gridCellStep << ",\n";
         file << "    \"yOffset\": " << navDebug.yOffset << "\n";
+        file << "  },\n";
+        file << "  \"ddgiDebug\": {\n";
+        WriteBool(file, "enabled", ddgiDebug.enabled, true);
+        WriteBool(file, "showVolumeBounds", ddgiDebug.showVolumeBounds, true);
+        WriteBool(file, "showProbeGrid", ddgiDebug.showProbeGrid, true);
+        file << "    \"probeDrawRadius\": " << ddgiDebug.probeDrawRadius << "\n";
         file << "  }\n";
         file << "}\n";
     }
