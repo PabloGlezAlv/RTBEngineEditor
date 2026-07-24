@@ -38,6 +38,7 @@ namespace RTBEditor {
         colliderRenderer = std::make_unique<ColliderRenderer>();
         navGridDebugRenderer = std::make_unique<NavGridDebugRenderer>();
         ddgiDebugRenderer = std::make_unique<DDGIDebugRenderer>();
+        lightGizmoRenderer = std::make_unique<LightGizmoRenderer>();
     }
 
     SceneViewPanel::~SceneViewPanel() {}

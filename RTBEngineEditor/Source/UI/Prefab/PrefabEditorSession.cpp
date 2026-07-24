@@ -25,7 +25,10 @@ namespace RTBEditor {
 
         auto* lightObject = new RTBEngine::Scene::GameObject(EditorUtilityLightName);
         lightObject->GetTransform().SetRotation(
-            RTBEngine::Math::Quaternion::FromEulerAngles(50.0f, -30.0f, 0.0f));
+            RTBEngine::Math::Quaternion::FromEulerAngles(
+                50.0f * (3.14159265f / 180.0f),
+                -30.0f * (3.14159265f / 180.0f),
+                0.0f));
 
         auto* lightComponent = new RTBEngine::Scene::LightComponent();
         lightComponent->lightType = RTBEngine::Rendering::LightType::Directional;

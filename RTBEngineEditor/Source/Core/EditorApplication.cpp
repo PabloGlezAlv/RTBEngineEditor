@@ -784,6 +784,13 @@ namespace RTBEditor {
                         editorContext.ddgiDebug);
                 }
 
+                if (sceneView->GetLightGizmoRenderer()) {
+                    sceneView->GetLightGizmoRenderer()->Render(
+                        editorCamera,
+                        sceneViewScene,
+                        uiLayer->GetSelectedGameObject());
+                }
+
                 framebuffer->Unbind();
             }
         }
