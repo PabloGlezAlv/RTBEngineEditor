@@ -33,6 +33,8 @@ namespace RTBEditor {
 
         bool ddgiEnabled = true;
         float ddgiIntensity = 0.32f;
+        bool shadowsEnabled = true;
+        int shadowMapResolution = 2048;
         RTBEngine::Math::Vector3 ddgiOrigin = RTBEngine::Math::Vector3(-15.0f, 0.0f, -9.0f);
         RTBEngine::Math::Vector3 ddgiExtent = RTBEngine::Math::Vector3(30.0f, 12.0f, 18.0f);
         int ddgiGridX = 16;

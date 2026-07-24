@@ -30,6 +30,8 @@ namespace RTBEditor {
         ambientIntensity = lighting.ambientIntensity;
         ddgiEnabled = lighting.IsDDGIEnabled();
         ddgiIntensity = lighting.ddgiIntensity;
+        shadowsEnabled = lighting.shadowsEnabled;
+        shadowMapResolution = lighting.GetClampedShadowMapResolution();
         ddgiOrigin = lighting.ddgiOrigin;
         ddgiExtent = lighting.ddgiExtent;
         ddgiGridX = lighting.ddgiGridX;
@@ -59,12 +61,15 @@ namespace RTBEditor {
         lighting.ambientIntensity = std::max(0.0f, ambientIntensity);
         lighting.SetDDGIEnabled(ddgiEnabled);
         lighting.ddgiIntensity = std::max(0.0f, ddgiIntensity);
+        lighting.shadowsEnabled = shadowsEnabled;
+        lighting.shadowMapResolution =
+            RTBEngine::Rendering::LightingProjectSettings::ClampShadowMapResolution(shadowMapResolution);
         lighting.ddgiOrigin = ddgiOrigin;
         lighting.ddgiExtent = ddgiExtent;
         lighting.ddgiGridX = std::clamp(ddgiGridX, 1, 32);
         lighting.ddgiGridY = std::clamp(ddgiGridY, 1, 32);
         lighting.ddgiGridZ = std::clamp(ddgiGridZ, 1, 32);
-                lighting.ddgiHysteresis = std::clamp(ddgiHysteresis, 0.0f, 0.85f);
+        lighting.ddgiHysteresis = std::clamp(ddgiHysteresis, 0.0f, 0.85f);
         lighting.ddgiNormalBias = std::max(0.0f, ddgiNormalBias);
         lighting.ddgiViewBias = std::max(0.0f, ddgiViewBias);
         lighting.ddgiProbeRadius = std::max(0.1f, ddgiProbeRadius);
@@ -126,6 +131,27 @@ namespace RTBEditor {
             ImGui::DragFloat("Ambient Intensity", &ambientIntensity, 0.005f, 0.0f, 2.0f, "%.3f");
 
             ImGui::Spacing();
+            if (ImGui::TreeNodeEx("Shadows", ImGuiTreeNodeFlags_DefaultOpen)) {
+                ImGui::Checkbox("Enable Shadows", &shadowsEnabled);
+                ImGui::TextDisabled("Directional light shadow maps (OpenGL and Vulkan).");
+                ImGui::BeginDisabled(!shadowsEnabled);
+                const char* resolutionLabels[] = { "512", "1024", "2048", "4096", "8192", "16384" };
+                const int resolutionValues[] = { 512, 1024, 2048, 4096, 8192, 16384 };
+                int resolutionIndex = 2;
+                for (int i = 0; i < 6; ++i) {
+                    if (resolutionValues[i] == shadowMapResolution) {
+                        resolutionIndex = i;
+                        break;
+                    }
+                }
+                if (ImGui::Combo("Shadow Map Resolution", &resolutionIndex, resolutionLabels, 6)) {
+                    shadowMapResolution = resolutionValues[resolutionIndex];
+                }
+                ImGui::EndDisabled();
+                ImGui::TreePop();
+            }
+
+            ImGui::Spacing();
             if (ImGui::TreeNodeEx("DDGI", ImGuiTreeNodeFlags_DefaultOpen)) {
                 ImGui::Checkbox("Enable DDGI", &ddgiEnabled);
                 ImGui::BeginDisabled(!ddgiEnabled);
@@ -172,12 +198,15 @@ namespace RTBEditor {
             lighting.ambientIntensity = std::max(0.0f, ambientIntensity);
             lighting.SetDDGIEnabled(ddgiEnabled);
             lighting.ddgiIntensity = std::max(0.0f, ddgiIntensity);
+            lighting.shadowsEnabled = shadowsEnabled;
+            lighting.shadowMapResolution =
+                RTBEngine::Rendering::LightingProjectSettings::ClampShadowMapResolution(shadowMapResolution);
             lighting.ddgiOrigin = ddgiOrigin;
             lighting.ddgiExtent = ddgiExtent;
             lighting.ddgiGridX = std::clamp(ddgiGridX, 1, 32);
             lighting.ddgiGridY = std::clamp(ddgiGridY, 1, 32);
             lighting.ddgiGridZ = std::clamp(ddgiGridZ, 1, 32);
-                lighting.ddgiHysteresis = std::clamp(ddgiHysteresis, 0.0f, 0.85f);
+            lighting.ddgiHysteresis = std::clamp(ddgiHysteresis, 0.0f, 0.85f);
             lighting.ddgiNormalBias = std::max(0.0f, ddgiNormalBias);
             lighting.ddgiViewBias = std::max(0.0f, ddgiViewBias);
             lighting.ddgiProbeRadius = std::max(0.1f, ddgiProbeRadius);
