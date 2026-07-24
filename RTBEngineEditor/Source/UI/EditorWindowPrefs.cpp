@@ -212,6 +212,18 @@ namespace RTBEditor {
             ddgiDebug.probeDrawRadius =
                 ParseFloat(ExtractJsonStringValue(ddgiDebugJson, "probeDrawRadius"), ddgiDebug.probeDrawRadius);
         }
+
+        const std::string editorCameraJson = ExtractJsonObject(json, "editorCamera");
+        if (!editorCameraJson.empty()) {
+            EditorCameraState& editorCamera = context.editorCamera;
+            editorCamera.posX = ParseFloat(ExtractJsonStringValue(editorCameraJson, "posX"), editorCamera.posX);
+            editorCamera.posY = ParseFloat(ExtractJsonStringValue(editorCameraJson, "posY"), editorCamera.posY);
+            editorCamera.posZ = ParseFloat(ExtractJsonStringValue(editorCameraJson, "posZ"), editorCamera.posZ);
+            editorCamera.pitch = ParseFloat(ExtractJsonStringValue(editorCameraJson, "pitch"), editorCamera.pitch);
+            editorCamera.yaw = ParseFloat(ExtractJsonStringValue(editorCameraJson, "yaw"), editorCamera.yaw);
+            editorCamera.fov = ParseFloat(ExtractJsonStringValue(editorCameraJson, "fov"), editorCamera.fov);
+            editorCamera.valid = true;
+        }
     }
 
     void EditorWindowPrefs::SaveFrom(const EditorContext& context)
@@ -228,6 +240,7 @@ namespace RTBEditor {
         const OptionalWindowState& windows = context.optionalWindows;
         const NavDebugSettings& navDebug = context.navDebug;
         const DDGIDebugSettings& ddgiDebug = context.ddgiDebug;
+        const EditorCameraState& editorCamera = context.editorCamera;
 
         file << "{\n";
         WriteBool(file, "online", windows.online, true);
@@ -248,6 +261,14 @@ namespace RTBEditor {
         WriteBool(file, "showVolumeBounds", ddgiDebug.showVolumeBounds, true);
         WriteBool(file, "showProbeGrid", ddgiDebug.showProbeGrid, true);
         file << "    \"probeDrawRadius\": " << ddgiDebug.probeDrawRadius << "\n";
+        file << "  },\n";
+        file << "  \"editorCamera\": {\n";
+        file << "    \"posX\": " << editorCamera.posX << ",\n";
+        file << "    \"posY\": " << editorCamera.posY << ",\n";
+        file << "    \"posZ\": " << editorCamera.posZ << ",\n";
+        file << "    \"pitch\": " << editorCamera.pitch << ",\n";
+        file << "    \"yaw\": " << editorCamera.yaw << ",\n";
+        file << "    \"fov\": " << editorCamera.fov << "\n";
         file << "  }\n";
         file << "}\n";
     }

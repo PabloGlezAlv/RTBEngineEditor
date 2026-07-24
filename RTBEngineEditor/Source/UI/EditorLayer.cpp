@@ -34,6 +34,15 @@ namespace RTBEditor {
         // Add default panels
         auto sceneView = std::make_unique<SceneViewPanel>();
         sceneViewPanel = sceneView.get();
+        if (context.editorCamera.valid) {
+            RTBEngine::Rendering::Camera* camera = sceneViewPanel->GetEditorCamera();
+            camera->SetPosition(RTBEngine::Math::Vector3(
+                context.editorCamera.posX,
+                context.editorCamera.posY,
+                context.editorCamera.posZ));
+            camera->SetRotation(context.editorCamera.pitch, context.editorCamera.yaw);
+            camera->SetFOV(context.editorCamera.fov);
+        }
         AddPanel(std::move(sceneView));
 
         auto gameView = std::make_unique<GameViewPanel>();
@@ -391,6 +400,17 @@ namespace RTBEditor {
     }
 
     void EditorLayer::PersistWindowPrefs() {
+        if (sceneViewPanel) {
+            const RTBEngine::Rendering::Camera* camera = sceneViewPanel->GetEditorCamera();
+            const RTBEngine::Math::Vector3& position = camera->GetPosition();
+            context.editorCamera.posX = position.x;
+            context.editorCamera.posY = position.y;
+            context.editorCamera.posZ = position.z;
+            context.editorCamera.pitch = camera->GetPitch();
+            context.editorCamera.yaw = camera->GetYaw();
+            context.editorCamera.fov = camera->GetFOV();
+            context.editorCamera.valid = true;
+        }
         EditorWindowPrefs::SaveFrom(context);
     }
 

@@ -137,6 +137,16 @@ namespace RTBEditor {
             if (ImGui::IsKeyPressed(ImGuiKey_E)) gizmoOperation = GizmoOperation::Rotate;
             if (ImGui::IsKeyPressed(ImGuiKey_R)) gizmoOperation = GizmoOperation::Scale;
         }
+
+        // Keep camera prefs in sync so any prefs save (including exit) persists the last view
+        const RTBEngine::Math::Vector3& position = editorCamera.GetPosition();
+        context.editorCamera.posX = position.x;
+        context.editorCamera.posY = position.y;
+        context.editorCamera.posZ = position.z;
+        context.editorCamera.pitch = editorCamera.GetPitch();
+        context.editorCamera.yaw = editorCamera.GetYaw();
+        context.editorCamera.fov = editorCamera.GetFOV();
+        context.editorCamera.valid = true;
     }
 
     void SceneViewPanel::UpdateEditorCamera(float deltaTime) {

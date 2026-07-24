@@ -60,6 +60,16 @@ namespace RTBEditor {
         bool projectSettings = false;
     };
 
+    struct EditorCameraState {
+        bool valid = false;
+        float posX = 0.0f;
+        float posY = 2.0f;
+        float posZ = 5.0f;
+        float pitch = -20.0f;
+        float yaw = 180.0f;
+        float fov = 45.0f;
+    };
+
     struct EditorContext {
         RTBEngine::Scene::GameObject* selectedGameObject = nullptr;
         std::vector<RTBEngine::Scene::GameObject*> selectedGameObjects;
@@ -73,6 +83,7 @@ namespace RTBEditor {
         NavDebugSettings navDebug;
         DDGIDebugSettings ddgiDebug;
         OptionalWindowState optionalWindows;
+        EditorCameraState editorCamera;
         RTBEngineCore::Window* window = nullptr;
 
         std::function<void()> onCopySelection;
