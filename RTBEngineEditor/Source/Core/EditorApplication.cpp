@@ -791,6 +791,17 @@ namespace RTBEditor {
                         uiLayer->GetSelectedGameObject());
                 }
 
+                // Volumetric fog samples scene depth: bind color-only continue FBO so depth
+                // is no longer an active attachment (Vulkan render-pass break + OpenGL feedback).
+                if (RTBEngine::Rendering::Framebuffer* colorOnly = framebuffer->GetColorOnlyContinueTarget()) {
+                    colorOnly->Bind();
+                    device.SetViewport(0, 0, vpWidth, vpHeight);
+                    engineApp->RenderVolumetricFogPass(
+                        sceneViewScene,
+                        editorCamera,
+                        framebuffer->GetDepthTextureID());
+                }
+
                 framebuffer->Unbind();
             }
         }
@@ -812,6 +823,14 @@ namespace RTBEditor {
                     device.SetViewport(0, 0, vpWidth, vpHeight);
                     // For now, reuse shadow maps from first pass
                     engineApp->RenderGeometryPass(activeScene, mainCamera);
+                    if (RTBEngine::Rendering::Framebuffer* colorOnly = framebuffer->GetColorOnlyContinueTarget()) {
+                        colorOnly->Bind();
+                        device.SetViewport(0, 0, vpWidth, vpHeight);
+                        engineApp->RenderVolumetricFogPass(
+                            activeScene,
+                            mainCamera,
+                            framebuffer->GetDepthTextureID());
+                    }
 
                     // Note: Scene UI is rendered in GameViewPanel::OnUIRender()
                     // after the framebuffer image, within the ImGui frame

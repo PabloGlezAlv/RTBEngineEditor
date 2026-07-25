@@ -41,6 +41,18 @@ namespace RTBEditor {
         ddgiNormalBias = lighting.ddgiNormalBias;
         ddgiViewBias = lighting.ddgiViewBias;
         ddgiProbeRadius = lighting.ddgiProbeRadius;
+        fogEnabled = lighting.fogEnabled;
+        fogColor = lighting.fogColor;
+        fogDensity = lighting.fogDensity;
+        fogHeight = lighting.fogHeight;
+        fogHeightFalloff = lighting.fogHeightFalloff;
+        fogStart = lighting.fogStart;
+        fogEnd = lighting.fogEnd;
+        volumetricFogEnabled = lighting.volumetricFogEnabled;
+        volumetricIntensity = lighting.volumetricIntensity;
+        volumetricAnisotropy = lighting.volumetricAnisotropy;
+        volumetricSamples = lighting.volumetricSamples;
+        volumetricMaxLuminance = lighting.volumetricMaxLuminance;
 
         syncedOnce = true;
     }
@@ -73,6 +85,18 @@ namespace RTBEditor {
         lighting.ddgiNormalBias = std::max(0.0f, ddgiNormalBias);
         lighting.ddgiViewBias = std::max(0.0f, ddgiViewBias);
         lighting.ddgiProbeRadius = std::max(0.1f, ddgiProbeRadius);
+        lighting.fogEnabled = fogEnabled;
+        lighting.fogColor = fogColor;
+        lighting.fogDensity = std::max(0.0f, fogDensity);
+        lighting.fogHeight = fogHeight;
+        lighting.fogHeightFalloff = std::max(0.0f, fogHeightFalloff);
+        lighting.fogStart = std::max(0.0f, fogStart);
+        lighting.fogEnd = std::max(lighting.fogStart + 0.1f, fogEnd);
+        lighting.volumetricFogEnabled = volumetricFogEnabled;
+        lighting.volumetricIntensity = std::max(0.0f, volumetricIntensity);
+        lighting.volumetricAnisotropy = std::clamp(volumetricAnisotropy, -0.95f, 0.95f);
+        lighting.volumetricSamples = std::clamp(volumetricSamples, 4, 64);
+        lighting.volumetricMaxLuminance = std::max(0.05f, volumetricMaxLuminance);
 
         const std::filesystem::path lightingPath =
             project->GetProjectDirectory()
@@ -180,6 +204,46 @@ namespace RTBEditor {
                 }
                 ImGui::TreePop();
             }
+
+            ImGui::Spacing();
+            if (ImGui::TreeNodeEx("Fog", ImGuiTreeNodeFlags_DefaultOpen)) {
+                ImGui::Checkbox("Enable Distance Fog", &fogEnabled);
+                ImGui::BeginDisabled(!fogEnabled);
+                ImGui::ColorEdit3("Fog Color", &fogColor.x, ImGuiColorEditFlags_Float);
+                ImGui::DragFloat("Density", &fogDensity, 0.001f, 0.0f, 0.2f, "%.4f");
+                ImGui::DragFloat("Height", &fogHeight, 0.05f, -50.0f, 100.0f, "%.2f");
+                ImGui::DragFloat("Height Falloff", &fogHeightFalloff, 0.005f, 0.0f, 1.0f, "%.3f");
+                ImGui::DragFloat("Start", &fogStart, 0.5f, 0.0f, 500.0f, "%.1f");
+                ImGui::DragFloat("End", &fogEnd, 0.5f, 1.0f, 2000.0f, "%.1f");
+                ImGui::EndDisabled();
+
+                ImGui::Spacing();
+                if (ImGui::Checkbox("Enable Volumetric Fog", &volumetricFogEnabled)) {
+                    RTBEngine::Rendering::LightingProjectSettings::Get().volumetricFogEnabled =
+                        volumetricFogEnabled;
+                }
+                ImGui::TextDisabled("Fullscreen god rays using the directional shadow map.");
+                ImGui::BeginDisabled(!fogEnabled || !volumetricFogEnabled);
+                if (ImGui::DragFloat("Volumetric Intensity", &volumetricIntensity, 0.01f, 0.0f, 5.0f, "%.2f")) {
+                    RTBEngine::Rendering::LightingProjectSettings::Get().volumetricIntensity =
+                        std::max(0.0f, volumetricIntensity);
+                }
+                if (ImGui::DragFloat("Anisotropy", &volumetricAnisotropy, 0.01f, -0.95f, 0.95f, "%.2f")) {
+                    RTBEngine::Rendering::LightingProjectSettings::Get().volumetricAnisotropy =
+                        std::clamp(volumetricAnisotropy, -0.95f, 0.95f);
+                }
+                if (ImGui::DragInt("Ray Samples", &volumetricSamples, 1.0f, 4, 64)) {
+                    RTBEngine::Rendering::LightingProjectSettings::Get().volumetricSamples =
+                        std::clamp(volumetricSamples, 4, 64);
+                }
+                if (ImGui::DragFloat("Max Luminance", &volumetricMaxLuminance, 0.01f, 0.05f, 3.0f, "%.2f")) {
+                    RTBEngine::Rendering::LightingProjectSettings::Get().volumetricMaxLuminance =
+                        std::max(0.05f, volumetricMaxLuminance);
+                }
+                ImGui::TextDisabled("Soft ceiling for volumetric add (stops outdoor white-out).");
+                ImGui::EndDisabled();
+                ImGui::TreePop();
+            }
         }
 
         ImGui::Spacing();
@@ -210,6 +274,18 @@ namespace RTBEditor {
             lighting.ddgiNormalBias = std::max(0.0f, ddgiNormalBias);
             lighting.ddgiViewBias = std::max(0.0f, ddgiViewBias);
             lighting.ddgiProbeRadius = std::max(0.1f, ddgiProbeRadius);
+            lighting.fogEnabled = fogEnabled;
+            lighting.fogColor = fogColor;
+            lighting.fogDensity = std::max(0.0f, fogDensity);
+            lighting.fogHeight = fogHeight;
+            lighting.fogHeightFalloff = std::max(0.0f, fogHeightFalloff);
+            lighting.fogStart = std::max(0.0f, fogStart);
+            lighting.fogEnd = std::max(lighting.fogStart + 0.1f, fogEnd);
+            lighting.volumetricFogEnabled = volumetricFogEnabled;
+            lighting.volumetricIntensity = std::max(0.0f, volumetricIntensity);
+            lighting.volumetricAnisotropy = std::clamp(volumetricAnisotropy, -0.95f, 0.95f);
+            lighting.volumetricSamples = std::clamp(volumetricSamples, 4, 64);
+            lighting.volumetricMaxLuminance = std::max(0.05f, volumetricMaxLuminance);
             RTBEngine::Rendering::GI::DDGISystem::GetInstance().SyncFromProjectSettings();
             lastSaveSucceeded = true;
             lastMessage = "Lighting settings applied (not saved to disk).";
