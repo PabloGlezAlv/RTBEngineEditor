@@ -770,6 +770,11 @@ namespace RTBEditor {
                     sceneView->GetColliderRenderer()->RenderSelection(editorCamera, uiLayer->GetSelectedGameObject());
                 }
 
+                if (sceneView->GetVolumeRenderer()) {
+                    sceneView->GetVolumeRenderer()->RenderSceneVolumes(editorCamera, sceneViewScene);
+                    sceneView->GetVolumeRenderer()->RenderSelection(editorCamera, uiLayer->GetSelectedGameObject());
+                }
+
                 if (sceneView->GetNavGridDebugRenderer()) {
                     sceneView->GetNavGridDebugRenderer()->Render(
                         editorCamera,

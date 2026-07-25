@@ -7,6 +7,8 @@
 #include <RTBEngine/Scene/GameObject.h>
 #include <RTBEngine/Animation/Animator.h>
 #include <RTBEngine/Scene/ParticleSystem.h>
+#include <RTBEngine/Scene/VolumeComponent.h>
+#include "../Inspectors/VolumeComponentInspector.h"
 #include <RTBEngine/Scene/NavGridComponent.h>
 #include <RTBEngine/Math/Vectors/Vector2.h>
 #include <RTBEngine/Math/Vectors/Vector3.h>
@@ -1068,6 +1070,38 @@ namespace RTBEditor {
             }
 
             ImGui::PushID(component.get());
+
+            if (std::string(typeName) == "VolumeComponent") {
+                auto* volume = static_cast<RTBEngine::Scene::VolumeComponent*>(component.get());
+                bool open = false;
+                if (DrawVolumeComponentHeader(volume, open)) {
+                    MarkDirtyFromInspector();
+                }
+                if (ImGui::BeginPopupContextItem("ComponentSettings")) {
+                    if (ImGui::MenuItem("Remove Component")) {
+                        componentsToRemove.push_back(component.get());
+                    }
+                    ImGui::EndPopup();
+                }
+                if (hasActivePrefabContext) {
+                    PrefabOverrideInspector::DrawComponentOverrideMenu(
+                        activePrefabGameObject,
+                        component.get(),
+                        hasActivePrefabContext && activePrefabContext.baselineNode &&
+                            RTBEngine::Scene::PrefabOverrideDiff::IsAddedComponent(
+                                component.get(),
+                                activePrefabContext.baselineNode),
+                        [this]() { MarkDirtyFromInspector(); });
+                }
+                if (open) {
+                    if (DrawVolumeComponentInspector(volume)) {
+                        MarkDirtyFromInspector();
+                    }
+                }
+                ImGui::PopID();
+                continue;
+            }
+
             std::string displayName = FormatTypeName(typeName);
             const bool isAddedComponent = hasActivePrefabContext && activePrefabContext.baselineNode &&
                 RTBEngine::Scene::PrefabOverrideDiff::IsAddedComponent(

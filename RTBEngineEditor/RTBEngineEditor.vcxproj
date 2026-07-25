@@ -139,6 +139,8 @@ if exist "$(ProjectDir)MyProject.rtbproj" xcopy /y /d "$(ProjectDir)MyProject.rt
     <ClCompile Include="Source\UI\Panels\GameViewPanel.cpp" />
     <ClCompile Include="Source\Rendering\EditorGridRenderer.cpp" />
     <ClCompile Include="Source\Rendering\ColliderRenderer.cpp" />
+    <ClCompile Include="Source\Rendering\VolumeRenderer.cpp" />
+    <ClCompile Include="Source\UI\Inspectors\VolumeComponentInspector.cpp" />
     <ClCompile Include="Source\Rendering\NavGridDebugRenderer.cpp" />
     <ClCompile Include="Source\Rendering\DDGIDebugRenderer.cpp" />
     <ClCompile Include="Source\Rendering\LightGizmoRenderer.cpp" />
@@ -181,6 +183,8 @@ if exist "$(ProjectDir)MyProject.rtbproj" xcopy /y /d "$(ProjectDir)MyProject.rt
     <ClInclude Include="Source\UI\Panels\GameViewPanel.h" />
     <ClInclude Include="Source\Rendering\EditorGridRenderer.h" />
     <ClInclude Include="Source\Rendering\ColliderRenderer.h" />
+    <ClInclude Include="Source\Rendering\VolumeRenderer.h" />
+    <ClInclude Include="Source\UI\Inspectors\VolumeComponentInspector.h" />
     <ClInclude Include="Source\Rendering\NavGridDebugRenderer.h" />
     <ClInclude Include="Source\Rendering\DDGIDebugRenderer.h" />
     <ClInclude Include="Source\Rendering\LightGizmoRenderer.h" />

@@ -6,6 +6,7 @@
 #include "../../Rendering/ColliderRenderer.h"
 #include "../../Rendering/NavGridDebugRenderer.h"
 #include "../../Rendering/DDGIDebugRenderer.h"
+#include "../../Rendering/VolumeRenderer.h"
 #include "../../Rendering/LightGizmoRenderer.h"
 #include "../../Utils/RaycastUtils.h"
 #include <memory>
@@ -38,6 +39,7 @@ namespace RTBEditor {
         ColliderRenderer* GetColliderRenderer() const { return colliderRenderer.get(); }
         NavGridDebugRenderer* GetNavGridDebugRenderer() const { return navGridDebugRenderer.get(); }
         DDGIDebugRenderer* GetDDGIDebugRenderer() const { return ddgiDebugRenderer.get(); }
+        VolumeRenderer* GetVolumeRenderer() const { return volumeRenderer.get(); }
         LightGizmoRenderer* GetLightGizmoRenderer() const { return lightGizmoRenderer.get(); }
 
         // Check if the panel is focused/hovered
@@ -63,6 +65,7 @@ namespace RTBEditor {
         std::unique_ptr<ColliderRenderer> colliderRenderer;
         std::unique_ptr<NavGridDebugRenderer> navGridDebugRenderer;
         std::unique_ptr<DDGIDebugRenderer> ddgiDebugRenderer;
+        std::unique_ptr<VolumeRenderer> volumeRenderer;
         std::unique_ptr<LightGizmoRenderer> lightGizmoRenderer;
 
         // Viewport state

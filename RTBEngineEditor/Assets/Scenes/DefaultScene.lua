@@ -22,6 +22,35 @@ function CreateScene()
                 }
             },
             {
+                name = "Fog Volume",
+                uuid = "A1B2C3D4-E5F6-7890-ABCD-EF1234567890",
+                components = {
+                    {
+                        type = "VolumeComponent",
+                        isGlobal = true,
+                        size = Vector3(20.00, 10.00, 20.00),
+                        priority = 0,
+                        blendDistance = 2.00,
+                        weight = 1.00,
+                        profileAssetPath = "",
+                        overrideDistanceFog = true,
+                        fogEnabled = true,
+                        fogColor = Vector3(0.55, 0.62, 0.72),
+                        fogDensity = 0.018,
+                        fogHeight = 5.65,
+                        fogHeightFalloff = 1.00,
+                        fogStart = 8.00,
+                        fogEnd = 140.00,
+                        overrideVolumetricFog = true,
+                        volumetricFogEnabled = true,
+                        volumetricIntensity = 1.25,
+                        volumetricAnisotropy = 0.51,
+                        volumetricSamples = 32,
+                        volumetricMaxLuminance = 0.69
+                    },
+                }
+            },
+            {
                 name = "UICanvas",
                 uuid = "62E6AE07-7DC2-42B3-8F0E-AA7CA40264F0",
                 components = {

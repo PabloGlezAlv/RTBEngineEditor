@@ -8,7 +8,7 @@ function CreateScene()
                 name = "Main Camera",
                 uuid = "DDGI-SPONZA-CAM1-4000-8000-000000000001",
                 position = Vector3(-9.64, 5.86, 3.98),
-                rotation = Quaternion.FromEulerAngles(-0.11, -116.35, -0.05),
+                rotation = Quaternion.FromEulerAngles(-0.09, -116.35, -0.08),
                 components = {
                     {
                         type = "CameraComponent",
@@ -31,9 +31,8 @@ function CreateScene()
             {
                 name = "Sun",
                 uuid = "DDGI-SPONZA-LIT1-4000-8000-000000000002",
-                position = Vector3(1.15, 13.22, -0.47),
-                rotation = Quaternion.FromEulerAngles(-29.03, -14.39, 10.48),
-                scale = Vector3(1.00, 1.00, 1.00),
+                position = Vector3(0.98, 12.71, -1.09),
+                rotation = Quaternion.FromEulerAngles(-27.34, -3.18, -2.17),
                 components = {
                     {
                         type = "LightComponent",
@@ -117,6 +116,15 @@ function CreateScene()
                         shaderPropertyOverrides = "",
                         meshIndex = 0,
                         multiMesh = true
+                    },
+                }
+            },
+            {
+                name = "Volume",
+                uuid = "FC929949-5F05-4E09-9EC8-A4E4C5479992",
+                components = {
+                    {
+                        type = "VolumeComponent"
                     },
                 }
             },
