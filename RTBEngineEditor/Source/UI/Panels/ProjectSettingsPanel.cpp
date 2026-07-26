@@ -143,9 +143,12 @@ namespace RTBEditor {
 
             if (selectedGraphicsAPI != activeRuntimeAPI) {
                 ImGui::Spacing();
-                ImGui::TextWrapped(
-                    "Changing the Graphics API requires restarting the editor. "
-                    "Save, then close and reopen RTBEngineEditor.");
+                ImGui::TextWrapped("The editor will restart to apply the Graphics API.");
+                if (ImGui::Button("Apply & Restart Editor")) {
+                    if (context.onRestartForGraphicsAPI) {
+                        context.onRestartForGraphicsAPI(selectedGraphicsAPI);
+                    }
+                }
             }
         }
 

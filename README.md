@@ -4,12 +4,12 @@ A visual game editor for **RTBEngine**, built in **C++17** using **ImGui** for t
 
 > **Note:** Authoring uses `RTBEngine::Scene` (GameObject–Component). Dense simulation uses `RTBEngine::ECS` (sparse-set World). GameScripts owns projectile/swarm systems and registers them via `RTBScripts_InitializeEcs`. After engine ECS/API changes: rebuild engine → SDK → GameScripts → editor.
 
-**Version:** `0.10.0` — requires **RTBEngine SDK 0.10.0**. See [`CHANGELOG.md`](CHANGELOG.md).
+**Version:** `0.11.0` — requires **RTBEngine SDK 0.11.0**. See [`CHANGELOG.md`](CHANGELOG.md).
 
 | Constant | Value | Header |
 |----------|-------|--------|
-| Editor semver | `0.10.0` | `Source/Core/EditorVersion.h` → `RTBEngineEditor::Core::EditorVersionInfo` |
-| Required engine SDK | `0.10.0` | `RTBEngine_SDK` (generated with `BuildSDK.bat`) |
+| Editor semver | `0.11.0` | `Source/Core/EditorVersion.h` → `RTBEngineEditor::Core::EditorVersionInfo` |
+| Required engine SDK | `0.11.0` | `RTBEngine_SDK` (generated with `BuildSDK.bat`) |
 | ImGuizmo | `1.83` | `ThirdParty/ImGuizmo-1.83/` |
 
 ---
@@ -43,6 +43,7 @@ A visual game editor for **RTBEngine**, built in **C++17** using **ImGui** for t
 25. [Online and Multiplayer](#25-online-and-multiplayer)
 26. [Optional Windows and Navigation Debug](#26-optional-windows-and-navigation-debug)
 27. [Prefab Edit Mode](#27-prefab-edit-mode)
+28. [Project Settings & Graphics API](#28-project-settings--graphics-api)
 
 ---
 
@@ -77,8 +78,11 @@ RTBEngineEditor/
     │   │   │   ├── OnlinePanel.h / .cpp
     │   │   │   ├── PhysicsLayersPanel.h / .cpp
     │   │   │   ├── NavigationDebugPanel.h / .cpp
+    │   │   │   ├── ProjectSettingsPanel.h / .cpp
     │   │   │   └── ToolbarPanel.h / .cpp
     │   │   │
+    │   │   ├── Inspectors/
+    │   │   │   └── VolumeComponentInspector.h / .cpp
     │   │   ├── Prefab/
     │   │   │   └── PrefabEditorSession.h / .cpp   Isolated staging scene for prefab editing
     │   │   │
@@ -258,6 +262,7 @@ struct OptionalWindowState {
     bool online = false;
     bool physicsLayers = false;
     bool navigationDebug = false;
+    bool projectSettings = false;
 };
 
 struct EditorContext {
@@ -284,7 +289,7 @@ struct EditorContext {
 | `pendingPrefabOpen` | Double-click `.prefab` or Inspector **Open Prefab** → opens prefab mode |
 | `prefabEditor` | Owns the isolated staging scene while editing a prefab asset |
 | `navDebug` | Navigation overlay toggles for Scene View |
-| `optionalWindows` | Online / Physics Layers / Navigation Debug panel visibility |
+| `optionalWindows` | Online / Physics Layers / Navigation Debug / **Project Settings** panel visibility |
 
 **Prefab routing helpers** (same header):
 
@@ -534,6 +539,7 @@ Used by `EditorApplication::Update()` to check and consume `pendingSceneLoad`.
 - **Online** — toggle `OnlinePanel` (closed by default)
 - **Physics Layers** — toggle `PhysicsLayersPanel` (closed by default)
 - **Navigation Debug** — toggle `NavigationDebugPanel` (closed by default)
+- **Project Settings** — toggle `ProjectSettingsPanel` (closed by default)
 
 Optional panels use `ImGui::Begin(title, &isOpen)` and skip `Begin` entirely when closed so ImGui docking does not leave empty tabs. When reopened, `PrepareOptionalWindowDocking()` tabs them into an existing dock bar (Inspector, another optional panel, Hierarchy, etc.) instead of creating a new left column.
 
@@ -841,6 +847,7 @@ Some engine components bypass the generic property loop and render dedicated con
 | `Animator` | `modelRef`, `additionalModels` (vector of FBX paths); changing them calls `ReloadClipLibrary()` then `OnValidate()` |
 | `ParticleSystem` | **Play**, **Pause**, **Stop**, **Burst** (`burstCount`), live stats (active count, playback state), then all reflected properties |
 | `NavGridComponent` | **Bake Grid**, **Clear Baked**, baked status / walkable count; debug overlay is in **Window → Navigation Debug** (not here) |
+| `VolumeComponent` | Custom inspector: zone settings + per-effect toggles for Distance Fog and Volumetric Fog (see [§28](#28-project-settings--graphics-api)) |
 
 `DrawParticleSystemComponent` calls `Play()`, `Pause()`, `Stop()`, or `Emit(burstCount)` from the toolbar buttons, then draws the reflected fields (`maxParticles`, `emissionRate`, emitter shape, colors, `textureRef`, `simulateInEditMode`, etc.). Any button change triggers `OnValidate()` and marks the scene dirty.
 
@@ -2145,7 +2152,7 @@ outDistance = tMin > 0 ? tMin : tMax
 
 ## 22. Project System
 
-`Source/Core/Project.h` — Stores project-level metadata (name, start scene, directories). Loaded from a `.rtbproject` file at editor startup.
+`Source/Project/Project.h` — Stores project-level metadata (name, start scene, graphics API, directories). Loaded from a `.rtbproj` file at editor startup.
 
 ### Project Struct / Class
 
@@ -2156,15 +2163,15 @@ public:
     std::string startScene;
     std::filesystem::path projectDirectory;
     std::filesystem::path assetDirectory;
+    RTBEngine::Rendering::RHI::GraphicsAPI GetGraphicsAPI() const;
+    void SetGraphicsAPI(RTBEngine::Rendering::RHI::GraphicsAPI api);
 
     bool Load(const std::filesystem::path& path);
     bool Save(const std::filesystem::path& path) const;
 
-    static Project* GetActive();
-    static void     SetActive(Project* project);
-
-private:
-    static Project* activeProject;
+    static Project* GetActiveProject();
+    static RTBEngine::Rendering::RHI::GraphicsAPI PeekGraphicsAPI(
+        const std::filesystem::path& projectPath);
 };
 ```
 
@@ -2173,16 +2180,20 @@ private:
 A simple `key=value` text file (one setting per line):
 
 ```ini
-name=My Game
-startScene=Assets/Scenes/Main.lua
+Name=My Game
+StartScene=Assets/Scenes/Main.lua
+LastOpenScene=Assets/Scenes/DefaultScene.lua
+AssetDirectory=Assets
+GraphicsAPI=Vulkan
 ```
 
-`assetDirectory` is derived from `projectDirectory + "/Assets"`.
-`startScene` is normalized to `Assets/Scenes/X.lua` form with forward slashes when it is stored by the editor or written into build settings.
+`assetDirectory` is relative to the project directory. `GraphicsAPI` is `OpenGL` or `Vulkan`; the editor reads it at startup (`main.cpp` → `ConfigureGraphicsAPI`). Changing the API in Project Settings requires an editor restart — use **Apply & Restart Editor** (see [§28](#28-project-settings--graphics-api)).
+
+Lighting defaults (shadows, DDGI, fog) are stored separately in `lighting.ini` beside the project file.
 
 ### Usage in Editor
 
-- `EditorApplication::Initialize()` calls `Project::Load("project.rtbproject")`.
+- `EditorApplication::Initialize()` calls `Project::Load("MyProject.rtbproj")` (resolved next to the editor executable).
 - If no project file exists, default values are used.
 - `Project::Save()` is called when the user selects File → Save Project (not yet exposed in the menu; future feature).
 - `BuildSystem::Build()` reads `Project::GetActive()->startScene` as the default value for `BuildSettings::startScene`.
@@ -2449,6 +2460,7 @@ Three editor panels are **optional**: they start closed, open from the **Window*
 | `OnlinePanel` | Online | Multiplayer ports, relay URL, multiplayer test launcher |
 | `PhysicsLayersPanel` | Physics Layers | Layer names and collision matrix for the active project |
 | `NavigationDebugPanel` | Navigation Debug | Navigation overlay toggles + scene grid status |
+| `ProjectSettingsPanel` | Project Settings | Graphics API, lighting, DDGI, shadows, fog |
 
 ### 26.1 Window Menu and Visibility
 
@@ -2475,7 +2487,7 @@ The new window is tabbed into that node via `ImGui::SetNextWindowDockID`. Dock *
 
 | Field | Content |
 |-------|---------|
-| `online`, `physicsLayers`, `navigationDebug` | Panel open/closed |
+| `online`, `physicsLayers`, `navigationDebug`, `projectSettings` | Panel open/closed |
 | `navDebug` | Overlay enabled + per-layer toggles, grid step, Y offset |
 
 Loaded in `EditorLayer` constructor; saved on editor shutdown, Window menu changes, panel close (X), and Navigation Debug setting edits.
@@ -2594,3 +2606,44 @@ When a prefab is placed in a level scene (not in Prefab Edit Mode), the Inspecto
 ### Not Yet Implemented
 
 - `Animator::OnValidate` bone GameObjects still target the active scene — known limitation in prefab mode.
+
+---
+
+## 28. Project Settings & Graphics API
+
+Open from **Window → Project Settings** (`ProjectSettingsPanel.cpp`). The panel edits project-wide rendering defaults and persists them to the active `.rtbproj` and `lighting.ini`.
+
+### Sections
+
+| Section | Persists to | Contents |
+|---------|-------------|----------|
+| **Rendering** | `.rtbproj` (`GraphicsAPI=`) | OpenGL / Vulkan selector; shows active session API |
+| **Lighting** | `lighting.ini` | Ambient, shadows, DDGI volume, distance fog, volumetric fog |
+| **Save** | Both files | **Save Project Settings** button (does not change Graphics API session) |
+
+### Graphics API switch (editor only)
+
+The SDL window and RHI backend are created once at process start. Switching API **in-process** is not supported (window flags, ImGui backends, GPU singletons). The editor applies API changes by:
+
+1. Saving `GraphicsAPI=` to `.rtbproj`
+2. Stopping Play if active (`OnStop()`)
+3. Showing the unsaved-changes popup when the scene or prefab is dirty
+4. Spawning a new `RTBEngineEditor.exe` via `CreateProcessA` and exiting cleanly
+
+When the selected API differs from the running session, the **Rendering** section shows:
+
+> *The editor will restart to apply the Graphics API.*
+
+and an **Apply & Restart Editor** button (`EditorApplication::TryRestartForGraphicsAPI`).
+
+The new process reads the API with `Project::PeekGraphicsAPI` before the render device is created (`main.cpp`). CI can still override with `RTB_GRAPHICS_API=OpenGL|Vulkan`. Exported **RTBPlayer** builds are unaffected — this flow is editor-only.
+
+### VolumeComponent inspector
+
+`VolumeComponent` uses a custom inspector (`VolumeComponentInspector`) instead of the generic property list:
+
+- Header checkbox toggles the whole volume in the stack
+- **Zone** — global flag, box size, blend distance, priority, weight
+- **Distance Fog** / **Volumetric Fog** — per-effect enable checkbox (maps to `overrideDistanceFog` / `overrideVolumetricFog`) with parameters disabled when the effect is off
+
+See engine README [§7.12](../RTBEngine/README.md#712-volumecomponent) and [§8.16](../RTBEngine/README.md#816-post-process-volumes--fog) for runtime behavior.

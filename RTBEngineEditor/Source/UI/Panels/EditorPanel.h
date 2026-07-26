@@ -1,4 +1,5 @@
 #pragma once
+#include <RTBEngine/Rendering/RHI/GraphicsAPI.h>
 #include <RTBEngine/Scene/GameObject.h>
 #include <RTBEngine/Scene/Scene.h>
 #include <RTBEngine/Scene/SceneManager.h>
@@ -92,6 +93,7 @@ namespace RTBEditor {
         std::function<bool()> canCopySelection;
         std::function<bool()> hasClipboardContent;
         std::function<bool()> ensureScenePhysicsReady;
+        std::function<void(RTBEngine::Rendering::RHI::GraphicsAPI)> onRestartForGraphicsAPI;
     };
 
     inline void ClearSelection(EditorContext& context) {

@@ -28,9 +28,16 @@
 #include <RTBEngine/Rendering/GI/DDGISystem.h>
 #include "../UI/Panels/SceneViewPanel.h"
 #include "../Build/BuildSystem.h"
+#include <RTBEngine/Core/Logger.h>
+#include <Windows.h>
 
 namespace {
     namespace fs = std::filesystem;
+
+    std::string QuotePath(const fs::path& path)
+    {
+        return "\"" + path.string() + "\"";
+    }
 
     const char* GetEditorBuildConfiguration() {
 #ifdef _DEBUG
@@ -167,6 +174,10 @@ namespace RTBEditor {
 
             engineApp->RebuildPhysicsForScene(scene);
             return engineApp->GetPhysicsWorld() != nullptr;
+        };
+
+        uiLayer->GetContext().onRestartForGraphicsAPI = [this](RTBEngine::Rendering::RHI::GraphicsAPI api) {
+            TryRestartForGraphicsAPI(api);
         };
 
         uiLayer->GetMenuBar()->SetSaveSceneCallback([this]() {
@@ -593,6 +604,83 @@ namespace RTBEditor {
         }
     }
 
+    void EditorApplication::TryRestartForGraphicsAPI(RTBEngine::Rendering::RHI::GraphicsAPI api) {
+        if (!project) {
+            RTB_ERROR("EditorApplication: Cannot restart for Graphics API without an active project.");
+            return;
+        }
+
+        project->SetGraphicsAPI(api);
+        if (!project->Save()) {
+            RTB_ERROR("EditorApplication: Failed to save Graphics API to project file.");
+            return;
+        }
+
+        if (state == EditorState::Play || state == EditorState::Pause) {
+            OnStop();
+        }
+
+        if (uiLayer && uiLayer->IsPrefabEditMode() && !HasUnsavedPrefabChanges()) {
+            OnClosePrefab();
+        }
+
+        if (HasBlockingUnsavedChanges(PendingAction::RestartForGraphicsAPI)) {
+            pendingAction = PendingAction::RestartForGraphicsAPI;
+            showUnsavedScenePopup = true;
+        }
+        else {
+            BeginRelaunchAndExit();
+        }
+    }
+
+    bool EditorApplication::RelaunchEditorProcess() {
+        char executablePath[MAX_PATH] = {};
+        const DWORD pathLength = GetModuleFileNameA(nullptr, executablePath, MAX_PATH);
+        if (pathLength == 0 || pathLength >= MAX_PATH) {
+            RTB_ERROR("EditorApplication: Failed to resolve editor executable path for relaunch.");
+            return false;
+        }
+
+        const fs::path exePath(executablePath);
+        const fs::path workingDirectory = fs::current_path();
+
+        STARTUPINFOA startupInfo{};
+        startupInfo.cb = sizeof(startupInfo);
+
+        PROCESS_INFORMATION processInfo{};
+        std::string commandLine = QuotePath(exePath);
+
+        const BOOL created = CreateProcessA(
+            exePath.string().c_str(),
+            commandLine.data(),
+            nullptr,
+            nullptr,
+            FALSE,
+            0,
+            nullptr,
+            workingDirectory.string().c_str(),
+            &startupInfo,
+            &processInfo);
+
+        if (!created) {
+            RTB_ERROR("EditorApplication: CreateProcess failed while relaunching editor.");
+            return false;
+        }
+
+        CloseHandle(processInfo.hThread);
+        CloseHandle(processInfo.hProcess);
+        return true;
+    }
+
+    void EditorApplication::BeginRelaunchAndExit() {
+        if (RelaunchEditorProcess()) {
+            isRunning = false;
+        }
+        else {
+            RTB_ERROR("EditorApplication: Could not relaunch editor. Close and reopen manually.");
+        }
+    }
+
     void EditorApplication::ExecutePendingAction() {
         switch (pendingAction) {
         case PendingAction::Play:  OnPlay(); break;
@@ -602,6 +690,12 @@ namespace RTBEditor {
                 OnClosePrefab();
             }
             isRunning = false;
+            break;
+        case PendingAction::RestartForGraphicsAPI:
+            if (uiLayer && uiLayer->IsPrefabEditMode()) {
+                OnClosePrefab();
+            }
+            BeginRelaunchAndExit();
             break;
         case PendingAction::OpenScene: OnOpenScene(); break;
         case PendingAction::OpenPrefab: OnOpenPrefab(); break;
@@ -624,7 +718,13 @@ namespace RTBEditor {
             const bool sceneDirty = RTBEngine::Scene::SceneManager::GetInstance().IsSceneDirty();
             const bool closingPrefab = pendingAction == PendingAction::ClosePrefab;
             const bool openingPrefab = pendingAction == PendingAction::OpenPrefab;
+            const bool restartingForGraphicsApi = pendingAction == PendingAction::RestartForGraphicsAPI;
             const bool inPrefabMode = uiLayer && uiLayer->IsPrefabEditMode();
+
+            if (restartingForGraphicsApi) {
+                ImGui::TextWrapped("The editor will restart to apply the Graphics API.");
+                ImGui::Spacing();
+            }
 
             if (closingPrefab || (openingPrefab && prefabDirty)) {
                 ImGui::Text("The prefab has unsaved changes.");
@@ -640,7 +740,8 @@ namespace RTBEditor {
             ImGui::Spacing();
 
             const bool canSavePrefab = prefabDirty &&
-                (closingPrefab || openingPrefab || pendingAction == PendingAction::Exit);
+                (closingPrefab || openingPrefab || pendingAction == PendingAction::Exit ||
+                 pendingAction == PendingAction::RestartForGraphicsAPI);
             const bool canSaveScene = sceneDirty && !inPrefabMode;
             const bool canSave = canSavePrefab || canSaveScene;
 

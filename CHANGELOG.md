@@ -1,12 +1,25 @@
 # Changelog — RTBEngineEditor
 
-**Current version:** `0.10.0`
+**Current version:** `0.11.0`
 
 API documentation: [`README.md`](README.md)
 
-**Requirements:** RTBEngine SDK **0.10.0** (generate with `../RTBEngine/BuildSDK.bat`).
+**Requirements:** RTBEngine SDK **0.11.0** (generate with `../RTBEngine/BuildSDK.bat`).
 
 ---
+
+## [0.11.0] — 2026
+
+### Added
+- **Apply & Restart Editor** in Project Settings when the selected Graphics API differs from the active session (persists `GraphicsAPI=` to `.rtbproj`, then relaunches the editor process).
+- Custom **`VolumeComponent`** inspector: component enable toggle, zone settings (global / box / priority / weight), and Unity-style per-effect checkboxes for Distance Fog and Volumetric Fog.
+
+### Changed
+- Graphics API switching is **editor-only** and uses a clean process relaunch (`CreateProcessA`); the new instance reads the API via `Project::PeekGraphicsAPI` at startup. In-process GPU remount is intentionally not supported.
+- Unsaved scene/prefab popup integrates with graphics API restart (Save / Ignore / Cancel); **Play** is stopped automatically before relaunch.
+
+### Fixed
+- Project Settings Graphics API UX: no manual close/reopen — one-click apply with automatic editor restart.
 
 ## [0.10.0] — 2026
 

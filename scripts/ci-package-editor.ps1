@@ -37,6 +37,16 @@ if (-not (Test-Path (Join-Path $outDir 'RTBEngineEditor.exe'))) {
     throw "Editor output not found at $outDir"
 }
 
+$playerExe = Join-Path $sdkDir 'Bin\RTBPlayer.exe'
+if (-not (Test-Path $playerExe)) {
+    throw "RTBPlayer.exe not found at $playerExe (RTBPlayer Release build required for File -> Build and multiplayer test)"
+}
+
+$gameScriptsDll = Join-Path $editorRoot 'RTBEngineEditor\x64\Release\GameScripts.dll'
+if (-not (Test-Path $gameScriptsDll)) {
+    throw "GameScripts.dll not found at $gameScriptsDll"
+}
+
 $packageRoot = Join-Path $editorRoot 'dist\RTBEngineEditor'
 if (Test-Path $packageRoot) {
     Remove-Item -Recurse -Force $packageRoot
@@ -47,13 +57,11 @@ Write-Host "Packaging editor from $outDir"
 Copy-Item -Recurse -Force (Join-Path $outDir '*') $packageRoot
 
 # Ensure player and scripts are present at package root.
-$playerExe = Join-Path $sdkDir 'Bin\RTBPlayer.exe'
 if (Test-Path $playerExe) {
     Copy-Item -Force $playerExe (Join-Path $packageRoot 'RTBPlayer.exe')
     Copy-Item -Force $playerExe (Join-Path $packageRoot 'RTBEngine_SDK\Bin\RTBPlayer.exe')
 }
 
-$gameScriptsDll = Join-Path $editorRoot 'RTBEngineEditor\x64\Release\GameScripts.dll'
 if (Test-Path $gameScriptsDll) {
     Copy-Item -Force $gameScriptsDll (Join-Path $packageRoot 'GameScripts.dll')
 }

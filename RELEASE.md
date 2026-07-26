@@ -4,7 +4,7 @@ Publishes a **ready-to-run editor** bundle (engine, DLLs, `Assets/`, `Default/`,
 
 ## When it runs
 
-When you push a semver tag (for example `0.10.0`) to this repository.
+When you push a semver tag (for example `0.11.0`) to this repository.
 
 ## Create a release
 
@@ -14,13 +14,13 @@ When you push a semver tag (for example `0.10.0`) to this repository.
 ```bash
 git checkout main
 git pull
-git tag 0.10.0
-git push origin 0.10.0
+git tag 0.11.0
+git push origin 0.11.0
 ```
 
 The workflow [`.github/workflows/release.yml`](.github/workflows/release.yml) produces:
 
-- `RTBEngineEditor-0.10.0-win-x64.zip`
+- `RTBEngineEditor-0.11.0-win-x64.zip`
 
 Extract the archive and run `RTBEngineEditor.exe`.
 
