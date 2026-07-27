@@ -779,7 +779,7 @@ namespace RTBEditor {
                             "Include in DDGI and raytracing (TLAS).");
                         drawFlag("Occluder",
                             RTBEngine::Scene::StaticFlags::Occluder,
-                            "Reserved for future occlusion culling.");
+                            "Reserved for occlusion culling. Does not drive camera fade (use Occludable).");
                         drawFlag("Navigation",
                             RTBEngine::Scene::StaticFlags::Navigation,
                             "Valid geometry for nav grid bake.");

@@ -1,5 +1,5 @@
 Name=RTBEngine Demo
 StartScene=Assets/Scenes/Test/DDGI_Sponza.lua
-LastOpenScene=Assets/Scenes/Test/DDGI_Sponza.lua
+LastOpenScene=Assets/Scenes/DefaultScene.lua
 AssetDirectory=Assets
 GraphicsAPI=Vulkan

@@ -179,6 +179,33 @@ namespace {
         }
     }
 
+    // Stable WASD/aim basis from the fixed orbit camera, not the live child camera world
+    // matrix (which inherits pawn yaw between FixedUpdate and LateUpdate and causes stutter).
+    void GetFixedCameraPlanarBasis(RTBEngine::Math::Vector3& outForward,
+                                   RTBEngine::Math::Vector3& outRight)
+    {
+        const RTBEngine::Math::Quaternion orbitRotation =
+            RTBEngine::Math::Quaternion::FromEulerAngles(
+                kFixedCameraPitchDegrees * kDegToRad,
+                kFixedCameraYawDegrees * kDegToRad,
+                0.0f);
+
+        outForward = orbitRotation * RTBEngine::Math::Vector3::Forward();
+        outForward.y = 0.0f;
+        if (outForward.LengthSquared() <= kDirectionEpsilon) {
+            outForward = RTBEngine::Math::Vector3::Forward();
+        } else {
+            outForward.Normalize();
+        }
+
+        outRight = outForward.Cross(RTBEngine::Math::Vector3::Up());
+        if (outRight.LengthSquared() <= kDirectionEpsilon) {
+            outRight = RTBEngine::Math::Vector3::Forward().Cross(RTBEngine::Math::Vector3::Up());
+        } else {
+            outRight.Normalize();
+        }
+    }
+
 }
 
 RTB_REGISTER_COMPONENT(ThirdPersonCharacterController)
@@ -953,7 +980,10 @@ void ThirdPersonCharacterController::FinishAiming()
     aimPhase = AimPhase::Draw;
     SetAimArrowVisible(false);
     HideAttackAimTrail();
-    UpdateAnimatorLocomotion(false, false);
+
+    bool isRunning = false;
+    const RTBEngine::Math::Vector3 desiredMove = GetDesiredMoveDirection(isRunning);
+    UpdateAnimatorLocomotion(HasMovementInput(desiredMove), isRunning);
 }
 
 void ThirdPersonCharacterController::UpdateAimFacing(float deltaTime)
@@ -1035,8 +1065,6 @@ void ThirdPersonCharacterController::UpdateAimingMovement(float deltaTime)
         aimFacingDirection = desiredMove;
     }
 
-    UpdateAimFacingToward(aimFacingDirection, deltaTime);
-
     auto* rbComp = owner->GetComponent<RTBEngine::Scene::RigidBodyComponent>();
     RTBEngine::Physics::RigidBody* rigidBody =
         (rbComp && rbComp->HasRigidBody()) ? rbComp->GetRigidBody() : nullptr;
@@ -1056,6 +1084,8 @@ void ThirdPersonCharacterController::UpdateAimingMovement(float deltaTime)
             deltaTime);
         return;
     }
+
+    UpdateAimFacingToward(aimFacingDirection, deltaTime);
 
     if (hasMovementInput) {
         owner->GetTransform().SetPosition(
@@ -1135,8 +1165,6 @@ void ThirdPersonCharacterController::UpdateAttackFacingLock(float deltaTime)
         return;
     }
 
-    FaceAttackDirection(attackDirection);
-
     bool isRunning = false;
     RTBEngine::Math::Vector3 desiredMove = GetDesiredMoveDirection(isRunning);
     const bool hasMovementInput = HasMovementInput(desiredMove);
@@ -1150,13 +1178,16 @@ void ThirdPersonCharacterController::UpdateAttackFacingLock(float deltaTime)
     const bool useDynamicRigidBody =
         rigidBody && rigidBody->GetType() == RTBEngine::Physics::RigidBodyType::Dynamic;
 
+    FaceAttackDirection(attackDirection);
+
     if (useDynamicRigidBody) {
         ApplyDynamicPlanarMotion(
             rigidBody,
             desiredMove,
             attackDirection,
             speed,
-            deltaTime);
+            deltaTime,
+            0.0f);
         return;
     }
 
@@ -1194,7 +1225,8 @@ void ThirdPersonCharacterController::UpdateMovement(float deltaTime)
     const float speed = moveSpeed * (isRunning ? sprintMultiplier : 1.0f);
 
     if (useDynamicRigidBody) {
-        UpdateAimFacingToward(desiredMove, deltaTime);
+        // Facing is applied only via planar angular velocity — calling UpdateAimFacingToward
+        // here fought the rigid body and caused stuttering turns.
         ApplyDynamicPlanarMotion(
             rigidBody,
             desiredMove,
@@ -1601,7 +1633,7 @@ RTBEngine::Math::Vector3 ThirdPersonCharacterController::GetDesiredMoveDirection
     RTBEngine::Input::InputManager& input = RTBEngine::Input::InputManager::GetInstance();
     RTBEngine::Math::Vector3 forward = RTBEngine::Math::Vector3::Forward();
     RTBEngine::Math::Vector3 right = RTBEngine::Math::Vector3::Forward().Cross(RTBEngine::Math::Vector3::Up());
-    GetPlanarMovementBasis(cameraObject ? cameraObject : owner, forward, right);
+    GetFixedCameraPlanarBasis(forward, right);
 
     RTBEngine::Math::Vector3 desiredMove = RTBEngine::Math::Vector3::Zero();
     if (input.IsKeyPressed(RTBEngine::Input::KeyCode::W)) desiredMove += forward;
@@ -1705,7 +1737,7 @@ RTBEngine::Math::Vector3 ThirdPersonCharacterController::GetAttackDirectionFromJ
 {
     RTBEngine::Math::Vector3 forward = RTBEngine::Math::Vector3::Forward();
     RTBEngine::Math::Vector3 right = RTBEngine::Math::Vector3::Forward().Cross(RTBEngine::Math::Vector3::Up());
-    GetPlanarMovementBasis(cameraObject ? cameraObject : owner, forward, right);
+    GetFixedCameraPlanarBasis(forward, right);
 
     RTBEngine::Math::Vector3 attackDirection = right * joystickValue.x + forward * joystickValue.y;
     attackDirection.y = 0.0f;
@@ -1721,7 +1753,7 @@ RTBEngine::Math::Vector3 ThirdPersonCharacterController::GetAttackDirectionFromC
 {
     RTBEngine::Math::Vector3 forward = RTBEngine::Math::Vector3::Forward();
     RTBEngine::Math::Vector3 right = RTBEngine::Math::Vector3::Forward().Cross(RTBEngine::Math::Vector3::Up());
-    GetPlanarMovementBasis(cameraObject ? cameraObject : owner, forward, right);
+    GetFixedCameraPlanarBasis(forward, right);
 
     RTBEngine::Math::Vector3 attackDirection = forward;
     attackDirection.y = 0.0f;

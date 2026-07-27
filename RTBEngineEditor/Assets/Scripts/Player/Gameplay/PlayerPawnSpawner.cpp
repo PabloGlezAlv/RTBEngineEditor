@@ -79,10 +79,26 @@ void WireSpawnedPlayerCamera(RTBEngine::Scene::GameObject* spawnedPawn)
     }
 
     auto* controller = spawnedPawn->GetComponent<ThirdPersonCharacterController>();
-    if (!controller || !controller->cameraObject) {
-        if (controller && !controller->cameraObject) {
-            RTB_WARN("[PlayerPawnSpawner] cameraObject is not assigned on spawned player pawn.");
+    if (!controller) {
+        return;
+    }
+
+    if (!controller->cameraObject) {
+        for (RTBEngine::Scene::GameObject* child : spawnedPawn->GetChildren()) {
+            if (!child) {
+                continue;
+            }
+
+            if (child->GetName() == "MainCamera" ||
+                child->GetComponent<RTBEngine::Scene::CameraComponent>()) {
+                controller->cameraObject = child;
+                break;
+            }
         }
+    }
+
+    if (!controller->cameraObject) {
+        RTB_WARN("[PlayerPawnSpawner] cameraObject is not assigned on spawned player pawn.");
         return;
     }
 

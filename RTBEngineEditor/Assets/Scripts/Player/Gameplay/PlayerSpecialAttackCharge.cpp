@@ -3,6 +3,7 @@
 #include <RTBEngine/Core/Logger.h>
 #include <RTBEngine/Scene/GameObject.h>
 #include <RTBEngine/Scene/NetworkIdentity.h>
+#include <RTBEngine/Scene/SceneManager.h>
 #include <RTBEngine/UI/Elements/UIImage.h>
 #include <RTBEngine/UI/Elements/UIJoystick.h>
 
@@ -150,7 +151,8 @@ void PlayerSpecialAttackCharge::ApplyVisuals(bool forceReset)
     if (RTBEngine::UI::UIImage* background = GetBackgroundImage()) {
         const RTBEngine::Math::Vector4 tint = background->GetTint();
         background->SetTint(RTBEngine::Math::Vector4(tint.x, tint.y, tint.z, alpha));
-        background->SetRaycastTarget(ready);
+        // Keep non-interactive until a real special ability exists (avoid stealing pointer input).
+        background->SetRaycastTarget(false);
     }
 
     if (RTBEngine::UI::UIImage* handle = GetHandleImage()) {
@@ -159,7 +161,7 @@ void PlayerSpecialAttackCharge::ApplyVisuals(bool forceReset)
     }
 
     if (specialAttackJoystick) {
-        specialAttackJoystick->interactable = ready;
+        specialAttackJoystick->interactable = false;
     }
 
     if (readyIcon) {
@@ -173,6 +175,15 @@ void PlayerSpecialAttackCharge::ApplyVisuals(bool forceReset)
 
 void PlayerSpecialAttackCharge::ResetSceneJoystickVisuals()
 {
+    if (!specialAttackJoystick) {
+        return;
+    }
+
+    RTBEngine::Scene::GameObject* joystickOwner = specialAttackJoystick->GetOwner();
+    if (!joystickOwner || joystickOwner->IsBeingDestroyed()) {
+        return;
+    }
+
     ApplyVisuals(true);
 }
 
@@ -232,7 +243,9 @@ void PlayerSpecialAttackCharge::OnValidate()
 
 void PlayerSpecialAttackCharge::OnDestroy()
 {
-    if (IsLocalPlayer()) {
+    // During scene unload the shared HUD GameObject may already be destroyed.
+    // Touching cached UI component pointers here causes use-after-free on Stop Play.
+    if (!RTBEngine::Scene::SceneManager::GetInstance().IsSceneUnloading()) {
         ResetSceneJoystickVisuals();
     }
 

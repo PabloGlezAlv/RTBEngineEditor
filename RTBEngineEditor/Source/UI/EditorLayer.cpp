@@ -95,7 +95,19 @@ namespace RTBEditor {
     }
 
     void EditorLayer::Begin() {
+        if (!RTBEngine::Rendering::RHI::RenderDevice::HasDevice()) {
+            return;
+        }
+
         RTBEngine::Rendering::RHI::RenderDevice::Get().BeginImGuiFrame();
+
+        ImGuiIO& io = ImGui::GetIO();
+        if (io.DisplaySize.x < 1.0f || io.DisplaySize.y < 1.0f) {
+            // Minimized / invalid window — ImGui asserts on NewFrame with DisplaySize < 0.
+            io.DisplaySize.x = 1.0f;
+            io.DisplaySize.y = 1.0f;
+        }
+
         ImGui::NewFrame();
     }
 
