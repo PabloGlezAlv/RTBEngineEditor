@@ -1,6 +1,8 @@
 @echo off
 setlocal
 
+cd /d "%~dp0"
+
 echo ===========================================
 echo Building RTBPlayer...
 echo ===========================================
@@ -12,14 +14,14 @@ for /f "usebackq tokens=*" %%i in (`"C:\Program Files (x86)\Microsoft Visual Stu
 
 if "%VS_INSTALL_PATH%"=="" (
     echo [ERROR] Visual Studio installation not found.
-    pause
+    if /I not "%~1"=="chained" pause
     exit /b 1
 )
 
 set MSBUILD_PATH=%VS_INSTALL_PATH%\MSBuild\Current\Bin\MSBuild.exe
 if not exist "%MSBUILD_PATH%" (
     echo [ERROR] MSBuild.exe not found.
-    pause
+    if /I not "%~1"=="chained" pause
     exit /b 1
 )
 
@@ -31,7 +33,7 @@ echo Building RTBPlayer [Release x64]...
 "%MSBUILD_PATH%" RTBPlayer.sln /p:Configuration=Release /p:Platform=x64 /t:Rebuild /m
 if errorlevel 1 (
     echo [ERROR] Release build failed.
-    pause
+    if /I not "%~1"=="chained" pause
     exit /b 1
 )
 
@@ -40,4 +42,5 @@ echo ===========================================
 echo RTBPlayer built successfully.
 echo Output: ..\RTBEngineEditor\RTBEngine_SDK\Bin\RTBPlayer.exe
 echo ===========================================
-pause
+
+if /I not "%~1"=="chained" pause

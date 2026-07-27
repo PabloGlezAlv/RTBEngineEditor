@@ -685,7 +685,7 @@ namespace RTBEditor {
 
         if (context.selectedGameObjects.size() > 1) {
             ImGui::Text("Multiple GameObjects selected.");
-            ImGui::TextDisabled("Modo multi-objeto: la edicion de propiedades no esta disponible.");
+            ImGui::TextDisabled("Multi-object mode: property editing is not available.");
         } else if (context.selectedGameObject) {
             dirtyContext = &context;
             auto& name = context.selectedGameObject->GetName();
@@ -696,7 +696,7 @@ namespace RTBEditor {
                 MarkDirtyFromInspector();
             }
             if (ImGui::IsItemHovered()) {
-                ImGui::SetTooltip("Activar o desactivar el GameObject");
+                ImGui::SetTooltip("Enable or disable the GameObject");
             }
 
             ImGui::SameLine();
@@ -733,6 +733,59 @@ namespace RTBEditor {
                         }
                     }
                     ImGui::EndCombo();
+                }
+                EndInspectorRow();
+            }
+
+            {
+                RTBEngine::Scene::GameObject* go = context.selectedGameObject;
+                bool isStatic = go->IsStatic();
+
+                BeginInspectorRow("Static");
+                if (ImGui::Checkbox("##static", &isStatic)) {
+                    go->SetStatic(isStatic);
+                    MarkDirtyFromInspector();
+                }
+                if (ImGui::IsItemHovered()) {
+                    ImGui::SetTooltip(
+                        "Mark the object as static for render, GI, navigation, and occlusion optimizations.");
+                }
+
+                if (isStatic) {
+                    ImGui::SameLine();
+                    ImGui::PushID(go);
+                    if (ImGui::SmallButton("Flags")) {
+                        ImGui::OpenPopup("StaticFlagsPopup");
+                    }
+                    if (ImGui::BeginPopup("StaticFlagsPopup")) {
+                        auto drawFlag = [&](const char* label,
+                                            RTBEngine::Scene::StaticFlags flag,
+                                            const char* tooltip) {
+                            bool enabled = go->HasStaticFlag(flag);
+                            if (ImGui::Checkbox(label, &enabled)) {
+                                go->SetStaticFlag(flag, enabled);
+                                MarkDirtyFromInspector();
+                            }
+                            if (tooltip && ImGui::IsItemHovered()) {
+                                ImGui::SetTooltip("%s", tooltip);
+                            }
+                        };
+
+                        drawFlag("Batching",
+                            RTBEngine::Scene::StaticFlags::Batching,
+                            "Reserved for future static batching.");
+                        drawFlag("Contribute GI",
+                            RTBEngine::Scene::StaticFlags::ContributeGI,
+                            "Include in DDGI and raytracing (TLAS).");
+                        drawFlag("Occluder",
+                            RTBEngine::Scene::StaticFlags::Occluder,
+                            "Reserved for future occlusion culling.");
+                        drawFlag("Navigation",
+                            RTBEngine::Scene::StaticFlags::Navigation,
+                            "Valid geometry for nav grid bake.");
+                        ImGui::EndPopup();
+                    }
+                    ImGui::PopID();
                 }
                 EndInspectorRow();
             }
@@ -925,7 +978,7 @@ namespace RTBEditor {
                 EndInspectorRow();
 
                 if (isStretched) {
-                    ImGui::TextDisabled("Stretch: el tamano final viene de anchors + size delta.");
+                    ImGui::TextDisabled("Stretch: final size comes from anchors + size delta.");
                 }
 
                 RTBEngine::Math::Vector2 pivot = uiElement->GetPivot();
