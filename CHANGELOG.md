@@ -11,6 +11,8 @@ API documentation: [`README.md`](README.md)
 ## [0.11.0] — 2026
 
 ### Added
+- **Special attack charge joystick**: scene `SpecialAttackJoystick` charges from successful normal attack hits (ranged or melee). Alpha rises with charge; at 100% becomes interactable and shows a center charged icon. `RTB_INFO` log when fully charged. No special ability effect yet.
+- Charged special-attack UI icon at `Assets/UI/special_attack_charged_icon.png`.
 - **Apply & Restart Editor** in Project Settings when the selected Graphics API differs from the active session (persists `GraphicsAPI=` to `.rtbproj`, then relaunches the editor process).
 - Custom **`VolumeComponent`** inspector: component enable toggle, zone settings (global / box / priority / weight), and Unity-style per-effect checkboxes for Distance Fog and Volumetric Fog.
 

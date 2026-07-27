@@ -4,6 +4,7 @@
 #include "CombatAuthority.h"
 #include "FloatingDamageNumberSpawner.h"
 #include "HitFlashComponent.h"
+#include "LocalHostileHitNotify.h"
 #include "ProjectileComponents.h"
 #include "ProjectileSimulation.h"
 
@@ -607,8 +608,11 @@ bool ProjectileComponent::HandleSweepHit(const RTBEngine::Math::Vector3& previou
     HealthComponent* targetHealth = ResolveHitHealth(hit.gameObject);
     if (targetHealth && !HasAlreadyHit(targetHealth)) {
         TryTriggerHitFlash(hit.gameObject);
-        if (!applyDamage && CombatAuthority::IsLocallyControlled(instigator)) {
-            TryTriggerDamageNumber(hit.gameObject, damage, hit.point);
+        if (CombatAuthority::IsLocallyControlled(instigator)) {
+            if (!applyDamage) {
+                TryTriggerDamageNumber(hit.gameObject, damage, hit.point);
+            }
+            LocalHostileHitNotify::NotifySuccessfulHit(instigator);
         }
     }
 
@@ -693,8 +697,11 @@ bool ProjectileComponent::ProcessEcsHit(RTBEngine::Scene::GameObject* hitObject,
     HealthComponent* targetHealth = ResolveHitHealth(hitObject);
     if (targetHealth && !HasAlreadyHit(targetHealth)) {
         TryTriggerHitFlash(hitObject);
-        if (!applyDamage && CombatAuthority::IsLocallyControlled(instigator)) {
-            TryTriggerDamageNumber(hitObject, damage, hitPoint);
+        if (CombatAuthority::IsLocallyControlled(instigator)) {
+            if (!applyDamage) {
+                TryTriggerDamageNumber(hitObject, damage, hitPoint);
+            }
+            LocalHostileHitNotify::NotifySuccessfulHit(instigator);
         }
     }
 

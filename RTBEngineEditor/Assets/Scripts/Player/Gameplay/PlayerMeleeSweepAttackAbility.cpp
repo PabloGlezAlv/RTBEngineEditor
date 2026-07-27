@@ -4,6 +4,7 @@
 #include "CharacterDefinition.h"
 #include "CombatAuthority.h"
 #include "HealthComponent.h"
+#include "LocalHostileHitNotify.h"
 #include "PlayerAmmoSystem.h"
 
 #include <RTBEngine/Scene/AudioSourceComponent.h>
@@ -211,6 +212,7 @@ bool PlayerMeleeSweepAttackAbility::ApplySweepHits(
         damageContext.hitDirection = castDirection;
         damageContext.knockbackStrength = knockbackStrength;
         hit.health->TakeDamage(hitDamage, damageContext);
+        LocalHostileHitNotify::NotifySuccessfulHit(instigator);
 
         anyHit = true;
     }

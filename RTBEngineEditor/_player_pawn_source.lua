@@ -76,6 +76,12 @@
                         partialAmmoColor = Color(0.52, 0.72, 0.92, 0.55)
                     },
                     {
+                        type = "PlayerSpecialAttackCharge",
+                        specialAttackJoystick = "B5D8E93E-6F33-44BA-9F4C-3B7E8E2B9D11/UIJoystick",
+                        readyIcon = "C2A14D70-1B9E-4F83-A551-6D8E9C0F1122/UIImage",
+                        hitsToFullyCharge = 5,
+                    },
+                    {
                         type = "ProjectileAttackAbility",
                         projectilePrefabRef = "Assets/Prefabs/Combat/Projectiles/Arrow Projectile.prefab",
                         attackOriginHeightOffset = 0.50,

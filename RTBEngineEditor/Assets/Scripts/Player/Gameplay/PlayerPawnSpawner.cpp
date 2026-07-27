@@ -10,12 +10,14 @@
 #include "RoundManager.h"
 
 #include "ThirdPersonCharacterController.h"
+#include "PlayerSpecialAttackCharge.h"
 
 #include <RTBEngine/Animation/Animator.h>
 #include <RTBEngine/Core/Logger.h>
 #include <RTBEngine/Input/InputManager.h>
 #include <RTBEngine/Scene/CameraComponent.h>
 #include <RTBEngine/Scene/SceneManager.h>
+#include <RTBEngine/UI/Elements/UIImage.h>
 #include <RTBEngine/UI/Elements/UIJoystick.h>
 
 #include <string>
@@ -34,6 +36,40 @@ RTBEngine::UI::UIJoystick* FindSceneAttackJoystick(RTBEngine::Scene::Scene* scen
     }
 
     return joystickObject->GetComponent<RTBEngine::UI::UIJoystick>();
+}
+
+RTBEngine::UI::UIJoystick* FindSceneSpecialAttackJoystick(RTBEngine::Scene::Scene* scene)
+{
+    if (!scene) {
+        return nullptr;
+    }
+
+    RTBEngine::Scene::GameObject* joystickObject = scene->FindGameObject("SpecialAttackJoystick");
+    if (!joystickObject) {
+        return nullptr;
+    }
+
+    return joystickObject->GetComponent<RTBEngine::UI::UIJoystick>();
+}
+
+RTBEngine::UI::UIImage* FindSceneSpecialAttackIcon(RTBEngine::Scene::Scene* scene)
+{
+    if (!scene) {
+        return nullptr;
+    }
+
+    RTBEngine::Scene::GameObject* joystickObject = scene->FindGameObject("SpecialAttackJoystick");
+    if (!joystickObject) {
+        return nullptr;
+    }
+
+    for (RTBEngine::Scene::GameObject* child : joystickObject->GetChildren()) {
+        if (child && child->GetName() == "SpecialAttackIcon") {
+            return child->GetComponent<RTBEngine::UI::UIImage>();
+        }
+    }
+
+    return nullptr;
 }
 
 void WireSpawnedPlayerCamera(RTBEngine::Scene::GameObject* spawnedPawn)
@@ -87,6 +123,20 @@ void WireSpawnedPlayerReferences(
                 RTBEngine::Scene::SceneManager::GetInstance().GetActiveScene()) {
             controller->attackJoystick = FindSceneAttackJoystick(scene);
         }
+    }
+
+    if (auto* specialCharge = spawnedPawn->GetComponent<PlayerSpecialAttackCharge>()) {
+        RTBEngine::Scene::Scene* scene =
+            RTBEngine::Scene::SceneManager::GetInstance().GetActiveScene();
+        if (scene) {
+            if (!specialCharge->specialAttackJoystick) {
+                specialCharge->specialAttackJoystick = FindSceneSpecialAttackJoystick(scene);
+            }
+            if (!specialCharge->readyIcon) {
+                specialCharge->readyIcon = FindSceneSpecialAttackIcon(scene);
+            }
+        }
+        specialCharge->RefreshAfterSpawn();
     }
 
     RTBEngine::Scene::Scene* scene = RTBEngine::Scene::SceneManager::GetInstance().GetActiveScene();

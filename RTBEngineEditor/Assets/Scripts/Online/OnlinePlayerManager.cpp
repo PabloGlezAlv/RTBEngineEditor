@@ -13,6 +13,7 @@
 #include "ProjectileAttackAbility.h"
 #include "RoundManager.h"
 #include "ThirdPersonCharacterController.h"
+#include "PlayerSpecialAttackCharge.h"
 
 #include <RTBEngine/Core/Logger.h>
 #include <RTBEngine/Scene/GameObject.h>
@@ -147,6 +148,12 @@ namespace {
         }
 
         controller->attackJoystick = nullptr;
+        if (RTBEngine::Scene::GameObject* pawn = controller->GetOwner()) {
+            if (auto* specialCharge = pawn->GetComponent<PlayerSpecialAttackCharge>()) {
+                specialCharge->specialAttackJoystick = nullptr;
+                specialCharge->readyIcon = nullptr;
+            }
+        }
         if (controller->cameraObject) {
             controller->cameraObject->SetActive(false);
             controller->cameraObject = nullptr;
