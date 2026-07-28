@@ -60,6 +60,10 @@ public:
     void ApplyCharacterStats(const CharacterDefinition& definition) override;
     void RefreshAfterSpawn();
 
+    RTBEngine::Math::Vector3 GetPlanarAttackDirectionFromJoystick(
+        const RTBEngine::Math::Vector2& joystickValue) const;
+    void FaceTowardPlanarDirection(const RTBEngine::Math::Vector3& direction, float deltaTime);
+
     RTBEngine::Scene::GameObject* cameraObject = nullptr;
     HealthComponent* health = nullptr;
     int team = static_cast<int>(CharacterTeam::Player);
@@ -135,6 +139,7 @@ private:
     void FinishAiming();
     void UpdateAimFacing(float deltaTime);
     void UpdateAimingMovement(float deltaTime);
+    void UpdateSpecialAttackAimingMovement(float deltaTime, const RTBEngine::Math::Vector3& aimDirection);
     void SetAimArrowVisible(bool visible);
     void UpdateAttackAimTrail();
     void HideAttackAimTrail();

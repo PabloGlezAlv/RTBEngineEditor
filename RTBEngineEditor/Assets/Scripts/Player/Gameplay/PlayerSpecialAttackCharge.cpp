@@ -1,5 +1,8 @@
 #include "PlayerSpecialAttackCharge.h"
 
+#include "PlayerSpecialBeamAttack.h"
+#include "ThirdPersonCharacterController.h"
+
 #include <RTBEngine/Scene/GameObject.h>
 #include <RTBEngine/Scene/NetworkIdentity.h>
 #include <RTBEngine/Scene/SceneManager.h>
@@ -14,6 +17,7 @@ using ThisClass = PlayerSpecialAttackCharge;
 
 namespace {
     constexpr float kMinChargeAlpha = 0.08f;
+    constexpr float kDirectionEpsilon = 0.0001f;
 
     RTBEngine::Scene::GameObject* FindChildByName(RTBEngine::Scene::GameObject* root, const std::string& name)
     {
@@ -36,6 +40,11 @@ namespace {
         }
 
         return nullptr;
+    }
+
+    bool HasPlanarDirection(const RTBEngine::Math::Vector3& value)
+    {
+        return std::abs(value.x) > kDirectionEpsilon || std::abs(value.z) > kDirectionEpsilon;
     }
 }
 
@@ -147,11 +156,15 @@ void PlayerSpecialAttackCharge::ApplyVisuals(bool forceReset)
     const float normalized = forceReset ? 0.0f : GetChargeNormalized();
     const float alpha = forceReset ? kMinChargeAlpha : std::max(kMinChargeAlpha, normalized);
 
+    PlayerSpecialBeamAttack* beamAttack =
+        owner ? owner->GetComponent<PlayerSpecialBeamAttack>() : nullptr;
+    const bool beamActive = beamAttack && beamAttack->IsActive();
+    const bool canInteract = ready && !beamActive;
+
     if (RTBEngine::UI::UIImage* background = GetBackgroundImage()) {
         const RTBEngine::Math::Vector4 tint = background->GetTint();
         background->SetTint(RTBEngine::Math::Vector4(tint.x, tint.y, tint.z, alpha));
-        // Keep non-interactive until a real special ability exists (avoid stealing pointer input).
-        background->SetRaycastTarget(false);
+        background->SetRaycastTarget(canInteract);
     }
 
     if (RTBEngine::UI::UIImage* handle = GetHandleImage()) {
@@ -160,11 +173,11 @@ void PlayerSpecialAttackCharge::ApplyVisuals(bool forceReset)
     }
 
     if (specialAttackJoystick) {
-        specialAttackJoystick->interactable = false;
+        specialAttackJoystick->interactable = canInteract;
     }
 
     if (readyIcon) {
-        readyIcon->SetVisible(ready);
+        readyIcon->SetVisible(ready && !beamActive);
         if (ready) {
             const RTBEngine::Math::Vector4 tint = readyIcon->GetTint();
             readyIcon->SetTint(RTBEngine::Math::Vector4(tint.x, tint.y, tint.z, 1.0f));
@@ -202,14 +215,138 @@ void PlayerSpecialAttackCharge::RegisterSuccessfulHit()
     ApplyVisuals(false);
 }
 
+bool PlayerSpecialAttackCharge::ConsumeCharge()
+{
+    if (!IsReady()) {
+        return false;
+    }
+
+    currentHits = 0;
+    ApplyVisuals(false);
+    return true;
+}
+
+void PlayerSpecialAttackCharge::UnsubscribeFromSpecialJoystick()
+{
+    specialJoystickReleaseSubscription.Reset();
+    subscribedSpecialJoystick = nullptr;
+}
+
+void PlayerSpecialAttackCharge::RebindSpecialJoystickSubscription()
+{
+    if (subscribedSpecialJoystick == specialAttackJoystick &&
+        specialJoystickReleaseSubscription.IsValid()) {
+        return;
+    }
+
+    UnsubscribeFromSpecialJoystick();
+
+    if (!specialAttackJoystick || !IsLocalPlayer()) {
+        return;
+    }
+
+    subscribedSpecialJoystick = specialAttackJoystick;
+    specialJoystickReleaseSubscription = specialAttackJoystick->SubscribeToReleased(
+        [this](const RTBEngine::Math::Vector2& joystickValue) {
+            HandleSpecialJoystickReleased(joystickValue);
+        });
+}
+
+void PlayerSpecialAttackCharge::HandleSpecialJoystickReleased(
+    const RTBEngine::Math::Vector2& joystickValue)
+{
+    if (!IsLocalPlayer() || !owner) {
+        return;
+    }
+
+    auto* beamAttack = owner->GetComponent<PlayerSpecialBeamAttack>();
+    if (beamAttack) {
+        beamAttack->HideAimPreview();
+    }
+
+    if (!IsReady()) {
+        return;
+    }
+
+    if (!beamAttack || beamAttack->IsActive()) {
+        return;
+    }
+
+    auto* controller = owner->GetComponent<ThirdPersonCharacterController>();
+    if (!controller) {
+        return;
+    }
+
+    const RTBEngine::Math::Vector3 attackDirection =
+        controller->GetPlanarAttackDirectionFromJoystick(joystickValue);
+    if (!HasPlanarDirection(attackDirection)) {
+        return;
+    }
+
+    if (!beamAttack->TryActivate(attackDirection)) {
+        return;
+    }
+
+    ConsumeCharge();
+}
+
+bool PlayerSpecialAttackCharge::TryGetSpecialAimDirection(
+    RTBEngine::Math::Vector3& outAimDirection) const
+{
+    if (!IsLocalPlayer() || !owner || !specialAttackJoystick || !IsReady()) {
+        return false;
+    }
+
+    if (!specialAttackJoystick->IsDragging()) {
+        return false;
+    }
+
+    const auto* beamAttack = owner->GetComponent<PlayerSpecialBeamAttack>();
+    if (!beamAttack || beamAttack->IsActive()) {
+        return false;
+    }
+
+    const auto* controller = owner->GetComponent<ThirdPersonCharacterController>();
+    if (!controller) {
+        return false;
+    }
+
+    outAimDirection = controller->GetPlanarAttackDirectionFromJoystick(
+        specialAttackJoystick->GetValue());
+    return HasPlanarDirection(outAimDirection);
+}
+
+void PlayerSpecialAttackCharge::OnLateUpdate(float /*deltaTime*/)
+{
+    if (!IsLocalPlayer() || !owner) {
+        return;
+    }
+
+    auto* beamAttack = owner->GetComponent<PlayerSpecialBeamAttack>();
+    if (!beamAttack) {
+        return;
+    }
+
+    RTBEngine::Math::Vector3 aimDirection = RTBEngine::Math::Vector3::Zero();
+    if (!TryGetSpecialAimDirection(aimDirection)) {
+        beamAttack->HideAimPreview();
+        return;
+    }
+
+    beamAttack->UpdateAimPreview(aimDirection);
+}
+
 void PlayerSpecialAttackCharge::RefreshAfterSpawn()
 {
     ClampSettings();
     EnsureReferences();
     if (!IsLocalPlayer()) {
+        UnsubscribeFromSpecialJoystick();
         return;
     }
 
+    RebindSpecialJoystickSubscription();
+    SetUpdateTickEnabled(true);
     ApplyVisuals(false);
 }
 
@@ -219,10 +356,13 @@ void PlayerSpecialAttackCharge::OnStart()
     if (!IsLocalPlayer()) {
         specialAttackJoystick = nullptr;
         readyIcon = nullptr;
+        SetUpdateTickEnabled(false);
         return;
     }
 
     EnsureReferences();
+    RebindSpecialJoystickSubscription();
+    SetUpdateTickEnabled(true);
     ApplyVisuals(false);
 }
 
@@ -237,8 +377,8 @@ void PlayerSpecialAttackCharge::OnValidate()
 
 void PlayerSpecialAttackCharge::OnDestroy()
 {
-    // During scene unload the shared HUD GameObject may already be destroyed.
-    // Touching cached UI component pointers here causes use-after-free on Stop Play.
+    UnsubscribeFromSpecialJoystick();
+
     if (!RTBEngine::Scene::SceneManager::GetInstance().IsSceneUnloading()) {
         ResetSceneJoystickVisuals();
     }

@@ -82,6 +82,11 @@
                         hitsToFullyCharge = 5,
                     },
                     {
+                        type = "PlayerSpecialBeamAttack",
+                        beamTrail = "SP3C14L-BEAM-4000-8000-000000000001/TrailRenderer",
+                        aimPreviewTrail = "SP3C14L-A1M0-4000-8000-000000000001/TrailRenderer",
+                    },
+                    {
                         type = "ProjectileAttackAbility",
                         projectilePrefabRef = "Assets/Prefabs/Combat/Projectiles/Arrow Projectile.prefab",
                         attackOriginHeightOffset = 0.50,
@@ -476,6 +481,34 @@
                                 width = 0.35,
                                 color = Color(1.00, 1.00, 1.00, 0.54),
                                 fadeAlphaAlongLength = false,
+                                visible = false
+                            },
+                        }
+                    },
+                    {
+                        name = "Special Attack Aim Trail",
+                        uuid = "SP3C14L-A1M0-4000-8000-000000000001",
+                        position = Vector3(0.00, 1.00, 0.40),
+                        components = {
+                            {
+                                type = "TrailRenderer",
+                                width = 1.10,
+                                color = Color(1.00, 1.00, 1.00, 0.54),
+                                fadeAlphaAlongLength = false,
+                                visible = false
+                            },
+                        }
+                    },
+                    {
+                        name = "Special Beam Trail",
+                        uuid = "SP3C14L-BEAM-4000-8000-000000000001",
+                        position = Vector3(0.00, 1.00, 0.40),
+                        components = {
+                            {
+                                type = "TrailRenderer",
+                                width = 1.60,
+                                color = Color(1.00, 0.95, 0.75, 0.85),
+                                fadeAlphaAlongLength = true,
                                 visible = false
                             },
                         }

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <RTBEngine/Core/Event.h>
+#include <RTBEngine/Math/Vectors/Vector3.h>
 #include <RTBEngine/Reflection/PropertyMacros.h>
 #include <RTBEngine/Scene/Component.h>
 
@@ -9,6 +11,8 @@ namespace RTBEngine {
         class UIJoystick;
     }
 }
+
+class PlayerSpecialBeamAttack;
 
 class PlayerSpecialAttackCharge : public RTBEngine::Scene::Component
 {
@@ -24,15 +28,19 @@ public:
     bool IsReady() const;
     float GetChargeNormalized() const;
     void RefreshAfterSpawn();
+    bool TryGetSpecialAimDirection(RTBEngine::Math::Vector3& outAimDirection) const;
 
     RTB_COMPONENT(PlayerSpecialAttackCharge)
 
     void OnStart() override;
     void OnValidate() override;
+    void OnLateUpdate(float deltaTime) override;
     void OnDestroy() override;
 
 private:
     int currentHits = 0;
+    RTBEngine::UI::UIJoystick* subscribedSpecialJoystick = nullptr;
+    RTBEngine::Core::EventSubscription specialJoystickReleaseSubscription;
 
     bool IsLocalPlayer() const;
     void ClampSettings();
@@ -40,6 +48,10 @@ private:
     void ResolveImagesFromJoystick();
     void ApplyVisuals(bool forceReset);
     void ResetSceneJoystickVisuals();
+    void RebindSpecialJoystickSubscription();
+    void UnsubscribeFromSpecialJoystick();
+    void HandleSpecialJoystickReleased(const RTBEngine::Math::Vector2& joystickValue);
+    bool ConsumeCharge();
     RTBEngine::UI::UIImage* GetBackgroundImage() const;
     RTBEngine::UI::UIImage* GetHandleImage() const;
 };

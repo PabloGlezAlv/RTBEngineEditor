@@ -9,6 +9,8 @@
 #include <RTBEngine/Online/OnlineGameplayNet.h>
 #include "PauseMenuController.h"
 #include "PlayerAmmoSystem.h"
+#include "PlayerSpecialBeamAttack.h"
+#include "PlayerSpecialAttackCharge.h"
 #include "PlayerRegistry.h"
 #include "CharacterAbility.h"
 #include "CharacterCombatOrigins.h"
@@ -318,6 +320,25 @@ void ThirdPersonCharacterController::OnFixedUpdate(float fixedDeltaTime)
     if (RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby() &&
         !RTBEngine::Online::OnlineGameplayNet::IsLobbyHost() &&
         IsLocallyControlled()) {
+        if (auto* beamAttack = owner->GetComponent<PlayerSpecialBeamAttack>()) {
+            if (beamAttack->IsActive()) {
+                StopPlanarMotion();
+                beamAttack->ApplyMovementLock(fixedDeltaTime);
+                UpdateAnimatorLocomotion(false, false);
+                SendNetworkInput();
+                return;
+            }
+        }
+
+        if (auto* specialCharge = owner->GetComponent<PlayerSpecialAttackCharge>()) {
+            RTBEngine::Math::Vector3 specialAimDirection = RTBEngine::Math::Vector3::Zero();
+            if (specialCharge->TryGetSpecialAimDirection(specialAimDirection)) {
+                UpdateSpecialAttackAimingMovement(fixedDeltaTime, specialAimDirection);
+                SendNetworkInput();
+                return;
+            }
+        }
+
         if (state == State::Aiming) {
             UpdateAimingMovement(fixedDeltaTime);
         }
@@ -335,6 +356,25 @@ void ThirdPersonCharacterController::OnFixedUpdate(float fixedDeltaTime)
         SetAimArrowVisible(false);
         StopPlanarMotion();
         return;
+    }
+
+    if (auto* beamAttack = owner->GetComponent<PlayerSpecialBeamAttack>()) {
+        if (beamAttack->IsActive()) {
+            HideAttackAimTrail();
+            SetAimArrowVisible(false);
+            StopPlanarMotion();
+            beamAttack->ApplyMovementLock(fixedDeltaTime);
+            UpdateAnimatorLocomotion(false, false);
+            return;
+        }
+    }
+
+    if (auto* specialCharge = owner->GetComponent<PlayerSpecialAttackCharge>()) {
+        RTBEngine::Math::Vector3 specialAimDirection = RTBEngine::Math::Vector3::Zero();
+        if (specialCharge->TryGetSpecialAimDirection(specialAimDirection)) {
+            UpdateSpecialAttackAimingMovement(fixedDeltaTime, specialAimDirection);
+            return;
+        }
     }
 
     if (PauseMenuController::IsAnyMenuOpen()) {
@@ -1133,6 +1173,51 @@ void ThirdPersonCharacterController::UpdateAimingMovement(float deltaTime)
     }
 }
 
+void ThirdPersonCharacterController::UpdateSpecialAttackAimingMovement(
+    float deltaTime,
+    const RTBEngine::Math::Vector3& aimDirection)
+{
+    if (!owner || !HasMovementInput(aimDirection)) {
+        return;
+    }
+
+    bool isRunning = false;
+    const RTBEngine::Math::Vector3 desiredMove = GetDesiredMoveDirection(isRunning);
+    const bool hasMovementInput = HasMovementInput(desiredMove);
+
+    RTBEngine::Math::Vector3 aimFacingDirection = aimDirection;
+    if (!HasMovementInput(aimFacingDirection) && hasMovementInput) {
+        aimFacingDirection = desiredMove;
+    }
+
+    auto* rbComp = owner->GetComponent<RTBEngine::Scene::RigidBodyComponent>();
+    RTBEngine::Physics::RigidBody* rigidBody =
+        (rbComp && rbComp->HasRigidBody()) ? rbComp->GetRigidBody() : nullptr;
+    const bool useDynamicRigidBody =
+        rigidBody && rigidBody->GetType() == RTBEngine::Physics::RigidBodyType::Dynamic;
+
+    const float speed = hasMovementInput
+        ? moveSpeed * (isRunning ? sprintMultiplier : 1.0f)
+        : 0.0f;
+
+    if (useDynamicRigidBody) {
+        ApplyDynamicPlanarMotion(
+            rigidBody,
+            desiredMove,
+            aimFacingDirection,
+            speed,
+            deltaTime);
+        return;
+    }
+
+    UpdateAimFacingToward(aimFacingDirection, deltaTime);
+
+    if (hasMovementInput) {
+        owner->GetTransform().SetPosition(
+            owner->GetTransform().GetPosition() + desiredMove * speed * deltaTime);
+    }
+}
+
 void ThirdPersonCharacterController::SetAimArrowVisible(bool visible)
 {
     if (!aimArrowVisual || !owner) {
@@ -1789,6 +1874,48 @@ RTBEngine::Math::Vector3 ThirdPersonCharacterController::GetAttackDirectionFromJ
 
     attackDirection.Normalize();
     return attackDirection;
+}
+
+RTBEngine::Math::Vector3 ThirdPersonCharacterController::GetPlanarAttackDirectionFromJoystick(
+    const RTBEngine::Math::Vector2& joystickValue) const
+{
+    RTBEngine::Math::Vector3 attackDirection = GetAttackDirectionFromJoystick(joystickValue);
+    if (!HasMovementInput(attackDirection) && owner) {
+        attackDirection = owner->GetWorldRotation() * RTBEngine::Math::Vector3::Forward();
+        attackDirection.y = 0.0f;
+        if (attackDirection.LengthSquared() > kDirectionEpsilon) {
+            attackDirection.Normalize();
+        }
+    }
+
+    return attackDirection;
+}
+
+void ThirdPersonCharacterController::FaceTowardPlanarDirection(
+    const RTBEngine::Math::Vector3& direction,
+    float deltaTime)
+{
+    if (!owner || !HasMovementInput(direction)) {
+        return;
+    }
+
+    auto* rbComp = owner->GetComponent<RTBEngine::Scene::RigidBodyComponent>();
+    RTBEngine::Physics::RigidBody* rigidBody =
+        (rbComp && rbComp->HasRigidBody()) ? rbComp->GetRigidBody() : nullptr;
+    const bool useDynamicRigidBody =
+        rigidBody && rigidBody->GetType() == RTBEngine::Physics::RigidBodyType::Dynamic;
+
+    if (useDynamicRigidBody) {
+        ApplyDynamicPlanarMotion(
+            rigidBody,
+            RTBEngine::Math::Vector3::Zero(),
+            direction,
+            0.0f,
+            deltaTime);
+        return;
+    }
+
+    UpdateAimFacingToward(direction, deltaTime);
 }
 
 RTBEngine::Math::Vector3 ThirdPersonCharacterController::GetAttackDirectionFromCamera() const
