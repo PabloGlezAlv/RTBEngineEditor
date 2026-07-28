@@ -7,6 +7,13 @@
 class OnlinePlayerManager;
 class RoundManager;
 
+namespace RTBEngine {
+    namespace UI {
+        class UIImage;
+        class UIJoystick;
+    }
+}
+
 class PlayerPawnSpawner : public RTBEngine::Scene::Component {
 public:
     PlayerPawnSpawner() = default;
@@ -14,6 +21,9 @@ public:
 
     OnlinePlayerManager* onlinePlayerManager = nullptr;
     RoundManager* roundManager = nullptr;
+    RTBEngine::UI::UIJoystick* attackJoystick = nullptr;
+    RTBEngine::UI::UIJoystick* specialAttackJoystick = nullptr;
+    RTBEngine::UI::UIImage* specialAttackReadyIcon = nullptr;
 
     RTB_COMPONENT(PlayerPawnSpawner)
 

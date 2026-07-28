@@ -209,25 +209,6 @@ namespace {
         }
     }
 
-    RTBEngine::Scene::GameObject* FindNamedDescendant(RTBEngine::Scene::GameObject* node, const char* name)
-    {
-        if (!node || !name) {
-            return nullptr;
-        }
-
-        if (node->GetName() == name) {
-            return node;
-        }
-
-        for (RTBEngine::Scene::GameObject* child : node->GetChildren()) {
-            if (RTBEngine::Scene::GameObject* found = FindNamedDescendant(child, name)) {
-                return found;
-            }
-        }
-
-        return nullptr;
-    }
-
 }
 
 RTB_REGISTER_COMPONENT(ThirdPersonCharacterController)
@@ -254,7 +235,7 @@ void ThirdPersonCharacterController::OnStart()
     hasReplicatedMotionSample = false;
     replicatedAnimatorReady = false;
     ClampSettings();
-    EnsureAimVisualReferences();
+    CacheGameplayReferences();
     ValidateCharacterHealth();
     ValidateRequiredReferences();
     DisableCompetingCameraController();
@@ -322,19 +303,17 @@ void ThirdPersonCharacterController::OnFixedUpdate(float fixedDeltaTime)
     if (RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby() &&
         !RTBEngine::Online::OnlineGameplayNet::IsLobbyHost() &&
         IsLocallyControlled()) {
-        if (auto* beamAttack = owner->GetComponent<PlayerSpecialBeamAttack>()) {
-            if (beamAttack->IsActive()) {
-                StopPlanarMotion();
-                beamAttack->ApplyMovementLock(fixedDeltaTime);
-                UpdateAnimatorLocomotion(false, false);
-                SendNetworkInput();
-                return;
-            }
+        if (specialBeamAttack && specialBeamAttack->IsActive()) {
+            StopPlanarMotion();
+            specialBeamAttack->ApplyMovementLock(fixedDeltaTime);
+            UpdateAnimatorLocomotion(false, false);
+            SendNetworkInput();
+            return;
         }
 
-        if (auto* specialCharge = owner->GetComponent<PlayerSpecialAttackCharge>()) {
+        if (specialAttackCharge) {
             RTBEngine::Math::Vector3 specialAimDirection = RTBEngine::Math::Vector3::Zero();
-            if (specialCharge->TryGetSpecialAimDirection(specialAimDirection)) {
+            if (specialAttackCharge->TryGetSpecialAimDirection(specialAimDirection)) {
                 UpdateSpecialAttackAimingMovement(fixedDeltaTime, specialAimDirection);
                 SendNetworkInput();
                 return;
@@ -360,20 +339,18 @@ void ThirdPersonCharacterController::OnFixedUpdate(float fixedDeltaTime)
         return;
     }
 
-    if (auto* beamAttack = owner->GetComponent<PlayerSpecialBeamAttack>()) {
-        if (beamAttack->IsActive()) {
-            HideAttackAimTrail();
-            SetAimArrowVisible(false);
-            StopPlanarMotion();
-            beamAttack->ApplyMovementLock(fixedDeltaTime);
-            UpdateAnimatorLocomotion(false, false);
-            return;
-        }
+    if (specialBeamAttack && specialBeamAttack->IsActive()) {
+        HideAttackAimTrail();
+        SetAimArrowVisible(false);
+        StopPlanarMotion();
+        specialBeamAttack->ApplyMovementLock(fixedDeltaTime);
+        UpdateAnimatorLocomotion(false, false);
+        return;
     }
 
-    if (auto* specialCharge = owner->GetComponent<PlayerSpecialAttackCharge>()) {
+    if (specialAttackCharge) {
         RTBEngine::Math::Vector3 specialAimDirection = RTBEngine::Math::Vector3::Zero();
-        if (specialCharge->TryGetSpecialAimDirection(specialAimDirection)) {
+        if (specialAttackCharge->TryGetSpecialAimDirection(specialAimDirection)) {
             UpdateSpecialAttackAimingMovement(fixedDeltaTime, specialAimDirection);
             return;
         }
@@ -608,6 +585,7 @@ void ThirdPersonCharacterController::ScheduleAttackSafetyTimeout()
 void ThirdPersonCharacterController::OnValidate()
 {
     ClampSettings();
+    CacheGameplayReferences();
     ValidateCharacterHealth();
     ValidateRequiredReferences();
     DisableCompetingCameraController();
@@ -642,18 +620,28 @@ void ThirdPersonCharacterController::ClampSettings()
     cameraDistance = std::max(0.1f, cameraDistance);
 }
 
-void ThirdPersonCharacterController::EnsureAimVisualReferences()
+void ThirdPersonCharacterController::CacheGameplayReferences()
 {
     if (!owner) {
+        specialBeamAttack = nullptr;
+        specialAttackCharge = nullptr;
+        ammoSystem = nullptr;
+        rigidBodyComponent = nullptr;
+        networkIdentity = nullptr;
+        freeLookCamera = nullptr;
         return;
     }
 
-    if (!attackAimTrail) {
-        attackAimTrail = owner->GetComponentInChildren<RTBEngine::Scene::TrailRenderer>();
-    }
+    specialBeamAttack = owner->GetComponent<PlayerSpecialBeamAttack>();
+    specialAttackCharge = owner->GetComponent<PlayerSpecialAttackCharge>();
+    ammoSystem = owner->GetComponent<PlayerAmmoSystem>();
+    rigidBodyComponent = owner->GetComponent<RTBEngine::Scene::RigidBodyComponent>();
+    networkIdentity = owner->GetComponent<RTBEngine::Scene::NetworkIdentity>();
+    freeLookCamera = nullptr;
+    competingCameraDisabled = false;
 
-    if (!aimArrowVisual) {
-        aimArrowVisual = FindNamedDescendant(owner, "Ranger_Arrow");
+    if (cameraObject) {
+        freeLookCamera = cameraObject->GetComponent<RTBEngine::Scene::FreeLookCamera>();
     }
 }
 
@@ -691,16 +679,21 @@ void ThirdPersonCharacterController::ValidateRequiredReferences()
     }
 }
 
-void ThirdPersonCharacterController::DisableCompetingCameraController() const
+void ThirdPersonCharacterController::DisableCompetingCameraController()
 {
-    if (!cameraObject) {
+    if (competingCameraDisabled) {
         return;
     }
 
-    auto* freeLook = cameraObject->GetComponent<RTBEngine::Scene::FreeLookCamera>();
-    if (freeLook) {
-        freeLook->SetUpdateTickEnabled(false);
+    if (!freeLookCamera && cameraObject) {
+        freeLookCamera = cameraObject->GetComponent<RTBEngine::Scene::FreeLookCamera>();
     }
+
+    if (freeLookCamera) {
+        freeLookCamera->SetUpdateTickEnabled(false);
+    }
+
+    competingCameraDisabled = true;
 }
 
 void ThirdPersonCharacterController::ForceDeathState()
@@ -963,17 +956,6 @@ void ThirdPersonCharacterController::HandleAttackReleasedWithDirection(
         return;
     }
 
-    if (attackAbility && attackAbility->ConsumesAmmo()) {
-        if (PlayerAmmoSystem* ammoSystem = owner->GetComponent<PlayerAmmoSystem>()) {
-            if (!ammoSystem->CanFire()) {
-                if (wasAiming) {
-                    FinishAiming();
-                }
-                return;
-            }
-        }
-    }
-
     if (RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby() &&
         !RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
         if (state == State::Attacking) {
@@ -987,7 +969,13 @@ void ThirdPersonCharacterController::HandleAttackReleasedWithDirection(
         }
 
         if (attackAbility && attackAbility->ConsumesAmmo()) {
-            if (PlayerAmmoSystem* ammoSystem = owner->GetComponent<PlayerAmmoSystem>()) {
+            if (ammoSystem && !ammoSystem->CanFire()) {
+                if (wasAiming) {
+                    FinishAiming();
+                }
+                return;
+            }
+            if (ammoSystem) {
                 ammoSystem->ConsumeShot();
             }
         }
@@ -1110,7 +1098,7 @@ void ThirdPersonCharacterController::UpdateAimFacingToward(
 
     owner->GetTransform().SetRotation(nextRotation);
 
-    auto* rbComp = owner->GetComponent<RTBEngine::Scene::RigidBodyComponent>();
+    auto* rbComp = rigidBodyComponent;
     RTBEngine::Physics::RigidBody* rigidBody =
         (rbComp && rbComp->HasRigidBody()) ? rbComp->GetRigidBody() : nullptr;
     if (rigidBody && rigidBody->GetType() == RTBEngine::Physics::RigidBodyType::Dynamic) {
@@ -1147,7 +1135,7 @@ void ThirdPersonCharacterController::UpdateAimingMovement(float deltaTime)
         aimFacingDirection = desiredMove;
     }
 
-    auto* rbComp = owner->GetComponent<RTBEngine::Scene::RigidBodyComponent>();
+    auto* rbComp = rigidBodyComponent;
     RTBEngine::Physics::RigidBody* rigidBody =
         (rbComp && rbComp->HasRigidBody()) ? rbComp->GetRigidBody() : nullptr;
     const bool useDynamicRigidBody =
@@ -1192,7 +1180,7 @@ void ThirdPersonCharacterController::UpdateSpecialAttackAimingMovement(
         aimFacingDirection = desiredMove;
     }
 
-    auto* rbComp = owner->GetComponent<RTBEngine::Scene::RigidBodyComponent>();
+    auto* rbComp = rigidBodyComponent;
     RTBEngine::Physics::RigidBody* rigidBody =
         (rbComp && rbComp->HasRigidBody()) ? rbComp->GetRigidBody() : nullptr;
     const bool useDynamicRigidBody =
@@ -1240,7 +1228,6 @@ void ThirdPersonCharacterController::SetAimArrowVisible(bool visible)
 
 void ThirdPersonCharacterController::UpdateAttackAimTrail()
 {
-    EnsureAimVisualReferences();
     if (!attackAimTrail) {
         return;
     }
@@ -1302,7 +1289,7 @@ void ThirdPersonCharacterController::UpdateAttackFacingLock(float deltaTime)
         ? moveSpeed * (isRunning ? sprintMultiplier : 1.0f)
         : 0.0f;
 
-    auto* rbComp = owner ? owner->GetComponent<RTBEngine::Scene::RigidBodyComponent>() : nullptr;
+    auto* rbComp = owner ? rigidBodyComponent : nullptr;
     RTBEngine::Physics::RigidBody* rigidBody =
         (rbComp && rbComp->HasRigidBody()) ? rbComp->GetRigidBody() : nullptr;
     const bool useDynamicRigidBody =
@@ -1332,7 +1319,7 @@ void ThirdPersonCharacterController::UpdateMovement(float deltaTime)
     bool isRunning = false;
     RTBEngine::Math::Vector3 desiredMove = GetDesiredMoveDirection(isRunning);
     const bool hasMovementInput = HasMovementInput(desiredMove);
-    auto* rbComp = owner ? owner->GetComponent<RTBEngine::Scene::RigidBodyComponent>() : nullptr;
+    auto* rbComp = owner ? rigidBodyComponent : nullptr;
     RTBEngine::Physics::RigidBody* rigidBody =
         (rbComp && rbComp->HasRigidBody()) ? rbComp->GetRigidBody() : nullptr;
     const bool useDynamicRigidBody =
@@ -1693,7 +1680,7 @@ void ThirdPersonCharacterController::FaceAttackDirection(const RTBEngine::Math::
 
     owner->GetTransform().SetRotation(targetRotation);
 
-    auto* rbComp = owner->GetComponent<RTBEngine::Scene::RigidBodyComponent>();
+    auto* rbComp = rigidBodyComponent;
     RTBEngine::Physics::RigidBody* rigidBody =
         (rbComp && rbComp->HasRigidBody()) ? rbComp->GetRigidBody() : nullptr;
     if (rigidBody && rigidBody->GetType() == RTBEngine::Physics::RigidBodyType::Dynamic) {
@@ -1714,7 +1701,7 @@ void ThirdPersonCharacterController::StopPlanarMotion() const
         return;
     }
 
-    auto* rbComp = owner->GetComponent<RTBEngine::Scene::RigidBodyComponent>();
+    auto* rbComp = rigidBodyComponent;
     if (!rbComp || !rbComp->HasRigidBody()) {
         return;
     }
@@ -1884,7 +1871,7 @@ void ThirdPersonCharacterController::ApplyCharacterStats(const CharacterDefiniti
 void ThirdPersonCharacterController::RefreshAfterSpawn()
 {
     ClampSettings();
-    EnsureAimVisualReferences();
+    CacheGameplayReferences();
     ValidateRequiredReferences();
     EnsureAnimationReady();
     DisableCompetingCameraController();
@@ -1942,7 +1929,7 @@ void ThirdPersonCharacterController::FaceTowardPlanarDirection(
         return;
     }
 
-    auto* rbComp = owner->GetComponent<RTBEngine::Scene::RigidBodyComponent>();
+    auto* rbComp = rigidBodyComponent;
     RTBEngine::Physics::RigidBody* rigidBody =
         (rbComp && rbComp->HasRigidBody()) ? rbComp->GetRigidBody() : nullptr;
     const bool useDynamicRigidBody =

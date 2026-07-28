@@ -19,7 +19,10 @@ namespace RTBEngine {
     }
 
     namespace Scene {
+        class FreeLookCamera;
         class GameObject;
+        class NetworkIdentity;
+        class RigidBodyComponent;
         class TrailRenderer;
     }
 
@@ -34,8 +37,10 @@ namespace RTBEngine {
 }
 
 class CharacterAbility;
-
 class CharacterDefinition;
+class PlayerAmmoSystem;
+class PlayerSpecialAttackCharge;
+class PlayerSpecialBeamAttack;
 
 class ThirdPersonCharacterController : public PlayableCharacterController, public ICharacterStatReceiver
 {
@@ -119,8 +124,8 @@ private:
 
     void ClampSettings();
     void ValidateRequiredReferences();
-    void EnsureAimVisualReferences();
-    void DisableCompetingCameraController() const;
+    void CacheGameplayReferences();
+    void DisableCompetingCameraController();
     void ApplyCameraFollowTransform();
     void ApplySpectateCameraFollow(RTBEngine::Scene::GameObject* targetPawn);
     void EnsureAnimationReady();
@@ -184,6 +189,14 @@ private:
                                   float deltaTime,
                                   float turnSpeedDegrees = -1.0f);
     void ApplyExternalKnockbackVelocity(RTBEngine::Physics::RigidBody* rigidBody, float deltaTime);
+
+    PlayerSpecialBeamAttack* specialBeamAttack = nullptr;
+    PlayerSpecialAttackCharge* specialAttackCharge = nullptr;
+    PlayerAmmoSystem* ammoSystem = nullptr;
+    RTBEngine::Scene::RigidBodyComponent* rigidBodyComponent = nullptr;
+    RTBEngine::Scene::NetworkIdentity* networkIdentity = nullptr;
+    RTBEngine::Scene::FreeLookCamera* freeLookCamera = nullptr;
+    bool competingCameraDisabled = false;
 
     RTBEngine::Math::Vector3 externalPlanarVelocity = RTBEngine::Math::Vector3::Zero();
     float externalPlanarDecay = 10.0f;

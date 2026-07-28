@@ -24,54 +24,6 @@
 
 namespace {
 
-RTBEngine::UI::UIJoystick* FindSceneAttackJoystick(RTBEngine::Scene::Scene* scene)
-{
-    if (!scene) {
-        return nullptr;
-    }
-
-    RTBEngine::Scene::GameObject* joystickObject = scene->FindGameObject("AttackJoystick");
-    if (!joystickObject) {
-        return nullptr;
-    }
-
-    return joystickObject->GetComponent<RTBEngine::UI::UIJoystick>();
-}
-
-RTBEngine::UI::UIJoystick* FindSceneSpecialAttackJoystick(RTBEngine::Scene::Scene* scene)
-{
-    if (!scene) {
-        return nullptr;
-    }
-
-    RTBEngine::Scene::GameObject* joystickObject = scene->FindGameObject("SpecialAttackJoystick");
-    if (!joystickObject) {
-        return nullptr;
-    }
-
-    return joystickObject->GetComponent<RTBEngine::UI::UIJoystick>();
-}
-
-RTBEngine::UI::UIImage* FindSceneSpecialAttackIcon(RTBEngine::Scene::Scene* scene)
-{
-    if (!scene) {
-        return nullptr;
-    }
-
-    RTBEngine::Scene::GameObject* joystickObject = scene->FindGameObject("SpecialAttackJoystick");
-    if (!joystickObject) {
-        return nullptr;
-    }
-
-    for (RTBEngine::Scene::GameObject* child : joystickObject->GetChildren()) {
-        if (child && child->GetName() == "SpecialAttackIcon") {
-            return child->GetComponent<RTBEngine::UI::UIImage>();
-        }
-    }
-
-    return nullptr;
-}
-
 void WireSpawnedPlayerCamera(RTBEngine::Scene::GameObject* spawnedPawn)
 {
     if (!spawnedPawn) {
@@ -81,20 +33,6 @@ void WireSpawnedPlayerCamera(RTBEngine::Scene::GameObject* spawnedPawn)
     auto* controller = spawnedPawn->GetComponent<ThirdPersonCharacterController>();
     if (!controller) {
         return;
-    }
-
-    if (!controller->cameraObject) {
-        for (RTBEngine::Scene::GameObject* child : spawnedPawn->GetChildren()) {
-            if (!child) {
-                continue;
-            }
-
-            if (child->GetName() == "MainCamera" ||
-                child->GetComponent<RTBEngine::Scene::CameraComponent>()) {
-                controller->cameraObject = child;
-                break;
-            }
-        }
     }
 
     if (!controller->cameraObject) {
@@ -121,7 +59,10 @@ void WireSpawnedPlayerCamera(RTBEngine::Scene::GameObject* spawnedPawn)
 
 void WireSpawnedPlayerReferences(
     RTBEngine::Scene::GameObject* spawnedPawn,
-    OnlinePlayerManager* onlinePlayerManager)
+    OnlinePlayerManager* onlinePlayerManager,
+    RTBEngine::UI::UIJoystick* attackJoystick,
+    RTBEngine::UI::UIJoystick* specialAttackJoystick,
+    RTBEngine::UI::UIImage* specialAttackReadyIcon)
 {
     if (!spawnedPawn) {
         return;
@@ -134,23 +75,19 @@ void WireSpawnedPlayerReferences(
 
     WireSpawnedPlayerCamera(spawnedPawn);
 
+    controller->attackJoystick = attackJoystick;
     if (!controller->attackJoystick) {
-        if (RTBEngine::Scene::Scene* scene =
-                RTBEngine::Scene::SceneManager::GetInstance().GetActiveScene()) {
-            controller->attackJoystick = FindSceneAttackJoystick(scene);
-        }
+        RTB_WARN("[PlayerPawnSpawner] attackJoystick is not assigned on PlayerPawnSpawner.");
     }
 
     if (auto* specialCharge = spawnedPawn->GetComponent<PlayerSpecialAttackCharge>()) {
-        RTBEngine::Scene::Scene* scene =
-            RTBEngine::Scene::SceneManager::GetInstance().GetActiveScene();
-        if (scene) {
-            if (!specialCharge->specialAttackJoystick) {
-                specialCharge->specialAttackJoystick = FindSceneSpecialAttackJoystick(scene);
-            }
-            if (!specialCharge->readyIcon) {
-                specialCharge->readyIcon = FindSceneSpecialAttackIcon(scene);
-            }
+        specialCharge->specialAttackJoystick = specialAttackJoystick;
+        specialCharge->readyIcon = specialAttackReadyIcon;
+        if (!specialCharge->specialAttackJoystick) {
+            RTB_WARN("[PlayerPawnSpawner] specialAttackJoystick is not assigned on PlayerPawnSpawner.");
+        }
+        if (!specialCharge->readyIcon) {
+            RTB_WARN("[PlayerPawnSpawner] specialAttackReadyIcon is not assigned on PlayerPawnSpawner.");
         }
         specialCharge->RefreshAfterSpawn();
     }
@@ -177,6 +114,7 @@ void WireSpawnedPlayerReferences(
         onlinePlayerManager->localPlayerObject = spawnedPawn;
     }
 }
+
 } // namespace
 
 using ThisClass = PlayerPawnSpawner;
@@ -184,6 +122,9 @@ using ThisClass = PlayerPawnSpawner;
 RTB_REGISTER_COMPONENT(PlayerPawnSpawner)
     RTB_PROPERTY_COMPONENT(onlinePlayerManager, OnlinePlayerManager)
     RTB_PROPERTY_COMPONENT(roundManager, RoundManager)
+    RTB_PROPERTY_COMPONENT(attackJoystick, UIJoystick)
+    RTB_PROPERTY_COMPONENT(specialAttackJoystick, UIJoystick)
+    RTB_PROPERTY_COMPONENT(specialAttackReadyIcon, UIImage)
 RTB_END_REGISTER(PlayerPawnSpawner)
 
 void PlayerPawnSpawner::OnAwake()
@@ -205,7 +146,12 @@ void PlayerPawnSpawner::OnAwake()
             }
             if (candidate->GetName() == "Player") {
                 spawnedPawn = candidate;
-                WireSpawnedPlayerReferences(spawnedPawn, onlinePlayerManager);
+                WireSpawnedPlayerReferences(
+                    spawnedPawn,
+                    onlinePlayerManager,
+                    attackJoystick,
+                    specialAttackJoystick,
+                    specialAttackReadyIcon);
                 if (onlinePlayerManager) {
                     onlinePlayerManager->localPlayerObject = spawnedPawn;
                 }
@@ -248,7 +194,12 @@ void PlayerPawnSpawner::OnAwake()
     }
 
     spawnedPawn->SetName("Player");
-    WireSpawnedPlayerReferences(spawnedPawn, onlinePlayerManager);
+    WireSpawnedPlayerReferences(
+        spawnedPawn,
+        onlinePlayerManager,
+        attackJoystick,
+        specialAttackJoystick,
+        specialAttackReadyIcon);
 
     if (onlinePlayerManager) {
         onlinePlayerManager->localPlayerObject = spawnedPawn;

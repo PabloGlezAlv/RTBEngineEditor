@@ -34,6 +34,9 @@ public:
     void RefreshNetworkState();
     float GetNormalizedAmmo() const { return normalizedAmmo; }
 
+    static bool HasAmmoAvailable(RTBEngine::Scene::GameObject* instigator);
+    static bool TryConsumeAttackAmmo(RTBEngine::Scene::GameObject* instigator);
+
     void ApplyCharacterStats(const CharacterDefinition& definition) override;
 
     RTB_COMPONENT(PlayerAmmoSystem)

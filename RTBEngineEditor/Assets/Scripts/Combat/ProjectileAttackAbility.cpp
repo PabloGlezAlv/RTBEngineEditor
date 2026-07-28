@@ -168,10 +168,8 @@ bool ProjectileAttackAbility::FireNow(RTBEngine::Scene::GameObject* instigator,
                                       RTBEngine::Physics::PhysicsWorld* physicsWorld)
 {
     const bool spawned = SpawnProjectile(instigator, attackDirection, physicsWorld, true);
-    if (spawned && CombatAuthority::CanConsumeAmmo(instigator)) {
-        if (auto* ammoSystem = instigator->GetComponent<PlayerAmmoSystem>()) {
-            ammoSystem->ConsumeShot();
-        }
+    if (spawned) {
+        PlayerAmmoSystem::TryConsumeAttackAmmo(instigator);
     }
 
     return spawned;
@@ -385,12 +383,8 @@ bool ProjectileAttackAbility::CanActivateAbility(
         return false;
     }
 
-    if (CombatAuthority::CanConsumeAmmo(instigator)) {
-        if (const auto* ammoSystem = instigator->GetComponent<PlayerAmmoSystem>()) {
-            if (!ammoSystem->CanFire()) {
-                return false;
-            }
-        }
+    if (!PlayerAmmoSystem::HasAmmoAvailable(instigator)) {
+        return false;
     }
 
     return true;
@@ -399,13 +393,11 @@ bool ProjectileAttackAbility::CanActivateAbility(
 void ProjectileAttackAbility::OnAbilityStarted()
 {
     RTBEngine::Scene::GameObject* instigator = GetActiveInstigator();
-    if (!instigator || !CombatAuthority::CanConsumeAmmo(instigator)) {
+    if (!instigator) {
         return;
     }
 
-    if (auto* ammoSystem = instigator->GetComponent<PlayerAmmoSystem>()) {
-        ammoSystem->ConsumeShot();
-    }
+    PlayerAmmoSystem::TryConsumeAttackAmmo(instigator);
 }
 
 void ProjectileAttackAbility::ExecuteAbilityHit()

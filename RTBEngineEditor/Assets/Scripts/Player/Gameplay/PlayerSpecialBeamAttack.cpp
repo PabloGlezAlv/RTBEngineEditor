@@ -6,6 +6,7 @@
 #include "HealthComponent.h"
 #include "ThirdPersonCharacterController.h"
 
+#include <RTBEngine/Core/Logger.h>
 #include <RTBEngine/Physics/PhysicsWorld.h>
 #include <RTBEngine/Scene/GameObject.h>
 #include <RTBEngine/Scene/SceneManager.h>
@@ -15,49 +16,6 @@
 #include <cmath>
 
 using ThisClass = PlayerSpecialBeamAttack;
-
-namespace {
-    constexpr float kDirectionEpsilon = 0.0001f;
-
-    bool HasPlanarDirection(const RTBEngine::Math::Vector3& value)
-    {
-        return std::abs(value.x) > kDirectionEpsilon || std::abs(value.z) > kDirectionEpsilon;
-    }
-
-    RTBEngine::Math::Vector3 NormalizePlanarDirection(RTBEngine::Math::Vector3 direction)
-    {
-        direction.y = 0.0f;
-        if (!HasPlanarDirection(direction)) {
-            return {};
-        }
-
-        direction.Normalize();
-        return direction;
-    }
-
-    RTBEngine::Scene::GameObject* FindChildByName(RTBEngine::Scene::GameObject* root, const std::string& name)
-    {
-        if (!root) {
-            return nullptr;
-        }
-
-        for (RTBEngine::Scene::GameObject* child : root->GetChildren()) {
-            if (!child) {
-                continue;
-            }
-
-            if (child->GetName() == name) {
-                return child;
-            }
-
-            if (RTBEngine::Scene::GameObject* nested = FindChildByName(child, name)) {
-                return nested;
-            }
-        }
-
-        return nullptr;
-    }
-}
 
 RTB_REGISTER_COMPONENT(PlayerSpecialBeamAttack)
     RTB_PROPERTY_COMPONENT(beamTrail, TrailRenderer)
@@ -88,30 +46,31 @@ void PlayerSpecialBeamAttack::ClampSettings()
     damageRadius = std::max(damageRadius, beamWidth * 0.5f);
 }
 
-void PlayerSpecialBeamAttack::EnsureReferences()
+void PlayerSpecialBeamAttack::CacheGameplayReferences()
+{
+    controller = owner ? owner->GetComponent<ThirdPersonCharacterController>() : nullptr;
+}
+
+void PlayerSpecialBeamAttack::ValidateRequiredReferences() const
 {
     if (!owner) {
         return;
     }
 
     if (!beamTrail) {
-        if (RTBEngine::Scene::GameObject* trailObject = FindChildByName(owner, "Special Beam Trail")) {
-            beamTrail = trailObject->GetComponent<RTBEngine::Scene::TrailRenderer>();
-        }
+        RTB_WARN("[PlayerSpecialBeamAttack] beamTrail is not assigned on '" + owner->GetName() + "'.");
     }
-
     if (!aimPreviewTrail) {
-        if (RTBEngine::Scene::GameObject* previewObject =
-                FindChildByName(owner, "Special Attack Aim Trail")) {
-            aimPreviewTrail = previewObject->GetComponent<RTBEngine::Scene::TrailRenderer>();
-        }
+        RTB_WARN("[PlayerSpecialBeamAttack] aimPreviewTrail is not assigned on '" +
+                 owner->GetName() + "'.");
     }
 }
 
 void PlayerSpecialBeamAttack::OnStart()
 {
     ClampSettings();
-    EnsureReferences();
+    CacheGameplayReferences();
+    ValidateRequiredReferences();
     HideAimPreview();
     HideBeamVisual();
     SetUpdateTickEnabled(false);
@@ -120,13 +79,14 @@ void PlayerSpecialBeamAttack::OnStart()
 void PlayerSpecialBeamAttack::OnValidate()
 {
     ClampSettings();
-    EnsureReferences();
+    CacheGameplayReferences();
 }
 
 void PlayerSpecialBeamAttack::OnDestroy()
 {
     HideAimPreview();
     StopBeam();
+    controller = nullptr;
 }
 
 void PlayerSpecialBeamAttack::UpdateAimPreview(const RTBEngine::Math::Vector3& direction)
@@ -136,18 +96,18 @@ void PlayerSpecialBeamAttack::UpdateAimPreview(const RTBEngine::Math::Vector3& d
         return;
     }
 
-    const RTBEngine::Math::Vector3 planarDirection = NormalizePlanarDirection(direction);
-    if (!HasPlanarDirection(planarDirection)) {
+    const RTBEngine::Math::Vector3 planarDirection =
+        CharacterCombatUtils::NormalizePlanarDirection(direction);
+    if (!CharacterCombatUtils::HasPlanarDirection(planarDirection)) {
         HideAimPreview();
         return;
     }
 
-    ClampSettings();
-    EnsureReferences();
     if (!aimPreviewTrail) {
         return;
     }
 
+    ClampSettings();
     previewActive = true;
     const RTBEngine::Math::Vector3 visualOrigin = GetBeamOrigin(planarDirection);
     const float effectiveLength = ResolveEffectiveLengthForDirection(
@@ -176,11 +136,11 @@ void PlayerSpecialBeamAttack::HideAimPreview()
 
 void PlayerSpecialBeamAttack::ApplyMovementLock(float deltaTime)
 {
-    if (!active || !owner || !HasPlanarDirection(beamDirection)) {
+    if (!active || !owner || !CharacterCombatUtils::HasPlanarDirection(beamDirection)) {
         return;
     }
 
-    if (auto* controller = owner->GetComponent<ThirdPersonCharacterController>()) {
+    if (controller) {
         controller->FaceTowardPlanarDirection(beamDirection, deltaTime);
     }
 }
@@ -195,15 +155,15 @@ bool PlayerSpecialBeamAttack::TryActivate(const RTBEngine::Math::Vector3& direct
         return false;
     }
 
-    const RTBEngine::Math::Vector3 planarDirection = NormalizePlanarDirection(direction);
-    if (!HasPlanarDirection(planarDirection)) {
+    const RTBEngine::Math::Vector3 planarDirection =
+        CharacterCombatUtils::NormalizePlanarDirection(direction);
+    if (!CharacterCombatUtils::HasPlanarDirection(planarDirection)) {
         return false;
     }
 
     HideAimPreview();
-
     ClampSettings();
-    EnsureReferences();
+    CacheGameplayReferences();
 
     beamDirection = planarDirection;
     elapsed = 0.0f;
@@ -218,9 +178,9 @@ bool PlayerSpecialBeamAttack::TryActivate(const RTBEngine::Math::Vector3& direct
         beamTrail->SetGlobalAlphaScale(1.0f);
     }
 
-    const float effectiveLength = ResolveEffectiveLength();
-    UpdateBeamVisual(effectiveLength);
-    ApplyDamageTick(effectiveLength);
+    frameEffectiveLength = ResolveEffectiveLength();
+    UpdateBeamVisual(frameEffectiveLength);
+    ApplyDamageTick(frameEffectiveLength);
     return true;
 }
 
@@ -265,7 +225,7 @@ float PlayerSpecialBeamAttack::ResolveEffectiveLengthForDirection(
     const RTBEngine::Math::Vector3& origin,
     const RTBEngine::Math::Vector3& direction) const
 {
-    if (!owner || !HasPlanarDirection(direction)) {
+    if (!owner || !CharacterCombatUtils::HasPlanarDirection(direction)) {
         return 0.0f;
     }
 
@@ -367,11 +327,11 @@ void PlayerSpecialBeamAttack::OnUpdate(float deltaTime)
     elapsed += std::max(0.0f, deltaTime);
     tickTimer += std::max(0.0f, deltaTime);
 
-    const float effectiveLength = ResolveEffectiveLength();
+    frameEffectiveLength = ResolveEffectiveLength();
 
     while (tickTimer >= tickInterval) {
         tickTimer -= tickInterval;
-        ApplyDamageTick(effectiveLength);
+        ApplyDamageTick(frameEffectiveLength);
     }
 
     if (elapsed >= duration) {
@@ -385,8 +345,7 @@ void PlayerSpecialBeamAttack::OnLateUpdate(float /*deltaTime*/)
         return;
     }
 
-    const float effectiveLength = ResolveEffectiveLength();
-    UpdateBeamVisual(effectiveLength);
+    UpdateBeamVisual(frameEffectiveLength);
 }
 
 void PlayerSpecialBeamAttack::StopBeam()
@@ -399,6 +358,7 @@ void PlayerSpecialBeamAttack::StopBeam()
     active = false;
     elapsed = 0.0f;
     tickTimer = 0.0f;
+    frameEffectiveLength = 0.0f;
     beamDirection = RTBEngine::Math::Vector3::Zero();
     HideBeamVisual();
     SetUpdateTickEnabled(false);

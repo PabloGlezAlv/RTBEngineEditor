@@ -10,6 +10,8 @@ namespace RTBEngine {
     }
 }
 
+class ThirdPersonCharacterController;
+
 class PlayerSpecialBeamAttack : public RTBEngine::Scene::Component
 {
 public:
@@ -51,10 +53,13 @@ private:
     bool previewActive = false;
     float elapsed = 0.0f;
     float tickTimer = 0.0f;
+    float frameEffectiveLength = 0.0f;
     RTBEngine::Math::Vector3 beamDirection = RTBEngine::Math::Vector3::Zero();
+    ThirdPersonCharacterController* controller = nullptr;
 
     void ClampSettings();
-    void EnsureReferences();
+    void CacheGameplayReferences();
+    void ValidateRequiredReferences() const;
     void StopBeam();
     RTBEngine::Math::Vector3 GetBeamOrigin(const RTBEngine::Math::Vector3& direction) const;
     RTBEngine::Math::Vector3 GetCombatOrigin(const RTBEngine::Math::Vector3& direction) const;

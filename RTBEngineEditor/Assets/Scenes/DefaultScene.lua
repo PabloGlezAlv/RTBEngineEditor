@@ -676,7 +676,10 @@ function CreateScene()
                     {
                         type = "PlayerPawnSpawner",
                         onlinePlayerManager = "B1A2C3D4-E5F6-7890-ABCD-EF1234567891/OnlinePlayerManager",
-                        roundManager = "4A7C26F9-7F62-4A3A-B8F0-91A4B36C1601/RoundManager"
+                        roundManager = "4A7C26F9-7F62-4A3A-B8F0-91A4B36C1601/RoundManager",
+                        attackJoystick = "B4C7E92D-5F22-43A9-8E3B-2A6D7D1A8C10/UIJoystick",
+                        specialAttackJoystick = "B5D8E93E-6F33-44BA-9F4C-3B7E8E2B9D11/UIJoystick",
+                        specialAttackReadyIcon = "C2A14D70-1B9E-4F83-A551-6D8E9C0F1122/UIImage"
                     },
                 }
             },

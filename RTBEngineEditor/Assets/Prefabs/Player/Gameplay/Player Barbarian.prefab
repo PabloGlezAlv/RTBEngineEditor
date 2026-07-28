@@ -38,7 +38,6 @@ return {
                         cameraFocusOffset = Vector3(0.00, 1.05, 0.00),
                         animator = "5200AC9B-039A-416E-82AE-FD5FE1754C95/Animator",
                         attackAbility = "E8682E33-50ED-45D8-BC76-B31113639F9E/PlayerMeleeSweepAttackAbility",
-                        attackJoystick = "B4C7E92D-5F22-43A9-8E3B-2A6D7D1A8C10/UIJoystick",
                         attackAimTrail = "7C57C988-6629-4FE8-AFF1-8D4D39C84D1B/TrailRenderer",
                         aimTrailForwardOffset = 0.40,
                         aimTrailHeightOffset = 0.00,
@@ -77,8 +76,6 @@ return {
                     },
                     {
                         type = "PlayerSpecialAttackCharge",
-                        specialAttackJoystick = "B5D8E93E-6F33-44BA-9F4C-3B7E8E2B9D11/UIJoystick",
-                        readyIcon = "C2A14D70-1B9E-4F83-A551-6D8E9C0F1122/UIImage",
                         hitsToFullyCharge = 5,
                     },
                     {
@@ -86,7 +83,7 @@ return {
                         beamTrail = "SP3C14L-BEAM-4000-8000-000000000001/TrailRenderer",
                         aimPreviewTrail = "SP3C14L-A1M0-4000-8000-000000000001/TrailRenderer",
                     },
-                                        {
+                    {
                         type = "PlayerMeleeSweepAttackAbility",
                         attackOriginOffset = Vector3(0.00, 1.05, 0.18),
                         cooldown = 0.00,

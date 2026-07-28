@@ -20,6 +20,9 @@ namespace RTBEngine {
 
 namespace CharacterCombatUtils {
 
+    bool HasPlanarDirection(const RTBEngine::Math::Vector3& value);
+    RTBEngine::Math::Vector3 NormalizePlanarDirection(RTBEngine::Math::Vector3 direction);
+
     int ResolveCharacterTeam(RTBEngine::Scene::GameObject* gameObject);
 
     RTBEngine::Scene::GameObject* ResolveHealthRoot(RTBEngine::Scene::GameObject* gameObject);

@@ -123,12 +123,8 @@ bool PlayerMeleeSweepAttackAbility::CanActivateAbility(
         return false;
     }
 
-    if (CombatAuthority::CanConsumeAmmo(instigator)) {
-        if (const auto* ammoSystem = instigator->GetComponent<PlayerAmmoSystem>()) {
-            if (!ammoSystem->CanFire()) {
-                return false;
-            }
-        }
+    if (!PlayerAmmoSystem::HasAmmoAvailable(instigator)) {
+        return false;
     }
 
     return true;
@@ -137,13 +133,11 @@ bool PlayerMeleeSweepAttackAbility::CanActivateAbility(
 void PlayerMeleeSweepAttackAbility::OnAbilityStarted()
 {
     RTBEngine::Scene::GameObject* instigator = GetActiveInstigator();
-    if (!instigator || !CombatAuthority::CanConsumeAmmo(instigator)) {
+    if (!instigator) {
         return;
     }
 
-    if (auto* ammoSystem = instigator->GetComponent<PlayerAmmoSystem>()) {
-        ammoSystem->ConsumeShot();
-    }
+    PlayerAmmoSystem::TryConsumeAttackAmmo(instigator);
 }
 
 void PlayerMeleeSweepAttackAbility::ExecuteAbilityHit()

@@ -13,6 +13,7 @@ namespace RTBEngine {
 }
 
 class PlayerSpecialBeamAttack;
+class ThirdPersonCharacterController;
 
 class PlayerSpecialAttackCharge : public RTBEngine::Scene::Component
 {
@@ -41,11 +42,13 @@ private:
     int currentHits = 0;
     RTBEngine::UI::UIJoystick* subscribedSpecialJoystick = nullptr;
     RTBEngine::Core::EventSubscription specialJoystickReleaseSubscription;
+    PlayerSpecialBeamAttack* beamAttack = nullptr;
+    ThirdPersonCharacterController* controller = nullptr;
 
     bool IsLocalPlayer() const;
     void ClampSettings();
-    void EnsureReferences();
-    void ResolveImagesFromJoystick();
+    void CacheGameplayReferences();
+    void ValidateRequiredReferences() const;
     void ApplyVisuals(bool forceReset);
     void ResetSceneJoystickVisuals();
     void RebindSpecialJoystickSubscription();

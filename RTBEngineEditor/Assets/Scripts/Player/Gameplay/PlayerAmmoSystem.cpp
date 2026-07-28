@@ -1,14 +1,15 @@
 #include "PlayerAmmoSystem.h"
 
 #include "CharacterDefinition.h"
+#include "CombatAuthority.h"
 
+#include <RTBEngine/Core/Logger.h>
 #include <RTBEngine/Scene/GameObject.h>
 #include <RTBEngine/Scene/NetworkIdentity.h>
 #include <RTBEngine/UI/Elements/UISlider.h>
 
 #include <algorithm>
 #include <cmath>
-#include <functional>
 
 using ThisClass = PlayerAmmoSystem;
 
@@ -68,7 +69,6 @@ void PlayerAmmoSystem::EnsureReferences()
         RTBEngine::Scene::GameObject* sliderOwner = ammoSlider->GetOwner();
         if (!sliderOwner || !IsDescendantOf(sliderOwner, owner)) {
             ammoSlider = nullptr;
-            ammoFillPanel = nullptr;
         }
     }
 
@@ -79,35 +79,15 @@ void PlayerAmmoSystem::EnsureReferences()
         }
     }
 
-    if (ammoSlider) {
-        return;
-    }
-
-    std::function<void(RTBEngine::Scene::GameObject*)> visit =
-        [&](RTBEngine::Scene::GameObject* gameObject) {
-            if (!gameObject || ammoSlider) {
-                return;
-            }
-
-            if (gameObject->GetName() == "NameplateAmmoTrack") {
-                if (auto* slider = gameObject->GetComponent<RTBEngine::UI::UISlider>()) {
-                    ammoSlider = slider;
-                    return;
-                }
-            }
-
-            for (RTBEngine::Scene::GameObject* child : gameObject->GetChildren()) {
-                visit(child);
-            }
-        };
-
-    visit(owner);
-
     if (!ammoFillPanel && ammoSlider && ammoSlider->fillPanel) {
         RTBEngine::Scene::GameObject* fillOwner = ammoSlider->fillPanel->GetOwner();
         if (fillOwner && IsDescendantOf(fillOwner, owner)) {
             ammoFillPanel = ammoSlider->fillPanel;
         }
+    }
+
+    if (!ammoSlider) {
+        RTB_WARN("[PlayerAmmoSystem] ammoSlider is not assigned on '" + owner->GetName() + "'.");
     }
 }
 
@@ -115,11 +95,13 @@ void PlayerAmmoSystem::OnStart()
 {
     maxShots = std::max(1, maxShots);
     fullReloadDuration = std::max(0.0f, fullReloadDuration);
-    SetUpdateTickEnabled(true);
     EnsureReferences();
 
     if (IsLocalPlayer()) {
         normalizedAmmo = 1.0f;
+        SetUpdateTickEnabled(true);
+    } else {
+        SetUpdateTickEnabled(false);
     }
 
     RefreshNetworkState();
@@ -127,24 +109,23 @@ void PlayerAmmoSystem::OnStart()
 
 void PlayerAmmoSystem::OnLateUpdate(float deltaTime)
 {
-    EnsureReferences();
-
-    const bool localPlayer = IsLocalPlayer();
-    SetBarVisible(localPlayer);
-
-    if (!localPlayer) {
+    if (!IsLocalPlayer()) {
+        SetUpdateTickEnabled(false);
         return;
     }
 
+    SetBarVisible(true);
     RechargeAmmo(deltaTime);
 }
 
 void PlayerAmmoSystem::RefreshNetworkState()
 {
     EnsureReferences();
-    SetBarVisible(IsLocalPlayer());
+    const bool localPlayer = IsLocalPlayer();
+    SetBarVisible(localPlayer);
+    SetUpdateTickEnabled(localPlayer);
 
-    if (IsLocalPlayer()) {
+    if (localPlayer) {
         UpdateVisuals();
     }
 }
@@ -175,22 +156,11 @@ void PlayerAmmoSystem::OnValidate()
 
 bool PlayerAmmoSystem::IsLocalPlayer() const
 {
-    if (!owner) {
-        return false;
-    }
-
-    const RTBEngine::Scene::NetworkIdentity* identity = owner->GetComponent<RTBEngine::Scene::NetworkIdentity>();
-    if (!identity) {
-        return true;
-    }
-
-    return identity->IsLocallyControlled();
+    return CombatAuthority::IsLocallyControlled(owner);
 }
 
 void PlayerAmmoSystem::SetBarVisible(bool visible)
 {
-    EnsureReferences();
-
     if (!ammoSlider) {
         return;
     }
@@ -218,6 +188,38 @@ void PlayerAmmoSystem::ConsumeShot()
     UpdateVisuals();
 }
 
+bool PlayerAmmoSystem::HasAmmoAvailable(RTBEngine::Scene::GameObject* instigator)
+{
+    if (!instigator || !CombatAuthority::CanConsumeAmmo(instigator)) {
+        return true;
+    }
+
+    if (const auto* ammoSystem = instigator->GetComponent<PlayerAmmoSystem>()) {
+        return ammoSystem->CanFire();
+    }
+
+    return true;
+}
+
+bool PlayerAmmoSystem::TryConsumeAttackAmmo(RTBEngine::Scene::GameObject* instigator)
+{
+    if (!instigator || !CombatAuthority::CanConsumeAmmo(instigator)) {
+        return false;
+    }
+
+    auto* ammoSystem = instigator->GetComponent<PlayerAmmoSystem>();
+    if (!ammoSystem) {
+        return false;
+    }
+
+    if (!ammoSystem->CanFire()) {
+        return false;
+    }
+
+    ammoSystem->ConsumeShot();
+    return true;
+}
+
 void PlayerAmmoSystem::RefillAmmo()
 {
     normalizedAmmo = 1.0f;
@@ -238,8 +240,6 @@ void PlayerAmmoSystem::UpdateVisuals()
     if (!IsLocalPlayer()) {
         return;
     }
-
-    EnsureReferences();
 
     if (!ammoSlider) {
         return;

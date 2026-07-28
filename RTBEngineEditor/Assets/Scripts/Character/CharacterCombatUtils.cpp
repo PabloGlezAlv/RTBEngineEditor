@@ -10,11 +10,11 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstring>
 #include <unordered_set>
 
 namespace CharacterCombatUtils {
     namespace {
-        constexpr float kDirectionEpsilon = 0.0001f;
         constexpr float kMinClipLength = 0.05f;
         constexpr float kGroundCastSkipEpsilon = 0.02f;
         constexpr int kMaxEnvironmentCastIterations = 16;
@@ -22,22 +22,6 @@ namespace CharacterCombatUtils {
         bool IsWalkableGroundHit(const RTBEngine::Physics::PhysicsQueryHit& hit)
         {
             return hit.normal.y > 0.65f;
-        }
-
-        bool HasPlanarDirection(const RTBEngine::Math::Vector3& value)
-        {
-            return std::abs(value.x) > kDirectionEpsilon || std::abs(value.z) > kDirectionEpsilon;
-        }
-
-        RTBEngine::Math::Vector3 NormalizePlanarDirection(RTBEngine::Math::Vector3 direction)
-        {
-            direction.y = 0.0f;
-            if (!HasPlanarDirection(direction)) {
-                return {};
-            }
-
-            direction.Normalize();
-            return direction;
         }
 
         bool PassesTeamFilter(
@@ -55,6 +39,23 @@ namespace CharacterCombatUtils {
                 instigatorTeam != static_cast<int>(CharacterTeam::Neutral) &&
                 instigatorTeam == targetTeam);
         }
+    }
+
+    bool HasPlanarDirection(const RTBEngine::Math::Vector3& value)
+    {
+        constexpr float kDirectionEpsilon = 0.0001f;
+        return std::abs(value.x) > kDirectionEpsilon || std::abs(value.z) > kDirectionEpsilon;
+    }
+
+    RTBEngine::Math::Vector3 NormalizePlanarDirection(RTBEngine::Math::Vector3 direction)
+    {
+        direction.y = 0.0f;
+        if (!HasPlanarDirection(direction)) {
+            return {};
+        }
+
+        direction.Normalize();
+        return direction;
     }
 
     int ResolveCharacterTeam(RTBEngine::Scene::GameObject* gameObject)
@@ -94,8 +95,24 @@ namespace CharacterCombatUtils {
 
     std::uint32_t GetPhysicsLayerBit(const char* layerName)
     {
+        static const std::uint32_t defaultBit = 1u << static_cast<std::uint32_t>(std::max(
+            0,
+            RTBEngine::Physics::PhysicsLayerSettings::Get().GetLayerIndex("Default")));
+        static const std::uint32_t charactersBit = 1u << static_cast<std::uint32_t>(std::max(
+            0,
+            RTBEngine::Physics::PhysicsLayerSettings::Get().GetLayerIndex("Characters")));
+
+        if (layerName) {
+            if (std::strcmp(layerName, "Default") == 0) {
+                return defaultBit;
+            }
+            if (std::strcmp(layerName, "Characters") == 0) {
+                return charactersBit;
+            }
+        }
+
         const int layerIndex =
-            RTBEngine::Physics::PhysicsLayerSettings::Get().GetLayerIndex(layerName);
+            RTBEngine::Physics::PhysicsLayerSettings::Get().GetLayerIndex(layerName ? layerName : "Default");
         return 1u << static_cast<std::uint32_t>(std::max(0, layerIndex));
     }
 
