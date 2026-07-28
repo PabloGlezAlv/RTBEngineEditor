@@ -643,9 +643,6 @@ function CreateScene()
                 position = Vector3(-3.00, 0.00, 0.00),
                 overrides = {
                     components = {
-                        { type = "EnemyAnimationDriver",
-                            animator = "39CDA1EB-E8FC-421A-8847-64EA6030B49F/Animator",
-                        },
                         { type = "EnemyMeleeAI",
                             health = "753770D2-B00E-4859-B7D3-5ABF1249B014/HealthComponent",
                             targetTracker = "753770D2-B00E-4859-B7D3-5ABF1249B014/EnemyTargetTracker",
@@ -4814,19 +4811,19 @@ function CreateScene()
                             health = "F86013BD-FF24-4672-91B3-9411CDF272AE/HealthComponent",
                             animator = "B07543DC-D2C4-4C9A-BAAE-829055141C7A/Animator",
                             attackAbility = "F86013BD-FF24-4672-91B3-9411CDF272AE/ProjectileAttackAbility",
-                            attackAimTrail = "5E67D90D-99F9-4FB6-B5FD-5FF9B606E532/TrailRenderer",
-                            aimArrowVisual = "890A9602-5D20-4773-AC9A-7EE4D83E4A78",
+                            attackAimTrail = "7C57C988-6629-4FE8-AFF1-8D4D39C84D1B/TrailRenderer",
+                            aimArrowVisual = "R4NG3R00-ARRO-4000-8000-000000000001",
                         },
                         { type = "PlayerDamageFeedback",
                             health = "F86013BD-FF24-4672-91B3-9411CDF272AE/HealthComponent",
                         },
                         { type = "PlayerAmmoSystem",
                             ammoSlider = "A1447084-CE03-491F-A070-85BF4BD352D6/UISlider",
-                            ammoFillPanel = "CC4442E3-7405-4756-A004-C05CFA3526D1/UIPanel",
+                            ammoFillPanel = "A1000001-0011-4000-8000-000000000011/UIPanel",
                         },
                         { type = "ProjectileAttackAbility",
-                            fireAudio = "9BEDF8EB-88CE-4DC0-93B3-35E4F699B886/AudioSourceComponent",
-                            hitAudio = "DE091A5E-9251-467A-9D5E-8007D7051EBF/AudioSourceComponent",
+                            fireAudio = "C0MBAT-F1RE-4001-8000-000000000001/AudioSourceComponent",
+                            hitAudio = "C0MBAT-H1T0-4001-8000-000000000001/AudioSourceComponent",
                         },
                     },
                 },
@@ -4852,7 +4849,7 @@ function CreateScene()
                                     },
                                     {
                                         type = "PlayerNameplateUI",
-                                        displayNameText = "5D3F267F-7E1E-4D8A-8BF3-9FE867B96551/UIText",
+                                        displayNameText = "A1000001-0004-4000-8000-000000000004/UIText",
                                         healthBarUI = "40968BFF-6484-4ED6-AF95-45D207A01236/HealthBarUI"
                                     },
                                 },
@@ -4888,7 +4885,7 @@ function CreateScene()
                                                         value = 1.00,
                                                         interactable = false,
                                                         fillPanel = "78ED8B41-2F67-415E-946B-1808C2F9C311/UIPanel",
-                                                        handlePanel = "E928456B-1A30-419A-A2D6-99E5E130B190/UIPanel"
+                                                        handlePanel = "A1000001-0007-4000-8000-000000000007/UIPanel"
                                                     },
                                                     {
                                                         type = "HealthBarUI",
@@ -4950,8 +4947,8 @@ function CreateScene()
                                                         maxValue = 1.00,
                                                         value = 1.00,
                                                         interactable = false,
-                                                        fillPanel = "CC4442E3-7405-4756-A004-C05CFA3526D1/UIPanel",
-                                                        handlePanel = "BE2596EF-4C01-4A17-9FE6-537B60DD331B/UIPanel"
+                                                        fillPanel = "A1000001-0011-4000-8000-000000000011/UIPanel",
+                                                        handlePanel = "A1000001-0012-4000-8000-000000000012/UIPanel"
                                                     },
                                                 },
                                             },

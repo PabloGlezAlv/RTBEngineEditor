@@ -1,6 +1,5 @@
 #include "PlayerSpecialAttackCharge.h"
 
-#include <RTBEngine/Core/Logger.h>
 #include <RTBEngine/Scene/GameObject.h>
 #include <RTBEngine/Scene/NetworkIdentity.h>
 #include <RTBEngine/Scene/SceneManager.h>
@@ -201,11 +200,6 @@ void PlayerSpecialAttackCharge::RegisterSuccessfulHit()
     ++currentHits;
     currentHits = std::min(currentHits, hitsToFullyCharge);
     ApplyVisuals(false);
-
-    if (IsReady() && !loggedFullyCharged) {
-        loggedFullyCharged = true;
-        RTB_INFO("[PlayerSpecialAttackCharge] Ataque especial cargado al 100%.");
-    }
 }
 
 void PlayerSpecialAttackCharge::RefreshAfterSpawn()

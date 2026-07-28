@@ -104,6 +104,7 @@ private:
     bool missingAttackAbilityWarningShown = false;
     bool missingAnimatorWarningShown = false;
     bool missingCameraWarningShown = false;
+    bool missingAttackAimTrailWarningShown = false;
     RTBEngine::UI::UIJoystick* subscribedAttackJoystick = nullptr;
     RTBEngine::Core::EventSubscription attackJoystickReleaseSubscription;
     RTBEngine::Core::EventSubscription aimDrawFinishedSubscription;
@@ -113,6 +114,7 @@ private:
 
     void ClampSettings();
     void ValidateRequiredReferences();
+    void EnsureAimVisualReferences();
     void DisableCompetingCameraController() const;
     void ApplyCameraFollowTransform();
     void ApplySpectateCameraFollow(RTBEngine::Scene::GameObject* targetPawn);

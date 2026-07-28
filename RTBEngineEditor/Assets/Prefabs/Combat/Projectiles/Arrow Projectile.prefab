@@ -26,7 +26,8 @@ return {
             ignoreSameTeam = true,
             destroyOnHit = true,
             maxHits = 1,
-            impactParticlePrefabRef = "Assets/Prefabs/Combat/Effects/Arrow Impact Sparks.prefab"
+            impactParticlePrefabRef = "Assets/Prefabs/Combat/Effects/Arrow Impact Sparks.prefab",
+            trailFadePrefabRef = "Assets/Prefabs/Combat/Effects/Projectile Trail Fade.prefab"
         },
     }
 }

@@ -160,6 +160,7 @@ RTB_REGISTER_COMPONENT(ProjectileComponent)
     RTB_PROPERTY_RANGE(maxHits, 0, 100)
     RTB_PROPERTY(enableFlightTrail)
     RTB_PROPERTY_ASSET_PATH(impactParticlePrefabRef, "prefab")
+    RTB_PROPERTY_ASSET_PATH(trailFadePrefabRef, "prefab")
 RTB_END_REGISTER(ProjectileComponent)
 
 void ProjectileComponent::OnPoolAcquire()
@@ -335,6 +336,9 @@ void ProjectileComponent::Initialize(const ProjectileConfig& config)
     if (!config.impactParticlePrefabRef.empty()) {
         impactParticlePrefabRef = config.impactParticlePrefabRef;
     }
+    if (!config.trailFadePrefabRef.empty()) {
+        trailFadePrefabRef = config.trailFadePrefabRef;
+    }
 
     ProjectileRuntimeContext context;
     context.instigator = config.instigator;
@@ -421,15 +425,34 @@ void ProjectileComponent::ReleaseTrailForFadeout()
         return;
     }
 
+    if (trailFadePrefabRef.empty()) {
+        flightTrail->SetVisible(false);
+        flightTrail->ClearPoints();
+        flightTrail = nullptr;
+        return;
+    }
+
+    const std::string trailFadePoolKey =
+        RTBEngine::Scene::ObjectPool::ResolvePoolKey(trailFadePrefabRef);
+    if (trailFadePoolKey.empty()) {
+        flightTrail->SetVisible(false);
+        flightTrail->ClearPoints();
+        flightTrail = nullptr;
+        return;
+    }
+
     const std::vector<RTBEngine::Math::Vector3> trailPoints = flightTrail->GetPoints();
     const float trailWidth = flightTrail->width;
 
     RTBEngine::Scene::GameObject* trailGhost =
         RTBEngine::Scene::ObjectPool::GetInstance().Acquire(
-            RTBEngine::Scene::ObjectPool::ResolvePoolKey("Projectile Trail Fade"),
+            trailFadePoolKey,
             trailPoints.back(),
             RTBEngine::Math::Quaternion::Identity());
     if (!trailGhost) {
+        flightTrail->SetVisible(false);
+        flightTrail->ClearPoints();
+        flightTrail = nullptr;
         return;
     }
 
@@ -465,9 +488,12 @@ void ProjectileComponent::SpawnImpactParticles()
         return;
     }
 
-    const std::string impactPoolKey = !impactParticlePrefabRef.empty()
-        ? RTBEngine::Scene::ObjectPool::ResolvePoolKey(impactParticlePrefabRef)
-        : RTBEngine::Scene::ObjectPool::ResolvePoolKey("Arrow Impact Sparks");
+    if (impactParticlePrefabRef.empty()) {
+        return;
+    }
+
+    const std::string impactPoolKey =
+        RTBEngine::Scene::ObjectPool::ResolvePoolKey(impactParticlePrefabRef);
     if (impactPoolKey.empty()) {
         return;
     }
@@ -500,6 +526,7 @@ void ProjectileComponent::InitializeFromOwnerTransform()
     config.destroyOnHit = destroyOnHit;
     config.maxHits = maxHits;
     config.impactParticlePrefabRef = impactParticlePrefabRef;
+    config.trailFadePrefabRef = trailFadePrefabRef;
 
     if (owner) {
         config.origin = owner->GetWorldPosition();

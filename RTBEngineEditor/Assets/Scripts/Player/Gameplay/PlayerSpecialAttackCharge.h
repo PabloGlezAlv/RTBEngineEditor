@@ -33,7 +33,6 @@ public:
 
 private:
     int currentHits = 0;
-    bool loggedFullyCharged = false;
 
     bool IsLocalPlayer() const;
     void ClampSettings();

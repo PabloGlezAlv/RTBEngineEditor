@@ -1,0 +1,18 @@
+return {
+    name = "Projectile Trail Fade",
+    uuid = "1TR4IL-FADE-4000-8000-000000000001",
+    position = Vector3(0.00, 0.00, 0.00),
+    components = {
+        {
+            type = "TrailRenderer",
+            width = 0.10,
+            color = Color(1.00, 1.00, 1.00, 1.00),
+            fadeAlphaAlongLength = true
+        },
+        {
+            type = "ProjectileTrailFadeLifetime",
+            fadeDuration = 0.55,
+            headTrimInterval = 0.028
+        },
+    }
+}

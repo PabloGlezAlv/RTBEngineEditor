@@ -289,6 +289,7 @@ bool ProjectileAttackAbility::SpawnProjectile(RTBEngine::Scene::GameObject* inst
         config.maxHits = networkSnapshot->maxHits;
         config.applyDamage = applyDamage;
         config.impactParticlePrefabRef = projectile->impactParticlePrefabRef;
+        config.trailFadePrefabRef = projectile->trailFadePrefabRef;
         projectile->Initialize(config);
     } else {
         ProjectileComponent::ProjectileRuntimeContext context;

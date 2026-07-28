@@ -206,6 +206,25 @@ namespace {
         }
     }
 
+    RTBEngine::Scene::GameObject* FindNamedDescendant(RTBEngine::Scene::GameObject* node, const char* name)
+    {
+        if (!node || !name) {
+            return nullptr;
+        }
+
+        if (node->GetName() == name) {
+            return node;
+        }
+
+        for (RTBEngine::Scene::GameObject* child : node->GetChildren()) {
+            if (RTBEngine::Scene::GameObject* found = FindNamedDescendant(child, name)) {
+                return found;
+            }
+        }
+
+        return nullptr;
+    }
+
 }
 
 RTB_REGISTER_COMPONENT(ThirdPersonCharacterController)
@@ -231,6 +250,7 @@ void ThirdPersonCharacterController::OnStart()
     hasReplicatedMotionSample = false;
     replicatedAnimatorReady = false;
     ClampSettings();
+    EnsureAimVisualReferences();
     ValidateCharacterHealth();
     ValidateRequiredReferences();
     DisableCompetingCameraController();
@@ -580,6 +600,21 @@ void ThirdPersonCharacterController::ClampSettings()
     cameraDistance = std::max(0.1f, cameraDistance);
 }
 
+void ThirdPersonCharacterController::EnsureAimVisualReferences()
+{
+    if (!owner) {
+        return;
+    }
+
+    if (!attackAimTrail) {
+        attackAimTrail = owner->GetComponentInChildren<RTBEngine::Scene::TrailRenderer>();
+    }
+
+    if (!aimArrowVisual) {
+        aimArrowVisual = FindNamedDescendant(owner, "Ranger_Arrow");
+    }
+}
+
 void ThirdPersonCharacterController::ValidateRequiredReferences()
 {
     if (!owner) {
@@ -606,6 +641,11 @@ void ThirdPersonCharacterController::ValidateRequiredReferences()
     if (!cameraObject && !missingCameraWarningShown) {
         RTB_WARN("[ThirdPersonCharacterController] cameraObject is not assigned on '" + pawnName + "'.");
         missingCameraWarningShown = true;
+    }
+
+    if (!attackAimTrail && !missingAttackAimTrailWarningShown) {
+        RTB_WARN("[ThirdPersonCharacterController] attackAimTrail is not assigned on '" + pawnName + "'.");
+        missingAttackAimTrailWarningShown = true;
     }
 }
 
@@ -1113,6 +1153,7 @@ void ThirdPersonCharacterController::SetAimArrowVisible(bool visible)
 
 void ThirdPersonCharacterController::UpdateAttackAimTrail()
 {
+    EnsureAimVisualReferences();
     if (!attackAimTrail) {
         return;
     }
@@ -1715,6 +1756,7 @@ void ThirdPersonCharacterController::ApplyCharacterStats(const CharacterDefiniti
 void ThirdPersonCharacterController::RefreshAfterSpawn()
 {
     ClampSettings();
+    EnsureAimVisualReferences();
     ValidateRequiredReferences();
     EnsureAnimationReady();
     DisableCompetingCameraController();

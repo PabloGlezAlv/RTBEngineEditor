@@ -53,6 +53,7 @@ public:
         int maxHits = 1;
         bool applyDamage = true;
         std::string impactParticlePrefabRef;
+        std::string trailFadePrefabRef;
     };
 
     ProjectileComponent() = default;
@@ -82,6 +83,7 @@ public:
     bool applyDamage = true;
     bool enableFlightTrail = true;
     std::string impactParticlePrefabRef;
+    std::string trailFadePrefabRef;
 
     RTB_COMPONENT(ProjectileComponent)
 
