@@ -78,6 +78,7 @@ public:
     RTBEngine::Scene::TrailRenderer* attackAimTrail = nullptr;
     float aimTrailForwardOffset = 0.40f;
     float aimTrailHeightOffset = 0.0f;
+    float aimTrailWallClipRadius = 0.45f;
     RTBEngine::Scene::GameObject* aimArrowVisual = nullptr;
 
     RTB_COMPONENT(ThirdPersonCharacterController)
@@ -160,6 +161,10 @@ private:
     void StopPlanarMotion() const;
     RTBEngine::Math::Vector3 GetDesiredMoveDirection(bool& outIsRunning) const;
     RTBEngine::Math::Vector3 GetAimTrailWorldOrigin(const RTBEngine::Math::Vector3& attackDirection) const;
+    RTBEngine::Math::Vector3 GetAimTrailCombatOrigin(const RTBEngine::Math::Vector3& attackDirection) const;
+    float GetAimTrailEffectiveLength(
+        const RTBEngine::Math::Vector3& attackDirection,
+        float maxLength) const;
     float GetAimRangeForVisual() const;
     RTBEngine::Math::Vector3 GetAttackDirectionFromJoystick(const RTBEngine::Math::Vector2& joystickValue) const;
     RTBEngine::Math::Vector3 GetAttackDirectionFromCamera() const;

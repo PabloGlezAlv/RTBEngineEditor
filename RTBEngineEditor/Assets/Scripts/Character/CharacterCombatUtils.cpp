@@ -3,16 +3,26 @@
 #include "CharacterBase.h"
 #include "HealthComponent.h"
 
+#include <RTBEngine/Physics/PhysicsLayerSettings.h>
 #include <RTBEngine/Physics/PhysicsWorld.h>
 #include <RTBEngine/Scene/GameObject.h>
 #include <RTBEngine/Scene/PhysicsWorldResolver.h>
 
+#include <algorithm>
 #include <cmath>
 #include <unordered_set>
 
 namespace CharacterCombatUtils {
     namespace {
         constexpr float kDirectionEpsilon = 0.0001f;
+        constexpr float kMinClipLength = 0.05f;
+        constexpr float kGroundCastSkipEpsilon = 0.02f;
+        constexpr int kMaxEnvironmentCastIterations = 16;
+
+        bool IsWalkableGroundHit(const RTBEngine::Physics::PhysicsQueryHit& hit)
+        {
+            return hit.normal.y > 0.65f;
+        }
 
         bool HasPlanarDirection(const RTBEngine::Math::Vector3& value)
         {
@@ -80,6 +90,64 @@ namespace CharacterCombatUtils {
     RTBEngine::Physics::PhysicsWorld* ResolvePhysicsWorld(RTBEngine::Scene::GameObject* gameObject)
     {
         return RTBEngine::Scene::ResolvePhysicsWorldFromGameObject(gameObject, true);
+    }
+
+    std::uint32_t GetPhysicsLayerBit(const char* layerName)
+    {
+        const int layerIndex =
+            RTBEngine::Physics::PhysicsLayerSettings::Get().GetLayerIndex(layerName);
+        return 1u << static_cast<std::uint32_t>(std::max(0, layerIndex));
+    }
+
+    float ResolvePlanarEnvironmentClipLength(const PlanarEnvironmentClipQuery& query)
+    {
+        if (!query.physicsWorld || !query.instigator || query.maxLength <= 0.0f || query.castRadius <= 0.0f) {
+            return std::max(0.0f, query.maxLength);
+        }
+
+        const RTBEngine::Math::Vector3 castDirection = NormalizePlanarDirection(query.direction);
+        if (!HasPlanarDirection(castDirection)) {
+            return 0.0f;
+        }
+
+        const std::uint32_t environmentLayerMask = query.layerMask != 0u
+            ? query.layerMask
+            : GetPhysicsLayerBit("Default");
+
+        RTBEngine::Physics::PhysicsQueryOptions options;
+        options.ignoredObject = query.instigator;
+        options.ignoreIgnoredObjectHierarchy = true;
+        options.ignoreTriggers = true;
+        options.layerMask = environmentLayerMask;
+
+        float traveled = 0.0f;
+        for (int iteration = 0; iteration < kMaxEnvironmentCastIterations; ++iteration) {
+            const float remaining = query.maxLength - traveled;
+            if (remaining <= kMinClipLength) {
+                return std::max(traveled, kMinClipLength);
+            }
+
+            const RTBEngine::Math::Vector3 castStart = query.origin + castDirection * traveled;
+            const RTBEngine::Math::Vector3 castEnd = query.origin + castDirection * query.maxLength;
+
+            RTBEngine::Physics::PhysicsQueryHit hit;
+            if (!query.physicsWorld->SphereCastClosest(castStart, castEnd, query.castRadius, hit, options)) {
+                return query.maxLength;
+            }
+
+            const float hitDistance = std::clamp(hit.fraction, 0.0f, 1.0f) * remaining;
+            if (IsWalkableGroundHit(hit)) {
+                traveled += std::max(hitDistance, kGroundCastSkipEpsilon);
+                if (traveled >= query.maxLength) {
+                    return query.maxLength;
+                }
+                continue;
+            }
+
+            return std::clamp(traveled + hitDistance, kMinClipLength, query.maxLength);
+        }
+
+        return query.maxLength;
     }
 
     std::vector<HostileOverlapHit> OverlapHostileTargets(const HostileOverlapQuery& query)

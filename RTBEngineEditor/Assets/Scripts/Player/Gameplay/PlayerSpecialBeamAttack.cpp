@@ -6,7 +6,6 @@
 #include "HealthComponent.h"
 #include "ThirdPersonCharacterController.h"
 
-#include <RTBEngine/Physics/PhysicsLayerSettings.h>
 #include <RTBEngine/Physics/PhysicsWorld.h>
 #include <RTBEngine/Scene/GameObject.h>
 #include <RTBEngine/Scene/SceneManager.h>
@@ -19,21 +18,6 @@ using ThisClass = PlayerSpecialBeamAttack;
 
 namespace {
     constexpr float kDirectionEpsilon = 0.0001f;
-    constexpr float kMinBeamLength = 0.05f;
-    constexpr float kGroundCastSkipEpsilon = 0.02f;
-    constexpr int kMaxWallCastIterations = 16;
-
-    std::uint32_t GetPhysicsLayerBit(const char* layerName)
-    {
-        const int layerIndex =
-            RTBEngine::Physics::PhysicsLayerSettings::Get().GetLayerIndex(layerName);
-        return 1u << static_cast<std::uint32_t>(std::max(0, layerIndex));
-    }
-
-    bool IsWalkableGroundHit(const RTBEngine::Physics::PhysicsQueryHit& hit)
-    {
-        return hit.normal.y > 0.65f;
-    }
 
     bool HasPlanarDirection(const RTBEngine::Math::Vector3& value)
     {
@@ -291,44 +275,15 @@ float PlayerSpecialBeamAttack::ResolveEffectiveLengthForDirection(
         return beamLength;
     }
 
-    const RTBEngine::Math::Vector3 castDirection = NormalizePlanarDirection(direction);
-    const std::uint32_t environmentLayerMask = GetPhysicsLayerBit("Default");
-
-    RTBEngine::Physics::PhysicsQueryOptions options;
-    options.ignoredObject = owner;
-    options.ignoreIgnoredObjectHierarchy = true;
-    options.ignoreTriggers = true;
-    options.layerMask = environmentLayerMask;
-
-    float traveled = 0.0f;
-    for (int iteration = 0; iteration < kMaxWallCastIterations; ++iteration) {
-        const float remaining = beamLength - traveled;
-        if (remaining <= kMinBeamLength) {
-            return std::max(traveled, kMinBeamLength);
-        }
-
-        const RTBEngine::Math::Vector3 castStart = origin + castDirection * traveled;
-        const RTBEngine::Math::Vector3 castEnd = origin + castDirection * beamLength;
-
-        RTBEngine::Physics::PhysicsQueryHit hit;
-        if (!physicsWorld->SphereCastClosest(castStart, castEnd, beamRadius, hit, options)) {
-            return beamLength;
-        }
-
-        const float hitDistance = std::clamp(hit.fraction, 0.0f, 1.0f) * remaining;
-
-        if (IsWalkableGroundHit(hit)) {
-            traveled += std::max(hitDistance, kGroundCastSkipEpsilon);
-            if (traveled >= beamLength) {
-                return beamLength;
-            }
-            continue;
-        }
-
-        return std::clamp(traveled + hitDistance, kMinBeamLength, beamLength);
-    }
-
-    return beamLength;
+    CharacterCombatUtils::PlanarEnvironmentClipQuery clipQuery;
+    clipQuery.physicsWorld = physicsWorld;
+    clipQuery.instigator = owner;
+    clipQuery.origin = origin;
+    clipQuery.direction = direction;
+    clipQuery.maxLength = beamLength;
+    clipQuery.castRadius = beamRadius;
+    clipQuery.layerMask = CharacterCombatUtils::GetPhysicsLayerBit("Default");
+    return CharacterCombatUtils::ResolvePlanarEnvironmentClipLength(clipQuery);
 }
 
 void PlayerSpecialBeamAttack::ApplyDamageTick(float effectiveLength)
@@ -357,7 +312,7 @@ void PlayerSpecialBeamAttack::ApplyDamageTick(float effectiveLength)
     overlapQuery.distance = effectiveLength;
     overlapQuery.radius = damageRadius;
     overlapQuery.ignoreSameTeam = ignoreSameTeam;
-    overlapQuery.layerMask = GetPhysicsLayerBit("Characters");
+    overlapQuery.layerMask = CharacterCombatUtils::GetPhysicsLayerBit("Characters");
 
     const std::vector<CharacterCombatUtils::HostileOverlapHit> hits =
         CharacterCombatUtils::OverlapHostileTargets(overlapQuery);

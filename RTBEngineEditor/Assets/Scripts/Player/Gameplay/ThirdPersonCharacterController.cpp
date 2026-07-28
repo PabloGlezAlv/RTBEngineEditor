@@ -14,6 +14,7 @@
 #include "PlayerRegistry.h"
 #include "CharacterAbility.h"
 #include "CharacterCombatOrigins.h"
+#include "CharacterCombatUtils.h"
 
 #include <RTBEngine/Animation/Animator.h>
 #include <RTBEngine/Animation/AnimationClip.h>
@@ -244,6 +245,7 @@ RTB_REGISTER_COMPONENT(ThirdPersonCharacterController)
     RTB_PROPERTY_COMPONENT(attackAimTrail, TrailRenderer)
     RTB_PROPERTY_RANGE(aimTrailForwardOffset, 0.0f, 3.0f)
     RTB_PROPERTY_RANGE(aimTrailHeightOffset, -2.0f, 3.0f)
+    RTB_PROPERTY_RANGE(aimTrailWallClipRadius, 0.05f, 3.0f)
     RTB_PROPERTY_GAMEOBJECT(aimArrowVisual)
 RTB_END_REGISTER(ThirdPersonCharacterController)
 
@@ -1263,7 +1265,9 @@ void ThirdPersonCharacterController::UpdateAttackAimTrail()
     RTBEngine::Math::Vector3 start = GetAimTrailWorldOrigin(attackDirection);
     start.y += aimTrailHeightOffset;
 
-    const RTBEngine::Math::Vector3 end = start + attackDirection * GetAimRangeForVisual();
+    const float maxRange = GetAimRangeForVisual();
+    const float effectiveLength = GetAimTrailEffectiveLength(attackDirection, maxRange);
+    const RTBEngine::Math::Vector3 end = start + attackDirection * effectiveLength;
     const RTBEngine::Math::Vector3 points[] = {
         start,
         end
@@ -1788,6 +1792,45 @@ RTBEngine::Math::Vector3 ThirdPersonCharacterController::GetAimTrailWorldOrigin(
         origin,
         attackDirection,
         aimTrailForwardOffset);
+}
+
+RTBEngine::Math::Vector3 ThirdPersonCharacterController::GetAimTrailCombatOrigin(
+    const RTBEngine::Math::Vector3& attackDirection) const
+{
+    if (!owner) {
+        return RTBEngine::Math::Vector3::Zero();
+    }
+
+    RTBEngine::Math::Vector3 origin = CharacterCombatOrigins::GetCapsuleCenterWorld(owner);
+    return CharacterCombatOrigins::ApplyPlanarDirectionOffset(
+        origin,
+        attackDirection,
+        aimTrailForwardOffset);
+}
+
+float ThirdPersonCharacterController::GetAimTrailEffectiveLength(
+    const RTBEngine::Math::Vector3& attackDirection,
+    float maxLength) const
+{
+    if (!owner || maxLength <= 0.0f) {
+        return 0.0f;
+    }
+
+    RTBEngine::Physics::PhysicsWorld* physicsWorld =
+        CharacterCombatUtils::ResolvePhysicsWorld(owner);
+    if (!physicsWorld) {
+        return maxLength;
+    }
+
+    CharacterCombatUtils::PlanarEnvironmentClipQuery clipQuery;
+    clipQuery.physicsWorld = physicsWorld;
+    clipQuery.instigator = owner;
+    clipQuery.origin = GetAimTrailCombatOrigin(attackDirection);
+    clipQuery.direction = attackDirection;
+    clipQuery.maxLength = maxLength;
+    clipQuery.castRadius = std::max(0.05f, aimTrailWallClipRadius);
+    clipQuery.layerMask = CharacterCombatUtils::GetPhysicsLayerBit("Default");
+    return CharacterCombatUtils::ResolvePlanarEnvironmentClipLength(clipQuery);
 }
 
 float ThirdPersonCharacterController::GetAimRangeForVisual() const

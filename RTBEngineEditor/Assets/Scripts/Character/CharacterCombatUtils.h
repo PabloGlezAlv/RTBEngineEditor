@@ -26,6 +26,20 @@ namespace CharacterCombatUtils {
 
     RTBEngine::Physics::PhysicsWorld* ResolvePhysicsWorld(RTBEngine::Scene::GameObject* gameObject);
 
+    std::uint32_t GetPhysicsLayerBit(const char* layerName);
+
+    struct PlanarEnvironmentClipQuery {
+        RTBEngine::Physics::PhysicsWorld* physicsWorld = nullptr;
+        RTBEngine::Scene::GameObject* instigator = nullptr;
+        RTBEngine::Math::Vector3 origin = RTBEngine::Math::Vector3(0.0f, 0.0f, 0.0f);
+        RTBEngine::Math::Vector3 direction = RTBEngine::Math::Vector3(0.0f, 0.0f, 1.0f);
+        float maxLength = 0.0f;
+        float castRadius = 0.45f;
+        std::uint32_t layerMask = 0u;
+    };
+
+    float ResolvePlanarEnvironmentClipLength(const PlanarEnvironmentClipQuery& query);
+
     struct HostileOverlapHit {
         RTBEngine::Scene::GameObject* targetRoot = nullptr;
         HealthComponent* health = nullptr;
