@@ -3,8 +3,6 @@
 #include "CharacterDefinition.h"
 #include "CharacterCombatUtils.h"
 #include "CombatAuthority.h"
-#include "PlayerMeleeSweepAttackAbility.h"
-#include "ThirdPersonCharacterController.h"
 #include "CharacterBase.h"
 #include "CharacterCombatOrigins.h"
 #include "PlayerAmmoSystem.h"
@@ -12,6 +10,7 @@
 #include "ProjectileComponent.h"
 
 #include <RTBEngine/Core/ResourceManager.h>
+#include <RTBEngine/Reflection/TypeInfo.h>
 #include <RTBEngine/Scene/NetworkIdentity.h>
 #include <RTBEngine/Scene/Scene.h>
 #include <RTBEngine/Scene/SceneManager.h>
@@ -20,12 +19,15 @@
 #include <RTBEngine/Scene/AudioSourceComponent.h>
 #include <RTBEngine/Scene/GameObject.h>
 #include <RTBEngine/Scene/ObjectPool.h>
+#include <RTBEngine/Scene/Prefab.h>
 #include <RTBEngine/Scene/PrefabRegistry.h>
 #include <RTBEngine/Scene/RigidBodyComponent.h>
 #include <RTBEngine/Math/Quaternions/Quaternion.h>
 
 #include <algorithm>
 #include <cmath>
+#include <cstring>
+#include <functional>
 
 using ThisClass = ProjectileAttackAbility;
 
@@ -33,27 +35,87 @@ namespace {
     constexpr float kPi = 3.14159265358979323846f;
     constexpr float kRadToDeg = 180.0f / kPi;
     constexpr float kDegToRad = kPi / 180.0f;
-    constexpr float kDirectionEpsilon = 0.0001f;
 
-    bool HasPlanarDirection(const RTBEngine::Math::Vector3& value)
+    bool TryReadFloatProperty(
+        const RTBEngine::Scene::ComponentSnapshot& snap,
+        const RTBEngine::Reflection::TypeInfo* typeInfo,
+        const char* propertyName,
+        float& outValue)
     {
-        return std::abs(value.x) > kDirectionEpsilon || std::abs(value.z) > kDirectionEpsilon;
+        if (!typeInfo || !propertyName) {
+            return false;
+        }
+
+        const RTBEngine::Reflection::PropertyInfo* property = typeInfo->GetProperty(propertyName);
+        if (!property || property->size != sizeof(float)) {
+            return false;
+        }
+
+        const std::uint8_t* ptr = snap.rawData.data();
+        const std::uint8_t* end = ptr + snap.rawData.size();
+        while (ptr + sizeof(std::size_t) * 2 <= end) {
+            std::size_t offset = 0;
+            std::size_t size = 0;
+            std::memcpy(&offset, ptr, sizeof(std::size_t));
+            ptr += sizeof(std::size_t);
+            std::memcpy(&size, ptr, sizeof(std::size_t));
+            ptr += sizeof(std::size_t);
+            if (ptr + size > end) {
+                break;
+            }
+
+            if (offset == property->offset && size == sizeof(float)) {
+                std::memcpy(&outValue, ptr, sizeof(float));
+                return true;
+            }
+
+            ptr += size;
+        }
+
+        return false;
     }
 
-    int ResolveCharacterTeam(RTBEngine::Scene::GameObject* gameObject)
+    bool TryReadProjectileStatsFromPrefab(
+        const RTBEngine::Scene::Prefab& prefab,
+        float& outTravelDistance,
+        float& outRadius,
+        float& outDamage)
     {
-        return CharacterCombatUtils::ResolveCharacterTeam(gameObject);
+        const RTBEngine::Reflection::TypeInfo* typeInfo =
+            RTBEngine::Reflection::TypeRegistry::GetInstance().GetTypeInfo("ProjectileComponent");
+        if (!typeInfo) {
+            return false;
+        }
+
+        for (const RTBEngine::Scene::ComponentSnapshot& snap : prefab.GetSnapshots()) {
+            if (snap.typeName != "ProjectileComponent") {
+                continue;
+            }
+
+            TryReadFloatProperty(snap, typeInfo, "maxDistance", outTravelDistance);
+            TryReadFloatProperty(snap, typeInfo, "radius", outRadius);
+            TryReadFloatProperty(snap, typeInfo, "damage", outDamage);
+            return true;
+        }
+
+        for (const auto& child : prefab.GetChildPrefabs()) {
+            if (child && TryReadProjectileStatsFromPrefab(*child, outTravelDistance, outRadius, outDamage)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
 
 RTB_REGISTER_COMPONENT(ProjectileAttackAbility)
     RTB_PROPERTY_ASSET_PATH(projectilePrefabRef, "prefab")
-    RTB_PROPERTY_RANGE(attackOriginHeightOffset, -2.0f, 3.0f)
-    RTB_PROPERTY_RANGE(launchForwardOffset, -2.0f, 2.0f)
-    RTB_PROPERTY_RANGE(hitDelay, 0.0f, 10.0f)
-    RTB_PROPERTY_RANGE(recoveryDuration, 0.0f, 10.0f)
-    RTB_PROPERTY_RANGE(tickInterval, 0.0f, 2.0f)
-    RTB_PROPERTY_RANGE(tickCount, 1, 8)
+    RTB_PROPERTY_SERIALIZED_RANGE(attackOriginHeightOffset, -2.0f, 3.0f)
+    RTB_PROPERTY_SERIALIZED_RANGE(launchForwardOffset, -2.0f, 2.0f)
+    RTB_PROPERTY_SERIALIZED_RANGE(hitDelay, 0.0f, 10.0f)
+    RTB_PROPERTY_SERIALIZED_RANGE(recoveryDuration, 0.0f, 10.0f)
+    RTB_PROPERTY_SERIALIZED_RANGE(tickInterval, 0.0f, 2.0f)
+    RTB_PROPERTY_SERIALIZED_RANGE(tickCount, 1, 8)
     RTB_PROPERTY_COMPONENT(fireAudio, AudioSourceComponent)
     RTB_PROPERTY_COMPONENT(hitAudio, AudioSourceComponent)
 RTB_END_REGISTER(ProjectileAttackAbility)
@@ -69,9 +131,11 @@ void ProjectileAttackAbility::OnStart()
 
 void ProjectileAttackAbility::ApplyCharacterStats(const CharacterDefinition& definition)
 {
-    RTBEngine::Scene::GameObject* owner = GetOwner();
-    if (owner && owner->GetComponent<PlayerMeleeSweepAttackAbility>()) {
-        return;
+    // Melee characters use melee* fields; skip projectile overrides when definition is melee-only.
+    if (definition.meleeRange > 0.0f || definition.meleeRadius > 0.0f) {
+        if (definition.projectilePrefabRef.empty()) {
+            return;
+        }
     }
 
     if (!definition.projectilePrefabRef.empty()) {
@@ -185,7 +249,7 @@ bool ProjectileAttackAbility::SpawnFromNetworkSnapshot(
 
     RTBEngine::Math::Vector3 direction = snapshot.direction;
     direction.y = 0.0f;
-    if (!HasPlanarDirection(direction)) {
+    if (!CharacterCombatUtils::HasPlanarDirection(direction)) {
         return false;
     }
 
@@ -204,9 +268,8 @@ bool ProjectileAttackAbility::SpawnFromNetworkSnapshot(
         &snapshot);
 
     if (spawned) {
-        if (ThirdPersonCharacterController* controller =
-                instigator->GetComponent<ThirdPersonCharacterController>()) {
-            controller->PlayReplicatedAttackVisual(direction);
+        if (auto* playable = instigator->GetComponent<PlayableCharacterController>()) {
+            playable->PlayReplicatedAttackVisual(direction);
         }
     }
 
@@ -229,7 +292,7 @@ bool ProjectileAttackAbility::SpawnProjectile(RTBEngine::Scene::GameObject* inst
 
     RTBEngine::Math::Vector3 planarDirection = attackDirection;
     planarDirection.y = 0.0f;
-    if (!HasPlanarDirection(planarDirection)) {
+    if (!CharacterCombatUtils::HasPlanarDirection(planarDirection)) {
         return false;
     }
     planarDirection.Normalize();
@@ -293,7 +356,7 @@ bool ProjectileAttackAbility::SpawnProjectile(RTBEngine::Scene::GameObject* inst
         ProjectileComponent::ProjectileRuntimeContext context;
         context.instigator = instigator;
         context.hitAudio = hitAudio;
-        context.instigatorTeam = ResolveCharacterTeam(instigator);
+        context.instigatorTeam = CharacterCombatUtils::ResolveCharacterTeam(instigator);
         context.physicsWorld = physicsWorld ? physicsWorld : ResolvePhysicsWorld(instigator);
         context.origin = spawnPosition;
         context.direction = planarDirection;
@@ -319,7 +382,7 @@ bool ProjectileAttackAbility::SpawnProjectile(RTBEngine::Scene::GameObject* inst
         snapshot.maxDistance = projectile->GetTravelDistance();
         snapshot.radius = projectile->radius;
         snapshot.damage = projectile->damage;
-        snapshot.instigatorTeam = ResolveCharacterTeam(instigator);
+        snapshot.instigatorTeam = CharacterCombatUtils::ResolveCharacterTeam(instigator);
         snapshot.ignoreSameTeam = projectile->ignoreSameTeam;
         snapshot.destroyOnHit = projectile->destroyOnHit;
         snapshot.maxHits = projectile->maxHits;
@@ -346,11 +409,11 @@ RTBEngine::Math::Vector3 ProjectileAttackAbility::GetLaunchOrigin(
 
     RTBEngine::Math::Vector3 planarDirection = attackDirection;
     planarDirection.y = 0.0f;
-    if (!HasPlanarDirection(planarDirection)) {
+    if (!CharacterCombatUtils::HasPlanarDirection(planarDirection)) {
         planarDirection = instigator->GetWorldRotation() * RTBEngine::Math::Vector3::Forward();
         planarDirection.y = 0.0f;
     }
-    if (!HasPlanarDirection(planarDirection)) {
+    if (!CharacterCombatUtils::HasPlanarDirection(planarDirection)) {
         planarDirection = RTBEngine::Math::Vector3::Forward();
     } else {
         planarDirection.Normalize();
@@ -379,7 +442,7 @@ bool ProjectileAttackAbility::CanActivateAbility(
     RTBEngine::Scene::GameObject* instigator,
     const RTBEngine::Math::Vector3& direction) const
 {
-    if (!instigator || !HasValidProjectilePrefab() || !HasPlanarDirection(direction)) {
+    if (!instigator || !HasValidProjectilePrefab() || !CharacterCombatUtils::HasPlanarDirection(direction)) {
         return false;
     }
 
@@ -454,24 +517,11 @@ void ProjectileAttackAbility::RefreshCachedProjectileStats()
         return;
     }
 
-    RTBEngine::Scene::Scene* scene = RTBEngine::Scene::SceneManager::GetInstance().GetActiveScene();
-    if (!scene) {
-        return;
-    }
-
-    RTBEngine::Scene::GameObject* templateObject =
-        RTBEngine::Scene::SceneManager::GetInstance().Instantiate(*projectileSpawnPrefab);
-    if (!templateObject) {
-        return;
-    }
-
-    if (auto* projectile = templateObject->GetComponent<ProjectileComponent>()) {
-        cachedTravelDistance = projectile->GetTravelDistance();
-        cachedProjectileRadius = projectile->radius;
-        cachedDamage = projectile->damage;
-    }
-
-    scene->RemoveGameObject(templateObject);
+    TryReadProjectileStatsFromPrefab(
+        *projectileSpawnPrefab,
+        cachedTravelDistance,
+        cachedProjectileRadius,
+        cachedDamage);
 
     if (projectileDamageOverride > 0.0f) {
         cachedDamage = projectileDamageOverride;
@@ -483,22 +533,10 @@ void ProjectileAttackAbility::RefreshCachedProjectileStats()
 RTBEngine::Physics::PhysicsWorld* ProjectileAttackAbility::ResolvePhysicsWorld(
     RTBEngine::Scene::GameObject* instigator) const
 {
-    auto resolveFromObject = [](RTBEngine::Scene::GameObject* gameObject) -> RTBEngine::Physics::PhysicsWorld* {
-        if (!gameObject) {
-            return nullptr;
-        }
-
-        auto* rbComp = gameObject->GetComponent<RTBEngine::Scene::RigidBodyComponent>();
-        if (!rbComp || !rbComp->HasRigidBody() || !rbComp->GetRigidBody()) {
-            return nullptr;
-        }
-
-        return rbComp->GetRigidBody()->GetPhysicsWorld();
-    };
-
-    if (RTBEngine::Physics::PhysicsWorld* world = resolveFromObject(owner)) {
+    if (RTBEngine::Physics::PhysicsWorld* world =
+            CharacterCombatUtils::ResolvePhysicsWorld(owner)) {
         return world;
     }
 
-    return resolveFromObject(instigator);
+    return CharacterCombatUtils::ResolvePhysicsWorld(instigator);
 }

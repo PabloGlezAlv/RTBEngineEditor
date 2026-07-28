@@ -3,6 +3,7 @@
 #include "HealthComponent.h"
 
 #include <RTBEngine/Core/Event.h>
+#include <RTBEngine/Math/Vectors/Vector3.h>
 #include <RTBEngine/Scene/Component.h>
 
 namespace RTBEngine {
@@ -50,6 +51,8 @@ class PlayableCharacterController : public CharacterBase
 public:
     PlayableCharacterController() = default;
     ~PlayableCharacterController() override = default;
+
+    virtual void PlayReplicatedAttackVisual(const RTBEngine::Math::Vector3& /*attackDirection*/) {}
 };
 
 class AICharacterController : public CharacterBase

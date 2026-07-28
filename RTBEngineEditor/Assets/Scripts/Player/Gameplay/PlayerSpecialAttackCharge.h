@@ -21,9 +21,10 @@ public:
     PlayerSpecialAttackCharge() = default;
     ~PlayerSpecialAttackCharge() override;
 
-    RTBEngine::UI::UIJoystick* specialAttackJoystick = nullptr;
-    RTBEngine::UI::UIImage* readyIcon = nullptr;
-    int hitsToFullyCharge = 5;
+    void SetSpecialAttackJoystick(RTBEngine::UI::UIJoystick* joystick);
+    void SetReadyIcon(RTBEngine::UI::UIImage* icon);
+    RTBEngine::UI::UIJoystick* GetSpecialAttackJoystick() const { return specialAttackJoystick; }
+    RTBEngine::UI::UIImage* GetReadyIcon() const { return readyIcon; }
 
     void RegisterSuccessfulHit();
     bool IsReady() const;
@@ -31,14 +32,20 @@ public:
     void RefreshAfterSpawn();
     bool TryGetSpecialAimDirection(RTBEngine::Math::Vector3& outAimDirection) const;
 
-    RTB_COMPONENT(PlayerSpecialAttackCharge)
-
     void OnStart() override;
     void OnValidate() override;
     void OnLateUpdate(float deltaTime) override;
     void OnDestroy() override;
 
-private:
+    RTB_COMPONENT(PlayerSpecialAttackCharge)
+
+    RTB_SERIALIZE()
+    RTBEngine::UI::UIJoystick* specialAttackJoystick = nullptr;
+    RTB_SERIALIZE()
+    RTBEngine::UI::UIImage* readyIcon = nullptr;
+    RTB_SERIALIZE()
+    int hitsToFullyCharge = 5;
+
     int currentHits = 0;
     RTBEngine::UI::UIJoystick* subscribedSpecialJoystick = nullptr;
     RTBEngine::Core::EventSubscription specialJoystickReleaseSubscription;

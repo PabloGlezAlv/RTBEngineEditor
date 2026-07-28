@@ -3,6 +3,7 @@
 #include "CharacterBase.h"
 #include "HealthComponent.h"
 #include "ICharacterStatReceiver.h"
+#include "PlayerAimTrailPresenter.h"
 
 #include <RTBEngine/Core/Event.h>
 #include <RTBEngine/Scene/Component.h>
@@ -58,7 +59,7 @@ public:
     void ForceDeathState();
     void ReviveFromDeath();
     void AddPlanarKnockback(const RTBEngine::Math::Vector3& direction, float strength);
-    void PlayReplicatedAttackVisual(const RTBEngine::Math::Vector3& attackDirection);
+    void PlayReplicatedAttackVisual(const RTBEngine::Math::Vector3& attackDirection) override;
     void ApplyCombatAnimationOverrides(const std::string& aimDrawFbx,
                                        const std::string& aimLoopFbx,
                                        const std::string& attackFbx);
@@ -69,24 +70,47 @@ public:
         const RTBEngine::Math::Vector2& joystickValue) const;
     void FaceTowardPlanarDirection(const RTBEngine::Math::Vector3& direction, float deltaTime);
 
-    RTBEngine::Scene::GameObject* cameraObject = nullptr;
-    HealthComponent* health = nullptr;
-    int team = static_cast<int>(CharacterTeam::Player);
-    float moveSpeed = 4.0f;
-    float sprintMultiplier = 1.75f;
-    float turnSpeed = 720.0f;
-    float cameraDistance = 11.0f;
-    RTBEngine::Math::Vector3 cameraFocusOffset = RTBEngine::Math::Vector3(0.0f, 1.2f, 0.0f);
-    RTBEngine::Animation::Animator* animator = nullptr;
-    CharacterAbility* attackAbility = nullptr;
-    RTBEngine::UI::UIJoystick* attackJoystick = nullptr;
-    RTBEngine::Scene::TrailRenderer* attackAimTrail = nullptr;
-    float aimTrailForwardOffset = 0.40f;
-    float aimTrailHeightOffset = 0.0f;
-    float aimTrailWallClipRadius = 0.45f;
-    RTBEngine::Scene::GameObject* aimArrowVisual = nullptr;
+    RTBEngine::Scene::GameObject* GetCameraObject() const { return cameraObject; }
+    void SetCameraObject(RTBEngine::Scene::GameObject* camera) { cameraObject = camera; }
+    RTBEngine::Animation::Animator* GetAnimator() const { return animator; }
+    RTBEngine::UI::UIJoystick* GetAttackJoystick() const { return attackJoystick; }
+    void SetAttackJoystick(RTBEngine::UI::UIJoystick* joystick) { attackJoystick = joystick; }
+    void ClearLocalOnlyInputAndCamera();
 
     RTB_COMPONENT(ThirdPersonCharacterController)
+
+    RTB_SERIALIZE()
+    RTBEngine::Scene::GameObject* cameraObject = nullptr;
+    RTB_SERIALIZE()
+    HealthComponent* health = nullptr;
+    RTB_SERIALIZE()
+    int team = static_cast<int>(CharacterTeam::Player);
+    RTB_SERIALIZE()
+    float moveSpeed = 4.0f;
+    RTB_SERIALIZE()
+    float sprintMultiplier = 1.75f;
+    RTB_SERIALIZE()
+    float turnSpeed = 720.0f;
+    RTB_SERIALIZE()
+    float cameraDistance = 11.0f;
+    RTB_SERIALIZE()
+    RTBEngine::Math::Vector3 cameraFocusOffset = RTBEngine::Math::Vector3(0.0f, 1.2f, 0.0f);
+    RTB_SERIALIZE()
+    RTBEngine::Animation::Animator* animator = nullptr;
+    RTB_SERIALIZE()
+    CharacterAbility* attackAbility = nullptr;
+    RTB_SERIALIZE()
+    RTBEngine::UI::UIJoystick* attackJoystick = nullptr;
+    RTB_SERIALIZE()
+    RTBEngine::Scene::TrailRenderer* attackAimTrail = nullptr;
+    RTB_SERIALIZE()
+    float aimTrailForwardOffset = 0.40f;
+    RTB_SERIALIZE()
+    float aimTrailHeightOffset = 0.0f;
+    RTB_SERIALIZE()
+    float aimTrailWallClipRadius = 0.45f;
+    RTB_SERIALIZE()
+    RTBEngine::Scene::GameObject* aimArrowVisual = nullptr;
 
 private:
     enum class State {
@@ -165,11 +189,6 @@ private:
     void FaceAttackDirection(const RTBEngine::Math::Vector3& attackDirection);
     void StopPlanarMotion() const;
     RTBEngine::Math::Vector3 GetDesiredMoveDirection(bool& outIsRunning) const;
-    RTBEngine::Math::Vector3 GetAimTrailWorldOrigin(const RTBEngine::Math::Vector3& attackDirection) const;
-    RTBEngine::Math::Vector3 GetAimTrailCombatOrigin(const RTBEngine::Math::Vector3& attackDirection) const;
-    float GetAimTrailEffectiveLength(
-        const RTBEngine::Math::Vector3& attackDirection,
-        float maxLength) const;
     float GetAimRangeForVisual() const;
     RTBEngine::Math::Vector3 GetAttackDirectionFromJoystick(const RTBEngine::Math::Vector2& joystickValue) const;
     RTBEngine::Math::Vector3 GetAttackDirectionFromCamera() const;
@@ -197,6 +216,7 @@ private:
     RTBEngine::Scene::NetworkIdentity* networkIdentity = nullptr;
     RTBEngine::Scene::FreeLookCamera* freeLookCamera = nullptr;
     bool competingCameraDisabled = false;
+    PlayerAimTrailPresenter aimTrailPresenter;
 
     RTBEngine::Math::Vector3 externalPlanarVelocity = RTBEngine::Math::Vector3::Zero();
     float externalPlanarDecay = 10.0f;

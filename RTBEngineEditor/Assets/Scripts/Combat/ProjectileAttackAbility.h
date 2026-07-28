@@ -34,19 +34,6 @@ public:
     void OnStart() override;
     void OnValidate() override;
 
-    std::string projectilePrefabRef = "Assets/Prefabs/Combat/Projectiles/Arrow Projectile.prefab";
-    float attackOriginHeightOffset = 0.55f;
-    float launchForwardOffset = 0.35f;
-    float hitDelay = 0.0f;
-    float recoveryDuration = 0.0f;
-    float tickInterval = 0.0f;
-    int tickCount = 1;
-    RTBEngine::Scene::AudioSourceComponent* fireAudio = nullptr;
-    RTBEngine::Scene::AudioSourceComponent* hitAudio = nullptr;
-
-    RTB_COMPONENT(ProjectileAttackAbility)
-
-public:
     bool FireNow(RTBEngine::Scene::GameObject* instigator,
                  const RTBEngine::Math::Vector3& attackDirection,
                  RTBEngine::Physics::PhysicsWorld* physicsWorld = nullptr);
@@ -82,7 +69,27 @@ protected:
     void OnAbilityStarted() override;
     void ExecuteAbilityHit() override;
 
-private:
+    RTB_COMPONENT(ProjectileAttackAbility)
+
+    RTB_SERIALIZE()
+    std::string projectilePrefabRef = "Assets/Prefabs/Combat/Projectiles/Arrow Projectile.prefab";
+    RTB_SERIALIZE()
+    float attackOriginHeightOffset = 0.55f;
+    RTB_SERIALIZE()
+    float launchForwardOffset = 0.35f;
+    RTB_SERIALIZE()
+    float hitDelay = 0.0f;
+    RTB_SERIALIZE()
+    float recoveryDuration = 0.0f;
+    RTB_SERIALIZE()
+    float tickInterval = 0.0f;
+    RTB_SERIALIZE()
+    int tickCount = 1;
+    RTB_SERIALIZE()
+    RTBEngine::Scene::AudioSourceComponent* fireAudio = nullptr;
+    RTB_SERIALIZE()
+    RTBEngine::Scene::AudioSourceComponent* hitAudio = nullptr;
+
     RTBEngine::Scene::Prefab* projectileSpawnPrefab = nullptr;
     std::string projectilePoolKey;
     float cachedTravelDistance = 0.0f;

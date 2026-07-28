@@ -147,16 +147,12 @@ namespace {
             return;
         }
 
-        controller->attackJoystick = nullptr;
+        controller->ClearLocalOnlyInputAndCamera();
         if (RTBEngine::Scene::GameObject* pawn = controller->GetOwner()) {
             if (auto* specialCharge = pawn->GetComponent<PlayerSpecialAttackCharge>()) {
-                specialCharge->specialAttackJoystick = nullptr;
-                specialCharge->readyIcon = nullptr;
+                specialCharge->SetSpecialAttackJoystick(nullptr);
+                specialCharge->SetReadyIcon(nullptr);
             }
-        }
-        if (controller->cameraObject) {
-            controller->cameraObject->SetActive(false);
-            controller->cameraObject = nullptr;
         }
     }
 

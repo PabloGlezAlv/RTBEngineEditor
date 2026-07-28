@@ -27,22 +27,6 @@ public:
 
     void OnValidate() override;
 
-    RTBEngine::Math::Vector3 attackOriginOffset = RTBEngine::Math::Vector3(0.0f, 1.05f, 0.18f);
-    float cooldown = 0.0f;
-    float damage = 12.0f;
-    float hitDelay = 0.10f;
-    float recoveryDuration = 1.50f;
-    float sphereRadius = 0.45f;
-    float sphereDistance = 1.20f;
-    float tickInterval = 0.50f;
-    int tickCount = 1;
-    float knockbackStrength = 0.0f;
-    bool ignoreSameTeam = true;
-    RTBEngine::Scene::AudioSourceComponent* hitAudio = nullptr;
-
-    RTB_COMPONENT(PlayerMeleeSweepAttackAbility)
-
-public:
     void SetMeleeCombatOverrides(float damageAmount,
                                  float range,
                                  float radius,
@@ -71,7 +55,33 @@ protected:
     void OnAbilityStarted() override;
     void ExecuteAbilityHit() override;
 
-private:
+    RTB_COMPONENT(PlayerMeleeSweepAttackAbility)
+
+    RTB_SERIALIZE()
+    RTBEngine::Math::Vector3 attackOriginOffset = RTBEngine::Math::Vector3(0.0f, 1.05f, 0.18f);
+    RTB_SERIALIZE()
+    float cooldown = 0.0f;
+    RTB_SERIALIZE()
+    float damage = 12.0f;
+    RTB_SERIALIZE()
+    float hitDelay = 0.10f;
+    RTB_SERIALIZE()
+    float recoveryDuration = 1.50f;
+    RTB_SERIALIZE()
+    float sphereRadius = 0.45f;
+    RTB_SERIALIZE()
+    float sphereDistance = 1.20f;
+    RTB_SERIALIZE()
+    float tickInterval = 0.50f;
+    RTB_SERIALIZE()
+    int tickCount = 1;
+    RTB_SERIALIZE()
+    float knockbackStrength = 0.0f;
+    RTB_SERIALIZE()
+    bool ignoreSameTeam = true;
+    RTB_SERIALIZE()
+    RTBEngine::Scene::AudioSourceComponent* hitAudio = nullptr;
+
     void ClampSettings();
     float GetDamagePerHit() const;
     bool ApplySweepHits(RTBEngine::Scene::GameObject* instigator,

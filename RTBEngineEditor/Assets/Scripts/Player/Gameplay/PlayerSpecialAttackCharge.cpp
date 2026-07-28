@@ -23,10 +23,20 @@ namespace {
 RTB_REGISTER_COMPONENT(PlayerSpecialAttackCharge)
     RTB_PROPERTY_COMPONENT(specialAttackJoystick, UIJoystick)
     RTB_PROPERTY_COMPONENT(readyIcon, UIImage)
-    RTB_PROPERTY_RANGE(hitsToFullyCharge, 1, 50)
+    RTB_PROPERTY_SERIALIZED_RANGE(hitsToFullyCharge, 1, 50)
 RTB_END_REGISTER(PlayerSpecialAttackCharge)
 
 PlayerSpecialAttackCharge::~PlayerSpecialAttackCharge() = default;
+
+void PlayerSpecialAttackCharge::SetSpecialAttackJoystick(RTBEngine::UI::UIJoystick* joystick)
+{
+    specialAttackJoystick = joystick;
+}
+
+void PlayerSpecialAttackCharge::SetReadyIcon(RTBEngine::UI::UIImage* icon)
+{
+    readyIcon = icon;
+}
 
 void PlayerSpecialAttackCharge::ClampSettings()
 {

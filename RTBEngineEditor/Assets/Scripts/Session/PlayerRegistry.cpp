@@ -106,7 +106,7 @@ void PlayerRegistry::RegisterPlayerPawn(RTBEngine::Scene::GameObject* pawn)
     }
 
     ThirdPersonCharacterController* controller = pawn->GetComponent<ThirdPersonCharacterController>();
-    if (!controller || controller->team != static_cast<int>(CharacterTeam::Player)) {
+    if (!controller || controller->GetTeam() != static_cast<int>(CharacterTeam::Player)) {
         return;
     }
 
@@ -119,7 +119,7 @@ void PlayerRegistry::RegisterPlayerPawn(RTBEngine::Scene::GameObject* pawn)
 
     PawnInfo info;
     info.pawn = pawn;
-    info.team = controller->team;
+    info.team = controller->GetTeam();
     info.networkPlayerSlot = identity ? identity->networkPlayerSlot : -1;
     info.health = health;
     Register(info);

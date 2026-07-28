@@ -19,16 +19,20 @@ public:
     PlayerPawnSpawner() = default;
     ~PlayerPawnSpawner() override = default;
 
-    OnlinePlayerManager* onlinePlayerManager = nullptr;
-    RoundManager* roundManager = nullptr;
-    RTBEngine::UI::UIJoystick* attackJoystick = nullptr;
-    RTBEngine::UI::UIJoystick* specialAttackJoystick = nullptr;
-    RTBEngine::UI::UIImage* specialAttackReadyIcon = nullptr;
+    void OnAwake() override;
 
     RTB_COMPONENT(PlayerPawnSpawner)
 
-    void OnAwake() override;
+    RTB_SERIALIZE()
+    OnlinePlayerManager* onlinePlayerManager = nullptr;
+    RTB_SERIALIZE()
+    RoundManager* roundManager = nullptr;
+    RTB_SERIALIZE()
+    RTBEngine::UI::UIJoystick* attackJoystick = nullptr;
+    RTB_SERIALIZE()
+    RTBEngine::UI::UIJoystick* specialAttackJoystick = nullptr;
+    RTB_SERIALIZE()
+    RTBEngine::UI::UIImage* specialAttackReadyIcon = nullptr;
 
-private:
     RTBEngine::Scene::GameObject* spawnedPawn = nullptr;
 };

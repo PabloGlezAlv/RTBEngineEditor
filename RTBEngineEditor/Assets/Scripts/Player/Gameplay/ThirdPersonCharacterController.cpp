@@ -8,13 +8,14 @@
 #include <RTBEngine/Scene/NetworkIdentity.h>
 #include <RTBEngine/Online/OnlineGameplayNet.h>
 #include "PauseMenuController.h"
-#include "PlayerAmmoSystem.h"
-#include "PlayerSpecialBeamAttack.h"
-#include "PlayerSpecialAttackCharge.h"
-#include "PlayerRegistry.h"
 #include "CharacterAbility.h"
-#include "CharacterCombatOrigins.h"
-#include "CharacterCombatUtils.h"
+#include "PlayerAimTrailPresenter.h"
+#include "PlayerAmmoSystem.h"
+#include "PlayerCameraFollow.h"
+#include "PlayerCombatNet.h"
+#include "PlayerSpecialAttackCharge.h"
+#include "PlayerSpecialBeamAttack.h"
+#include "PlayerRegistry.h"
 
 #include <RTBEngine/Animation/Animator.h>
 #include <RTBEngine/Animation/AnimationClip.h>
@@ -137,7 +138,7 @@ namespace {
 
             ThirdPersonCharacterController* controller =
                 candidatePawn->GetComponent<ThirdPersonCharacterController>();
-            if (!controller || controller->team != static_cast<int>(CharacterTeam::Player)) {
+            if (!controller || controller->GetTeam() != static_cast<int>(CharacterTeam::Player)) {
                 continue;
             }
 
@@ -214,19 +215,19 @@ namespace {
 RTB_REGISTER_COMPONENT(ThirdPersonCharacterController)
     RTB_PROPERTY_GAMEOBJECT(cameraObject)
     RTB_PROPERTY_COMPONENT(health, HealthComponent)
-    RTB_PROPERTY_RANGE(team, 0, 8)
-    RTB_PROPERTY_RANGE(moveSpeed, 0.0f, 20.0f)
-    RTB_PROPERTY_RANGE(sprintMultiplier, 1.0f, 4.0f)
-    RTB_PROPERTY_RANGE(turnSpeed, 0.0f, 1440.0f)
-    RTB_PROPERTY_RANGE(cameraDistance, 0.5f, 20.0f)
-    RTB_PROPERTY(cameraFocusOffset)
+    RTB_PROPERTY_SERIALIZED_RANGE(team, 0, 8)
+    RTB_PROPERTY_SERIALIZED_RANGE(moveSpeed, 0.0f, 20.0f)
+    RTB_PROPERTY_SERIALIZED_RANGE(sprintMultiplier, 1.0f, 4.0f)
+    RTB_PROPERTY_SERIALIZED_RANGE(turnSpeed, 0.0f, 1440.0f)
+    RTB_PROPERTY_SERIALIZED_RANGE(cameraDistance, 0.5f, 20.0f)
+    RTB_PROPERTY_SERIALIZED(cameraFocusOffset)
     RTB_PROPERTY_COMPONENT(animator, Animator)
     RTB_PROPERTY_COMPONENT(attackAbility, CharacterAbility)
     RTB_PROPERTY_COMPONENT(attackJoystick, UIJoystick)
     RTB_PROPERTY_COMPONENT(attackAimTrail, TrailRenderer)
-    RTB_PROPERTY_RANGE(aimTrailForwardOffset, 0.0f, 3.0f)
-    RTB_PROPERTY_RANGE(aimTrailHeightOffset, -2.0f, 3.0f)
-    RTB_PROPERTY_RANGE(aimTrailWallClipRadius, 0.05f, 3.0f)
+    RTB_PROPERTY_SERIALIZED_RANGE(aimTrailForwardOffset, 0.0f, 3.0f)
+    RTB_PROPERTY_SERIALIZED_RANGE(aimTrailHeightOffset, -2.0f, 3.0f)
+    RTB_PROPERTY_SERIALIZED_RANGE(aimTrailWallClipRadius, 0.05f, 3.0f)
     RTB_PROPERTY_GAMEOBJECT(aimArrowVisual)
 RTB_END_REGISTER(ThirdPersonCharacterController)
 
@@ -643,6 +644,12 @@ void ThirdPersonCharacterController::CacheGameplayReferences()
     if (cameraObject) {
         freeLookCamera = cameraObject->GetComponent<RTBEngine::Scene::FreeLookCamera>();
     }
+
+    aimTrailPresenter.Bind(
+        attackAimTrail,
+        aimTrailForwardOffset,
+        aimTrailHeightOffset,
+        aimTrailWallClipRadius);
 }
 
 void ThirdPersonCharacterController::ValidateRequiredReferences()
@@ -735,65 +742,17 @@ void ThirdPersonCharacterController::ApplyCameraFollowTransform()
         return;
     }
 
-    const RTBEngine::Math::Quaternion orbitRotation =
-        RTBEngine::Math::Quaternion::FromEulerAngles(
-            kFixedCameraPitchDegrees * kDegToRad,
-            kFixedCameraYawDegrees * kDegToRad,
-            0.0f);
-    const RTBEngine::Math::Quaternion ownerWorldRotation = owner->GetWorldRotation();
-    const RTBEngine::Math::Vector3 worldFocusOffset = ownerWorldRotation * cameraFocusOffset;
-    const bool cameraIsChildOfOwner = (cameraObject->GetParent() == owner);
-
-    if (cameraIsChildOfOwner) {
-        const RTBEngine::Math::Quaternion localOrbitRotation = ownerWorldRotation.Inverse() * orbitRotation;
-        const RTBEngine::Math::Vector3 localForward = localOrbitRotation * RTBEngine::Math::Vector3::Forward();
-        const RTBEngine::Math::Vector3 localCameraPosition = cameraFocusOffset - localForward * cameraDistance;
-
-        cameraObject->GetTransform().SetPosition(localCameraPosition);
-        cameraObject->GetTransform().SetRotation(localOrbitRotation);
-        return;
-    }
-
-    const RTBEngine::Math::Vector3 focusPoint = owner->GetWorldPosition() + worldFocusOffset;
-    const RTBEngine::Math::Vector3 forward = orbitRotation * RTBEngine::Math::Vector3::Forward();
-    const RTBEngine::Math::Vector3 cameraPosition = focusPoint - forward * cameraDistance;
-
-    cameraObject->GetTransform().SetPosition(cameraPosition);
-    cameraObject->GetTransform().SetRotation(orbitRotation);
+    PlayerCameraFollow::ApplyFollow(owner, cameraObject, cameraDistance, cameraFocusOffset);
 }
 
 void ThirdPersonCharacterController::ApplySpectateCameraFollow(RTBEngine::Scene::GameObject* targetPawn)
 {
-    if (!owner || !cameraObject || !targetPawn) {
-        return;
-    }
-
-    const RTBEngine::Math::Quaternion orbitRotation =
-        RTBEngine::Math::Quaternion::FromEulerAngles(
-            kFixedCameraPitchDegrees * kDegToRad,
-            kFixedCameraYawDegrees * kDegToRad,
-            0.0f);
-    const RTBEngine::Math::Quaternion targetWorldRotation = targetPawn->GetWorldRotation();
-    const RTBEngine::Math::Vector3 worldFocusOffset = targetWorldRotation * cameraFocusOffset;
-    const RTBEngine::Math::Vector3 worldFocusPoint = targetPawn->GetWorldPosition() + worldFocusOffset;
-    const RTBEngine::Math::Vector3 worldForward = orbitRotation * RTBEngine::Math::Vector3::Forward();
-    const RTBEngine::Math::Vector3 worldCameraPosition = worldFocusPoint - worldForward * cameraDistance;
-    const bool cameraIsChildOfOwner = (cameraObject->GetParent() == owner);
-
-    if (cameraIsChildOfOwner) {
-        const RTBEngine::Math::Vector3 ownerWorldPosition = owner->GetWorldPosition();
-        const RTBEngine::Math::Quaternion ownerWorldRotation = owner->GetWorldRotation();
-        const RTBEngine::Math::Vector3 localCameraPosition =
-            ownerWorldRotation.Inverse() * (worldCameraPosition - ownerWorldPosition);
-        const RTBEngine::Math::Quaternion localOrbitRotation = ownerWorldRotation.Inverse() * orbitRotation;
-
-        cameraObject->GetTransform().SetPosition(localCameraPosition);
-        cameraObject->GetTransform().SetRotation(localOrbitRotation);
-        return;
-    }
-
-    cameraObject->GetTransform().SetPosition(worldCameraPosition);
-    cameraObject->GetTransform().SetRotation(orbitRotation);
+    PlayerCameraFollow::ApplySpectate(
+        owner,
+        cameraObject,
+        targetPawn,
+        cameraDistance,
+        cameraFocusOffset);
 }
 
 void ThirdPersonCharacterController::EnsureAnimationReady()
@@ -1228,7 +1187,7 @@ void ThirdPersonCharacterController::SetAimArrowVisible(bool visible)
 
 void ThirdPersonCharacterController::UpdateAttackAimTrail()
 {
-    if (!attackAimTrail) {
+    if (!aimTrailPresenter.trail) {
         return;
     }
 
@@ -1249,29 +1208,18 @@ void ThirdPersonCharacterController::UpdateAttackAimTrail()
         return;
     }
 
-    RTBEngine::Math::Vector3 start = GetAimTrailWorldOrigin(attackDirection);
-    start.y += aimTrailHeightOffset;
-
+    const RTBEngine::Math::Vector3 start =
+        aimTrailPresenter.ResolveVisualOrigin(owner, attackDirection);
     const float maxRange = GetAimRangeForVisual();
-    const float effectiveLength = GetAimTrailEffectiveLength(attackDirection, maxRange);
+    const float effectiveLength =
+        aimTrailPresenter.ResolveClippedLength(owner, attackDirection, maxRange);
     const RTBEngine::Math::Vector3 end = start + attackDirection * effectiveLength;
-    const RTBEngine::Math::Vector3 points[] = {
-        start,
-        end
-    };
-
-    attackAimTrail->SetPoints(points, 2);
-    attackAimTrail->SetVisible(true);
+    aimTrailPresenter.ShowSegment(start, end);
 }
 
 void ThirdPersonCharacterController::HideAttackAimTrail()
 {
-    if (!attackAimTrail) {
-        return;
-    }
-
-    attackAimTrail->SetVisible(false);
-    attackAimTrail->ClearPoints();
+    aimTrailPresenter.Hide();
 }
 
 void ThirdPersonCharacterController::UpdateAttackFacingLock(float deltaTime)
@@ -1767,59 +1715,6 @@ RTBEngine::Math::Vector3 ThirdPersonCharacterController::GetDesiredMoveDirection
     return desiredMove;
 }
 
-RTBEngine::Math::Vector3 ThirdPersonCharacterController::GetAimTrailWorldOrigin(
-    const RTBEngine::Math::Vector3& attackDirection) const
-{
-    if (!owner) {
-        return RTBEngine::Math::Vector3::Zero();
-    }
-
-    RTBEngine::Math::Vector3 origin = CharacterCombatOrigins::GetFeetWorld(owner);
-    return CharacterCombatOrigins::ApplyPlanarDirectionOffset(
-        origin,
-        attackDirection,
-        aimTrailForwardOffset);
-}
-
-RTBEngine::Math::Vector3 ThirdPersonCharacterController::GetAimTrailCombatOrigin(
-    const RTBEngine::Math::Vector3& attackDirection) const
-{
-    if (!owner) {
-        return RTBEngine::Math::Vector3::Zero();
-    }
-
-    RTBEngine::Math::Vector3 origin = CharacterCombatOrigins::GetCapsuleCenterWorld(owner);
-    return CharacterCombatOrigins::ApplyPlanarDirectionOffset(
-        origin,
-        attackDirection,
-        aimTrailForwardOffset);
-}
-
-float ThirdPersonCharacterController::GetAimTrailEffectiveLength(
-    const RTBEngine::Math::Vector3& attackDirection,
-    float maxLength) const
-{
-    if (!owner || maxLength <= 0.0f) {
-        return 0.0f;
-    }
-
-    RTBEngine::Physics::PhysicsWorld* physicsWorld =
-        CharacterCombatUtils::ResolvePhysicsWorld(owner);
-    if (!physicsWorld) {
-        return maxLength;
-    }
-
-    CharacterCombatUtils::PlanarEnvironmentClipQuery clipQuery;
-    clipQuery.physicsWorld = physicsWorld;
-    clipQuery.instigator = owner;
-    clipQuery.origin = GetAimTrailCombatOrigin(attackDirection);
-    clipQuery.direction = attackDirection;
-    clipQuery.maxLength = maxLength;
-    clipQuery.castRadius = std::max(0.05f, aimTrailWallClipRadius);
-    clipQuery.layerMask = CharacterCombatUtils::GetPhysicsLayerBit("Default");
-    return CharacterCombatUtils::ResolvePlanarEnvironmentClipLength(clipQuery);
-}
-
 float ThirdPersonCharacterController::GetAimRangeForVisual() const
 {
     if (!attackAbility) {
@@ -1886,6 +1781,15 @@ void ThirdPersonCharacterController::RefreshAfterSpawn()
 
     if (IsLocallyControlled()) {
         ApplyCameraFollowTransform();
+    }
+}
+
+void ThirdPersonCharacterController::ClearLocalOnlyInputAndCamera()
+{
+    attackJoystick = nullptr;
+    if (cameraObject) {
+        cameraObject->SetActive(false);
+        cameraObject = nullptr;
     }
 }
 
@@ -1983,29 +1887,15 @@ RTBEngine::Math::Vector3 ThirdPersonCharacterController::GetActiveAttackDirectio
 
 void ThirdPersonCharacterController::SendNetworkInput()
 {
-    if (!owner || RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
-        return;
-    }
-
     bool isRunning = false;
     const RTBEngine::Math::Vector3 desiredMove = GetDesiredMoveDirection(isRunning);
-
-    RTBEngine::Online::OnlineGameplayNet::PlayerInputSnapshot snapshot;
-    snapshot.senderUserId = RTBEngine::Online::OnlineGameplayNet::GetLocalUserId();
-    snapshot.sequenceNumber = ++inputSequenceNumber;
-    snapshot.moveX = desiredMove.x;
-    snapshot.moveZ = desiredMove.z;
-    snapshot.sprint = isRunning;
-    RTBEngine::Online::OnlineGameplayNet::SendPlayerInput(snapshot);
-
-    if (networkAttackSequence > 0) {
-        GameNet::PlayerCombatInput combatInput;
-        combatInput.senderUserId = snapshot.senderUserId;
-        combatInput.attackSequence = networkAttackSequence;
-        combatInput.attackDirX = pendingNetworkAttackDirection.x;
-        combatInput.attackDirZ = pendingNetworkAttackDirection.z;
-        GameNet::OnlineGameNetSubsystem::SendCombatInput(combatInput);
-    }
+    PlayerCombatNet::SendLocalInput(
+        owner,
+        desiredMove,
+        isRunning,
+        inputSequenceNumber,
+        networkAttackSequence,
+        pendingNetworkAttackDirection);
 }
 
 void ThirdPersonCharacterController::TryProcessRemoteAttackInput()
@@ -2014,27 +1904,12 @@ void ThirdPersonCharacterController::TryProcessRemoteAttackInput()
         return;
     }
 
-    RTBEngine::Scene::NetworkIdentity* identity = owner->GetComponent<RTBEngine::Scene::NetworkIdentity>();
-    if (!identity || identity->networkOwnerUserId.empty()) {
-        return;
-    }
-
-    GameNet::PlayerCombatInput remoteCombat;
-    if (!GameNet::OnlineGameNetSubsystem::TryGetLatestCombatInputForUser(
-            identity->networkOwnerUserId,
-            remoteCombat)) {
-        return;
-    }
-
-    if (remoteCombat.attackSequence == 0 ||
-        remoteCombat.attackSequence == lastProcessedRemoteAttackSequence) {
-        return;
-    }
-
-    lastProcessedRemoteAttackSequence = remoteCombat.attackSequence;
-
-    RTBEngine::Math::Vector3 attackDirection(remoteCombat.attackDirX, 0.0f, remoteCombat.attackDirZ);
-    if (!HasMovementInput(attackDirection)) {
+    RTBEngine::Math::Vector3 attackDirection = RTBEngine::Math::Vector3::Zero();
+    if (!PlayerCombatNet::TryConsumeRemoteAttackDirection(
+            owner,
+            networkIdentity,
+            lastProcessedRemoteAttackSequence,
+            attackDirection)) {
         return;
     }
 

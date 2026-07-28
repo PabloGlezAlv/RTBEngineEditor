@@ -35,13 +35,14 @@ void WireSpawnedPlayerCamera(RTBEngine::Scene::GameObject* spawnedPawn)
         return;
     }
 
-    if (!controller->cameraObject) {
+    RTBEngine::Scene::GameObject* cameraObject = controller->GetCameraObject();
+    if (!cameraObject) {
         RTB_WARN("[PlayerPawnSpawner] cameraObject is not assigned on spawned player pawn.");
         return;
     }
 
-    if (controller->cameraObject->GetParent() != spawnedPawn) {
-        controller->cameraObject->SetParent(spawnedPawn);
+    if (cameraObject->GetParent() != spawnedPawn) {
+        cameraObject->SetParent(spawnedPawn);
     }
 
     RTBEngine::Scene::Scene* scene =
@@ -51,7 +52,7 @@ void WireSpawnedPlayerCamera(RTBEngine::Scene::GameObject* spawnedPawn)
     }
 
     if (auto* cameraComponent =
-            controller->cameraObject->GetComponent<RTBEngine::Scene::CameraComponent>()) {
+            cameraObject->GetComponent<RTBEngine::Scene::CameraComponent>()) {
         scene->SetMainCamera(cameraComponent);
         cameraComponent->SyncNow();
     }
@@ -75,18 +76,18 @@ void WireSpawnedPlayerReferences(
 
     WireSpawnedPlayerCamera(spawnedPawn);
 
-    controller->attackJoystick = attackJoystick;
-    if (!controller->attackJoystick) {
+    controller->SetAttackJoystick(attackJoystick);
+    if (!controller->GetAttackJoystick()) {
         RTB_WARN("[PlayerPawnSpawner] attackJoystick is not assigned on PlayerPawnSpawner.");
     }
 
     if (auto* specialCharge = spawnedPawn->GetComponent<PlayerSpecialAttackCharge>()) {
-        specialCharge->specialAttackJoystick = specialAttackJoystick;
-        specialCharge->readyIcon = specialAttackReadyIcon;
-        if (!specialCharge->specialAttackJoystick) {
+        specialCharge->SetSpecialAttackJoystick(specialAttackJoystick);
+        specialCharge->SetReadyIcon(specialAttackReadyIcon);
+        if (!specialCharge->GetSpecialAttackJoystick()) {
             RTB_WARN("[PlayerPawnSpawner] specialAttackJoystick is not assigned on PlayerPawnSpawner.");
         }
-        if (!specialCharge->readyIcon) {
+        if (!specialCharge->GetReadyIcon()) {
             RTB_WARN("[PlayerPawnSpawner] specialAttackReadyIcon is not assigned on PlayerPawnSpawner.");
         }
         specialCharge->RefreshAfterSpawn();
@@ -94,8 +95,9 @@ void WireSpawnedPlayerReferences(
 
     RTBEngine::Scene::Scene* scene = RTBEngine::Scene::SceneManager::GetInstance().GetActiveScene();
     if (scene) {
-        if (controller->animator && !controller->animator->AreBoneGOsCreated()) {
-            controller->animator->CreateBoneGameObjects(scene);
+        if (auto* animator = controller->GetAnimator();
+            animator && !animator->AreBoneGOsCreated()) {
+            animator->CreateBoneGameObjects(scene);
         }
     }
 
