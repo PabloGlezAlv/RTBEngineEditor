@@ -13,6 +13,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <string>
 
 using ThisClass = PlayerSpecialAttackCharge;
 
@@ -196,7 +197,8 @@ bool PlayerSpecialAttackCharge::ConsumeCharge()
         return false;
     }
 
-    currentHits = 0;
+    // TEMP: keep full charge while iterating on beam VFX.
+    currentHits = hitsToFullyCharge;
     ApplyVisuals(false);
     return true;
 }
@@ -317,6 +319,8 @@ void PlayerSpecialAttackCharge::RefreshAfterSpawn()
     ValidateRequiredReferences();
     RebindSpecialJoystickSubscription();
     SetUpdateTickEnabled(true);
+    // TEMP: start fully charged for beam VFX testing.
+    currentHits = hitsToFullyCharge;
     ApplyVisuals(false);
 }
 
@@ -334,6 +338,8 @@ void PlayerSpecialAttackCharge::OnStart()
     ValidateRequiredReferences();
     RebindSpecialJoystickSubscription();
     SetUpdateTickEnabled(true);
+    // TEMP: start fully charged for beam VFX testing.
+    currentHits = hitsToFullyCharge;
     ApplyVisuals(false);
 }
 

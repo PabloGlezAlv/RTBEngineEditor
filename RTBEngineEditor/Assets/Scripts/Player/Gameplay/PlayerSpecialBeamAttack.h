@@ -1,5 +1,7 @@
 #pragma once
 
+#include "PlayerSpecialBeamPresenter.h"
+
 #include <RTBEngine/Math/Vectors/Vector3.h>
 #include <RTBEngine/Reflection/PropertyMacros.h>
 #include <RTBEngine/Scene/Component.h>
@@ -35,6 +37,10 @@ public:
     RTB_SERIALIZE()
     RTBEngine::Scene::TrailRenderer* beamTrail = nullptr;
     RTB_SERIALIZE()
+    RTBEngine::Scene::TrailRenderer* beamAuraTrail = nullptr;
+    RTB_SERIALIZE()
+    RTBEngine::Scene::TrailRenderer* beamHaloTrail = nullptr;
+    RTB_SERIALIZE()
     RTBEngine::Scene::TrailRenderer* aimPreviewTrail = nullptr;
     RTB_SERIALIZE()
     float duration = 5.0f;
@@ -68,9 +74,11 @@ public:
     float frameEffectiveLength = 0.0f;
     RTBEngine::Math::Vector3 beamDirection = RTBEngine::Math::Vector3::Zero();
     ThirdPersonCharacterController* controller = nullptr;
+    PlayerSpecialBeamPresenter beamPresenter;
 
     void ClampSettings();
     void CacheGameplayReferences();
+    void BindBeamPresenter();
     void ValidateRequiredReferences() const;
     void StopBeam();
     RTBEngine::Math::Vector3 GetBeamOrigin(const RTBEngine::Math::Vector3& direction) const;

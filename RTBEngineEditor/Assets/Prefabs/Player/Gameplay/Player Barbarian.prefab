@@ -81,6 +81,8 @@ return {
                     {
                         type = "PlayerSpecialBeamAttack",
                         beamTrail = "SP3C14L-BEAM-4000-8000-000000000001/TrailRenderer",
+                        beamAuraTrail = "SP3C14L-AURA-4000-8000-000000000001/TrailRenderer",
+                        beamHaloTrail = "SP3C14L-HAL0-4000-8000-000000000001/TrailRenderer",
                         aimPreviewTrail = "SP3C14L-A1M0-4000-8000-000000000001/TrailRenderer",
                     },
                     {
@@ -496,10 +498,15 @@ return {
                         components = {
                             {
                                 type = "TrailRenderer",
-                                width = 1.10,
-                                color = Color(1.00, 1.00, 1.00, 0.54),
+                                width = 0.90,
+                                color = Color(0.88, 0.96, 1.00, 0.40),
                                 fadeAlphaAlongLength = false,
-                                visible = false
+                                visible = false,
+                                blendMode = "Additive",
+                                alignment = "CameraFacing",
+                                softEdge = 0.85,
+                                uvScrollSpeed = 0.00,
+                                uvTilesPerMeter = 0.45
                             },
                         }
                     },
@@ -510,13 +517,57 @@ return {
                         components = {
                             {
                                 type = "TrailRenderer",
-                                width = 1.60,
-                                color = Color(1.00, 0.95, 0.75, 0.85),
-                                fadeAlphaAlongLength = true,
-                                visible = false
+                                width = 0.35,
+                                color = Color(1.00, 1.00, 0.96, 1.00),
+                                fadeAlphaAlongLength = false,
+                                visible = false,
+                                blendMode = "Additive",
+                                alignment = "CameraFacing",
+                                softEdge = 1.25,
+                                uvScrollSpeed = 3.20,
+                                uvTilesPerMeter = 0.45
                             },
                         }
                     },
+                    {
+                        name = "Special Beam Aura Trail",
+                        uuid = "SP3C14L-AURA-4000-8000-000000000001",
+                        position = Vector3(0.00, 1.00, 0.40),
+                        components = {
+                            {
+                                type = "TrailRenderer",
+                                width = 1.20,
+                                color = Color(0.40, 0.88, 1.00, 0.85),
+                                fadeAlphaAlongLength = false,
+                                visible = false,
+                                blendMode = "Additive",
+                                alignment = "CameraFacing",
+                                softEdge = 0.95,
+                                uvScrollSpeed = 1.80,
+                                uvTilesPerMeter = 0.45
+                            },
+                        }
+                    },
+                    {
+                        name = "Special Beam Halo Trail",
+                        uuid = "SP3C14L-HAL0-4000-8000-000000000001",
+                        position = Vector3(0.00, 1.00, 0.40),
+                        components = {
+                            {
+                                type = "TrailRenderer",
+                                width = 2.20,
+                                color = Color(0.20, 0.42, 1.00, 0.55),
+                                fadeAlphaAlongLength = false,
+                                visible = false,
+                                blendMode = "Additive",
+                                alignment = "CameraFacing",
+                                softEdge = 0.70,
+                                uvScrollSpeed = 0.90,
+                                uvTilesPerMeter = 0.45
+                            },
+                        }
+                    },
+
 {
                         name = "Avatar",
                         uuid = "5200AC9B-039A-416E-82AE-FD5FE1754C95",

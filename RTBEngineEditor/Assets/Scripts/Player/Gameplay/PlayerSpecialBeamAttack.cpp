@@ -19,6 +19,8 @@ using ThisClass = PlayerSpecialBeamAttack;
 
 RTB_REGISTER_COMPONENT(PlayerSpecialBeamAttack)
     RTB_PROPERTY_COMPONENT(beamTrail, TrailRenderer)
+    RTB_PROPERTY_COMPONENT(beamAuraTrail, TrailRenderer)
+    RTB_PROPERTY_COMPONENT(beamHaloTrail, TrailRenderer)
     RTB_PROPERTY_COMPONENT(aimPreviewTrail, TrailRenderer)
     RTB_PROPERTY_SERIALIZED_RANGE(duration, 0.1f, 30.0f)
     RTB_PROPERTY_SERIALIZED_RANGE(tickInterval, 0.05f, 1.0f)
@@ -49,6 +51,13 @@ void PlayerSpecialBeamAttack::ClampSettings()
 void PlayerSpecialBeamAttack::CacheGameplayReferences()
 {
     controller = owner ? owner->GetComponent<ThirdPersonCharacterController>() : nullptr;
+    BindBeamPresenter();
+}
+
+void PlayerSpecialBeamAttack::BindBeamPresenter()
+{
+    beamPresenter.Bind(beamTrail, beamAuraTrail, beamHaloTrail, aimPreviewTrail);
+    beamPresenter.ApplyWidths(beamWidth, previewWidth);
 }
 
 void PlayerSpecialBeamAttack::ValidateRequiredReferences() const
@@ -59,6 +68,12 @@ void PlayerSpecialBeamAttack::ValidateRequiredReferences() const
 
     if (!beamTrail) {
         RTB_WARN("[PlayerSpecialBeamAttack] beamTrail is not assigned on '" + owner->GetName() + "'.");
+    }
+    if (!beamAuraTrail) {
+        RTB_WARN("[PlayerSpecialBeamAttack] beamAuraTrail is not assigned on '" + owner->GetName() + "'.");
+    }
+    if (!beamHaloTrail) {
+        RTB_WARN("[PlayerSpecialBeamAttack] beamHaloTrail is not assigned on '" + owner->GetName() + "'.");
     }
     if (!aimPreviewTrail) {
         RTB_WARN("[PlayerSpecialBeamAttack] aimPreviewTrail is not assigned on '" +
@@ -103,35 +118,21 @@ void PlayerSpecialBeamAttack::UpdateAimPreview(const RTBEngine::Math::Vector3& d
         return;
     }
 
-    if (!aimPreviewTrail) {
-        return;
-    }
-
     ClampSettings();
+    BindBeamPresenter();
     previewActive = true;
     const RTBEngine::Math::Vector3 visualOrigin = GetBeamOrigin(planarDirection);
     const float effectiveLength = ResolveEffectiveLengthForDirection(
         GetCombatOrigin(planarDirection),
         planarDirection);
     const RTBEngine::Math::Vector3 end = visualOrigin + planarDirection * effectiveLength;
-    const RTBEngine::Math::Vector3 points[] = { visualOrigin, end };
-
-    aimPreviewTrail->width = previewWidth;
-    aimPreviewTrail->fadeAlphaAlongLength = false;
-    aimPreviewTrail->SetGlobalAlphaScale(1.0f);
-    aimPreviewTrail->SetPoints(points, 2);
-    aimPreviewTrail->SetVisible(true);
+    beamPresenter.ShowPreview(visualOrigin, end);
 }
 
 void PlayerSpecialBeamAttack::HideAimPreview()
 {
     previewActive = false;
-    if (!aimPreviewTrail) {
-        return;
-    }
-
-    aimPreviewTrail->SetVisible(false);
-    aimPreviewTrail->ClearPoints();
+    beamPresenter.HidePreview();
 }
 
 void PlayerSpecialBeamAttack::ApplyMovementLock(float deltaTime)
@@ -171,12 +172,6 @@ bool PlayerSpecialBeamAttack::TryActivate(const RTBEngine::Math::Vector3& direct
     active = true;
     SetEnabled(true);
     SetUpdateTickEnabled(true);
-
-    if (beamTrail) {
-        beamTrail->width = beamWidth;
-        beamTrail->fadeAlphaAlongLength = true;
-        beamTrail->SetGlobalAlphaScale(1.0f);
-    }
 
     frameEffectiveLength = ResolveEffectiveLength();
     UpdateBeamVisual(frameEffectiveLength);
@@ -294,27 +289,19 @@ void PlayerSpecialBeamAttack::ApplyDamageTick(float effectiveLength)
 
 void PlayerSpecialBeamAttack::UpdateBeamVisual(float effectiveLength)
 {
-    if (!beamTrail || !owner) {
+    if (!owner) {
         return;
     }
 
+    BindBeamPresenter();
     const RTBEngine::Math::Vector3 visualOrigin = GetBeamOrigin(beamDirection);
     const RTBEngine::Math::Vector3 end = visualOrigin + beamDirection * effectiveLength;
-    const RTBEngine::Math::Vector3 points[] = { visualOrigin, end };
-
-    beamTrail->width = beamWidth;
-    beamTrail->SetPoints(points, 2);
-    beamTrail->SetVisible(true);
+    beamPresenter.ShowBeam(visualOrigin, end);
 }
 
 void PlayerSpecialBeamAttack::HideBeamVisual()
 {
-    if (!beamTrail) {
-        return;
-    }
-
-    beamTrail->SetVisible(false);
-    beamTrail->ClearPoints();
+    beamPresenter.HideBeam();
 }
 
 void PlayerSpecialBeamAttack::OnUpdate(float deltaTime)

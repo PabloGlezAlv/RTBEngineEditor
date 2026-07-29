@@ -23,6 +23,7 @@
 #include <RTBEngine/Scene/SceneManager.h>
 #include <RTBEngine/Scene/TrailRenderer.h>
 #include <RTBEngine/Physics/PhysicsWorld.h>
+#include <RTBEngine/Scripting/ComponentRegistry.h>
 
 #include <algorithm>
 #include <cmath>
@@ -374,13 +375,24 @@ void ProjectileComponent::EnsureFlightTrail()
 
     flightTrail = owner->GetComponent<RTBEngine::Scene::TrailRenderer>();
     if (!flightTrail) {
-        flightTrail = new RTBEngine::Scene::TrailRenderer();
+        flightTrail = static_cast<RTBEngine::Scene::TrailRenderer*>(
+            RTBEngine::Scripting::ComponentRegistry::GetInstance().CreateComponent("TrailRenderer"));
+        if (!flightTrail) {
+            return;
+        }
         owner->AddComponent(flightTrail);
     }
 
     flightTrail->width = kProjectileTrailWidth;
+    flightTrail->startWidth = -1.0f;
+    flightTrail->endWidth = -1.0f;
     flightTrail->color = RTBEngine::Math::Vector4(1.0f, 1.0f, 1.0f, 1.0f);
     flightTrail->fadeAlphaAlongLength = true;
+    flightTrail->blendMode = RTBEngine::Scene::TrailBlendMode::Alpha;
+    flightTrail->alignment = RTBEngine::Scene::TrailAlignment::FlatXZ;
+    flightTrail->softEdge = 0.0f;
+    flightTrail->texture = nullptr;
+    flightTrail->uvScrollSpeed = 0.0f;
     flightTrail->SetGlobalAlphaScale(1.0f);
     flightTrail->SetVisible(true);
     flightTrail->ClearPoints();
@@ -458,7 +470,14 @@ void ProjectileComponent::ReleaseTrailForFadeout()
 
     RTBEngine::Scene::TrailRenderer* ghostTrail = trailGhost->GetComponent<RTBEngine::Scene::TrailRenderer>();
     if (!ghostTrail) {
-        ghostTrail = new RTBEngine::Scene::TrailRenderer();
+        ghostTrail = static_cast<RTBEngine::Scene::TrailRenderer*>(
+            RTBEngine::Scripting::ComponentRegistry::GetInstance().CreateComponent("TrailRenderer"));
+        if (!ghostTrail) {
+            flightTrail->SetVisible(false);
+            flightTrail->ClearPoints();
+            flightTrail = nullptr;
+            return;
+        }
         trailGhost->AddComponent(ghostTrail);
     }
 
@@ -469,8 +488,15 @@ void ProjectileComponent::ReleaseTrailForFadeout()
     }
 
     ghostTrail->width = trailWidth;
+    ghostTrail->startWidth = -1.0f;
+    ghostTrail->endWidth = -1.0f;
     ghostTrail->color = RTBEngine::Math::Vector4(1.0f, 1.0f, 1.0f, 1.0f);
     ghostTrail->fadeAlphaAlongLength = true;
+    ghostTrail->blendMode = RTBEngine::Scene::TrailBlendMode::Alpha;
+    ghostTrail->alignment = RTBEngine::Scene::TrailAlignment::FlatXZ;
+    ghostTrail->softEdge = 0.0f;
+    ghostTrail->texture = nullptr;
+    ghostTrail->uvScrollSpeed = 0.0f;
     ghostTrail->SetGlobalAlphaScale(1.0f);
     ghostTrail->SetPoints(trailPoints);
     ghostTrail->SetVisible(true);
