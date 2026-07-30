@@ -22,6 +22,7 @@
 #include <RTBEngine/Physics/PhysicsWorld.h>
 #include <RTBEngine/Scene/ParticleSystem.h>
 #include <RTBEngine/Scene/AnimatedBillboard.h>
+#include <RTBEngine/Scene/Scene.h>
 #include <RTBEngine/Animation/Animator.h>
 #include <RTBEngine/UI/CanvasSystem.h>
 #include <RTBEngine/Rendering/Lighting/LightingUBO.h>
@@ -274,6 +275,7 @@ namespace RTBEditor {
             if (editingScene) {
                 RTBEngine::Scene::ParticleSystem::TickScenePreview(editingScene, deltaTime);
                 RTBEngine::Scene::AnimatedBillboard::TickScenePreview(editingScene, deltaTime);
+                editingScene->TickEditModeSimulate(deltaTime);
                 TickAnimatorPreview(editingScene, deltaTime);
             }
         }
@@ -897,15 +899,22 @@ namespace RTBEditor {
                         uiLayer->GetSelectedGameObject());
                 }
 
-                // Volumetric fog samples scene depth: bind color-only continue FBO so depth
+                // Post-process samples scene depth: bind color-only continue FBO so depth
                 // is no longer an active attachment (Vulkan render-pass break + OpenGL feedback).
                 if (RTBEngine::Rendering::Framebuffer* colorOnly = framebuffer->GetColorOnlyContinueTarget()) {
                     colorOnly->Bind();
                     device.SetViewport(0, 0, vpWidth, vpHeight);
-                    engineApp->RenderVolumetricFogPass(
+                    engineApp->RenderPostProcessPasses(
                         sceneViewScene,
                         editorCamera,
-                        framebuffer->GetDepthTextureID());
+                        {
+                            framebuffer->GetColorTextureID(),
+                            framebuffer->GetDepthTextureID(),
+                            vpWidth,
+                            vpHeight
+                        });
+                } else {
+                    engineApp->RenderBloomPass(framebuffer->GetColorTextureID(), vpWidth, vpHeight);
                 }
 
                 framebuffer->Unbind();
@@ -932,10 +941,17 @@ namespace RTBEditor {
                     if (RTBEngine::Rendering::Framebuffer* colorOnly = framebuffer->GetColorOnlyContinueTarget()) {
                         colorOnly->Bind();
                         device.SetViewport(0, 0, vpWidth, vpHeight);
-                        engineApp->RenderVolumetricFogPass(
+                        engineApp->RenderPostProcessPasses(
                             activeScene,
                             mainCamera,
-                            framebuffer->GetDepthTextureID());
+                            {
+                                framebuffer->GetColorTextureID(),
+                                framebuffer->GetDepthTextureID(),
+                                vpWidth,
+                                vpHeight
+                            });
+                    } else {
+                        engineApp->RenderBloomPass(framebuffer->GetColorTextureID(), vpWidth, vpHeight);
                     }
 
                     // Note: Scene UI is rendered in GameViewPanel::OnUIRender()

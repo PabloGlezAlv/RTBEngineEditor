@@ -57,6 +57,9 @@ namespace RTBEditor {
         float volumetricAnisotropy = 0.55f;
         int volumetricSamples = 16;
         float volumetricMaxLuminance = 0.85f;
+        bool bloomEnabled = true;
+        float bloomThreshold = 1.0f;
+        float bloomIntensity = 0.8f;
 
         bool syncedOnce = false;
         std::string lastMessage;

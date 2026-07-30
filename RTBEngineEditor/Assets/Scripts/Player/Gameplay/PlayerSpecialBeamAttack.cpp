@@ -1,5 +1,7 @@
 #include "PlayerSpecialBeamAttack.h"
 
+#include "../../VFX/EnergyBeamAsset.h"
+#include "../../VFX/EnergyBeamComponent.h"
 #include "CharacterCombatOrigins.h"
 #include "CharacterCombatUtils.h"
 #include "CombatAuthority.h"
@@ -7,6 +9,8 @@
 #include "ThirdPersonCharacterController.h"
 
 #include <RTBEngine/Core/Logger.h>
+#include <RTBEngine/Core/ResourceManager.h>
+#include <RTBEngine/Data/DataAsset.h>
 #include <RTBEngine/Physics/PhysicsWorld.h>
 #include <RTBEngine/Scene/GameObject.h>
 #include <RTBEngine/Scene/SceneManager.h>
@@ -18,14 +22,14 @@
 using ThisClass = PlayerSpecialBeamAttack;
 
 RTB_REGISTER_COMPONENT(PlayerSpecialBeamAttack)
-    RTB_PROPERTY_COMPONENT(beamTrail, TrailRenderer)
-    RTB_PROPERTY_COMPONENT(beamAuraTrail, TrailRenderer)
-    RTB_PROPERTY_COMPONENT(beamHaloTrail, TrailRenderer)
+    RTB_PROPERTY_COMPONENT(energyBeam, EnergyBeamComponent)
     RTB_PROPERTY_COMPONENT(aimPreviewTrail, TrailRenderer)
+    RTB_PROPERTY_DATA_ASSET(beamAssetRef)
     RTB_PROPERTY_SERIALIZED_RANGE(duration, 0.1f, 30.0f)
     RTB_PROPERTY_SERIALIZED_RANGE(tickInterval, 0.05f, 1.0f)
     RTB_PROPERTY_SERIALIZED_RANGE(damagePerTick, 0.0f, 100.0f)
     RTB_PROPERTY_SERIALIZED_RANGE(beamLength, 0.5f, 30.0f)
+    RTB_PROPERTY_SERIALIZED_RANGE(beamGrowDuration, 0.0f, 5.0f)
     RTB_PROPERTY_SERIALIZED_RANGE(beamRadius, 0.05f, 3.0f)
     RTB_PROPERTY_SERIALIZED_RANGE(damageRadius, 0.05f, 5.0f)
     RTB_PROPERTY_SERIALIZED_RANGE(beamWidth, 0.05f, 5.0f)
@@ -42,6 +46,7 @@ void PlayerSpecialBeamAttack::ClampSettings()
     tickInterval = std::max(0.05f, tickInterval);
     damagePerTick = std::max(0.0f, damagePerTick);
     beamLength = std::max(0.5f, beamLength);
+    beamGrowDuration = std::max(0.0f, beamGrowDuration);
     beamRadius = std::max(0.05f, beamRadius);
     damageRadius = std::max(beamRadius, damageRadius);
     beamWidth = std::max(0.05f, beamWidth);
@@ -56,8 +61,29 @@ void PlayerSpecialBeamAttack::CacheGameplayReferences()
 
 void PlayerSpecialBeamAttack::BindBeamPresenter()
 {
-    beamPresenter.Bind(beamTrail, beamAuraTrail, beamHaloTrail, aimPreviewTrail);
+    beamPresenter.Bind(energyBeam, aimPreviewTrail);
+    ApplyBeamLook();
     beamPresenter.ApplyWidths(beamWidth, previewWidth);
+}
+
+void PlayerSpecialBeamAttack::ApplyBeamLook()
+{
+    EnergyBeamAsset* asset = nullptr;
+    if (!beamAssetRef.empty()) {
+        RTBEngine::Data::DataAsset* loadedAsset =
+            RTBEngine::Core::ResourceManager::GetInstance().LoadDataAsset(beamAssetRef);
+        asset = dynamic_cast<EnergyBeamAsset*>(loadedAsset);
+        if (!asset) {
+            RTB_WARN("[PlayerSpecialBeamAttack] Failed to load beam asset '" + beamAssetRef + "'.");
+        }
+    }
+
+    if (asset) {
+        beamPresenter.ApplyFromAsset(asset);
+        return;
+    }
+
+    beamPresenter.ApplyDefaults();
 }
 
 void PlayerSpecialBeamAttack::ValidateRequiredReferences() const
@@ -66,14 +92,8 @@ void PlayerSpecialBeamAttack::ValidateRequiredReferences() const
         return;
     }
 
-    if (!beamTrail) {
-        RTB_WARN("[PlayerSpecialBeamAttack] beamTrail is not assigned on '" + owner->GetName() + "'.");
-    }
-    if (!beamAuraTrail) {
-        RTB_WARN("[PlayerSpecialBeamAttack] beamAuraTrail is not assigned on '" + owner->GetName() + "'.");
-    }
-    if (!beamHaloTrail) {
-        RTB_WARN("[PlayerSpecialBeamAttack] beamHaloTrail is not assigned on '" + owner->GetName() + "'.");
+    if (!energyBeam) {
+        RTB_WARN("[PlayerSpecialBeamAttack] energyBeam is not assigned on '" + owner->GetName() + "'.");
     }
     if (!aimPreviewTrail) {
         RTB_WARN("[PlayerSpecialBeamAttack] aimPreviewTrail is not assigned on '" +
@@ -173,9 +193,13 @@ bool PlayerSpecialBeamAttack::TryActivate(const RTBEngine::Math::Vector3& direct
     SetEnabled(true);
     SetUpdateTickEnabled(true);
 
-    frameEffectiveLength = ResolveEffectiveLength();
-    UpdateBeamVisual(frameEffectiveLength);
-    ApplyDamageTick(frameEffectiveLength);
+    // Beam starts at the character and grows outward; damage follows the tip.
+    frameMaxLength = ResolveEffectiveLength();
+    frameCurrentLength = ResolveGrownLength(frameMaxLength);
+    UpdateBeamVisual(frameCurrentLength);
+    if (frameCurrentLength > 0.0f) {
+        ApplyDamageTick(frameCurrentLength);
+    }
     return true;
 }
 
@@ -214,6 +238,22 @@ RTBEngine::Math::Vector3 PlayerSpecialBeamAttack::GetCombatOrigin(
 float PlayerSpecialBeamAttack::ResolveEffectiveLength() const
 {
     return ResolveEffectiveLengthForDirection(GetCombatOrigin(beamDirection), beamDirection);
+}
+
+float PlayerSpecialBeamAttack::ResolveGrownLength(float maxLength) const
+{
+    const float safeMax = std::max(0.0f, maxLength);
+    if (safeMax <= 0.0f) {
+        return 0.0f;
+    }
+
+    // 0 = instant full length; otherwise lerp origin -> tip over beamGrowDuration.
+    if (beamGrowDuration <= 0.0f) {
+        return safeMax;
+    }
+
+    const float growT = std::clamp(elapsed / beamGrowDuration, 0.0f, 1.0f);
+    return safeMax * growT;
 }
 
 float PlayerSpecialBeamAttack::ResolveEffectiveLengthForDirection(
@@ -293,6 +333,11 @@ void PlayerSpecialBeamAttack::UpdateBeamVisual(float effectiveLength)
         return;
     }
 
+    if (effectiveLength <= 0.001f) {
+        HideBeamVisual();
+        return;
+    }
+
     BindBeamPresenter();
     const RTBEngine::Math::Vector3 visualOrigin = GetBeamOrigin(beamDirection);
     const RTBEngine::Math::Vector3 end = visualOrigin + beamDirection * effectiveLength;
@@ -314,11 +359,12 @@ void PlayerSpecialBeamAttack::OnUpdate(float deltaTime)
     elapsed += std::max(0.0f, deltaTime);
     tickTimer += std::max(0.0f, deltaTime);
 
-    frameEffectiveLength = ResolveEffectiveLength();
+    frameMaxLength = ResolveEffectiveLength();
+    frameCurrentLength = ResolveGrownLength(frameMaxLength);
 
     while (tickTimer >= tickInterval) {
         tickTimer -= tickInterval;
-        ApplyDamageTick(frameEffectiveLength);
+        ApplyDamageTick(frameCurrentLength);
     }
 
     if (elapsed >= duration) {
@@ -332,12 +378,12 @@ void PlayerSpecialBeamAttack::OnLateUpdate(float /*deltaTime*/)
         return;
     }
 
-    UpdateBeamVisual(frameEffectiveLength);
+    UpdateBeamVisual(frameCurrentLength);
 }
 
 void PlayerSpecialBeamAttack::StopBeam()
 {
-    if (!active && !beamTrail) {
+    if (!active && !energyBeam) {
         SetUpdateTickEnabled(false);
         return;
     }
@@ -345,7 +391,8 @@ void PlayerSpecialBeamAttack::StopBeam()
     active = false;
     elapsed = 0.0f;
     tickTimer = 0.0f;
-    frameEffectiveLength = 0.0f;
+    frameMaxLength = 0.0f;
+    frameCurrentLength = 0.0f;
     beamDirection = RTBEngine::Math::Vector3::Zero();
     HideBeamVisual();
     SetUpdateTickEnabled(false);

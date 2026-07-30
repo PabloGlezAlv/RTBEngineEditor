@@ -80,10 +80,9 @@ return {
                     },
                     {
                         type = "PlayerSpecialBeamAttack",
-                        beamTrail = "SP3C14L-BEAM-4000-8000-000000000001/TrailRenderer",
-                        beamAuraTrail = "SP3C14L-AURA-4000-8000-000000000001/TrailRenderer",
-                        beamHaloTrail = "SP3C14L-HAL0-4000-8000-000000000001/TrailRenderer",
+                        energyBeam = "SP3C14L-BEAM-4000-8000-000000000001/EnergyBeamComponent",
                         aimPreviewTrail = "SP3C14L-A1M0-4000-8000-000000000001/TrailRenderer",
+                        beamAssetRef = "Assets/Data/VFX/KamehamehaBeam.rtbasset",
                     },
                     {
                         type = "PlayerMeleeSweepAttackAbility",
@@ -516,16 +515,16 @@ return {
                         position = Vector3(0.00, 1.00, 0.40),
                         components = {
                             {
-                                type = "TrailRenderer",
-                                width = 0.35,
-                                color = Color(1.00, 1.00, 0.96, 1.00),
-                                fadeAlphaAlongLength = false,
+                                type = "EnergyBeamComponent",
+                                radius = 0.90,
+                                useVerticalCross = true,
+                                emissionStrength = 2.50,
+                                beamColor = Color(0.35, 0.85, 1.00, 0.85),
+                                coreColor = Color(1.00, 0.98, 0.94, 1.00),
                                 visible = false,
-                                blendMode = "Additive",
-                                alignment = "CameraFacing",
-                                softEdge = 1.25,
-                                uvScrollSpeed = 3.20,
-                                uvTilesPerMeter = 0.45
+                                softEdge = 0.85,
+                                uvScrollSpeed = 2.50,
+                                uvTilesPerMeter = 0.35
                             },
                         }
                     },

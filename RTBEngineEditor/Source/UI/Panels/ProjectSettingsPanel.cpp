@@ -53,6 +53,9 @@ namespace RTBEditor {
         volumetricAnisotropy = lighting.volumetricAnisotropy;
         volumetricSamples = lighting.volumetricSamples;
         volumetricMaxLuminance = lighting.volumetricMaxLuminance;
+        bloomEnabled = lighting.bloomEnabled;
+        bloomThreshold = lighting.bloomThreshold;
+        bloomIntensity = lighting.bloomIntensity;
 
         syncedOnce = true;
     }
@@ -97,6 +100,9 @@ namespace RTBEditor {
         lighting.volumetricAnisotropy = std::clamp(volumetricAnisotropy, -0.95f, 0.95f);
         lighting.volumetricSamples = std::clamp(volumetricSamples, 4, 64);
         lighting.volumetricMaxLuminance = std::max(0.05f, volumetricMaxLuminance);
+        lighting.bloomEnabled = bloomEnabled;
+        lighting.bloomThreshold = std::max(0.0f, bloomThreshold);
+        lighting.bloomIntensity = std::max(0.0f, bloomIntensity);
 
         const std::filesystem::path lightingPath =
             project->GetProjectDirectory()
@@ -247,6 +253,25 @@ namespace RTBEditor {
                 ImGui::EndDisabled();
                 ImGui::TreePop();
             }
+
+            ImGui::Spacing();
+            if (ImGui::TreeNodeEx("Bloom", ImGuiTreeNodeFlags_DefaultOpen)) {
+                if (ImGui::Checkbox("Enable Bloom", &bloomEnabled)) {
+                    RTBEngine::Rendering::LightingProjectSettings::Get().bloomEnabled = bloomEnabled;
+                }
+                ImGui::TextDisabled("HDR bright extract + blur after geometry/fog.");
+                ImGui::BeginDisabled(!bloomEnabled);
+                if (ImGui::DragFloat("Threshold", &bloomThreshold, 0.01f, 0.0f, 8.0f, "%.2f")) {
+                    RTBEngine::Rendering::LightingProjectSettings::Get().bloomThreshold =
+                        std::max(0.0f, bloomThreshold);
+                }
+                if (ImGui::DragFloat("Intensity", &bloomIntensity, 0.01f, 0.0f, 4.0f, "%.2f")) {
+                    RTBEngine::Rendering::LightingProjectSettings::Get().bloomIntensity =
+                        std::max(0.0f, bloomIntensity);
+                }
+                ImGui::EndDisabled();
+                ImGui::TreePop();
+            }
         }
 
         ImGui::Spacing();
@@ -289,6 +314,9 @@ namespace RTBEditor {
             lighting.volumetricAnisotropy = std::clamp(volumetricAnisotropy, -0.95f, 0.95f);
             lighting.volumetricSamples = std::clamp(volumetricSamples, 4, 64);
             lighting.volumetricMaxLuminance = std::max(0.05f, volumetricMaxLuminance);
+            lighting.bloomEnabled = bloomEnabled;
+            lighting.bloomThreshold = std::max(0.0f, bloomThreshold);
+            lighting.bloomIntensity = std::max(0.0f, bloomIntensity);
             RTBEngine::Rendering::GI::DDGISystem::GetInstance().SyncFromProjectSettings();
             lastSaveSucceeded = true;
             lastMessage = "Lighting settings applied (not saved to disk).";

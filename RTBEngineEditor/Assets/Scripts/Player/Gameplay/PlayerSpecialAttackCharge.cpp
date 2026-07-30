@@ -197,8 +197,7 @@ bool PlayerSpecialAttackCharge::ConsumeCharge()
         return false;
     }
 
-    // TEMP: keep full charge while iterating on beam VFX.
-    currentHits = hitsToFullyCharge;
+    currentHits = 0;
     ApplyVisuals(false);
     return true;
 }
@@ -319,8 +318,7 @@ void PlayerSpecialAttackCharge::RefreshAfterSpawn()
     ValidateRequiredReferences();
     RebindSpecialJoystickSubscription();
     SetUpdateTickEnabled(true);
-    // TEMP: start fully charged for beam VFX testing.
-    currentHits = hitsToFullyCharge;
+    currentHits = 0;
     ApplyVisuals(false);
 }
 
@@ -338,8 +336,7 @@ void PlayerSpecialAttackCharge::OnStart()
     ValidateRequiredReferences();
     RebindSpecialJoystickSubscription();
     SetUpdateTickEnabled(true);
-    // TEMP: start fully charged for beam VFX testing.
-    currentHits = hitsToFullyCharge;
+    currentHits = 0;
     ApplyVisuals(false);
 }
 

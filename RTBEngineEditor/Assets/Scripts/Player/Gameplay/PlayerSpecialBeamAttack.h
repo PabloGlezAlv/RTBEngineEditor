@@ -6,12 +6,15 @@
 #include <RTBEngine/Reflection/PropertyMacros.h>
 #include <RTBEngine/Scene/Component.h>
 
+#include <string>
+
 namespace RTBEngine {
     namespace Scene {
         class TrailRenderer;
     }
 }
 
+class EnergyBeamComponent;
 class ThirdPersonCharacterController;
 
 class PlayerSpecialBeamAttack : public RTBEngine::Scene::Component
@@ -35,13 +38,11 @@ public:
     RTB_COMPONENT(PlayerSpecialBeamAttack)
 
     RTB_SERIALIZE()
-    RTBEngine::Scene::TrailRenderer* beamTrail = nullptr;
-    RTB_SERIALIZE()
-    RTBEngine::Scene::TrailRenderer* beamAuraTrail = nullptr;
-    RTB_SERIALIZE()
-    RTBEngine::Scene::TrailRenderer* beamHaloTrail = nullptr;
+    EnergyBeamComponent* energyBeam = nullptr;
     RTB_SERIALIZE()
     RTBEngine::Scene::TrailRenderer* aimPreviewTrail = nullptr;
+    RTB_SERIALIZE()
+    std::string beamAssetRef;
     RTB_SERIALIZE()
     float duration = 5.0f;
     RTB_SERIALIZE()
@@ -50,6 +51,8 @@ public:
     float damagePerTick = 1.0f;
     RTB_SERIALIZE()
     float beamLength = 8.0f;
+    RTB_SERIALIZE()
+    float beamGrowDuration = 0.35f;
     RTB_SERIALIZE()
     float beamRadius = 0.45f;
     RTB_SERIALIZE()
@@ -71,7 +74,8 @@ public:
     bool previewActive = false;
     float elapsed = 0.0f;
     float tickTimer = 0.0f;
-    float frameEffectiveLength = 0.0f;
+    float frameMaxLength = 0.0f;
+    float frameCurrentLength = 0.0f;
     RTBEngine::Math::Vector3 beamDirection = RTBEngine::Math::Vector3::Zero();
     ThirdPersonCharacterController* controller = nullptr;
     PlayerSpecialBeamPresenter beamPresenter;
@@ -79,6 +83,7 @@ public:
     void ClampSettings();
     void CacheGameplayReferences();
     void BindBeamPresenter();
+    void ApplyBeamLook();
     void ValidateRequiredReferences() const;
     void StopBeam();
     RTBEngine::Math::Vector3 GetBeamOrigin(const RTBEngine::Math::Vector3& direction) const;
@@ -87,6 +92,7 @@ public:
     float ResolveEffectiveLengthForDirection(
         const RTBEngine::Math::Vector3& origin,
         const RTBEngine::Math::Vector3& direction) const;
+    float ResolveGrownLength(float maxLength) const;
     void ApplyDamageTick(float effectiveLength);
     void UpdateBeamVisual(float effectiveLength);
     void HideBeamVisual();

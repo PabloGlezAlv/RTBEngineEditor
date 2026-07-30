@@ -206,6 +206,30 @@ namespace RTBEditor {
             ImGui::TreePop();
         }
 
+        ImGui::Spacing();
+
+        bool bloomOpen = false;
+        if (DrawEffectHeader("bloom", "Bloom", volume->overrideBloom, bloomOpen, changed)) {
+            if (volume->overrideBloom) {
+                volume->bloomEnabled = true;
+            }
+            ImGui::BeginDisabled(!volume->overrideBloom);
+
+            DrawParamRow("bloomThresh", "Threshold", [&]() {
+                if (ImGui::DragFloat("##bloomThresh", &volume->bloomThreshold, 0.01f, 0.0f, 8.0f, "%.2f")) {
+                    changed = true;
+                }
+            });
+            DrawParamRow("bloomInt", "Intensidad", [&]() {
+                if (ImGui::DragFloat("##bloomInt", &volume->bloomIntensity, 0.01f, 0.0f, 4.0f, "%.2f")) {
+                    changed = true;
+                }
+            });
+
+            ImGui::EndDisabled();
+            ImGui::TreePop();
+        }
+
         ImGui::EndDisabled();
 
         return changed;
