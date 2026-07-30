@@ -8,6 +8,11 @@ RTB_REGISTER_DATA_ASSET(EnergyBeamAsset)
     RTB_PROPERTY_RANGE(coreWidthScale, 0.05f, 2.0f)
     RTB_PROPERTY_RANGE(innerWidthScale, 0.1f, 3.0f)
     RTB_PROPERTY_RANGE(outerWidthScale, 0.1f, 4.0f)
+    RTB_PROPERTY_RANGE(taperAmount, 0.0f, 0.95f)
+    RTB_PROPERTY_RANGE(tipCapScale, 0.1f, 4.0f)
+    RTB_PROPERTY_RANGE(muzzleFlareScale, 0.1f, 4.0f)
+    RTB_PROPERTY_RANGE(fadeOutDuration, 0.0f, 2.0f)
+    RTB_PROPERTY_RANGE(tipBurstCount, 0, 128)
     RTB_PROPERTY_COLOR(beamColor)
     RTB_PROPERTY_COLOR(coreColor)
     RTB_PROPERTY_RANGE(emissionStrength, 0.0f, 16.0f)
@@ -36,6 +41,11 @@ void EnergyBeamAsset::ApplyTo(EnergyBeamComponent* beam) const
     beam->coreWidthScale = coreWidthScale;
     beam->innerWidthScale = innerWidthScale;
     beam->outerWidthScale = outerWidthScale;
+    beam->taperAmount = taperAmount;
+    beam->tipCapScale = tipCapScale;
+    beam->muzzleFlareScale = muzzleFlareScale;
+    beam->fadeOutDuration = fadeOutDuration;
+    beam->tipBurstCount = tipBurstCount;
     beam->beamColor = beamColor;
     beam->coreColor = coreColor;
     beam->emissionStrength = emissionStrength;

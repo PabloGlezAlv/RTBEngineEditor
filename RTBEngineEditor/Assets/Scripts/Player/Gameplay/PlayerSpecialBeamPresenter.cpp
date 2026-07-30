@@ -161,8 +161,8 @@ void PlayerSpecialBeamPresenter::HideBeam() const
         return;
     }
 
-    beam->Stop();
-    beam->visible = false;
+    // Soft end: tip burst + fade instead of hard cut.
+    beam->BeginFadeOut();
 }
 
 void PlayerSpecialBeamPresenter::HideAll() const

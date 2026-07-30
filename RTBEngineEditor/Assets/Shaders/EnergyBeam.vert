@@ -3,7 +3,8 @@
 layout(location = 0) in vec3 aPosition;
 layout(location = 1) in vec4 aColor;
 layout(location = 2) in vec2 aUV;
-layout(location = 3) in float aSide;
+layout(location = 3) in vec3 aNormal;
+layout(location = 4) in float aShell;
 
 layout(std140) uniform CameraData {
     mat4 view;
@@ -19,15 +20,17 @@ layout(std140) uniform CameraData {
 
 out vec4 vColor;
 out vec2 vUV;
-out float vSide;
+out vec3 vNormal;
 out vec3 vWorldPos;
+out float vShell;
 
 void main()
 {
     vWorldPos = aPosition;
+    vNormal = normalize(aNormal);
     gl_Position = viewProjection * vec4(aPosition, 1.0);
     gl_Position.z -= 0.0015 * gl_Position.w;
     vColor = aColor;
     vUV = aUV;
-    vSide = aSide;
+    vShell = aShell;
 }

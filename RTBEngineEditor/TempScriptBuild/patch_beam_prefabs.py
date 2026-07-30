@@ -1,139 +1,120 @@
 from pathlib import Path
 import re
 
-prefab_dir = Path(r"C:\Users\pablo\Desktop\Proyectos\RTBEngine\RTBEngineEditor\RTBEngineEditor\Assets\Prefabs\Player\Gameplay")
+base = Path(r"c:\Users\pablo\Desktop\Proyectos\RTBEngine\RTBEngineEditor\RTBEngineEditor\Assets\Prefabs\Player\Gameplay")
+files = [
+    "Player Knight.prefab",
+    "Player Barbarian.prefab",
+    "Player Arcanist.prefab",
+    "Player Ranger.prefab",
+    "Player Rogue.prefab",
+]
 
-AURA_CHILD = """                    {
-                        name = "Special Beam Aura Trail",
-                        uuid = "SP3C14L-AURA-4000-8000-000000000001",
+new_block = """{
+                        name = "Special Beam Trail",
+                        uuid = "SP3C14L-BEAM-4000-8000-000000000001",
                         position = Vector3(0.00, 1.00, 0.40),
                         components = {
                             {
-                                type = "TrailRenderer",
-                                width = 1.20,
-                                color = Color(0.40, 0.88, 1.00, 0.85),
-                                fadeAlphaAlongLength = false,
+                                type = "EnergyBeamComponent",
+                                radius = 0.28,
+                                useVerticalCross = false,
+                                coreWidthScale = 0.40,
+                                innerWidthScale = 0.72,
+                                outerWidthScale = 1.10,
+                                taperAmount = 0.55,
+                                tipCapScale = 1.15,
+                                muzzleFlareScale = 1.75,
+                                fadeOutDuration = 0.22,
+                                tipBurstCount = 22,
+                                emissionStrength = 1.35,
+                                glowIntensity = 0.85,
+                                beamColor = Color(0.25, 0.78, 1.00, 0.55),
+                                coreColor = Color(0.95, 0.98, 1.00, 0.95),
                                 visible = false,
-                                blendMode = "Additive",
-                                alignment = "CameraFacing",
-                                softEdge = 0.95,
-                                uvScrollSpeed = 1.80,
-                                uvTilesPerMeter = 0.45
+                                softEdge = 0.90,
+                                uvScrollSpeed = 2.50,
+                                uvTilesPerMeter = 0.45,
+                                tipParticles = "SP3C14L-BTIP-4000-8000-000000000001/ParticleSystem",
+                                muzzleParticles = "SP3C14L-BMZL-4000-8000-000000000001/ParticleSystem"
                             },
-                        }
-                    },
-"""
-
-HALO_CHILD = """                    {
-                        name = "Special Beam Halo Trail",
-                        uuid = "SP3C14L-HAL0-4000-8000-000000000001",
-                        position = Vector3(0.00, 1.00, 0.40),
-                        components = {
+                        },
+                        children = {
                             {
-                                type = "TrailRenderer",
-                                width = 2.20,
-                                color = Color(0.20, 0.42, 1.00, 0.55),
-                                fadeAlphaAlongLength = false,
-                                visible = false,
-                                blendMode = "Additive",
-                                alignment = "CameraFacing",
-                                softEdge = 0.70,
-                                uvScrollSpeed = 0.90,
-                                uvTilesPerMeter = 0.45
+                                name = "Beam Tip FX",
+                                uuid = "SP3C14L-BTIP-4000-8000-000000000001",
+                                components = {
+                                    {
+                                        type = "ParticleSystem",
+                                        maxParticles = 64,
+                                        emissionRate = 55.00,
+                                        emitterShape = "Sphere",
+                                        shapeRadius = 0.12,
+                                        startLifetime = 0.35,
+                                        startSpeed = 1.20,
+                                        startSize = 0.18,
+                                        endSize = 0.02,
+                                        startColor = Color(0.75, 0.95, 1.00, 0.95),
+                                        endColor = Color(0.20, 0.55, 1.00, 0.00),
+                                        gravity = Vector3(0.00, 0.15, 0.00),
+                                        worldSimulation = true,
+                                        textureRef = "Assets/VFX/spark_soft.png",
+                                        visible = true,
+                                        loop = true,
+                                        playOnAwake = false,
+                                        simulateInEditMode = false,
+                                        destroyOwnerWhenFinished = false,
+                                        burstCount = 22,
+                                        blendMode = "Additive"
+                                    },
+                                }
+                            },
+                            {
+                                name = "Beam Muzzle FX",
+                                uuid = "SP3C14L-BMZL-4000-8000-000000000001",
+                                components = {
+                                    {
+                                        type = "ParticleSystem",
+                                        maxParticles = 48,
+                                        emissionRate = 40.00,
+                                        emitterShape = "Cone",
+                                        shapeRadius = 0.06,
+                                        coneAngle = 35.00,
+                                        startLifetime = 0.28,
+                                        startSpeed = 2.40,
+                                        startSize = 0.14,
+                                        endSize = 0.02,
+                                        startColor = Color(0.45, 0.85, 1.00, 0.85),
+                                        endColor = Color(0.15, 0.40, 1.00, 0.00),
+                                        gravity = Vector3(0.00, 0.00, 0.00),
+                                        worldSimulation = true,
+                                        textureRef = "Assets/VFX/spark_soft.png",
+                                        visible = true,
+                                        loop = true,
+                                        playOnAwake = false,
+                                        simulateInEditMode = false,
+                                        destroyOwnerWhenFinished = false,
+                                        burstCount = 12,
+                                        blendMode = "Additive"
+                                    },
+                                }
                             },
                         }
-                    },
-"""
+                    }"""
 
-for prefab in sorted(prefab_dir.glob("Player *.prefab")):
-    text = prefab.read_text(encoding="utf-8")
-    original = text
+pat = re.compile(
+    r'\{\s*name = "Special Beam Trail",.*?uvTilesPerMeter = 0\.45\s*\},?\s*\}\s*\}',
+    re.S,
+)
 
-    # Wire new component refs on PlayerSpecialBeamAttack
-    if "beamAuraTrail" not in text:
-        text = text.replace(
-            'beamTrail = "SP3C14L-BEAM-4000-8000-000000000001/TrailRenderer",\n'
-            '                        aimPreviewTrail = "SP3C14L-A1M0-4000-8000-000000000001/TrailRenderer",',
-            'beamTrail = "SP3C14L-BEAM-4000-8000-000000000001/TrailRenderer",\n'
-            '                        beamAuraTrail = "SP3C14L-AURA-4000-8000-000000000001/TrailRenderer",\n'
-            '                        beamHaloTrail = "SP3C14L-HAL0-4000-8000-000000000001/TrailRenderer",\n'
-            '                        aimPreviewTrail = "SP3C14L-A1M0-4000-8000-000000000001/TrailRenderer",',
-        )
-
-    # Update core beam trail defaults
-    text = re.sub(
-        r'(name = "Special Beam Trail",[\s\S]*?type = "TrailRenderer",\s*)'
-        r'width = 1\.60,\s*'
-        r'color = Color\([^)]+\),\s*'
-        r'fadeAlphaAlongLength = true,\s*'
-        r'visible = false',
-        r'\1width = 0.35,\n'
-        r'                                color = Color(1.00, 1.00, 0.96, 1.00),\n'
-        r'                                fadeAlphaAlongLength = false,\n'
-        r'                                visible = false,\n'
-        r'                                blendMode = "Additive",\n'
-        r'                                alignment = "CameraFacing",\n'
-        r'                                softEdge = 1.25,\n'
-        r'                                uvScrollSpeed = 3.20,\n'
-        r'                                uvTilesPerMeter = 0.45',
-        text,
-        count=1,
-    )
-
-    # Update preview trail defaults
-    text = re.sub(
-        r'(name = "Special Attack Aim Trail",[\s\S]*?type = "TrailRenderer",\s*)'
-        r'width = 1\.10,\s*'
-        r'color = Color\([^)]+\),\s*'
-        r'fadeAlphaAlongLength = false,\s*'
-        r'visible = false',
-        r'\1width = 0.90,\n'
-        r'                                color = Color(0.88, 0.96, 1.00, 0.40),\n'
-        r'                                fadeAlphaAlongLength = false,\n'
-        r'                                visible = false,\n'
-        r'                                blendMode = "Additive",\n'
-        r'                                alignment = "CameraFacing",\n'
-        r'                                softEdge = 0.85,\n'
-        r'                                uvScrollSpeed = 0.00,\n'
-        r'                                uvTilesPerMeter = 0.45',
-        text,
-        count=1,
-    )
-
-    if "Special Beam Aura Trail" not in text:
-        # Insert aura+halo after Special Beam Trail child block
-        marker = 'name = "Special Beam Trail"'
-        idx = text.find(marker)
-        if idx < 0:
-            print("SKIP no beam trail", prefab.name)
-            continue
-        # find end of that child object: closing "}," after its components
-        # Search for the Avatar child that usually follows
-        avatar = text.find('name = "Avatar"', idx)
-        insert_at = text.rfind('{', idx, avatar)  # not ideal
-        # Better: find the block end by matching after Special Beam Trail section
-        # Locate uuid SP3C14L-BEAM then find the closing of that child
-        beam_uuid = 'uuid = "SP3C14L-BEAM-4000-8000-000000000001"'
-        b = text.find(beam_uuid)
-        # from the '{' of the child containing this uuid, find matching end
-        # walk backwards to child start
-        child_start = text.rfind('{', 0, b)
-        # naive: find next occurrence of 'name = "Avatar"' and insert before the preceding '{'
-        if avatar > 0:
-            # find the '{' that starts Avatar child - insert before it
-            # look back for "},\n                    {\n                        name = \"Avatar\""
-            pattern = re.search(r'\},\s*\{\s*name = "Avatar"', text[idx:])
-            if pattern:
-                abs_pos = idx + pattern.start() + 1  # after },
-                # insert after "},"
-                insert_pos = idx + pattern.start() + 2
-                text = text[:insert_pos] + "\n" + AURA_CHILD + HALO_CHILD + text[insert_pos:]
-            else:
-                print("SKIP insert pattern", prefab.name)
-                continue
-
-    if text != original:
-        prefab.write_text(text, encoding="utf-8")
-        print("updated", prefab.name)
-    else:
-        print("unchanged", prefab.name)
+for name in files:
+    path = base / name
+    text = path.read_text(encoding="utf-8")
+    if "Beam Tip FX" in text:
+        print("already", name)
+        continue
+    if not pat.search(text):
+        print("no match", name)
+        continue
+    path.write_text(pat.sub(new_block, text, count=1), encoding="utf-8")
+    print("updated", name)
