@@ -1,0 +1,32 @@
+return {
+    name = "Leap Landing Aura",
+    uuid = "L34P-L4ND-AURA-4000-8000-000000000001",
+    position = Vector3(0.00, 0.05, 0.00),
+    components = {
+        {
+            type = "ParticleSystem",
+            maxParticles = 96,
+            emissionRate = 0.00,
+            emitterShape = "Circle",
+            shapeRadius = 0.35,
+            coneAngle = 25.00,
+            boxSize = Vector3(1.00, 1.00, 1.00),
+            startLifetime = 0.70,
+            startSpeed = 5.50,
+            startSize = 0.55,
+            endSize = 0.06,
+            startColor = Color(0.92, 0.84, 0.62, 0.90),
+            endColor = Color(0.40, 0.32, 0.22, 0.00),
+            gravity = Vector3(0.00, 5.50, 0.00),
+            worldSimulation = true,
+            textureRef = "Assets/VFX/spark_soft.png",
+            visible = true,
+            loop = false,
+            playOnAwake = true,
+            simulateInEditMode = false,
+            destroyOwnerWhenFinished = true,
+            burstCount = 64,
+            blendMode = "Alpha"
+        },
+    }
+}

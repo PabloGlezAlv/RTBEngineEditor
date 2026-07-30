@@ -64,6 +64,9 @@ return {
             hitAudio = nil
         },
         {
+            type = "StunReceiver"
+        },
+        {
             type = "HealthComponent",
             maxHealth = 200.00,
             currentHealth = 200.00

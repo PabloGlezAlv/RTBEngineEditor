@@ -2,7 +2,7 @@
 
 #include "CharacterCombatUtils.h"
 #include "CombatAuthority.h"
-#include "PlayerSpecialBeamAttack.h"
+#include "PlayerSpecialAttackUtil.h"
 #include "ThirdPersonCharacterController.h"
 
 #include <RTBEngine/Core/Logger.h>
@@ -87,12 +87,12 @@ RTBEngine::UI::UIImage* PlayerSpecialAttackCharge::GetHandleImage() const
 void PlayerSpecialAttackCharge::CacheGameplayReferences()
 {
     if (!owner) {
-        beamAttack = nullptr;
+        specialAttack = nullptr;
         controller = nullptr;
         return;
     }
 
-    beamAttack = owner->GetComponent<PlayerSpecialBeamAttack>();
+    specialAttack = ResolvePlayerSpecialAttack(owner);
     controller = owner->GetComponent<ThirdPersonCharacterController>();
 }
 
@@ -110,8 +110,8 @@ void PlayerSpecialAttackCharge::ValidateRequiredReferences() const
         RTB_WARN("[PlayerSpecialAttackCharge] readyIcon is not assigned on '" +
                  owner->GetName() + "'.");
     }
-    if (!beamAttack) {
-        RTB_WARN("[PlayerSpecialAttackCharge] PlayerSpecialBeamAttack is missing on '" +
+    if (!specialAttack) {
+        RTB_WARN("[PlayerSpecialAttackCharge] No special attack component on '" +
                  owner->GetName() + "'.");
     }
     if (!controller) {
@@ -134,8 +134,8 @@ void PlayerSpecialAttackCharge::ApplyVisuals(bool forceReset)
     const float normalized = forceReset ? 0.0f : GetChargeNormalized();
     const float alpha = forceReset ? kMinChargeAlpha : std::max(kMinChargeAlpha, normalized);
 
-    const bool beamActive = beamAttack && beamAttack->IsActive();
-    const bool canInteract = ready && !beamActive;
+    const bool specialActive = specialAttack && specialAttack->IsActive();
+    const bool canInteract = ready && !specialActive;
 
     if (RTBEngine::UI::UIImage* background = GetBackgroundImage()) {
         const RTBEngine::Math::Vector4 tint = background->GetTint();
@@ -153,7 +153,7 @@ void PlayerSpecialAttackCharge::ApplyVisuals(bool forceReset)
     }
 
     if (readyIcon) {
-        readyIcon->SetVisible(ready && !beamActive);
+        readyIcon->SetVisible(ready && !specialActive);
         if (ready) {
             const RTBEngine::Math::Vector4 tint = readyIcon->GetTint();
             readyIcon->SetTint(RTBEngine::Math::Vector4(tint.x, tint.y, tint.z, 1.0f));
@@ -235,15 +235,15 @@ void PlayerSpecialAttackCharge::HandleSpecialJoystickReleased(
         return;
     }
 
-    if (beamAttack) {
-        beamAttack->HideAimPreview();
+    if (specialAttack) {
+        specialAttack->HideAimPreview();
     }
 
     if (!IsReady()) {
         return;
     }
 
-    if (!beamAttack || beamAttack->IsActive()) {
+    if (!specialAttack || specialAttack->IsActive()) {
         return;
     }
 
@@ -251,13 +251,14 @@ void PlayerSpecialAttackCharge::HandleSpecialJoystickReleased(
         return;
     }
 
+    const float aimStrength = std::clamp(joystickValue.Length(), 0.0f, 1.0f);
     const RTBEngine::Math::Vector3 attackDirection =
         controller->GetPlanarAttackDirectionFromJoystick(joystickValue);
     if (!CharacterCombatUtils::HasPlanarDirection(attackDirection)) {
         return;
     }
 
-    if (!beamAttack->TryActivate(attackDirection)) {
+    if (!specialAttack->TryActivate(attackDirection, aimStrength)) {
         return;
     }
 
@@ -275,7 +276,7 @@ bool PlayerSpecialAttackCharge::TryGetSpecialAimDirection(
         return false;
     }
 
-    if (!beamAttack || beamAttack->IsActive()) {
+    if (!specialAttack || specialAttack->IsActive()) {
         return false;
     }
 
@@ -283,24 +284,31 @@ bool PlayerSpecialAttackCharge::TryGetSpecialAimDirection(
         return false;
     }
 
-    outAimDirection = controller->GetPlanarAttackDirectionFromJoystick(
-        specialAttackJoystick->GetValue());
+    const RTBEngine::Math::Vector2 joystickValue = specialAttackJoystick->GetValue();
+    if (joystickValue.LengthSquared() <= 0.0001f) {
+        return false;
+    }
+
+    outAimDirection = controller->GetPlanarAttackDirectionFromJoystick(joystickValue);
     return CharacterCombatUtils::HasPlanarDirection(outAimDirection);
 }
 
 void PlayerSpecialAttackCharge::OnLateUpdate(float /*deltaTime*/)
 {
-    if (!IsLocalPlayer() || !owner || !beamAttack) {
+    if (!IsLocalPlayer() || !owner || !specialAttack) {
         return;
     }
 
     RTBEngine::Math::Vector3 aimDirection = RTBEngine::Math::Vector3::Zero();
     if (!TryGetSpecialAimDirection(aimDirection)) {
-        beamAttack->HideAimPreview();
+        specialAttack->HideAimPreview();
         return;
     }
 
-    beamAttack->UpdateAimPreview(aimDirection);
+    const float aimStrength = specialAttackJoystick
+        ? std::clamp(specialAttackJoystick->GetValue().Length(), 0.0f, 1.0f)
+        : 1.0f;
+    specialAttack->UpdateAimPreview(aimDirection, aimStrength);
 }
 
 void PlayerSpecialAttackCharge::RefreshAfterSpawn()
@@ -359,6 +367,6 @@ void PlayerSpecialAttackCharge::OnDestroy()
 
     specialAttackJoystick = nullptr;
     readyIcon = nullptr;
-    beamAttack = nullptr;
+    specialAttack = nullptr;
     controller = nullptr;
 }

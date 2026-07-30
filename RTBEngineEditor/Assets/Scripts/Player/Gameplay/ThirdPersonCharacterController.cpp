@@ -14,7 +14,8 @@
 #include "PlayerCameraFollow.h"
 #include "PlayerCombatNet.h"
 #include "PlayerSpecialAttackCharge.h"
-#include "PlayerSpecialBeamAttack.h"
+#include "PlayerSpecialAttackUtil.h"
+#include "StunReceiver.h"
 #include "PlayerRegistry.h"
 
 #include <RTBEngine/Animation/Animator.h>
@@ -304,12 +305,21 @@ void ThirdPersonCharacterController::OnFixedUpdate(float fixedDeltaTime)
     if (RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby() &&
         !RTBEngine::Online::OnlineGameplayNet::IsLobbyHost() &&
         IsLocallyControlled()) {
-        if (specialBeamAttack && specialBeamAttack->IsActive()) {
+        if (specialAttack && specialAttack->IsActive()) {
             StopPlanarMotion();
-            specialBeamAttack->ApplyMovementLock(fixedDeltaTime);
+            specialAttack->ApplyMovementLock(fixedDeltaTime);
             UpdateAnimatorLocomotion(false, false);
             SendNetworkInput();
             return;
+        }
+
+        if (const StunReceiver* stun = owner->GetComponent<StunReceiver>()) {
+            if (stun->IsStunned()) {
+                StopPlanarMotion();
+                UpdateAnimatorLocomotion(false, false);
+                SendNetworkInput();
+                return;
+            }
         }
 
         if (specialAttackCharge) {
@@ -340,13 +350,23 @@ void ThirdPersonCharacterController::OnFixedUpdate(float fixedDeltaTime)
         return;
     }
 
-    if (specialBeamAttack && specialBeamAttack->IsActive()) {
+    if (specialAttack && specialAttack->IsActive()) {
         HideAttackAimTrail();
         SetAimArrowVisible(false);
         StopPlanarMotion();
-        specialBeamAttack->ApplyMovementLock(fixedDeltaTime);
+        specialAttack->ApplyMovementLock(fixedDeltaTime);
         UpdateAnimatorLocomotion(false, false);
         return;
+    }
+
+    if (const StunReceiver* stun = owner->GetComponent<StunReceiver>()) {
+        if (stun->IsStunned()) {
+            HideAttackAimTrail();
+            SetAimArrowVisible(false);
+            StopPlanarMotion();
+            UpdateAnimatorLocomotion(false, false);
+            return;
+        }
     }
 
     if (specialAttackCharge) {
@@ -624,7 +644,7 @@ void ThirdPersonCharacterController::ClampSettings()
 void ThirdPersonCharacterController::CacheGameplayReferences()
 {
     if (!owner) {
-        specialBeamAttack = nullptr;
+        specialAttack = nullptr;
         specialAttackCharge = nullptr;
         ammoSystem = nullptr;
         rigidBodyComponent = nullptr;
@@ -633,7 +653,7 @@ void ThirdPersonCharacterController::CacheGameplayReferences()
         return;
     }
 
-    specialBeamAttack = owner->GetComponent<PlayerSpecialBeamAttack>();
+    specialAttack = ResolvePlayerSpecialAttack(owner);
     specialAttackCharge = owner->GetComponent<PlayerSpecialAttackCharge>();
     ammoSystem = owner->GetComponent<PlayerAmmoSystem>();
     rigidBodyComponent = owner->GetComponent<RTBEngine::Scene::RigidBodyComponent>();

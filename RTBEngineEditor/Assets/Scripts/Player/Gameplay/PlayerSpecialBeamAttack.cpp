@@ -124,7 +124,9 @@ void PlayerSpecialBeamAttack::OnDestroy()
     controller = nullptr;
 }
 
-void PlayerSpecialBeamAttack::UpdateAimPreview(const RTBEngine::Math::Vector3& direction)
+void PlayerSpecialBeamAttack::UpdateAimPreview(
+    const RTBEngine::Math::Vector3& direction,
+    float /*aimStrength*/)
 {
     if (active || !owner) {
         HideAimPreview();
@@ -166,7 +168,9 @@ void PlayerSpecialBeamAttack::ApplyMovementLock(float deltaTime)
     }
 }
 
-bool PlayerSpecialBeamAttack::TryActivate(const RTBEngine::Math::Vector3& direction)
+bool PlayerSpecialBeamAttack::TryActivate(
+    const RTBEngine::Math::Vector3& direction,
+    float /*aimStrength*/)
 {
     if (active || !owner) {
         return false;

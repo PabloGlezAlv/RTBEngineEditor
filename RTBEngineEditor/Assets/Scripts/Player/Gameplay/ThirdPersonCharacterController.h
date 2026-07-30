@@ -41,7 +41,7 @@ class CharacterAbility;
 class CharacterDefinition;
 class PlayerAmmoSystem;
 class PlayerSpecialAttackCharge;
-class PlayerSpecialBeamAttack;
+class IPlayerSpecialAttack;
 
 class ThirdPersonCharacterController : public PlayableCharacterController, public ICharacterStatReceiver
 {
@@ -209,7 +209,7 @@ private:
                                   float turnSpeedDegrees = -1.0f);
     void ApplyExternalKnockbackVelocity(RTBEngine::Physics::RigidBody* rigidBody, float deltaTime);
 
-    PlayerSpecialBeamAttack* specialBeamAttack = nullptr;
+    IPlayerSpecialAttack* specialAttack = nullptr;
     PlayerSpecialAttackCharge* specialAttackCharge = nullptr;
     PlayerAmmoSystem* ammoSystem = nullptr;
     RTBEngine::Scene::RigidBodyComponent* rigidBodyComponent = nullptr;

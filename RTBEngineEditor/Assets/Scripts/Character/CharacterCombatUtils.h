@@ -61,6 +61,16 @@ namespace CharacterCombatUtils {
         std::uint32_t layerMask = 0xFFFFFFFFu;
     };
 
+    struct HostileSphereOverlapQuery {
+        RTBEngine::Physics::PhysicsWorld* physicsWorld = nullptr;
+        RTBEngine::Scene::GameObject* instigator = nullptr;
+        RTBEngine::Math::Vector3 center = RTBEngine::Math::Vector3(0.0f, 0.0f, 0.0f);
+        float radius = 0.0f;
+        bool ignoreSameTeam = true;
+        std::uint32_t layerMask = 0xFFFFFFFFu;
+    };
+
     std::vector<HostileOverlapHit> OverlapHostileTargets(const HostileOverlapQuery& query);
+    std::vector<HostileOverlapHit> OverlapHostileTargetsInSphere(const HostileSphereOverlapQuery& query);
 
 }

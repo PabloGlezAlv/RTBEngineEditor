@@ -12,7 +12,7 @@ namespace RTBEngine {
     }
 }
 
-class PlayerSpecialBeamAttack;
+class IPlayerSpecialAttack;
 class ThirdPersonCharacterController;
 
 class PlayerSpecialAttackCharge : public RTBEngine::Scene::Component
@@ -49,7 +49,7 @@ public:
     int currentHits = 0;
     RTBEngine::UI::UIJoystick* subscribedSpecialJoystick = nullptr;
     RTBEngine::Core::EventSubscription specialJoystickReleaseSubscription;
-    PlayerSpecialBeamAttack* beamAttack = nullptr;
+    IPlayerSpecialAttack* specialAttack = nullptr;
     ThirdPersonCharacterController* controller = nullptr;
 
     bool IsLocalPlayer() const;

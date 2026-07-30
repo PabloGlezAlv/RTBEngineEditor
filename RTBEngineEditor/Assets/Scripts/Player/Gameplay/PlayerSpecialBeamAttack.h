@@ -1,5 +1,6 @@
 #pragma once
 
+#include "IPlayerSpecialAttack.h"
 #include "PlayerSpecialBeamPresenter.h"
 
 #include <RTBEngine/Math/Vectors/Vector3.h>
@@ -17,17 +18,21 @@ namespace RTBEngine {
 class EnergyBeamComponent;
 class ThirdPersonCharacterController;
 
-class PlayerSpecialBeamAttack : public RTBEngine::Scene::Component
+class PlayerSpecialBeamAttack : public RTBEngine::Scene::Component, public IPlayerSpecialAttack
 {
 public:
     PlayerSpecialBeamAttack() = default;
     ~PlayerSpecialBeamAttack() override = default;
 
-    bool TryActivate(const RTBEngine::Math::Vector3& direction);
-    bool IsActive() const { return active; }
-    void UpdateAimPreview(const RTBEngine::Math::Vector3& direction);
-    void HideAimPreview();
-    void ApplyMovementLock(float deltaTime);
+    bool TryActivate(
+        const RTBEngine::Math::Vector3& direction,
+        float aimStrength = 1.0f) override;
+    bool IsActive() const override { return active; }
+    void UpdateAimPreview(
+        const RTBEngine::Math::Vector3& direction,
+        float aimStrength = 1.0f) override;
+    void HideAimPreview() override;
+    void ApplyMovementLock(float deltaTime) override;
 
     void OnStart() override;
     void OnValidate() override;

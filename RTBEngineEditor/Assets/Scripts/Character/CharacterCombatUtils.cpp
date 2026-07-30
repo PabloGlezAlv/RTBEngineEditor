@@ -231,4 +231,60 @@ namespace CharacterCombatUtils {
         return results;
     }
 
+    std::vector<HostileOverlapHit> OverlapHostileTargetsInSphere(const HostileSphereOverlapQuery& query)
+    {
+        std::vector<HostileOverlapHit> results;
+
+        if (!query.physicsWorld || !query.instigator || query.radius <= 0.0f) {
+            return results;
+        }
+
+        RTBEngine::Physics::PhysicsQueryOptions physicsOptions;
+        physicsOptions.ignoredObject = query.instigator;
+        physicsOptions.ignoreIgnoredObjectHierarchy = true;
+        physicsOptions.ignoreTriggers = true;
+
+        const std::vector<RTBEngine::Physics::OverlapSphereHit> physicsHits =
+            query.physicsWorld->OverlapSphere(
+                query.center,
+                query.radius,
+                query.layerMask,
+                physicsOptions);
+
+        std::unordered_set<RTBEngine::Scene::GameObject*> seenTargets;
+        seenTargets.reserve(physicsHits.size());
+
+        for (const RTBEngine::Physics::OverlapSphereHit& physicsHit : physicsHits) {
+            if (!physicsHit.gameObject) {
+                continue;
+            }
+
+            HealthComponent* targetHealth = physicsHit.gameObject->GetComponent<HealthComponent>();
+            if (!targetHealth) {
+                targetHealth = physicsHit.gameObject->GetComponentInChildren<HealthComponent>();
+            }
+            if (!targetHealth || targetHealth->IsDead()) {
+                continue;
+            }
+
+            RTBEngine::Scene::GameObject* targetRoot = ResolveHealthRoot(targetHealth->GetOwner());
+            if (!targetRoot || !PassesTeamFilter(query.instigator, targetRoot, query.ignoreSameTeam)) {
+                continue;
+            }
+
+            if (!seenTargets.insert(targetRoot).second) {
+                continue;
+            }
+
+            HostileOverlapHit hostileHit;
+            hostileHit.targetRoot = targetRoot;
+            hostileHit.health = targetHealth;
+            hostileHit.hitPoint = physicsHit.point;
+            hostileHit.hitNormal = physicsHit.normal;
+            results.push_back(hostileHit);
+        }
+
+        return results;
+    }
+
 }
