@@ -1,0 +1,64 @@
+return {
+
+    name = "Bouncing Ball",
+
+    uuid = "B0UN-C1NG-BALL-4000-8000-000000000001",
+
+    collisionLayer = "Projectiles",
+
+    position = Vector3(0.00, 0.00, 0.00),
+
+    components = {
+
+        {
+
+            type = "MeshRenderer",
+
+            meshRef = "Default/Models/sphere.obj",
+
+            colorRef = Color(0.72, 0.35, 1.00, 1.00),
+
+            shaderRef = "Assets/Shaders/EmberOrb.shader",
+
+            shaderPropertyOverrides = "uPulseSpeed=2.400000|uGlowIntensity=2.800000",
+
+            meshIndex = 0,
+
+            multiMesh = false
+
+        },
+
+        {
+
+            type = "SphereColliderComponent",
+
+            radius = 0.22,
+
+            centerOffset = Vector3(0.00, 0.00, 0.00),
+
+            isTrigger = true
+
+        },
+
+        {
+
+            type = "BouncingBallProjectile",
+
+            speed = 12.00,
+
+            damage = 22.00,
+
+            knockbackStrength = 2.50,
+
+            contactRadius = 0.40,
+
+            ignoreSameTeam = true,
+
+            bounceImpactPrefabRef = "Assets/Prefabs/Combat/Effects/Bounce Impact Aura.prefab"
+
+        },
+
+    }
+
+}
+
