@@ -79,10 +79,18 @@ return {
                         hitsToFullyCharge = 5,
                     },
                     {
-                        type = "PlayerSpecialBeamAttack",
-                        energyBeam = "SP3C14L-BEAM-4000-8000-000000000001/EnergyBeamComponent",
-                        aimPreviewTrail = "SP3C14L-A1M0-4000-8000-000000000001/TrailRenderer",
-                        beamAssetRef = "Assets/Data/VFX/KamehamehaBeam.rtbasset",
+                        type = "PlayerSpecialDashAttack",
+                        pathPreviewTrail = "SP3C14L-A1M0-4000-8000-000000000001/TrailRenderer",
+                        maxRange = 3.50,
+                        minAimStrength = 0.30,
+                        dashDuration = 0.16,
+                        damage = 18.00,
+                        knockbackStrength = 2.00,
+                        hitRadius = 0.55,
+                        castRadius = 0.40,
+                        trailHeightOffset = 0.90,
+                        damageHeightOffset = 0.90,
+                        ignoreSameTeam = true
                     },
                     {
                         type = "ProjectileAttackAbility",

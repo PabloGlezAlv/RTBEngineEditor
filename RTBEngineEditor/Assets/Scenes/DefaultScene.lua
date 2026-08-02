@@ -4805,13 +4805,13 @@ function CreateScene()
                 name = "Player",
                 uuid = "F86013BD-FF24-4672-91B3-9411CDF272AE",
                 collisionLayer = "Characters",
-                prefab = "Player Ranger",
+                prefab = "Player Rogue",
                 position = Vector3(0.90, 0.10, 0.00),
                 overrides = {
                     components = {
                         { type = "CharacterStatsApplier",
                             usePlayerSelection = false,
-                            characterDefinitionRef = "Assets/Data/Characters/Ranger.rtbasset",
+                            characterDefinitionRef = "Assets/Data/Characters/Rogue.rtbasset",
                         },
                         { type = "ThirdPersonCharacterController",
                             cameraObject = "875ACC83-E59F-4B26-BAE7-B3C4BF3A1637",
@@ -4971,7 +4971,7 @@ function CreateScene()
                         components = {
                             {
                                 type = "Animator",
-                                modelRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Ranger.fbx",
+                                modelRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Rogue.fbx",
                                 currentClipName = "Idle",
                                 defaultClip = "Idle",
                                 speed = 1.00,

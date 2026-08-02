@@ -3,6 +3,7 @@
 #include "PlayerSpecialArrowRainAttack.h"
 #include "PlayerSpecialBeamAttack.h"
 #include "PlayerSpecialBouncingBallAttack.h"
+#include "PlayerSpecialDashAttack.h"
 #include "PlayerSpecialLeapAttack.h"
 
 #include <RTBEngine/Scene/GameObject.h>
@@ -25,6 +26,10 @@ IPlayerSpecialAttack* ResolvePlayerSpecialAttack(RTBEngine::Scene::GameObject* o
     if (PlayerSpecialArrowRainAttack* arrowRain =
             owner->GetComponent<PlayerSpecialArrowRainAttack>()) {
         return arrowRain;
+    }
+
+    if (PlayerSpecialDashAttack* dash = owner->GetComponent<PlayerSpecialDashAttack>()) {
+        return dash;
     }
 
     if (PlayerSpecialBeamAttack* beam = owner->GetComponent<PlayerSpecialBeamAttack>()) {
