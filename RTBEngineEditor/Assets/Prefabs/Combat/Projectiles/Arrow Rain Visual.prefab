@@ -1,0 +1,16 @@
+return {
+    name = "Arrow Rain Visual",
+    uuid = "ARR0-RA1N-V1SU-4000-8000-000000000001",
+    collisionLayer = "Projectiles",
+    position = Vector3(0.00, 0.00, 0.00),
+    components = {
+        {
+            type = "MeshRenderer",
+            meshRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/arrow_bow.obj",
+            textureRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Assets/obj/ranger_texture.png",
+            colorRef = Color(1.00, 1.00, 1.00, 1.00),
+            meshIndex = 0,
+            multiMesh = false
+        },
+    }
+}
