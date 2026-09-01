@@ -1,5 +1,6 @@
 #pragma once
 
+#include <RTBEngine/Math/Quaternions/Quaternion.h>
 #include <RTBEngine/Math/Vectors/Vector3.h>
 
 #include <cstdint>
@@ -72,5 +73,11 @@ namespace CharacterCombatUtils {
 
     std::vector<HostileOverlapHit> OverlapHostileTargets(const HostileOverlapQuery& query);
     std::vector<HostileOverlapHit> OverlapHostileTargetsInSphere(const HostileSphereOverlapQuery& query);
+
+    // Sets the actor root transform and syncs the rigidbody at collider center (matches PhysicsSystem).
+    void SetActorWorldPosition(
+        RTBEngine::Scene::GameObject* actor,
+        const RTBEngine::Math::Vector3& position,
+        const RTBEngine::Math::Quaternion& rotation);
 
 }

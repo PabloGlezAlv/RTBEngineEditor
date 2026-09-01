@@ -368,16 +368,10 @@ void PlayerSpecialLeapAttack::SetActorWorldPosition(const RTBEngine::Math::Vecto
         return;
     }
 
-    const RTBEngine::Math::Quaternion rotation = owner->GetTransform().GetRotation();
-    owner->GetTransform().SetPosition(position);
-
-    if (rigidBodyComponent && rigidBodyComponent->HasRigidBody()) {
-        if (RTBEngine::Physics::RigidBody* rigidBody = rigidBodyComponent->GetRigidBody()) {
-            rigidBody->SetLinearVelocity(btVector3(0.0f, 0.0f, 0.0f));
-            rigidBody->SetAngularVelocity(btVector3(0.0f, 0.0f, 0.0f));
-            rigidBody->SetWorldTransform(position, rotation);
-        }
-    }
+    CharacterCombatUtils::SetActorWorldPosition(
+        owner,
+        position,
+        owner->GetTransform().GetRotation());
 }
 
 void PlayerSpecialLeapAttack::ApplyLeapPose(float normalizedT)

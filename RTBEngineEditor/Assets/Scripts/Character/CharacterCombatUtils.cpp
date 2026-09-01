@@ -5,8 +5,12 @@
 
 #include <RTBEngine/Physics/PhysicsLayerSettings.h>
 #include <RTBEngine/Physics/PhysicsWorld.h>
+#include <RTBEngine/Physics/RigidBody.h>
+#include <RTBEngine/Scene/CapsuleColliderComponent.h>
 #include <RTBEngine/Scene/GameObject.h>
 #include <RTBEngine/Scene/PhysicsWorldResolver.h>
+#include <RTBEngine/Scene/RigidBodyComponent.h>
+#include <RTBEngine/Scene/SphereColliderComponent.h>
 
 #include <algorithm>
 #include <cmath>
@@ -285,6 +289,41 @@ namespace CharacterCombatUtils {
         }
 
         return results;
+    }
+
+    void SetActorWorldPosition(
+        RTBEngine::Scene::GameObject* actor,
+        const RTBEngine::Math::Vector3& position,
+        const RTBEngine::Math::Quaternion& rotation)
+    {
+        if (!actor) {
+            return;
+        }
+
+        actor->GetTransform().SetPosition(position);
+        actor->GetTransform().SetRotation(rotation);
+
+        RTBEngine::Scene::RigidBodyComponent* rigidBodyComponent =
+            actor->GetComponent<RTBEngine::Scene::RigidBodyComponent>();
+        if (!rigidBodyComponent || !rigidBodyComponent->HasRigidBody()) {
+            return;
+        }
+
+        RTBEngine::Physics::RigidBody* rigidBody = rigidBodyComponent->GetRigidBody();
+        if (!rigidBody) {
+            return;
+        }
+
+        RTBEngine::Math::Vector3 centerOffset = RTBEngine::Math::Vector3::Zero();
+        if (auto* capsule = actor->GetComponent<RTBEngine::Scene::CapsuleColliderComponent>()) {
+            centerOffset = capsule->GetCenterOffset();
+        } else if (auto* sphere = actor->GetComponent<RTBEngine::Scene::SphereColliderComponent>()) {
+            centerOffset = sphere->GetCenterOffset();
+        }
+
+        rigidBody->SetLinearVelocity(btVector3(0.0f, 0.0f, 0.0f));
+        rigidBody->SetAngularVelocity(btVector3(0.0f, 0.0f, 0.0f));
+        rigidBody->SetWorldTransform(position + (rotation * centerOffset), rotation);
     }
 
 }
