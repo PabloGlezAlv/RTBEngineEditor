@@ -16,18 +16,17 @@ RTB_REGISTER_COMPONENT(ProjectileTrailFadeLifetime)
     RTB_PROPERTY_RANGE(headTrimInterval, 0.01f, 0.2f)
 RTB_END_REGISTER(ProjectileTrailFadeLifetime)
 
-void ProjectileTrailFadeLifetime::OnPoolAcquire()
+void ProjectileTrailFadeLifetime::OnEnable()
 {
     elapsed = 0.0f;
     headTrimTimer = 0.0f;
 }
 
-void ProjectileTrailFadeLifetime::OnPoolRelease()
+void ProjectileTrailFadeLifetime::OnDisable()
 {
     elapsed = 0.0f;
     headTrimTimer = 0.0f;
     SetUpdateTickEnabled(false);
-    SetEnabled(false);
     trailRenderer = nullptr;
 }
 

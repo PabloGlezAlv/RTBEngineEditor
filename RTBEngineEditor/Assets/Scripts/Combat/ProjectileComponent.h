@@ -4,7 +4,6 @@
 
 #include <RTBEngine/ECS/Entity.h>
 #include <RTBEngine/Scene/Component.h>
-#include <RTBEngine/Scene/IPoolable.h>
 #include <RTBEngine/Math/Vectors/Vector3.h>
 #include <RTBEngine/Reflection/PropertyMacros.h>
 
@@ -23,7 +22,7 @@ namespace RTBEngine {
     }
 }
 
-class ProjectileComponent : public RTBEngine::Scene::Component, public RTBEngine::Scene::IPoolable
+class ProjectileComponent : public RTBEngine::Scene::Component
 {
 public:
     struct ProjectileRuntimeContext {
@@ -59,7 +58,8 @@ public:
     ProjectileComponent() = default;
     ~ProjectileComponent() override = default;
 
-    void OnStart() override;
+    void OnEnable() override;
+    void OnDisable() override;
     void OnUpdate(float deltaTime) override;
     void OnLateUpdate(float deltaTime) override;
     void OnValidate() override;
@@ -86,10 +86,6 @@ public:
     std::string trailFadePrefabRef;
 
     RTB_COMPONENT(ProjectileComponent)
-
-public:
-    void OnPoolAcquire() override;
-    void OnPoolRelease() override;
 
 private:
     RTBEngine::Scene::GameObject* instigator = nullptr;

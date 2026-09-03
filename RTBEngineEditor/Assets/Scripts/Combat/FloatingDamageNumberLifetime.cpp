@@ -33,13 +33,13 @@ RTB_REGISTER_COMPONENT(FloatingDamageNumberLifetime)
     RTB_PROPERTY_COLOR(textColor)
 RTB_END_REGISTER(FloatingDamageNumberLifetime)
 
-void FloatingDamageNumberLifetime::OnPoolAcquire()
+void FloatingDamageNumberLifetime::OnEnable()
 {
     elapsed = 0.0f;
     isPlaying = false;
 }
 
-void FloatingDamageNumberLifetime::OnPoolRelease()
+void FloatingDamageNumberLifetime::OnDisable()
 {
     elapsed = 0.0f;
     isPlaying = false;

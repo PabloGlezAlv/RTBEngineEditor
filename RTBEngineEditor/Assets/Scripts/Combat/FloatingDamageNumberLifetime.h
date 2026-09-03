@@ -3,7 +3,6 @@
 #include <RTBEngine/Math/Vectors/Vector3.h>
 #include <RTBEngine/Math/Vectors/Vector4.h>
 #include <RTBEngine/Scene/Component.h>
-#include <RTBEngine/Scene/IPoolable.h>
 #include <RTBEngine/Reflection/PropertyMacros.h>
 
 namespace RTBEngine {
@@ -13,7 +12,7 @@ namespace RTBEngine {
     }
 }
 
-class FloatingDamageNumberLifetime : public RTBEngine::Scene::Component, public RTBEngine::Scene::IPoolable
+class FloatingDamageNumberLifetime : public RTBEngine::Scene::Component
 {
 public:
     FloatingDamageNumberLifetime() = default;
@@ -27,15 +26,12 @@ public:
     float holdScale = 1.0f;
     RTBEngine::Math::Vector4 textColor = RTBEngine::Math::Vector4(1.0f, 0.92f, 0.35f, 1.0f);
 
-    RTB_COMPONENT(FloatingDamageNumberLifetime)
-
-public:
+    void OnEnable() override;
+    void OnDisable() override;
     void OnUpdate(float deltaTime) override;
-
-    void OnPoolAcquire() override;
-    void OnPoolRelease() override;
-
     void Play(float damageAmount, const RTBEngine::Math::Vector3& worldPosition);
+
+    RTB_COMPONENT(FloatingDamageNumberLifetime)
 
 private:
     RTBEngine::UI::UIText* damageText = nullptr;

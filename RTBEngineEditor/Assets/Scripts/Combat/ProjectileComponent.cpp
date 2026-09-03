@@ -164,9 +164,8 @@ RTB_REGISTER_COMPONENT(ProjectileComponent)
     RTB_PROPERTY_ASSET_PATH(trailFadePrefabRef, "prefab")
 RTB_END_REGISTER(ProjectileComponent)
 
-void ProjectileComponent::OnPoolAcquire()
+void ProjectileComponent::OnEnable()
 {
-    SetEnabled(true);
     SetUpdateTickEnabled(true);
     pendingDestroy = false;
     initialized = false;
@@ -176,9 +175,8 @@ void ProjectileComponent::OnPoolAcquire()
     DestroyEcsEntity();
 }
 
-void ProjectileComponent::OnPoolRelease()
+void ProjectileComponent::OnDisable()
 {
-    SetEnabled(false);
     DestroyEcsEntity();
     instigator = nullptr;
     physicsWorld = nullptr;
@@ -193,13 +191,6 @@ void ProjectileComponent::OnPoolRelease()
         flightTrail->SetVisible(false);
         flightTrail->ClearPoints();
         flightTrail = nullptr;
-    }
-}
-
-void ProjectileComponent::OnStart()
-{
-    if (!initialized) {
-        InitializeFromOwnerTransform();
     }
 }
 
