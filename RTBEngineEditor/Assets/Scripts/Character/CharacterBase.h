@@ -4,6 +4,7 @@
 
 #include <RTBEngine/Core/Event.h>
 #include <RTBEngine/Math/Vectors/Vector3.h>
+#include <RTBEngine/Reflection/PropertyMacros.h>
 #include <RTBEngine/Scene/Component.h>
 
 namespace RTBEngine {
@@ -23,6 +24,8 @@ class CharacterBase : public RTBEngine::Scene::Component
 public:
     CharacterBase() = default;
     ~CharacterBase() override = default;
+
+    RTB_COMPONENT_TYPE(CharacterBase)
 
     int GetTeam() const { return GetCharacterTeam(); }
     HealthComponent* GetHealth() const { return PeekHealthSlot(); }
@@ -52,6 +55,8 @@ public:
     PlayableCharacterController() = default;
     ~PlayableCharacterController() override = default;
 
+    RTB_COMPONENT_TYPE(PlayableCharacterController)
+
     virtual void PlayReplicatedAttackVisual(const RTBEngine::Math::Vector3& /*attackDirection*/) {}
 };
 
@@ -60,4 +65,6 @@ class AICharacterController : public CharacterBase
 public:
     AICharacterController() = default;
     ~AICharacterController() override = default;
+
+    RTB_COMPONENT_TYPE(AICharacterController)
 };

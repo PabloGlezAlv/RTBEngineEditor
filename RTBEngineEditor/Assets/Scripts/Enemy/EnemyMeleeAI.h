@@ -56,6 +56,7 @@ public:
     void SetRoundManager(RoundManager* manager);
 
     RTB_COMPONENT(EnemyMeleeAI)
+    RTB_INHERITS(AICharacterController, CharacterBase)
 
 private:
     enum class State {

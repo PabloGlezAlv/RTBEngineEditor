@@ -78,6 +78,7 @@ public:
     void ClearLocalOnlyInputAndCamera();
 
     RTB_COMPONENT(ThirdPersonCharacterController)
+    RTB_INHERITS(PlayableCharacterController, CharacterBase)
 
     RTB_SERIALIZE()
     RTBEngine::Scene::GameObject* cameraObject = nullptr;
