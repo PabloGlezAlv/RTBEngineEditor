@@ -68,6 +68,7 @@ public:
     void BeginFlight(const ProjectileRuntimeContext& context);
     void Initialize(const ProjectileConfig& config);
 
+    static float ResolveMaxDistance(float speed, float lifetime, float maxDistance);
     float GetTravelDistance() const { return maxDistance; }
 
     float speed = 8.0f;

@@ -79,7 +79,9 @@ namespace {
         const RTBEngine::Scene::Prefab& prefab,
         float& outTravelDistance,
         float& outRadius,
-        float& outDamage)
+        float& outDamage,
+        float& outSpeed,
+        float& outLifetime)
     {
         const RTBEngine::Reflection::TypeInfo* typeInfo =
             RTBEngine::Reflection::TypeRegistry::GetInstance().GetTypeInfo("ProjectileComponent");
@@ -92,14 +94,26 @@ namespace {
                 continue;
             }
 
+            TryReadFloatProperty(snap, typeInfo, "speed", outSpeed);
+            TryReadFloatProperty(snap, typeInfo, "lifetime", outLifetime);
             TryReadFloatProperty(snap, typeInfo, "maxDistance", outTravelDistance);
             TryReadFloatProperty(snap, typeInfo, "radius", outRadius);
             TryReadFloatProperty(snap, typeInfo, "damage", outDamage);
+            outTravelDistance = ProjectileComponent::ResolveMaxDistance(
+                outSpeed,
+                outLifetime,
+                outTravelDistance);
             return true;
         }
 
         for (const auto& child : prefab.GetChildPrefabs()) {
-            if (child && TryReadProjectileStatsFromPrefab(*child, outTravelDistance, outRadius, outDamage)) {
+            if (child && TryReadProjectileStatsFromPrefab(
+                    *child,
+                    outTravelDistance,
+                    outRadius,
+                    outDamage,
+                    outSpeed,
+                    outLifetime)) {
                 return true;
             }
         }
@@ -517,11 +531,22 @@ void ProjectileAttackAbility::RefreshCachedProjectileStats()
         return;
     }
 
+    float prefabSpeed = 8.0f;
+    float prefabLifetime = 0.85f;
     TryReadProjectileStatsFromPrefab(
         *projectileSpawnPrefab,
         cachedTravelDistance,
         cachedProjectileRadius,
-        cachedDamage);
+        cachedDamage,
+        prefabSpeed,
+        prefabLifetime);
+
+    if (projectileSpeedOverride > 0.0f) {
+        cachedTravelDistance = ProjectileComponent::ResolveMaxDistance(
+            projectileSpeedOverride,
+            prefabLifetime,
+            cachedTravelDistance);
+    }
 
     if (projectileDamageOverride > 0.0f) {
         cachedDamage = projectileDamageOverride;

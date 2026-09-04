@@ -342,15 +342,20 @@ void ProjectileComponent::Initialize(const ProjectileConfig& config)
     BeginFlight(context);
 }
 
+float ProjectileComponent::ResolveMaxDistance(float speed, float lifetime, float maxDistance)
+{
+    speed = std::max(0.01f, speed);
+    if (lifetime > 0.0f) {
+        return std::max(0.05f, speed * lifetime);
+    }
+    return std::max(0.05f, maxDistance);
+}
+
 void ProjectileComponent::ClampSettings()
 {
     speed = std::max(0.01f, speed);
     lifetime = std::max(0.01f, lifetime);
-    if (lifetime > 0.0f) {
-        maxDistance = std::max(0.05f, speed * lifetime);
-    } else {
-        maxDistance = std::max(0.05f, maxDistance);
-    }
+    maxDistance = ResolveMaxDistance(speed, lifetime, maxDistance);
     radius = std::max(0.05f, radius);
     damage = std::max(0.0f, damage);
     knockbackStrength = std::max(0.0f, knockbackStrength);
