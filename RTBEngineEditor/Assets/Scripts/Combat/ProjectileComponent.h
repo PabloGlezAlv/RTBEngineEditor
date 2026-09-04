@@ -108,7 +108,7 @@ private:
     void UpdateFlightTrail(const RTBEngine::Math::Vector3& position);
     void ReleaseTrailForFadeout();
     void SpawnImpactParticles();
-    RTBEngine::Physics::PhysicsWorld* ResolvePhysicsWorld() const;
+    RTBEngine::Physics::PhysicsWorld* ResolvePhysicsWorld();
     HealthComponent* ResolveHitHealth(RTBEngine::Scene::GameObject* hitObject) const;
     bool HasAlreadyHit(HealthComponent* target) const;
     bool HandleSweepHit(const RTBEngine::Math::Vector3& previousPosition,

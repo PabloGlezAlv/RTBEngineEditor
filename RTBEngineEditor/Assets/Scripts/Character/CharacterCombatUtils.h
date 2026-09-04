@@ -12,6 +12,7 @@ class HealthComponent;
 namespace RTBEngine {
     namespace Scene {
         class GameObject;
+        class RigidBodyComponent;
     }
 
     namespace Physics {
@@ -23,6 +24,14 @@ namespace CharacterCombatUtils {
 
     bool HasPlanarDirection(const RTBEngine::Math::Vector3& value);
     RTBEngine::Math::Vector3 NormalizePlanarDirection(RTBEngine::Math::Vector3 direction);
+
+    struct CombatTarget {
+        RTBEngine::Scene::GameObject* root = nullptr;
+        HealthComponent* health = nullptr;
+        CharacterBase* character = nullptr;
+    };
+
+    CombatTarget ResolveCombatTarget(RTBEngine::Scene::GameObject* gameObject);
 
     int ResolveCharacterTeam(RTBEngine::Scene::GameObject* gameObject);
 
@@ -74,10 +83,19 @@ namespace CharacterCombatUtils {
     std::vector<HostileOverlapHit> OverlapHostileTargets(const HostileOverlapQuery& query);
     std::vector<HostileOverlapHit> OverlapHostileTargetsInSphere(const HostileSphereOverlapQuery& query);
 
-    // Sets the actor root transform and syncs the rigidbody at collider center (matches PhysicsSystem).
+    RTBEngine::Math::Vector3 ResolveColliderCenterOffset(RTBEngine::Scene::GameObject* actor);
+
+    struct ActorPhysicsPose {
+        RTBEngine::Scene::RigidBodyComponent* rigidBodyComponent = nullptr;
+        RTBEngine::Math::Vector3 colliderCenterOffset = RTBEngine::Math::Vector3::Zero();
+    };
+
+    ActorPhysicsPose ResolveActorPhysicsPose(RTBEngine::Scene::GameObject* actor);
+
     void SetActorWorldPosition(
         RTBEngine::Scene::GameObject* actor,
         const RTBEngine::Math::Vector3& position,
-        const RTBEngine::Math::Quaternion& rotation);
+        const RTBEngine::Math::Quaternion& rotation,
+        const ActorPhysicsPose* cachedPose = nullptr);
 
 }

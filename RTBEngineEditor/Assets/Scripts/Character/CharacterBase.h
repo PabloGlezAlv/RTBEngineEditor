@@ -33,6 +33,10 @@ public:
     int GetTeam() const { return GetCharacterTeam(); }
     HealthComponent* GetHealth() const { return PeekHealthSlot(); }
     bool IsCharacterDead() const;
+    bool HasSimulationAuthority() const;
+    bool IsLocallyControlled() const;
+    bool HasLocalGameplayAuthority() const;
+    RTBEngine::Scene::NetworkIdentity* GetNetworkIdentity() const { return cachedNetworkIdentity; }
 
     /// StunReceiver is added on demand by ApplyStunTo, so it announces itself here
     /// instead of being polled every frame.
@@ -40,13 +44,9 @@ public:
 
 protected:
     void CacheCharacterBaseReferences();
-    RTBEngine::Scene::NetworkIdentity* GetNetworkIdentity() const { return cachedNetworkIdentity; }
     void ValidateCharacterHealth();
     void RebindCharacterDeathSubscription();
     void UnsubscribeCharacterDeath();
-    bool HasSimulationAuthority() const;
-    bool IsLocallyControlled() const;
-    bool HasLocalGameplayAuthority() const;
     bool IsStunned() const;
 
     virtual HealthComponent*& AccessHealthSlot() = 0;

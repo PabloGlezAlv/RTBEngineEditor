@@ -1,5 +1,6 @@
 #include "EnemyTargetTracker.h"
 
+#include "CharacterCombatUtils.h"
 #include "EnemyMeleeAIShared.h"
 
 #include <RTBEngine/Scene/GameObject.h>
@@ -40,15 +41,12 @@ bool EnemyTargetTracker::IsTargetAlive(const RTBEngine::Scene::GameObject* reque
 
 HealthComponent* EnemyTargetTracker::ResolveTargetHealth() const
 {
-    if (!targetObject) {
-        return nullptr;
-    }
+    return cachedTargetHealth;
+}
 
-    if (HealthComponent* targetHealth = targetObject->GetComponent<HealthComponent>()) {
-        return targetHealth;
-    }
-
-    return targetObject->GetComponentInChildren<HealthComponent>();
+void EnemyTargetTracker::CacheTargetHealth()
+{
+    cachedTargetHealth = CharacterCombatUtils::ResolveCombatTarget(targetObject).health;
 }
 
 float EnemyTargetTracker::GetPlanarDistanceTo(const RTBEngine::Scene::GameObject* requester) const
@@ -98,6 +96,7 @@ bool EnemyTargetTracker::IsWithinTargetHierarchy(const RTBEngine::Scene::GameObj
 void EnemyTargetTracker::SetTarget(RTBEngine::Scene::GameObject* target)
 {
     targetObject = (target != owner) ? target : nullptr;
+    CacheTargetHealth();
 }
 
 void EnemyTargetTracker::SanitizeTarget()
@@ -105,4 +104,6 @@ void EnemyTargetTracker::SanitizeTarget()
     if (targetObject == owner) {
         targetObject = nullptr;
     }
+
+    CacheTargetHealth();
 }

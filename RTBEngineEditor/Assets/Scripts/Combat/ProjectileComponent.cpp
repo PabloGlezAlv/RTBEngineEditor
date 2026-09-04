@@ -1,6 +1,7 @@
 #include "ProjectileComponent.h"
 
 #include "CharacterBase.h"
+#include "CharacterCombatUtils.h"
 #include "CombatAuthority.h"
 #include "FloatingDamageNumberSpawner.h"
 #include "HitFlashComponent.h"
@@ -81,21 +82,6 @@ namespace {
         return false;
     }
 
-    int ResolveCharacterTeam(RTBEngine::Scene::GameObject* gameObject)
-    {
-        if (!gameObject) {
-            return static_cast<int>(CharacterTeam::Neutral);
-        }
-
-        for (RTBEngine::Scene::GameObject* current = gameObject; current; current = current->GetParent()) {
-            if (auto* character = current->GetComponent<CharacterBase>()) {
-                return character->GetTeam();
-            }
-        }
-
-        return static_cast<int>(CharacterTeam::Neutral);
-    }
-
     bool IsOtherPlayer(RTBEngine::Scene::GameObject* hitObject,
                        const RTBEngine::Scene::GameObject* instigator)
     {
@@ -107,17 +93,10 @@ namespace {
             return false;
         }
 
-        for (RTBEngine::Scene::GameObject* current = hitObject; current; current = current->GetParent()) {
-            if (current == instigator) {
-                return false;
-            }
-
-            if (auto* character = current->GetComponent<CharacterBase>()) {
-                return character->GetTeam() == static_cast<int>(CharacterTeam::Player);
-            }
-        }
-
-        return false;
+        const CharacterCombatUtils::CombatTarget target =
+            CharacterCombatUtils::ResolveCombatTarget(hitObject);
+        return target.character &&
+            target.character->GetTeam() == static_cast<int>(CharacterTeam::Player);
     }
 
     void TryTriggerHitFlash(RTBEngine::Scene::GameObject* hitObject)
@@ -280,7 +259,7 @@ void ProjectileComponent::BeginFlight(const ProjectileRuntimeContext& context)
     physicsWorld = context.physicsWorld;
     instigatorTeam = context.instigatorTeam;
     if (instigatorTeam == static_cast<int>(CharacterTeam::Neutral)) {
-        instigatorTeam = ResolveCharacterTeam(instigator);
+        instigatorTeam = CharacterCombatUtils::ResolveCharacterTeam(instigator);
     }
     applyDamage = context.applyDamage;
 
@@ -550,7 +529,7 @@ void ProjectileComponent::InitializeFromOwnerTransform()
     Initialize(config);
 }
 
-RTBEngine::Physics::PhysicsWorld* ProjectileComponent::ResolvePhysicsWorld() const
+RTBEngine::Physics::PhysicsWorld* ProjectileComponent::ResolvePhysicsWorld()
 {
     if (physicsWorld) {
         return physicsWorld;
@@ -569,11 +548,12 @@ RTBEngine::Physics::PhysicsWorld* ProjectileComponent::ResolvePhysicsWorld() con
         return rbComp->GetRigidBody()->GetPhysicsWorld();
     };
 
-    if (RTBEngine::Physics::PhysicsWorld* world = resolveFromObject(owner)) {
-        return world;
+    physicsWorld = resolveFromObject(owner);
+    if (!physicsWorld) {
+        physicsWorld = resolveFromObject(instigator);
     }
 
-    return resolveFromObject(instigator);
+    return physicsWorld;
 }
 
 HealthComponent* ProjectileComponent::ResolveHitHealth(RTBEngine::Scene::GameObject* hitObject) const
@@ -586,31 +566,26 @@ HealthComponent* ProjectileComponent::ResolveHitHealth(RTBEngine::Scene::GameObj
         return nullptr;
     }
 
-    for (RTBEngine::Scene::GameObject* current = hitObject; current; current = current->GetParent()) {
-        if (instigator && current == instigator) {
-            return nullptr;
-        }
-
-        HealthComponent* targetHealth = current->GetComponent<HealthComponent>();
-        if (!targetHealth) {
-            continue;
-        }
-
-        if (!targetHealth->IsDead()) {
-            const int targetTeam = ResolveCharacterTeam(current);
-            if (ignoreSameTeam &&
-                instigatorTeam != static_cast<int>(CharacterTeam::Neutral) &&
-                targetTeam == instigatorTeam) {
-                return nullptr;
-            }
-
-            return targetHealth;
-        }
-
+    const CharacterCombatUtils::CombatTarget target =
+        CharacterCombatUtils::ResolveCombatTarget(hitObject);
+    if (!target.health || target.health->IsDead()) {
         return nullptr;
     }
 
-    return nullptr;
+    if (instigator && target.root == instigator) {
+        return nullptr;
+    }
+
+    const int targetTeam = target.character
+        ? target.character->GetTeam()
+        : static_cast<int>(CharacterTeam::Neutral);
+    if (ignoreSameTeam &&
+        instigatorTeam != static_cast<int>(CharacterTeam::Neutral) &&
+        targetTeam == instigatorTeam) {
+        return nullptr;
+    }
+
+    return target.health;
 }
 
 bool ProjectileComponent::HasAlreadyHit(HealthComponent* target) const

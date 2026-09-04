@@ -2,6 +2,7 @@
 
 #include "HealthComponent.h"
 #include "IPlayerSpecialAttack.h"
+#include "CharacterCombatUtils.h"
 
 #include <RTBEngine/Math/Vectors/Vector3.h>
 #include <RTBEngine/Reflection/PropertyMacros.h>
@@ -75,7 +76,7 @@ private:
     RTBEngine::Math::Vector3 dashEnd = RTBEngine::Math::Vector3::Zero();
     RTBEngine::Math::Vector3 previousRootPosition = RTBEngine::Math::Vector3::Zero();
     ThirdPersonCharacterController* controller = nullptr;
-    RTBEngine::Scene::RigidBodyComponent* rigidBodyComponent = nullptr;
+    CharacterCombatUtils::ActorPhysicsPose physicsPose;
     std::vector<HealthComponent*> hitTargets;
 
     void ClampSettings();

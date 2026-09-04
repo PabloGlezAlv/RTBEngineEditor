@@ -55,7 +55,7 @@ void PlayerSpecialDashAttack::ClampSettings()
 void PlayerSpecialDashAttack::CacheGameplayReferences()
 {
     controller = owner->GetComponent<ThirdPersonCharacterController>();
-    rigidBodyComponent = owner->GetComponent<RTBEngine::Scene::RigidBodyComponent>();
+    physicsPose = CharacterCombatUtils::ResolveActorPhysicsPose(owner);
 }
 
 void PlayerSpecialDashAttack::ValidateRequiredReferences() const
@@ -85,7 +85,7 @@ void PlayerSpecialDashAttack::OnDestroy()
     FinishDash();
     HideAimPreview();
     controller = nullptr;
-    rigidBodyComponent = nullptr;
+    physicsPose = {};
     hitTargets.clear();
 }
 
@@ -213,11 +213,11 @@ void PlayerSpecialDashAttack::SnapRootToGround(RTBEngine::Math::Vector3& rootPos
 
 void PlayerSpecialDashAttack::ClearMotionVelocity() const
 {
-    if (!rigidBodyComponent || !rigidBodyComponent->HasRigidBody()) {
+    if (!physicsPose.rigidBodyComponent || !physicsPose.rigidBodyComponent->HasRigidBody()) {
         return;
     }
 
-    if (RTBEngine::Physics::RigidBody* rigidBody = rigidBodyComponent->GetRigidBody()) {
+    if (RTBEngine::Physics::RigidBody* rigidBody = physicsPose.rigidBodyComponent->GetRigidBody()) {
         // Zero XZ and Y: residual vertical velocity while moving caused post-dash falls.
         rigidBody->SetLinearVelocity(btVector3(0.0f, 0.0f, 0.0f));
         rigidBody->SetAngularVelocity(btVector3(0.0f, 0.0f, 0.0f));
@@ -276,7 +276,8 @@ void PlayerSpecialDashAttack::SetActorWorldPosition(const RTBEngine::Math::Vecto
     CharacterCombatUtils::SetActorWorldPosition(
         owner,
         position,
-        owner->GetTransform().GetRotation());
+        owner->GetTransform().GetRotation(),
+        &physicsPose);
 }
 
 void PlayerSpecialDashAttack::ApplyDashPose(float normalizedT)

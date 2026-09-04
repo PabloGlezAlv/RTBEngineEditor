@@ -72,7 +72,7 @@ void PlayerSpecialLeapAttack::ClampSettings()
 void PlayerSpecialLeapAttack::CacheGameplayReferences()
 {
     controller = owner->GetComponent<ThirdPersonCharacterController>();
-    rigidBodyComponent = owner->GetComponent<RTBEngine::Scene::RigidBodyComponent>();
+    physicsPose = CharacterCombatUtils::ResolveActorPhysicsPose(owner);
     ResolveLandingAuraPrefab();
 }
 
@@ -127,7 +127,7 @@ void PlayerSpecialLeapAttack::OnDestroy()
     FinishLeap();
     HideAimPreview();
     controller = nullptr;
-    rigidBodyComponent = nullptr;
+    physicsPose = {};
     landingAuraPrefab = nullptr;
 }
 
@@ -355,7 +355,8 @@ void PlayerSpecialLeapAttack::SetActorWorldPosition(const RTBEngine::Math::Vecto
     CharacterCombatUtils::SetActorWorldPosition(
         owner,
         position,
-        owner->GetTransform().GetRotation());
+        owner->GetTransform().GetRotation(),
+        &physicsPose);
 }
 
 void PlayerSpecialLeapAttack::ApplyLeapPose(float normalizedT)

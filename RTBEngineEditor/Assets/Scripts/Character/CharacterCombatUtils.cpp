@@ -28,20 +28,66 @@ namespace CharacterCombatUtils {
             return hit.normal.y > 0.65f;
         }
 
+        int ResolveTeam(const CombatTarget& target)
+        {
+            return target.character
+                ? target.character->GetTeam()
+                : static_cast<int>(CharacterTeam::Neutral);
+        }
+
         bool PassesTeamFilter(
             RTBEngine::Scene::GameObject* instigator,
-            RTBEngine::Scene::GameObject* targetRoot,
+            const CombatTarget& target,
+            int instigatorTeam,
             bool ignoreSameTeam)
         {
-            if (!instigator || !targetRoot || instigator == targetRoot) {
+            if (!instigator || !target.root || instigator == target.root) {
                 return false;
             }
 
-            const int instigatorTeam = ResolveCharacterTeam(instigator);
-            const int targetTeam = ResolveCharacterTeam(targetRoot);
+            const int targetTeam = ResolveTeam(target);
             return !(ignoreSameTeam &&
                 instigatorTeam != static_cast<int>(CharacterTeam::Neutral) &&
                 instigatorTeam == targetTeam);
+        }
+
+        void CollectHostileHits(
+            const std::vector<RTBEngine::Physics::OverlapSphereHit>& physicsHits,
+            RTBEngine::Scene::GameObject* instigator,
+            bool ignoreSameTeam,
+            std::vector<HostileOverlapHit>& results)
+        {
+            const CombatTarget instigatorTarget = ResolveCombatTarget(instigator);
+            const int instigatorTeam = ResolveTeam(instigatorTarget);
+
+            std::unordered_set<RTBEngine::Scene::GameObject*> seenTargets;
+            seenTargets.reserve(physicsHits.size());
+
+            for (const RTBEngine::Physics::OverlapSphereHit& physicsHit : physicsHits) {
+                if (!physicsHit.gameObject) {
+                    continue;
+                }
+
+                const CombatTarget target = ResolveCombatTarget(physicsHit.gameObject);
+                if (!target.health || target.health->IsDead()) {
+                    continue;
+                }
+
+                if (!PassesTeamFilter(instigator, target, instigatorTeam, ignoreSameTeam)) {
+                    continue;
+                }
+
+                if (!seenTargets.insert(target.root).second) {
+                    continue;
+                }
+
+                HostileOverlapHit hostileHit;
+                hostileHit.targetRoot = target.root;
+                hostileHit.health = target.health;
+                hostileHit.hitPoint = physicsHit.point;
+                hostileHit.hitNormal = physicsHit.normal;
+                results.push_back(hostileHit);
+            }
         }
     }
 
@@ -62,34 +108,63 @@ namespace CharacterCombatUtils {
         return direction;
     }
 
-    int ResolveCharacterTeam(RTBEngine::Scene::GameObject* gameObject)
+    CombatTarget ResolveCombatTarget(RTBEngine::Scene::GameObject* gameObject)
     {
+        CombatTarget result;
         if (!gameObject) {
-            return static_cast<int>(CharacterTeam::Neutral);
+            return result;
         }
 
+        HealthComponent* nearestHealth = nullptr;
+        RTBEngine::Scene::GameObject* nearestHealthRoot = nullptr;
+
         for (RTBEngine::Scene::GameObject* current = gameObject; current; current = current->GetParent()) {
-            if (auto* character = current->GetComponent<CharacterBase>()) {
-                return character->GetTeam();
+            if (CharacterBase* character = current->GetComponent<CharacterBase>()) {
+                result.root = current;
+                result.character = character;
+                result.health = character->GetHealth();
+                if (!result.health) {
+                    result.health = current->GetComponent<HealthComponent>();
+                }
+                if (!result.health) {
+                    result.health = nearestHealth;
+                }
+                return result;
+            }
+
+            if (!nearestHealth) {
+                if (HealthComponent* health = current->GetComponent<HealthComponent>()) {
+                    nearestHealth = health;
+                    nearestHealthRoot = current;
+                }
             }
         }
 
-        return static_cast<int>(CharacterTeam::Neutral);
+        if (nearestHealth) {
+            result.root = nearestHealthRoot;
+            result.health = nearestHealth;
+            return result;
+        }
+
+        if (HealthComponent* childHealth = gameObject->GetComponentInChildren<HealthComponent>()) {
+            result.root = childHealth->GetOwner();
+            result.health = childHealth;
+        }
+
+        return result;
+    }
+
+    int ResolveCharacterTeam(RTBEngine::Scene::GameObject* gameObject)
+    {
+        const CombatTarget target = ResolveCombatTarget(gameObject);
+        return target.character
+            ? target.character->GetTeam()
+            : static_cast<int>(CharacterTeam::Neutral);
     }
 
     RTBEngine::Scene::GameObject* ResolveHealthRoot(RTBEngine::Scene::GameObject* gameObject)
     {
-        if (!gameObject) {
-            return nullptr;
-        }
-
-        for (RTBEngine::Scene::GameObject* current = gameObject; current; current = current->GetParent()) {
-            if (current->GetComponent<HealthComponent>()) {
-                return current;
-            }
-        }
-
-        return nullptr;
+        return ResolveCombatTarget(gameObject).root;
     }
 
     RTBEngine::Physics::PhysicsWorld* ResolvePhysicsWorld(RTBEngine::Scene::GameObject* gameObject)
@@ -199,39 +274,7 @@ namespace CharacterCombatUtils {
                 query.layerMask,
                 physicsOptions);
 
-        std::unordered_set<RTBEngine::Scene::GameObject*> seenTargets;
-        seenTargets.reserve(physicsHits.size());
-
-        for (const RTBEngine::Physics::OverlapSphereHit& physicsHit : physicsHits) {
-            if (!physicsHit.gameObject) {
-                continue;
-            }
-
-            HealthComponent* targetHealth = physicsHit.gameObject->GetComponent<HealthComponent>();
-            if (!targetHealth) {
-                targetHealth = physicsHit.gameObject->GetComponentInChildren<HealthComponent>();
-            }
-            if (!targetHealth || targetHealth->IsDead()) {
-                continue;
-            }
-
-            RTBEngine::Scene::GameObject* targetRoot = ResolveHealthRoot(targetHealth->GetOwner());
-            if (!targetRoot || !PassesTeamFilter(query.instigator, targetRoot, query.ignoreSameTeam)) {
-                continue;
-            }
-
-            if (!seenTargets.insert(targetRoot).second) {
-                continue;
-            }
-
-            HostileOverlapHit hostileHit;
-            hostileHit.targetRoot = targetRoot;
-            hostileHit.health = targetHealth;
-            hostileHit.hitPoint = physicsHit.point;
-            hostileHit.hitNormal = physicsHit.normal;
-            results.push_back(hostileHit);
-        }
-
+        CollectHostileHits(physicsHits, query.instigator, query.ignoreSameTeam, results);
         return results;
     }
 
@@ -255,46 +298,44 @@ namespace CharacterCombatUtils {
                 query.layerMask,
                 physicsOptions);
 
-        std::unordered_set<RTBEngine::Scene::GameObject*> seenTargets;
-        seenTargets.reserve(physicsHits.size());
+        CollectHostileHits(physicsHits, query.instigator, query.ignoreSameTeam, results);
+        return results;
+    }
 
-        for (const RTBEngine::Physics::OverlapSphereHit& physicsHit : physicsHits) {
-            if (!physicsHit.gameObject) {
-                continue;
-            }
-
-            HealthComponent* targetHealth = physicsHit.gameObject->GetComponent<HealthComponent>();
-            if (!targetHealth) {
-                targetHealth = physicsHit.gameObject->GetComponentInChildren<HealthComponent>();
-            }
-            if (!targetHealth || targetHealth->IsDead()) {
-                continue;
-            }
-
-            RTBEngine::Scene::GameObject* targetRoot = ResolveHealthRoot(targetHealth->GetOwner());
-            if (!targetRoot || !PassesTeamFilter(query.instigator, targetRoot, query.ignoreSameTeam)) {
-                continue;
-            }
-
-            if (!seenTargets.insert(targetRoot).second) {
-                continue;
-            }
-
-            HostileOverlapHit hostileHit;
-            hostileHit.targetRoot = targetRoot;
-            hostileHit.health = targetHealth;
-            hostileHit.hitPoint = physicsHit.point;
-            hostileHit.hitNormal = physicsHit.normal;
-            results.push_back(hostileHit);
+    RTBEngine::Math::Vector3 ResolveColliderCenterOffset(RTBEngine::Scene::GameObject* actor)
+    {
+        if (!actor) {
+            return RTBEngine::Math::Vector3::Zero();
         }
 
-        return results;
+        if (auto* capsule = actor->GetComponent<RTBEngine::Scene::CapsuleColliderComponent>()) {
+            return capsule->GetCenterOffset();
+        }
+
+        if (auto* sphere = actor->GetComponent<RTBEngine::Scene::SphereColliderComponent>()) {
+            return sphere->GetCenterOffset();
+        }
+
+        return RTBEngine::Math::Vector3::Zero();
+    }
+
+    ActorPhysicsPose ResolveActorPhysicsPose(RTBEngine::Scene::GameObject* actor)
+    {
+        ActorPhysicsPose pose;
+        if (!actor) {
+            return pose;
+        }
+
+        pose.rigidBodyComponent = actor->GetComponent<RTBEngine::Scene::RigidBodyComponent>();
+        pose.colliderCenterOffset = ResolveColliderCenterOffset(actor);
+        return pose;
     }
 
     void SetActorWorldPosition(
         RTBEngine::Scene::GameObject* actor,
         const RTBEngine::Math::Vector3& position,
-        const RTBEngine::Math::Quaternion& rotation)
+        const RTBEngine::Math::Quaternion& rotation,
+        const ActorPhysicsPose* cachedPose)
     {
         if (!actor) {
             return;
@@ -303,27 +344,19 @@ namespace CharacterCombatUtils {
         actor->GetTransform().SetPosition(position);
         actor->GetTransform().SetRotation(rotation);
 
-        RTBEngine::Scene::RigidBodyComponent* rigidBodyComponent =
-            actor->GetComponent<RTBEngine::Scene::RigidBodyComponent>();
-        if (!rigidBodyComponent || !rigidBodyComponent->HasRigidBody()) {
+        const ActorPhysicsPose localPose = cachedPose ? *cachedPose : ResolveActorPhysicsPose(actor);
+        if (!localPose.rigidBodyComponent || !localPose.rigidBodyComponent->HasRigidBody()) {
             return;
         }
 
-        RTBEngine::Physics::RigidBody* rigidBody = rigidBodyComponent->GetRigidBody();
+        RTBEngine::Physics::RigidBody* rigidBody = localPose.rigidBodyComponent->GetRigidBody();
         if (!rigidBody) {
             return;
         }
 
-        RTBEngine::Math::Vector3 centerOffset = RTBEngine::Math::Vector3::Zero();
-        if (auto* capsule = actor->GetComponent<RTBEngine::Scene::CapsuleColliderComponent>()) {
-            centerOffset = capsule->GetCenterOffset();
-        } else if (auto* sphere = actor->GetComponent<RTBEngine::Scene::SphereColliderComponent>()) {
-            centerOffset = sphere->GetCenterOffset();
-        }
-
         rigidBody->SetLinearVelocity(btVector3(0.0f, 0.0f, 0.0f));
         rigidBody->SetAngularVelocity(btVector3(0.0f, 0.0f, 0.0f));
-        rigidBody->SetWorldTransform(position + (rotation * centerOffset), rotation);
+        rigidBody->SetWorldTransform(position + (rotation * localPose.colliderCenterOffset), rotation);
     }
 
 }

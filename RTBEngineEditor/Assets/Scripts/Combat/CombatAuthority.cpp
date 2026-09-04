@@ -1,15 +1,32 @@
 #include "CombatAuthority.h"
 
+#include "CharacterBase.h"
+
 #include <RTBEngine/Online/OnlineGameplayNet.h>
 #include <RTBEngine/Scene/GameObject.h>
 #include <RTBEngine/Scene/NetworkIdentity.h>
 
 namespace CombatAuthority {
+    namespace {
+        const RTBEngine::Scene::NetworkIdentity* ResolveNetworkIdentity(
+            RTBEngine::Scene::GameObject* gameObject)
+        {
+            if (const CharacterBase* character = gameObject->GetComponent<CharacterBase>()) {
+                return character->GetNetworkIdentity();
+            }
+
+            return gameObject->GetComponent<RTBEngine::Scene::NetworkIdentity>();
+        }
+    }
 
     bool IsLocallyControlled(RTBEngine::Scene::GameObject* gameObject)
     {
         if (!gameObject) {
             return false;
+        }
+
+        if (const CharacterBase* character = gameObject->GetComponent<CharacterBase>()) {
+            return character->IsLocallyControlled();
         }
 
         const RTBEngine::Scene::NetworkIdentity* identity =
@@ -27,17 +44,17 @@ namespace CombatAuthority {
             return false;
         }
 
+        if (const CharacterBase* character = instigator->GetComponent<CharacterBase>()) {
+            return character->HasSimulationAuthority();
+        }
+
         const RTBEngine::Scene::NetworkIdentity* identity =
             instigator->GetComponent<RTBEngine::Scene::NetworkIdentity>();
         if (!identity) {
             return true;
         }
 
-        if (RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby()) {
-            return identity->IsSimulatedByHost();
-        }
-
-        return true;
+        return identity->IsSimulatedByHost();
     }
 
     bool CanApplyDamage(RTBEngine::Scene::GameObject* instigator)
@@ -61,8 +78,7 @@ namespace CombatAuthority {
             return false;
         }
 
-        const RTBEngine::Scene::NetworkIdentity* identity =
-            instigator->GetComponent<RTBEngine::Scene::NetworkIdentity>();
+        const RTBEngine::Scene::NetworkIdentity* identity = ResolveNetworkIdentity(instigator);
         return identity && identity->networkPlayerSlot >= 0;
     }
 

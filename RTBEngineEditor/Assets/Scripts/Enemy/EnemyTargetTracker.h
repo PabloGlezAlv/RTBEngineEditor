@@ -37,4 +37,7 @@ public:
 
 private:
     void SanitizeTarget();
+    void CacheTargetHealth();
+
+    HealthComponent* cachedTargetHealth = nullptr;
 };
