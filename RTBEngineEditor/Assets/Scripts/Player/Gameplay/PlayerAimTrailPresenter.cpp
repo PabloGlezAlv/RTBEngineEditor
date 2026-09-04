@@ -20,6 +20,12 @@ void PlayerAimTrailPresenter::Bind(
     wallClipRadius = std::max(0.05f, clipRadius);
 }
 
+void PlayerAimTrailPresenter::CacheOwner(RTBEngine::Scene::GameObject* owner)
+{
+    colliderBody = CharacterCombatOrigins::ResolveColliderBody(owner);
+    physicsWorld = CharacterCombatUtils::ResolvePhysicsWorld(owner);
+}
+
 void PlayerAimTrailPresenter::Hide() const
 {
     if (!trail) {
@@ -51,7 +57,7 @@ RTBEngine::Math::Vector3 PlayerAimTrailPresenter::ResolveVisualOrigin(
         return RTBEngine::Math::Vector3::Zero();
     }
 
-    RTBEngine::Math::Vector3 origin = CharacterCombatOrigins::GetFeetWorld(owner);
+    RTBEngine::Math::Vector3 origin = CharacterCombatOrigins::GetFeetWorld(owner, colliderBody);
     origin = CharacterCombatOrigins::ApplyPlanarDirectionOffset(
         origin,
         attackDirection,
@@ -68,7 +74,7 @@ RTBEngine::Math::Vector3 PlayerAimTrailPresenter::ResolveCombatOrigin(
         return RTBEngine::Math::Vector3::Zero();
     }
 
-    RTBEngine::Math::Vector3 origin = CharacterCombatOrigins::GetCapsuleCenterWorld(owner);
+    RTBEngine::Math::Vector3 origin = CharacterCombatOrigins::GetCapsuleCenterWorld(owner, colliderBody);
     return CharacterCombatOrigins::ApplyPlanarDirectionOffset(
         origin,
         attackDirection,
@@ -84,14 +90,15 @@ float PlayerAimTrailPresenter::ResolveClippedLength(
         return 0.0f;
     }
 
-    RTBEngine::Physics::PhysicsWorld* physicsWorld =
-        CharacterCombatUtils::ResolvePhysicsWorld(owner);
-    if (!physicsWorld) {
+    RTBEngine::Physics::PhysicsWorld* world = physicsWorld
+        ? physicsWorld
+        : CharacterCombatUtils::ResolvePhysicsWorld(owner);
+    if (!world) {
         return maxLength;
     }
 
     CharacterCombatUtils::PlanarEnvironmentClipQuery clipQuery;
-    clipQuery.physicsWorld = physicsWorld;
+    clipQuery.physicsWorld = world;
     clipQuery.instigator = owner;
     clipQuery.origin = ResolveCombatOrigin(owner, attackDirection);
     clipQuery.direction = attackDirection;

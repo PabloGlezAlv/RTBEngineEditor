@@ -1,6 +1,7 @@
 #pragma once
 
 #include "IPlayerSpecialAttack.h"
+#include "CharacterCombatOrigins.h"
 
 #include <RTBEngine/Math/Vectors/Vector3.h>
 #include <RTBEngine/Reflection/PropertyMacros.h>
@@ -103,6 +104,7 @@ private:
     RTBEngine::Math::Vector3 aimDirection = RTBEngine::Math::Vector3::Zero();
     RTBEngine::Math::Vector3 rainCenter = RTBEngine::Math::Vector3::Zero();
     ThirdPersonCharacterController* controller = nullptr;
+    CharacterCombatOrigins::ColliderBody colliderBody;
     RTBEngine::Scene::Prefab* arrowVisualPrefab = nullptr;
     RTBEngine::Scene::Prefab* impactAuraPrefab = nullptr;
     std::vector<FallingArrow> fallingArrows;

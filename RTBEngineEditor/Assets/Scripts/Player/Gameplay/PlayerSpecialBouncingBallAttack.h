@@ -1,6 +1,7 @@
 #pragma once
 
 #include "BouncingBallTrajectory.h"
+#include "CharacterCombatOrigins.h"
 #include "IPlayerSpecialAttack.h"
 
 #include <RTBEngine/Math/Vectors/Vector3.h>
@@ -87,6 +88,7 @@ private:
     bool previewActive = false;
     RTBEngine::Math::Vector3 aimDirection = RTBEngine::Math::Vector3::Zero();
     ThirdPersonCharacterController* controller = nullptr;
+    CharacterCombatOrigins::ColliderBody colliderBody;
     RTBEngine::Scene::Prefab* ballPrefab = nullptr;
     BouncingBallProjectile* activeProjectile = nullptr;
     RTBEngine::Scene::GameObject* activeProjectileObject = nullptr;

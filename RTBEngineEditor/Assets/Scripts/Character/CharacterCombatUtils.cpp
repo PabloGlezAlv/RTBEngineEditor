@@ -6,11 +6,9 @@
 #include <RTBEngine/Physics/PhysicsLayerSettings.h>
 #include <RTBEngine/Physics/PhysicsWorld.h>
 #include <RTBEngine/Physics/RigidBody.h>
-#include <RTBEngine/Scene/CapsuleColliderComponent.h>
 #include <RTBEngine/Scene/GameObject.h>
 #include <RTBEngine/Scene/PhysicsWorldResolver.h>
 #include <RTBEngine/Scene/RigidBodyComponent.h>
-#include <RTBEngine/Scene/SphereColliderComponent.h>
 
 #include <algorithm>
 #include <cmath>
@@ -304,19 +302,7 @@ namespace CharacterCombatUtils {
 
     RTBEngine::Math::Vector3 ResolveColliderCenterOffset(RTBEngine::Scene::GameObject* actor)
     {
-        if (!actor) {
-            return RTBEngine::Math::Vector3::Zero();
-        }
-
-        if (auto* capsule = actor->GetComponent<RTBEngine::Scene::CapsuleColliderComponent>()) {
-            return capsule->GetCenterOffset();
-        }
-
-        if (auto* sphere = actor->GetComponent<RTBEngine::Scene::SphereColliderComponent>()) {
-            return sphere->GetCenterOffset();
-        }
-
-        return RTBEngine::Math::Vector3::Zero();
+        return CharacterCombatOrigins::ResolveColliderBody(actor).centerOffset;
     }
 
     ActorPhysicsPose ResolveActorPhysicsPose(RTBEngine::Scene::GameObject* actor)
@@ -327,7 +313,12 @@ namespace CharacterCombatUtils {
         }
 
         pose.rigidBodyComponent = actor->GetComponent<RTBEngine::Scene::RigidBodyComponent>();
-        pose.colliderCenterOffset = ResolveColliderCenterOffset(actor);
+        pose.collider = CharacterCombatOrigins::ResolveColliderBody(actor);
+        if (pose.rigidBodyComponent &&
+            pose.rigidBodyComponent->HasRigidBody() &&
+            pose.rigidBodyComponent->GetRigidBody()) {
+            pose.physicsWorld = pose.rigidBodyComponent->GetRigidBody()->GetPhysicsWorld();
+        }
         return pose;
     }
 
@@ -356,7 +347,9 @@ namespace CharacterCombatUtils {
 
         rigidBody->SetLinearVelocity(btVector3(0.0f, 0.0f, 0.0f));
         rigidBody->SetAngularVelocity(btVector3(0.0f, 0.0f, 0.0f));
-        rigidBody->SetWorldTransform(position + (rotation * localPose.colliderCenterOffset), rotation);
+        rigidBody->SetWorldTransform(
+            position + (rotation * localPose.collider.centerOffset),
+            rotation);
     }
 
 }

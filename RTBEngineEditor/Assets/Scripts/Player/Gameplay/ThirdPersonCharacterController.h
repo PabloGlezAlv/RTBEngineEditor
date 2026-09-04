@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CharacterBase.h"
+#include "CharacterCombatOrigins.h"
 #include "HealthComponent.h"
 #include "ICharacterStatReceiver.h"
 #include "PlayerAimTrailPresenter.h"
@@ -209,11 +210,13 @@ private:
                                   float deltaTime,
                                   float turnSpeedDegrees = -1.0f);
     void ApplyExternalKnockbackVelocity(RTBEngine::Physics::RigidBody* rigidBody, float deltaTime);
+    void SyncDynamicBodyRotation(const RTBEngine::Math::Quaternion& rotation);
 
     IPlayerSpecialAttack* specialAttack = nullptr;
     PlayerSpecialAttackCharge* specialAttackCharge = nullptr;
     PlayerAmmoSystem* ammoSystem = nullptr;
     RTBEngine::Scene::RigidBodyComponent* rigidBodyComponent = nullptr;
+    CharacterCombatOrigins::ColliderBody colliderBody;
     RTBEngine::Scene::FreeLookCamera* freeLookCamera = nullptr;
     bool competingCameraDisabled = false;
     PlayerAimTrailPresenter aimTrailPresenter;

@@ -1,11 +1,17 @@
 #pragma once
 
+#include "CharacterCombatOrigins.h"
+
 #include <RTBEngine/Math/Vectors/Vector3.h>
 
 namespace RTBEngine {
     namespace Scene {
         class GameObject;
         class TrailRenderer;
+    }
+
+    namespace Physics {
+        class PhysicsWorld;
     }
 }
 
@@ -22,6 +28,7 @@ public:
         float trailForwardOffset,
         float trailHeightOffset,
         float clipRadius);
+    void CacheOwner(RTBEngine::Scene::GameObject* owner);
 
     void Hide() const;
     void ShowSegment(
@@ -38,4 +45,8 @@ public:
         RTBEngine::Scene::GameObject* owner,
         const RTBEngine::Math::Vector3& attackDirection,
         float maxLength) const;
+
+private:
+    CharacterCombatOrigins::ColliderBody colliderBody;
+    RTBEngine::Physics::PhysicsWorld* physicsWorld = nullptr;
 };

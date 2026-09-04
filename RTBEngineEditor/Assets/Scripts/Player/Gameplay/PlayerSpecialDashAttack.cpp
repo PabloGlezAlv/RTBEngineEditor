@@ -154,9 +154,11 @@ bool PlayerSpecialDashAttack::ResolveDashEndpoints(
 
     float distance = maxRange * strength;
     CharacterCombatUtils::PlanarEnvironmentClipQuery clipQuery;
-    clipQuery.physicsWorld = CharacterCombatUtils::ResolvePhysicsWorld(owner);
+    clipQuery.physicsWorld = physicsPose.physicsWorld
+        ? physicsPose.physicsWorld
+        : CharacterCombatUtils::ResolvePhysicsWorld(owner);
     clipQuery.instigator = owner;
-    clipQuery.origin = CharacterCombatOrigins::GetCapsuleCenterWorld(owner);
+    clipQuery.origin = CharacterCombatOrigins::GetCapsuleCenterWorld(owner, physicsPose.collider);
     clipQuery.direction = planar;
     clipQuery.maxLength = distance;
     clipQuery.castRadius = castRadius;
@@ -170,14 +172,16 @@ bool PlayerSpecialDashAttack::ResolveDashEndpoints(
 
 void PlayerSpecialDashAttack::SnapRootToGround(RTBEngine::Math::Vector3& rootPosition) const
 {
-    RTBEngine::Physics::PhysicsWorld* physicsWorld =
-        CharacterCombatUtils::ResolvePhysicsWorld(owner);
+    RTBEngine::Physics::PhysicsWorld* physicsWorld = physicsPose.physicsWorld
+        ? physicsPose.physicsWorld
+        : CharacterCombatUtils::ResolvePhysicsWorld(owner);
     if (!physicsWorld) {
         return;
     }
 
     const RTBEngine::Math::Vector3 currentRoot = owner->GetWorldPosition();
-    const RTBEngine::Math::Vector3 currentFeet = CharacterCombatOrigins::GetFeetWorld(owner);
+    const RTBEngine::Math::Vector3 currentFeet =
+        CharacterCombatOrigins::GetFeetWorld(owner, physicsPose.collider);
     const float rootAboveFeet = currentRoot.y - currentFeet.y;
 
     constexpr float kProbeUp = 4.0f;

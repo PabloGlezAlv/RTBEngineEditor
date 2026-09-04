@@ -84,6 +84,7 @@ void PlayerSpecialBouncingBallAttack::ResolveBallPrefab()
 void PlayerSpecialBouncingBallAttack::CacheGameplayReferences()
 {
     controller = owner->GetComponent<ThirdPersonCharacterController>();
+    colliderBody = CharacterCombatOrigins::ResolveColliderBody(owner);
     ResolveBallPrefab();
 }
 
@@ -242,7 +243,7 @@ void PlayerSpecialBouncingBallAttack::ShowBounceCirclesPreview(
 RTBEngine::Math::Vector3 PlayerSpecialBouncingBallAttack::GetLaunchOrigin(
     const RTBEngine::Math::Vector3& direction) const
 {
-    RTBEngine::Math::Vector3 origin = CharacterCombatOrigins::GetFeetWorld(owner);
+    RTBEngine::Math::Vector3 origin = CharacterCombatOrigins::GetFeetWorld(owner, colliderBody);
     origin.y += launchHeightOffset;
     origin = CharacterCombatOrigins::ApplyPlanarDirectionOffset(
         origin,

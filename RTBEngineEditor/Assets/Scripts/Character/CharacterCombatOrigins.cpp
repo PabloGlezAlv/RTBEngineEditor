@@ -1,5 +1,6 @@
 #include "CharacterCombatOrigins.h"
 
+#include <RTBEngine/Math/Quaternions/Quaternion.h>
 #include <RTBEngine/Scene/CapsuleColliderComponent.h>
 #include <RTBEngine/Scene/GameObject.h>
 #include <RTBEngine/Scene/SphereColliderComponent.h>
@@ -16,48 +17,73 @@ namespace CharacterCombatOrigins {
         }
     }
 
-    RTBEngine::Math::Vector3 GetCapsuleCenterWorld(RTBEngine::Scene::GameObject* object)
+    ColliderBody ResolveColliderBody(RTBEngine::Scene::GameObject* object)
+    {
+        ColliderBody body;
+        if (!object) {
+            return body;
+        }
+
+        if (auto* capsule = object->GetComponent<RTBEngine::Scene::CapsuleColliderComponent>()) {
+            body.shape = ColliderBody::Shape::Capsule;
+            body.centerOffset = capsule->GetCenterOffset();
+            body.verticalExtent = capsule->GetHeight() * 0.5f;
+            return body;
+        }
+
+        if (auto* sphere = object->GetComponent<RTBEngine::Scene::SphereColliderComponent>()) {
+            body.shape = ColliderBody::Shape::Sphere;
+            body.centerOffset = sphere->GetCenterOffset();
+            body.verticalExtent = sphere->GetRadius();
+            return body;
+        }
+
+        return body;
+    }
+
+    RTBEngine::Math::Vector3 GetCapsuleCenterWorld(
+        RTBEngine::Scene::GameObject* object,
+        const ColliderBody& body)
     {
         if (!object) {
             return RTBEngine::Math::Vector3::Zero();
         }
 
-        if (auto* capsule = object->GetComponent<RTBEngine::Scene::CapsuleColliderComponent>()) {
-            return object->GetWorldPosition() +
-                object->GetWorldRotation() * capsule->GetCenterOffset();
+        if (body.shape == ColliderBody::Shape::None) {
+            return object->GetWorldPosition();
         }
 
-        if (auto* sphere = object->GetComponent<RTBEngine::Scene::SphereColliderComponent>()) {
-            return object->GetWorldPosition() +
-                object->GetWorldRotation() * sphere->GetCenterOffset();
+        return object->GetWorldPosition() +
+            object->GetWorldRotation() * body.centerOffset;
+    }
+
+    RTBEngine::Math::Vector3 GetCapsuleCenterWorld(RTBEngine::Scene::GameObject* object)
+    {
+        return GetCapsuleCenterWorld(object, ResolveColliderBody(object));
+    }
+
+    RTBEngine::Math::Vector3 GetFeetWorld(
+        RTBEngine::Scene::GameObject* object,
+        const ColliderBody& body)
+    {
+        if (!object) {
+            return RTBEngine::Math::Vector3::Zero();
         }
 
-        return object->GetWorldPosition();
+        if (body.shape == ColliderBody::Shape::None) {
+            return object->GetWorldPosition();
+        }
+
+        const RTBEngine::Math::Quaternion rotation = object->GetWorldRotation();
+        const RTBEngine::Math::Vector3 centerWorld =
+            object->GetWorldPosition() + rotation * body.centerOffset;
+        const RTBEngine::Math::Vector3 down = rotation * RTBEngine::Math::Vector3(0.0f, -1.0f, 0.0f);
+        return centerWorld + down * body.verticalExtent;
     }
 
     RTBEngine::Math::Vector3 GetFeetWorld(RTBEngine::Scene::GameObject* object)
     {
-        if (!object) {
-            return RTBEngine::Math::Vector3::Zero();
-        }
-
-        if (auto* capsule = object->GetComponent<RTBEngine::Scene::CapsuleColliderComponent>()) {
-            const RTBEngine::Math::Quaternion rotation = object->GetWorldRotation();
-            const RTBEngine::Math::Vector3 centerWorld =
-                object->GetWorldPosition() + rotation * capsule->GetCenterOffset();
-            const RTBEngine::Math::Vector3 down = rotation * RTBEngine::Math::Vector3(0.0f, -1.0f, 0.0f);
-            return centerWorld + down * (capsule->GetHeight() * 0.5f);
-        }
-
-        if (auto* sphere = object->GetComponent<RTBEngine::Scene::SphereColliderComponent>()) {
-            const RTBEngine::Math::Quaternion rotation = object->GetWorldRotation();
-            const RTBEngine::Math::Vector3 centerWorld =
-                object->GetWorldPosition() + rotation * sphere->GetCenterOffset();
-            const RTBEngine::Math::Vector3 down = rotation * RTBEngine::Math::Vector3(0.0f, -1.0f, 0.0f);
-            return centerWorld + down * (sphere->GetRadius());
-        }
-
-        return object->GetWorldPosition();
+        return GetFeetWorld(object, ResolveColliderBody(object));
     }
 
     RTBEngine::Math::Vector3 ApplyPlanarDirectionOffset(

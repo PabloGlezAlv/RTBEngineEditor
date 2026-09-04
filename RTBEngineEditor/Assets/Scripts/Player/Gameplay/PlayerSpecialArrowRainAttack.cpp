@@ -99,6 +99,7 @@ void PlayerSpecialArrowRainAttack::ResolvePrefabs()
 void PlayerSpecialArrowRainAttack::CacheGameplayReferences()
 {
     controller = owner->GetComponent<ThirdPersonCharacterController>();
+    colliderBody = CharacterCombatOrigins::ResolveColliderBody(owner);
     ResolvePrefabs();
 }
 
@@ -235,7 +236,7 @@ bool PlayerSpecialArrowRainAttack::ResolveRainCenter(
         CharacterCombatUtils::NormalizePlanarDirection(direction);
     const float strength = std::clamp(aimStrength, 0.0f, 1.0f);
 
-    RTBEngine::Math::Vector3 origin = CharacterCombatOrigins::GetFeetWorld(owner);
+    RTBEngine::Math::Vector3 origin = CharacterCombatOrigins::GetFeetWorld(owner, colliderBody);
     origin.y += trailHeightOffset;
 
     float distance = maxRange * strength;

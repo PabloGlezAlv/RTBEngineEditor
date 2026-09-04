@@ -21,13 +21,11 @@
 #include <RTBEngine/Animation/AnimationClip.h>
 #include <RTBEngine/Core/Logger.h>
 #include <RTBEngine/Scene/CameraComponent.h>
-#include <RTBEngine/Scene/CapsuleColliderComponent.h>
 #include <RTBEngine/Scene/FreeLookCamera.h>
 #include <RTBEngine/Scene/GameObject.h>
 #include <RTBEngine/Scene/RigidBodyComponent.h>
 #include <RTBEngine/Scene/Scene.h>
 #include <RTBEngine/Scene/SceneManager.h>
-#include <RTBEngine/Scene/SphereColliderComponent.h>
 #include <RTBEngine/Scene/TrailRenderer.h>
 #include <RTBEngine/Scene/OcclusionTarget.h>
 #include <RTBEngine/Input/InputManager.h>
@@ -630,6 +628,7 @@ void ThirdPersonCharacterController::CacheGameplayReferences()
     specialAttackCharge = owner->GetComponent<PlayerSpecialAttackCharge>();
     ammoSystem = owner->GetComponent<PlayerAmmoSystem>();
     rigidBodyComponent = owner->GetComponent<RTBEngine::Scene::RigidBodyComponent>();
+    colliderBody = CharacterCombatOrigins::ResolveColliderBody(owner);
     CacheCharacterBaseReferences();
     freeLookCamera = nullptr;
     competingCameraDisabled = false;
@@ -643,6 +642,7 @@ void ThirdPersonCharacterController::CacheGameplayReferences()
         aimTrailForwardOffset,
         aimTrailHeightOffset,
         aimTrailWallClipRadius);
+    aimTrailPresenter.CacheOwner(owner);
 }
 
 void ThirdPersonCharacterController::ValidateRequiredReferences()
@@ -1041,20 +1041,7 @@ void ThirdPersonCharacterController::UpdateAimFacingToward(
         RTBEngine::Math::Quaternion::FromEulerAngles(0.0f, nextYaw * kDegToRad, 0.0f);
 
     owner->GetTransform().SetRotation(nextRotation);
-
-    auto* rbComp = rigidBodyComponent;
-    RTBEngine::Physics::RigidBody* rigidBody =
-        (rbComp && rbComp->HasRigidBody()) ? rbComp->GetRigidBody() : nullptr;
-    if (rigidBody && rigidBody->GetType() == RTBEngine::Physics::RigidBodyType::Dynamic) {
-        RTBEngine::Math::Vector3 centerOffset = RTBEngine::Math::Vector3::Zero();
-        if (auto* capsule = owner->GetComponent<RTBEngine::Scene::CapsuleColliderComponent>()) {
-            centerOffset = capsule->GetCenterOffset();
-        } else if (auto* sphere = owner->GetComponent<RTBEngine::Scene::SphereColliderComponent>()) {
-            centerOffset = sphere->GetCenterOffset();
-        }
-        rigidBody->SetWorldTransform(owner->GetWorldPosition() + (nextRotation * centerOffset), nextRotation);
-        rigidBody->SetAngularVelocity(btVector3(0.0f, 0.0f, 0.0f));
-    }
+    SyncDynamicBodyRotation(nextRotation);
 }
 
 void ThirdPersonCharacterController::UpdateAimingMovement(float deltaTime)
@@ -1593,6 +1580,23 @@ void ThirdPersonCharacterController::ApplyExternalKnockbackVelocity(
     externalPlanarVelocity *= (speed - decayAmount) / speed;
 }
 
+void ThirdPersonCharacterController::SyncDynamicBodyRotation(
+    const RTBEngine::Math::Quaternion& rotation)
+{
+    RTBEngine::Physics::RigidBody* rigidBody =
+        (rigidBodyComponent && rigidBodyComponent->HasRigidBody())
+            ? rigidBodyComponent->GetRigidBody()
+            : nullptr;
+    if (!rigidBody || rigidBody->GetType() != RTBEngine::Physics::RigidBodyType::Dynamic) {
+        return;
+    }
+
+    rigidBody->SetWorldTransform(
+        owner->GetWorldPosition() + (rotation * colliderBody.centerOffset),
+        rotation);
+    rigidBody->SetAngularVelocity(btVector3(0.0f, 0.0f, 0.0f));
+}
+
 void ThirdPersonCharacterController::FaceAttackDirection(const RTBEngine::Math::Vector3& attackDirection)
 {
     if (!HasMovementInput(attackDirection)) {
@@ -1608,20 +1612,7 @@ void ThirdPersonCharacterController::FaceAttackDirection(const RTBEngine::Math::
         RTBEngine::Math::Quaternion::FromEulerAngles(0.0f, targetYaw * kDegToRad, 0.0f);
 
     owner->GetTransform().SetRotation(targetRotation);
-
-    auto* rbComp = rigidBodyComponent;
-    RTBEngine::Physics::RigidBody* rigidBody =
-        (rbComp && rbComp->HasRigidBody()) ? rbComp->GetRigidBody() : nullptr;
-    if (rigidBody && rigidBody->GetType() == RTBEngine::Physics::RigidBodyType::Dynamic) {
-        RTBEngine::Math::Vector3 centerOffset = RTBEngine::Math::Vector3::Zero();
-        if (auto* capsule = owner->GetComponent<RTBEngine::Scene::CapsuleColliderComponent>()) {
-            centerOffset = capsule->GetCenterOffset();
-        } else if (auto* sphere = owner->GetComponent<RTBEngine::Scene::SphereColliderComponent>()) {
-            centerOffset = sphere->GetCenterOffset();
-        }
-        rigidBody->SetWorldTransform(owner->GetWorldPosition() + (targetRotation * centerOffset), targetRotation);
-        rigidBody->SetAngularVelocity(btVector3(0.0f, 0.0f, 0.0f));
-    }
+    SyncDynamicBodyRotation(targetRotation);
 }
 
 void ThirdPersonCharacterController::StopPlanarMotion() const

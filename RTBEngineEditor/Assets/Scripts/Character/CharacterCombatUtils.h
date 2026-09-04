@@ -1,5 +1,7 @@
 #pragma once
 
+#include "CharacterCombatOrigins.h"
+
 #include <RTBEngine/Math/Quaternions/Quaternion.h>
 #include <RTBEngine/Math/Vectors/Vector3.h>
 
@@ -87,7 +89,8 @@ namespace CharacterCombatUtils {
 
     struct ActorPhysicsPose {
         RTBEngine::Scene::RigidBodyComponent* rigidBodyComponent = nullptr;
-        RTBEngine::Math::Vector3 colliderCenterOffset = RTBEngine::Math::Vector3::Zero();
+        CharacterCombatOrigins::ColliderBody collider;
+        RTBEngine::Physics::PhysicsWorld* physicsWorld = nullptr;
     };
 
     ActorPhysicsPose ResolveActorPhysicsPose(RTBEngine::Scene::GameObject* actor);

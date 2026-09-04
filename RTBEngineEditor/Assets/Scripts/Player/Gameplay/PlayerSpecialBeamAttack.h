@@ -2,6 +2,7 @@
 
 #include "IPlayerSpecialAttack.h"
 #include "PlayerSpecialBeamPresenter.h"
+#include "CharacterCombatOrigins.h"
 
 #include <RTBEngine/Math/Vectors/Vector3.h>
 #include <RTBEngine/Reflection/PropertyMacros.h>
@@ -83,6 +84,7 @@ public:
     float frameCurrentLength = 0.0f;
     RTBEngine::Math::Vector3 beamDirection = RTBEngine::Math::Vector3::Zero();
     ThirdPersonCharacterController* controller = nullptr;
+    CharacterCombatOrigins::ColliderBody colliderBody;
     PlayerSpecialBeamPresenter beamPresenter;
 
     void ClampSettings();

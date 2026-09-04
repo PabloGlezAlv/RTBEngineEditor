@@ -228,15 +228,16 @@ RTBEngine::Math::Vector3 PlayerSpecialLeapAttack::GetFeetOrigin(
     const RTBEngine::Math::Vector3& /*direction*/) const
 {
     // Fixed origin at feet: do not push forward or the aim length looks inconsistent.
-    RTBEngine::Math::Vector3 origin = CharacterCombatOrigins::GetFeetWorld(owner);
+    RTBEngine::Math::Vector3 origin = CharacterCombatOrigins::GetFeetWorld(owner, physicsPose.collider);
     origin.y += trailHeightOffset;
     return origin;
 }
 
 void PlayerSpecialLeapAttack::SnapLandingToGround(RTBEngine::Math::Vector3& feetPosition) const
 {
-    RTBEngine::Physics::PhysicsWorld* physicsWorld =
-        CharacterCombatUtils::ResolvePhysicsWorld(owner);
+    RTBEngine::Physics::PhysicsWorld* physicsWorld = physicsPose.physicsWorld
+        ? physicsPose.physicsWorld
+        : CharacterCombatUtils::ResolvePhysicsWorld(owner);
     if (!physicsWorld) {
         return;
     }
@@ -445,8 +446,9 @@ void PlayerSpecialLeapAttack::ApplyLandingImpact()
         return;
     }
 
-    RTBEngine::Physics::PhysicsWorld* physicsWorld =
-        CharacterCombatUtils::ResolvePhysicsWorld(owner);
+    RTBEngine::Physics::PhysicsWorld* physicsWorld = physicsPose.physicsWorld
+        ? physicsPose.physicsWorld
+        : CharacterCombatUtils::ResolvePhysicsWorld(owner);
     if (!physicsWorld) {
         return;
     }

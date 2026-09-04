@@ -56,6 +56,7 @@ void PlayerSpecialBeamAttack::ClampSettings()
 void PlayerSpecialBeamAttack::CacheGameplayReferences()
 {
     controller = owner->GetComponent<ThirdPersonCharacterController>();
+    colliderBody = CharacterCombatOrigins::ResolveColliderBody(owner);
     BindBeamPresenter();
 }
 
@@ -206,7 +207,7 @@ bool PlayerSpecialBeamAttack::TryActivate(
 RTBEngine::Math::Vector3 PlayerSpecialBeamAttack::GetBeamOrigin(
     const RTBEngine::Math::Vector3& direction) const
 {
-    RTBEngine::Math::Vector3 origin = CharacterCombatOrigins::GetFeetWorld(owner);
+    RTBEngine::Math::Vector3 origin = CharacterCombatOrigins::GetFeetWorld(owner, colliderBody);
     origin = CharacterCombatOrigins::ApplyPlanarDirectionOffset(
         origin,
         direction,
@@ -218,7 +219,7 @@ RTBEngine::Math::Vector3 PlayerSpecialBeamAttack::GetBeamOrigin(
 RTBEngine::Math::Vector3 PlayerSpecialBeamAttack::GetCombatOrigin(
     const RTBEngine::Math::Vector3& direction) const
 {
-    RTBEngine::Math::Vector3 origin = CharacterCombatOrigins::GetCapsuleCenterWorld(owner);
+    RTBEngine::Math::Vector3 origin = CharacterCombatOrigins::GetCapsuleCenterWorld(owner, colliderBody);
     origin = CharacterCombatOrigins::ApplyPlanarDirectionOffset(
         origin,
         direction,
