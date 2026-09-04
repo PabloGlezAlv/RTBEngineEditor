@@ -37,6 +37,9 @@ public:
     bool IsLocallyControlled() const;
     bool HasLocalGameplayAuthority() const;
     RTBEngine::Scene::NetworkIdentity* GetNetworkIdentity() const { return cachedNetworkIdentity; }
+    virtual void ApplyPlanarKnockback(
+        const RTBEngine::Math::Vector3& /*direction*/,
+        float /*strength*/) {}
 
     /// StunReceiver is added on demand by ApplyStunTo, so it announces itself here
     /// instead of being polled every frame.

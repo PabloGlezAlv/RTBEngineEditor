@@ -435,11 +435,6 @@ void PlayerSpecialArrowRainAttack::ApplyRainDamageTick()
         damageContext.hitDirection = aimDirection;
         damageContext.knockbackStrength = knockbackStrength;
         hit.health->TakeDamage(damagePerTick, damageContext);
-
-        if (ThirdPersonCharacterController* targetController =
-                hit.targetRoot->GetComponent<ThirdPersonCharacterController>()) {
-            targetController->AddPlanarKnockback(aimDirection, knockbackStrength);
-        }
     }
 }
 

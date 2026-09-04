@@ -2,7 +2,6 @@
 
 #include "CharacterCombatUtils.h"
 #include "CombatAuthority.h"
-#include "ThirdPersonCharacterController.h"
 
 #include <RTBEngine/Core/Logger.h>
 #include <RTBEngine/Math/Quaternions/Quaternion.h>
@@ -198,11 +197,6 @@ void BouncingBallProjectile::ApplyAreaDamage(
         damageContext.hitDirection = planarDir;
         damageContext.knockbackStrength = knockbackStrength;
         hit.health->TakeDamage(damage, damageContext);
-
-        if (ThirdPersonCharacterController* targetController =
-                hit.targetRoot->GetComponent<ThirdPersonCharacterController>()) {
-            targetController->AddPlanarKnockback(planarDir, knockbackStrength);
-        }
     }
 }
 

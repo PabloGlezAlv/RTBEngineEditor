@@ -1513,6 +1513,13 @@ int ThirdPersonCharacterController::GetCharacterTeam() const
     return team;
 }
 
+void ThirdPersonCharacterController::ApplyPlanarKnockback(
+    const RTBEngine::Math::Vector3& direction,
+    float strength)
+{
+    AddPlanarKnockback(direction, strength);
+}
+
 void ThirdPersonCharacterController::AddPlanarKnockback(
     const RTBEngine::Math::Vector3& direction,
     float strength)

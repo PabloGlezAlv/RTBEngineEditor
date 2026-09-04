@@ -349,11 +349,6 @@ void PlayerSpecialDashAttack::ApplyDamageAlongSegment(
         damageContext.hitDirection = dashDirection;
         damageContext.knockbackStrength = knockbackStrength;
         hit.health->TakeDamage(damage, damageContext);
-
-        if (ThirdPersonCharacterController* targetController =
-                hit.targetRoot->GetComponent<ThirdPersonCharacterController>()) {
-            targetController->AddPlanarKnockback(dashDirection, knockbackStrength);
-        }
     }
 }
 

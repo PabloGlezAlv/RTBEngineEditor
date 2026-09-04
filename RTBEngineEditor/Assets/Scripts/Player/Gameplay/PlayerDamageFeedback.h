@@ -12,8 +12,11 @@
 namespace RTBEngine {
     namespace Scene {
         class AudioSourceComponent;
+        class RigidBodyComponent;
     }
 }
+
+class CharacterBase;
 
 class PlayerDamageFeedback : public RTBEngine::Scene::Component
 {
@@ -33,6 +36,8 @@ public:
     void OnDestroy() override;
 
 private:
+    CharacterBase* character = nullptr;
+    RTBEngine::Scene::RigidBodyComponent* rigidBodyComponent = nullptr;
     RTBEngine::Scene::AudioSourceComponent* hurtAudio = nullptr;
     RTBEngine::Core::EventSubscription damageSubscription;
     float soundCooldownRemaining = 0.0f;

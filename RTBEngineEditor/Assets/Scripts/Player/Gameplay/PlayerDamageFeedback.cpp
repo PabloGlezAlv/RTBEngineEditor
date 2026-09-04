@@ -1,12 +1,11 @@
 #include "PlayerDamageFeedback.h"
 
-#include "ThirdPersonCharacterController.h"
+#include "CharacterBase.h"
 
 #include <RTBEngine/Audio/AudioClip.h>
 #include <RTBEngine/Core/ResourceManager.h>
 #include <RTBEngine/Scene/AudioSourceComponent.h>
 #include <RTBEngine/Scene/GameObject.h>
-#include <RTBEngine/Scene/NetworkIdentity.h>
 #include <RTBEngine/Scene/RigidBodyComponent.h>
 #include <RTBEngine/Physics/RigidBody.h>
 
@@ -32,7 +31,12 @@ RTB_END_REGISTER(PlayerDamageFeedback)
 
 void PlayerDamageFeedback::OnStart()
 {
-    if (!health && owner) {
+    character = owner->GetComponent<CharacterBase>();
+    rigidBodyComponent = owner->GetComponent<RTBEngine::Scene::RigidBodyComponent>();
+    if (!health && character) {
+        health = character->GetHealth();
+    }
+    if (!health) {
         health = owner->GetComponent<HealthComponent>();
     }
 
@@ -54,12 +58,7 @@ void PlayerDamageFeedback::OnDestroy()
 
 bool PlayerDamageFeedback::IsLocallyControlled() const
 {
-    const RTBEngine::Scene::NetworkIdentity* identity = owner->GetComponent<RTBEngine::Scene::NetworkIdentity>();
-    if (!identity) {
-        return true;
-    }
-
-    return identity->IsLocallyControlled();
+    return !character || character->IsLocallyControlled();
 }
 
 void PlayerDamageFeedback::ResolveHurtAudio()
@@ -92,27 +91,19 @@ void PlayerDamageFeedback::UnbindDamageSubscription()
 
 void PlayerDamageFeedback::HandleDamageTaken(const HealthComponent::DamageTakenEvent& eventData)
 {
-    if (eventData.damage.amount <= 0.0f || !IsLocallyControlled()) {
+    if (eventData.damage.amount <= 0.0f) {
         return;
     }
 
     ApplyKnockback(eventData.damage);
-    PlayHurtSound();
+    if (IsLocallyControlled()) {
+        PlayHurtSound();
+    }
 }
 
 void PlayerDamageFeedback::ApplyKnockback(const HealthComponent::DamageContext& damage)
 {
     if (damage.knockbackStrength <= 0.0f) {
-        return;
-    }
-
-    auto* rigidBodyComponent = owner->GetComponent<RTBEngine::Scene::RigidBodyComponent>();
-    if (!rigidBodyComponent || !rigidBodyComponent->HasRigidBody()) {
-        return;
-    }
-
-    RTBEngine::Physics::RigidBody* rigidBody = rigidBodyComponent->GetRigidBody();
-    if (!rigidBody || rigidBody->GetType() != RTBEngine::Physics::RigidBodyType::Dynamic) {
         return;
     }
 
@@ -134,8 +125,21 @@ void PlayerDamageFeedback::ApplyKnockback(const HealthComponent::DamageContext& 
 
     planarDirection.Normalize();
 
-    if (auto* controller = owner->GetComponent<ThirdPersonCharacterController>()) {
-        controller->AddPlanarKnockback(planarDirection, damage.knockbackStrength);
+    if (character) {
+        if (!character->HasSimulationAuthority()) {
+            return;
+        }
+
+        character->ApplyPlanarKnockback(planarDirection, damage.knockbackStrength);
+        return;
+    }
+
+    if (!rigidBodyComponent || !rigidBodyComponent->HasRigidBody()) {
+        return;
+    }
+
+    RTBEngine::Physics::RigidBody* rigidBody = rigidBodyComponent->GetRigidBody();
+    if (!rigidBody || rigidBody->GetType() != RTBEngine::Physics::RigidBodyType::Dynamic) {
         return;
     }
 

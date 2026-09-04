@@ -481,11 +481,6 @@ void PlayerSpecialLeapAttack::ApplyLandingImpact()
         hit.health->TakeDamage(damage, damageContext);
 
         ApplyStunTo(hit.targetRoot, stunDuration);
-
-        if (ThirdPersonCharacterController* targetController =
-                hit.targetRoot->GetComponent<ThirdPersonCharacterController>()) {
-            targetController->AddPlanarKnockback(leapDirection, knockbackStrength);
-        }
     }
 }
 

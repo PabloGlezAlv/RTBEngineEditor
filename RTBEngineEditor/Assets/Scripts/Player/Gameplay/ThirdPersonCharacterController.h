@@ -60,6 +60,7 @@ public:
     void ForceDeathState();
     void ReviveFromDeath();
     void AddPlanarKnockback(const RTBEngine::Math::Vector3& direction, float strength);
+    void ApplyPlanarKnockback(const RTBEngine::Math::Vector3& direction, float strength) override;
     void PlayReplicatedAttackVisual(const RTBEngine::Math::Vector3& attackDirection) override;
     void ApplyCombatAnimationOverrides(const std::string& aimDrawFbx,
                                        const std::string& aimLoopFbx,

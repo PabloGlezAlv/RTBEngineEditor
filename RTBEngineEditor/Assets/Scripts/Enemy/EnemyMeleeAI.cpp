@@ -495,7 +495,7 @@ void EnemyMeleeAI::StartAttack()
 
     if (RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby() &&
         RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
-        if (RTBEngine::Scene::NetworkIdentity* identity = owner->GetComponent<RTBEngine::Scene::NetworkIdentity>()) {
+        if (RTBEngine::Scene::NetworkIdentity* identity = GetNetworkIdentity()) {
             if (identity->HasNetworkId()) {
                 ++networkAttackSequence;
                 GameNet::EnemyAttackSnapshot attackSnapshot;
@@ -690,7 +690,7 @@ void EnemyMeleeAI::HandleDeath(const HealthComponent::DeathEvent& /*eventData*/)
 
     if (RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby() &&
         RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
-        if (RTBEngine::Scene::NetworkIdentity* identity = owner->GetComponent<RTBEngine::Scene::NetworkIdentity>()) {
+        if (RTBEngine::Scene::NetworkIdentity* identity = GetNetworkIdentity()) {
             if (identity->HasNetworkId()) {
                 GameNet::OnlineGameNetSubsystem::BroadcastEnemyDeath(identity->GetNetworkId());
             }
