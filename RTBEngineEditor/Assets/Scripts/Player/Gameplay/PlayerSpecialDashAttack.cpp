@@ -54,16 +54,12 @@ void PlayerSpecialDashAttack::ClampSettings()
 
 void PlayerSpecialDashAttack::CacheGameplayReferences()
 {
-    controller = owner ? owner->GetComponent<ThirdPersonCharacterController>() : nullptr;
-    rigidBodyComponent = owner ? owner->GetComponent<RTBEngine::Scene::RigidBodyComponent>() : nullptr;
+    controller = owner->GetComponent<ThirdPersonCharacterController>();
+    rigidBodyComponent = owner->GetComponent<RTBEngine::Scene::RigidBodyComponent>();
 }
 
 void PlayerSpecialDashAttack::ValidateRequiredReferences() const
-{
-    if (!owner) {
-        return;
-    }
-    if (!pathPreviewTrail) {
+{    if (!pathPreviewTrail) {
         RTB_WARN("[PlayerSpecialDashAttack] pathPreviewTrail missing on '" +
                  owner->GetName() + "'.");
     }
@@ -145,7 +141,7 @@ bool PlayerSpecialDashAttack::ResolveDashEndpoints(
     RTBEngine::Math::Vector3& outRootStart,
     RTBEngine::Math::Vector3& outRootEnd) const
 {
-    if (!owner || !CharacterCombatUtils::HasPlanarDirection(direction)) {
+    if (!CharacterCombatUtils::HasPlanarDirection(direction)) {
         return false;
     }
 
@@ -174,10 +170,6 @@ bool PlayerSpecialDashAttack::ResolveDashEndpoints(
 
 void PlayerSpecialDashAttack::SnapRootToGround(RTBEngine::Math::Vector3& rootPosition) const
 {
-    if (!owner) {
-        return;
-    }
-
     RTBEngine::Physics::PhysicsWorld* physicsWorld =
         CharacterCombatUtils::ResolvePhysicsWorld(owner);
     if (!physicsWorld) {
@@ -236,7 +228,7 @@ void PlayerSpecialDashAttack::UpdateAimPreview(
     const RTBEngine::Math::Vector3& direction,
     float aimStrength)
 {
-    if (active || !owner) {
+    if (active) {
         HideAimPreview();
         return;
     }
@@ -271,7 +263,7 @@ void PlayerSpecialDashAttack::HideAimPreview()
 
 void PlayerSpecialDashAttack::ApplyMovementLock(float deltaTime)
 {
-    if (!active || !owner || !CharacterCombatUtils::HasPlanarDirection(dashDirection)) {
+    if (!active || !CharacterCombatUtils::HasPlanarDirection(dashDirection)) {
         return;
     }
     if (controller) {
@@ -281,10 +273,6 @@ void PlayerSpecialDashAttack::ApplyMovementLock(float deltaTime)
 
 void PlayerSpecialDashAttack::SetActorWorldPosition(const RTBEngine::Math::Vector3& position)
 {
-    if (!owner) {
-        return;
-    }
-
     CharacterCombatUtils::SetActorWorldPosition(
         owner,
         position,
@@ -303,7 +291,7 @@ void PlayerSpecialDashAttack::ApplyDamageAlongSegment(
     const RTBEngine::Math::Vector3& from,
     const RTBEngine::Math::Vector3& to)
 {
-    if (!owner || damage <= 0.0f) {
+    if (damage <= 0.0f) {
         return;
     }
     if (!CombatAuthority::CanApplyDamage(owner)) {
@@ -383,7 +371,7 @@ bool PlayerSpecialDashAttack::TryActivate(
     const RTBEngine::Math::Vector3& direction,
     float aimStrength)
 {
-    if (active || !owner) {
+    if (active) {
         return false;
     }
 
@@ -418,7 +406,7 @@ bool PlayerSpecialDashAttack::TryActivate(
 
 void PlayerSpecialDashAttack::OnUpdate(float deltaTime)
 {
-    if (!active || !owner || deltaTime <= 0.0f) {
+    if (!active || deltaTime <= 0.0f) {
         return;
     }
 

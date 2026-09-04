@@ -195,7 +195,7 @@ void ProjectileComponent::OnDisable()
 
 void ProjectileComponent::OnUpdate(float deltaTime)
 {
-    if (!owner || pendingDestroy) {
+    if (pendingDestroy) {
         return;
     }
 
@@ -359,7 +359,7 @@ void ProjectileComponent::ClampSettings()
 
 void ProjectileComponent::EnsureFlightTrail()
 {
-    if (!enableFlightTrail || !owner || flightTrail) {
+    if (!enableFlightTrail || flightTrail) {
         return;
     }
 
@@ -497,10 +497,6 @@ void ProjectileComponent::ReleaseTrailForFadeout()
 
 void ProjectileComponent::SpawnImpactParticles()
 {
-    if (!owner) {
-        return;
-    }
-
     if (impactParticlePrefabRef.empty()) {
         return;
     }
@@ -687,7 +683,7 @@ void ProjectileComponent::CreateEcsEntity()
     DestroyEcsEntity();
 
     RTBEngine::ECS::World* world = RTBEngine::ECS::World::GetActive();
-    if (!world || !owner) {
+    if (!world) {
         return;
     }
 

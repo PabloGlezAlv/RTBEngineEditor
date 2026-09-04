@@ -81,10 +81,6 @@ void HitFlashComponent::UnbindDamageSubscription()
 void HitFlashComponent::CollectFlashTargets()
 {
     flashTargets.clear();
-    if (!owner) {
-        return;
-    }
-
     const std::function<void(RTBEngine::Scene::GameObject*)> collectFromObject =
         [&](RTBEngine::Scene::GameObject* object) {
             if (!object) {

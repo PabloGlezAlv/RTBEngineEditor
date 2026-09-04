@@ -43,11 +43,6 @@ void HealthBarUI::OnDestroy()
 
 void HealthBarUI::ResolveSlider()
 {
-    if (!owner) {
-        slider = nullptr;
-        return;
-    }
-
     slider = owner->GetComponent<RTBEngine::UI::UISlider>();
 }
 

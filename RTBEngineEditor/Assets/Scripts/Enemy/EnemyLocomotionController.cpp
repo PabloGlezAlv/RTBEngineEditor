@@ -30,10 +30,6 @@ void EnemyLocomotionController::OnValidate()
 
 void EnemyLocomotionController::MoveTowards(const RTBEngine::Math::Vector3& targetDirection, float deltaTime)
 {
-    if (!owner) {
-        return;
-    }
-
     auto* rbComp = owner->GetComponent<RTBEngine::Scene::RigidBodyComponent>();
     RTBEngine::Physics::RigidBody* rigidBody =
         (rbComp && rbComp->HasRigidBody()) ? rbComp->GetRigidBody() : nullptr;
@@ -79,10 +75,6 @@ void EnemyLocomotionController::MoveTowards(const RTBEngine::Math::Vector3& targ
 
 void EnemyLocomotionController::StopPlanarMotion() const
 {
-    if (!owner) {
-        return;
-    }
-
     auto* rbComp = owner->GetComponent<RTBEngine::Scene::RigidBodyComponent>();
     if (!rbComp || !rbComp->HasRigidBody()) {
         return;
@@ -104,7 +96,7 @@ void EnemyLocomotionController::ApplyKnockback(const RTBEngine::Math::Vector3& h
                                                const RTBEngine::Math::Vector3& fallbackDirection,
                                                float strength)
 {
-    if (strength <= 0.0f || !owner) {
+    if (strength <= 0.0f) {
         return;
     }
 

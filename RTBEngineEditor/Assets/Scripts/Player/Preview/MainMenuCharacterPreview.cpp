@@ -46,7 +46,7 @@ void MainMenuCharacterPreview::ClearPreviewInstance()
 
 void MainMenuCharacterPreview::ApplyPreviewTransform()
 {
-    if (!previewInstance || !owner) {
+    if (!previewInstance) {
         return;
     }
 
@@ -96,10 +96,6 @@ void MainMenuCharacterPreview::ShowCharacterById(const std::string& characterId)
 
     if (definition->previewPrefabRef.empty()) {
         RTB_WARN("MainMenuCharacterPreview: No preview prefab for character '" + characterId + "'.");
-        return;
-    }
-
-    if (!owner) {
         return;
     }
 

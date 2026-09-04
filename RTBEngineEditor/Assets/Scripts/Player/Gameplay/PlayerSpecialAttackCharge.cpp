@@ -86,19 +86,13 @@ RTBEngine::UI::UIImage* PlayerSpecialAttackCharge::GetHandleImage() const
 
 void PlayerSpecialAttackCharge::CacheGameplayReferences()
 {
-    if (!owner) {
-        specialAttack = nullptr;
-        controller = nullptr;
-        return;
-    }
-
     specialAttack = ResolvePlayerSpecialAttack(owner);
     controller = owner->GetComponent<ThirdPersonCharacterController>();
 }
 
 void PlayerSpecialAttackCharge::ValidateRequiredReferences() const
 {
-    if (!owner || !IsLocalPlayer()) {
+    if (!IsLocalPlayer()) {
         return;
     }
 
@@ -231,7 +225,7 @@ void PlayerSpecialAttackCharge::RebindSpecialJoystickSubscription()
 void PlayerSpecialAttackCharge::HandleSpecialJoystickReleased(
     const RTBEngine::Math::Vector2& joystickValue)
 {
-    if (!IsLocalPlayer() || !owner) {
+    if (!IsLocalPlayer()) {
         return;
     }
 
@@ -268,7 +262,7 @@ void PlayerSpecialAttackCharge::HandleSpecialJoystickReleased(
 bool PlayerSpecialAttackCharge::TryGetSpecialAimDirection(
     RTBEngine::Math::Vector3& outAimDirection) const
 {
-    if (!IsLocalPlayer() || !owner || !specialAttackJoystick || !IsReady()) {
+    if (!IsLocalPlayer() || !specialAttackJoystick || !IsReady()) {
         return false;
     }
 
@@ -295,7 +289,7 @@ bool PlayerSpecialAttackCharge::TryGetSpecialAimDirection(
 
 void PlayerSpecialAttackCharge::OnLateUpdate(float /*deltaTime*/)
 {
-    if (!IsLocalPlayer() || !owner || !specialAttack) {
+    if (!IsLocalPlayer() || !specialAttack) {
         return;
     }
 

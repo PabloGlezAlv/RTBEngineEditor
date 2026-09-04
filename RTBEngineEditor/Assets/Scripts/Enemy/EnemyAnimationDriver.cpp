@@ -27,11 +27,6 @@ void EnemyAnimationDriver::OnValidate()
 
 void EnemyAnimationDriver::ResolveAnimator()
 {
-    if (!owner) {
-        animator = nullptr;
-        return;
-    }
-
     if (!animator) {
         animator = owner->GetComponentInChildren<RTBEngine::Animation::Animator>();
     }

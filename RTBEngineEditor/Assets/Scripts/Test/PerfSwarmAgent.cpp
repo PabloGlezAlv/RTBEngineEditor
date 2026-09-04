@@ -50,7 +50,7 @@ void PerfSwarmAgent::CreateEcsEntity()
     DestroyEcsEntity();
 
     RTBEngine::ECS::World* world = RTBEngine::ECS::World::GetActive();
-    if (!world || !owner) {
+    if (!world) {
         return;
     }
 
@@ -85,7 +85,7 @@ void PerfSwarmAgent::DestroyEcsEntity()
 
 void PerfSwarmAgent::IntegrateOop(float deltaTime)
 {
-    if (!owner || deltaTime <= 0.0f) {
+    if (deltaTime <= 0.0f) {
         return;
     }
 

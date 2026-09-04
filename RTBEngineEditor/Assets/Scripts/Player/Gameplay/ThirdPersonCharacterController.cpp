@@ -259,10 +259,6 @@ void ThirdPersonCharacterController::OnStart()
 
 void ThirdPersonCharacterController::OnUpdate(float deltaTime)
 {
-    if (!owner) {
-        return;
-    }
-
     if (!IsLocallyControlled()) {
         HideAttackAimTrail();
         return;
@@ -289,10 +285,6 @@ void ThirdPersonCharacterController::OnUpdate(float deltaTime)
 
 void ThirdPersonCharacterController::OnFixedUpdate(float fixedDeltaTime)
 {
-    if (!owner) {
-        return;
-    }
-
     // Client local pawn: send input to host and drive animator locally (transform comes from network).
     if (state == State::Dead) {
         HideAttackAimTrail();
@@ -412,10 +404,6 @@ void ThirdPersonCharacterController::OnFixedUpdate(float fixedDeltaTime)
 
 void ThirdPersonCharacterController::OnLateUpdate(float deltaTime)
 {
-    if (!owner) {
-        return;
-    }
-
     if (!IsLocallyControlled()) {
         HideAttackAimTrail();
         // Runs after NetworkTransform when that component is listed earlier on the pawn.
@@ -638,16 +626,6 @@ void ThirdPersonCharacterController::ClampSettings()
 
 void ThirdPersonCharacterController::CacheGameplayReferences()
 {
-    if (!owner) {
-        specialAttack = nullptr;
-        specialAttackCharge = nullptr;
-        ammoSystem = nullptr;
-        rigidBodyComponent = nullptr;
-        networkIdentity = nullptr;
-        freeLookCamera = nullptr;
-        return;
-    }
-
     specialAttack = ResolvePlayerSpecialAttack(owner);
     specialAttackCharge = owner->GetComponent<PlayerSpecialAttackCharge>();
     ammoSystem = owner->GetComponent<PlayerAmmoSystem>();
@@ -669,10 +647,6 @@ void ThirdPersonCharacterController::CacheGameplayReferences()
 
 void ThirdPersonCharacterController::ValidateRequiredReferences()
 {
-    if (!owner) {
-        return;
-    }
-
     const std::string pawnName = owner->GetName();
 
     if (!health && !missingHealthWarningShown) {
@@ -749,7 +723,7 @@ void ThirdPersonCharacterController::ReviveFromDeath()
 
 void ThirdPersonCharacterController::ApplyCameraFollowTransform()
 {
-    if (!owner || !cameraObject) {
+    if (!cameraObject) {
         return;
     }
 
@@ -772,7 +746,7 @@ void ThirdPersonCharacterController::ApplySpectateCameraFollow(RTBEngine::Scene:
 
 void ThirdPersonCharacterController::EnsureAnimationReady()
 {
-    if (!animator || !owner) {
+    if (!animator) {
         return;
     }
 
@@ -792,7 +766,7 @@ void ThirdPersonCharacterController::EnsureAnimationReady()
 
 void ThirdPersonCharacterController::ForceStartLocomotionAnimation()
 {
-    if (!animator || !owner) {
+    if (!animator) {
         return;
     }
 
@@ -1032,10 +1006,6 @@ void ThirdPersonCharacterController::FinishAiming()
 
 void ThirdPersonCharacterController::UpdateAimFacing(float deltaTime)
 {
-    if (!owner) {
-        return;
-    }
-
     if (usingMouseAim) {
         UpdateAimFacingToward(GetAttackDirectionFromCamera(), deltaTime);
         return;
@@ -1055,7 +1025,7 @@ void ThirdPersonCharacterController::UpdateAimFacingToward(
     const RTBEngine::Math::Vector3& aimDirection,
     float deltaTime)
 {
-    if (!owner || !HasMovementInput(aimDirection)) {
+    if (!HasMovementInput(aimDirection)) {
         return;
     }
 
@@ -1089,10 +1059,6 @@ void ThirdPersonCharacterController::UpdateAimFacingToward(
 
 void ThirdPersonCharacterController::UpdateAimingMovement(float deltaTime)
 {
-    if (!owner) {
-        return;
-    }
-
     bool isRunning = false;
     const RTBEngine::Math::Vector3 desiredMove = GetDesiredMoveDirection(isRunning);
     const bool hasMovementInput = HasMovementInput(desiredMove);
@@ -1141,7 +1107,7 @@ void ThirdPersonCharacterController::UpdateSpecialAttackAimingMovement(
     float deltaTime,
     const RTBEngine::Math::Vector3& aimDirection)
 {
-    if (!owner || !HasMovementInput(aimDirection)) {
+    if (!HasMovementInput(aimDirection)) {
         return;
     }
 
@@ -1184,7 +1150,7 @@ void ThirdPersonCharacterController::UpdateSpecialAttackAimingMovement(
 
 void ThirdPersonCharacterController::SetAimArrowVisible(bool visible)
 {
-    if (!aimArrowVisual || !owner) {
+    if (!aimArrowVisual) {
         return;
     }
 
@@ -1356,7 +1322,7 @@ void ThirdPersonCharacterController::UpdateAnimatorFromLocalInput()
 
 void ThirdPersonCharacterController::UpdateAnimatorFromReplicatedMotion(float deltaTime)
 {
-    if (!owner || state != State::Locomotion) {
+    if (state != State::Locomotion) {
         return;
     }
 
@@ -1398,7 +1364,7 @@ void ThirdPersonCharacterController::PlayReplicatedAttackVisual(const RTBEngine:
 
 void ThirdPersonCharacterController::UpdateAnimatorLocomotion(bool hasMovementInput, bool isRunning)
 {
-    if (!owner || !animator || state != State::Locomotion) {
+    if (!animator || state != State::Locomotion) {
         return;
     }
 
@@ -1514,7 +1480,7 @@ void ThirdPersonCharacterController::HandleDeath(const HealthComponent::DeathEve
     if (IsLocallyControlled() && cameraObject) {
         const bool isOnline = RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby();
         const RTBEngine::Scene::NetworkIdentity* identity =
-            owner ? owner->GetComponent<RTBEngine::Scene::NetworkIdentity>() : nullptr;
+            owner->GetComponent<RTBEngine::Scene::NetworkIdentity>();
         const int localSlot = identity ? identity->networkPlayerSlot : -1;
         const bool canSpectate = isOnline && FindNextAliveTeammatePawn(owner, localSlot) != nullptr;
 
@@ -1532,7 +1498,7 @@ void ThirdPersonCharacterController::HandleDeath(const HealthComponent::DeathEve
     if (RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby() &&
         RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
         if (const RTBEngine::Scene::NetworkIdentity* identity =
-                owner ? owner->GetComponent<RTBEngine::Scene::NetworkIdentity>() : nullptr) {
+                owner->GetComponent<RTBEngine::Scene::NetworkIdentity>()) {
             if (identity && identity->networkPlayerSlot >= 0) {
                 GameNet::OnlineGameNetSubsystem::BroadcastPlayerDeath(identity->networkPlayerSlot);
             }
@@ -1586,7 +1552,7 @@ void ThirdPersonCharacterController::ApplyDynamicPlanarMotion(
     float deltaTime,
     float turnSpeedDegrees)
 {
-    if (!rigidBody || !owner) {
+    if (!rigidBody) {
         return;
     }
 
@@ -1629,7 +1595,7 @@ void ThirdPersonCharacterController::ApplyExternalKnockbackVelocity(
 
 void ThirdPersonCharacterController::FaceAttackDirection(const RTBEngine::Math::Vector3& attackDirection)
 {
-    if (!owner || !HasMovementInput(attackDirection)) {
+    if (!HasMovementInput(attackDirection)) {
         return;
     }
 
@@ -1660,10 +1626,6 @@ void ThirdPersonCharacterController::FaceAttackDirection(const RTBEngine::Math::
 
 void ThirdPersonCharacterController::StopPlanarMotion() const
 {
-    if (!owner) {
-        return;
-    }
-
     auto* rbComp = rigidBodyComponent;
     if (!rbComp || !rbComp->HasRigidBody()) {
         return;
@@ -1684,10 +1646,6 @@ void ThirdPersonCharacterController::StopPlanarMotion() const
 RTBEngine::Math::Vector3 ThirdPersonCharacterController::GetDesiredMoveDirection(bool& outIsRunning) const
 {
     outIsRunning = false;
-
-    if (!owner) {
-        return RTBEngine::Math::Vector3::Zero();
-    }
 
     if (const RTBEngine::Scene::NetworkIdentity* identity = owner->GetComponent<RTBEngine::Scene::NetworkIdentity>()) {
         // Host simulating a remote client's pawn: read last PlayerInput from OnlineGameplayNet.
@@ -1844,7 +1802,7 @@ void ThirdPersonCharacterController::FaceTowardPlanarDirection(
     const RTBEngine::Math::Vector3& direction,
     float deltaTime)
 {
-    if (!owner || !HasMovementInput(direction)) {
+    if (!HasMovementInput(direction)) {
         return;
     }
 
@@ -1915,7 +1873,7 @@ void ThirdPersonCharacterController::SendNetworkInput()
 
 void ThirdPersonCharacterController::TryProcessRemoteAttackInput()
 {
-    if (!owner || IsLocallyControlled() || !attackAbility) {
+    if (IsLocallyControlled() || !attackAbility) {
         return;
     }
 

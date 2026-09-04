@@ -97,7 +97,7 @@ void PerfSwarmBenchmark::ResolveStatusText()
 
 void PerfSwarmBenchmark::EnsureInstanceMeshRenderer()
 {
-    if (!useEcs || !owner) {
+    if (!useEcs) {
         return;
     }
 

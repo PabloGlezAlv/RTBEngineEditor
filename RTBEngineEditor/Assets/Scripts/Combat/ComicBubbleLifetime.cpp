@@ -32,7 +32,7 @@ RTB_END_REGISTER(ComicBubbleLifetime)
 
 void ComicBubbleLifetime::ResolveBubbleImage()
 {
-    if (bubbleImage || !owner) {
+    if (bubbleImage) {
         return;
     }
 
@@ -41,7 +41,7 @@ void ComicBubbleLifetime::ResolveBubbleImage()
 
 void ComicBubbleLifetime::ResolveBubbleCanvas()
 {
-    if (bubbleCanvas || !owner) {
+    if (bubbleCanvas) {
         return;
     }
 
@@ -113,10 +113,6 @@ void ComicBubbleLifetime::EnsureWorldSpaceBillboard()
 
 void ComicBubbleLifetime::Play(const std::string& texturePath, const RTBEngine::Math::Vector3& worldPosition)
 {
-    if (!owner) {
-        return;
-    }
-
     ResolveBubbleImage();
     if (!bubbleImage) {
         return;
@@ -145,7 +141,7 @@ void ComicBubbleLifetime::Play(const std::string& texturePath, const RTBEngine::
 
 void ComicBubbleLifetime::OnUpdate(float deltaTime)
 {
-    if (!isPlaying || !owner) {
+    if (!isPlaying) {
         return;
     }
 

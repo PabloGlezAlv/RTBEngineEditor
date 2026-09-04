@@ -24,10 +24,6 @@ void PlayerHealthNetSync::BindHealth()
 {
     UnbindHealth();
 
-    if (!owner) {
-        return;
-    }
-
     health = owner->GetComponent<HealthComponent>();
     if (!health) {
         health = owner->GetComponentInChildren<HealthComponent>();

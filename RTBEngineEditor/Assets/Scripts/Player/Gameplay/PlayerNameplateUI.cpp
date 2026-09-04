@@ -81,7 +81,7 @@ namespace {
 
 void PlayerNameplateUI::OnStart()
 {
-    DisableCanvasBillboard(owner ? owner->GetComponent<RTBEngine::UI::Canvas>() : nullptr);
+    DisableCanvasBillboard(owner->GetComponent<RTBEngine::UI::Canvas>());
     ApplyFixedWorldOrientation();
 
     RefreshDisplayName();
@@ -111,7 +111,7 @@ void PlayerNameplateUI::OnDestroy()
 
 void PlayerNameplateUI::OnValidate()
 {
-    DisableCanvasBillboard(owner ? owner->GetComponent<RTBEngine::UI::Canvas>() : nullptr);
+    DisableCanvasBillboard(owner->GetComponent<RTBEngine::UI::Canvas>());
     ApplyFixedWorldOrientation();
     RefreshDisplayName();
     BindHealthBar();

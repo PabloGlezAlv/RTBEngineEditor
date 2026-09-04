@@ -55,7 +55,7 @@ void PlayerSpecialBeamAttack::ClampSettings()
 
 void PlayerSpecialBeamAttack::CacheGameplayReferences()
 {
-    controller = owner ? owner->GetComponent<ThirdPersonCharacterController>() : nullptr;
+    controller = owner->GetComponent<ThirdPersonCharacterController>();
     BindBeamPresenter();
 }
 
@@ -88,10 +88,6 @@ void PlayerSpecialBeamAttack::ApplyBeamLook()
 
 void PlayerSpecialBeamAttack::ValidateRequiredReferences() const
 {
-    if (!owner) {
-        return;
-    }
-
     if (!energyBeam) {
         RTB_WARN("[PlayerSpecialBeamAttack] energyBeam is not assigned on '" + owner->GetName() + "'.");
     }
@@ -128,7 +124,7 @@ void PlayerSpecialBeamAttack::UpdateAimPreview(
     const RTBEngine::Math::Vector3& direction,
     float /*aimStrength*/)
 {
-    if (active || !owner) {
+    if (active) {
         HideAimPreview();
         return;
     }
@@ -159,7 +155,7 @@ void PlayerSpecialBeamAttack::HideAimPreview()
 
 void PlayerSpecialBeamAttack::ApplyMovementLock(float deltaTime)
 {
-    if (!active || !owner || !CharacterCombatUtils::HasPlanarDirection(beamDirection)) {
+    if (!active || !CharacterCombatUtils::HasPlanarDirection(beamDirection)) {
         return;
     }
 
@@ -172,7 +168,7 @@ bool PlayerSpecialBeamAttack::TryActivate(
     const RTBEngine::Math::Vector3& direction,
     float /*aimStrength*/)
 {
-    if (active || !owner) {
+    if (active) {
         return false;
     }
 
@@ -210,10 +206,6 @@ bool PlayerSpecialBeamAttack::TryActivate(
 RTBEngine::Math::Vector3 PlayerSpecialBeamAttack::GetBeamOrigin(
     const RTBEngine::Math::Vector3& direction) const
 {
-    if (!owner) {
-        return RTBEngine::Math::Vector3::Zero();
-    }
-
     RTBEngine::Math::Vector3 origin = CharacterCombatOrigins::GetFeetWorld(owner);
     origin = CharacterCombatOrigins::ApplyPlanarDirectionOffset(
         origin,
@@ -226,10 +218,6 @@ RTBEngine::Math::Vector3 PlayerSpecialBeamAttack::GetBeamOrigin(
 RTBEngine::Math::Vector3 PlayerSpecialBeamAttack::GetCombatOrigin(
     const RTBEngine::Math::Vector3& direction) const
 {
-    if (!owner) {
-        return RTBEngine::Math::Vector3::Zero();
-    }
-
     RTBEngine::Math::Vector3 origin = CharacterCombatOrigins::GetCapsuleCenterWorld(owner);
     origin = CharacterCombatOrigins::ApplyPlanarDirectionOffset(
         origin,
@@ -264,7 +252,7 @@ float PlayerSpecialBeamAttack::ResolveEffectiveLengthForDirection(
     const RTBEngine::Math::Vector3& origin,
     const RTBEngine::Math::Vector3& direction) const
 {
-    if (!owner || !CharacterCombatUtils::HasPlanarDirection(direction)) {
+    if (!CharacterCombatUtils::HasPlanarDirection(direction)) {
         return 0.0f;
     }
 
@@ -287,7 +275,7 @@ float PlayerSpecialBeamAttack::ResolveEffectiveLengthForDirection(
 
 void PlayerSpecialBeamAttack::ApplyDamageTick(float effectiveLength)
 {
-    if (!owner || damagePerTick <= 0.0f || effectiveLength <= 0.0f) {
+    if (damagePerTick <= 0.0f || effectiveLength <= 0.0f) {
         return;
     }
 
@@ -333,10 +321,6 @@ void PlayerSpecialBeamAttack::ApplyDamageTick(float effectiveLength)
 
 void PlayerSpecialBeamAttack::UpdateBeamVisual(float effectiveLength)
 {
-    if (!owner) {
-        return;
-    }
-
     if (effectiveLength <= 0.001f) {
         HideBeamVisual();
         return;
@@ -355,7 +339,7 @@ void PlayerSpecialBeamAttack::HideBeamVisual()
 
 void PlayerSpecialBeamAttack::OnUpdate(float deltaTime)
 {
-    if (!active || !owner) {
+    if (!active) {
         StopBeam();
         return;
     }
@@ -378,7 +362,7 @@ void PlayerSpecialBeamAttack::OnUpdate(float deltaTime)
 
 void PlayerSpecialBeamAttack::OnLateUpdate(float /*deltaTime*/)
 {
-    if (!active || !owner) {
+    if (!active) {
         return;
     }
 

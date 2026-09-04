@@ -59,12 +59,6 @@ float PlayerAmmoSystem::GetEffectiveReloadDuration() const
 
 void PlayerAmmoSystem::EnsureReferences()
 {
-    if (!owner) {
-        ammoSlider = nullptr;
-        ammoFillPanel = nullptr;
-        return;
-    }
-
     if (ammoSlider) {
         RTBEngine::Scene::GameObject* sliderOwner = ammoSlider->GetOwner();
         if (!sliderOwner || !IsDescendantOf(sliderOwner, owner)) {
@@ -166,7 +160,7 @@ void PlayerAmmoSystem::SetBarVisible(bool visible)
     }
 
     RTBEngine::Scene::GameObject* trackObject = ammoSlider->GetOwner();
-    if (!trackObject || !owner || !IsDescendantOf(trackObject, owner)) {
+    if (!trackObject || !IsDescendantOf(trackObject, owner)) {
         return;
     }
 

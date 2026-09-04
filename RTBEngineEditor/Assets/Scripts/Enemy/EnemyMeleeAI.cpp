@@ -94,10 +94,6 @@ void EnemyMeleeAI::SetRoundManager(RoundManager* manager)
 
 void EnemyMeleeAI::OnUpdate(float deltaTime)
 {
-    if (!owner) {
-        return;
-    }
-
     if (IsStunned()) {
         return;
     }
@@ -138,10 +134,6 @@ void EnemyMeleeAI::OnUpdate(float deltaTime)
 
 void EnemyMeleeAI::OnFixedUpdate(float fixedDeltaTime)
 {
-    if (!owner) {
-        return;
-    }
-
     if (!locomotion) {
         return;
     }
@@ -300,10 +292,6 @@ void EnemyMeleeAI::ClampSettings()
 
 void EnemyMeleeAI::ResolveDependencies()
 {
-    if (!owner) {
-        return;
-    }
-
     if (!health) {
         health = owner->GetComponent<HealthComponent>();
     }
@@ -324,7 +312,7 @@ void EnemyMeleeAI::ResolveDependencies()
 
 void EnemyMeleeAI::ResolveMeleeAttack()
 {
-    if (meleeAttack || !owner) {
+    if (meleeAttack) {
         return;
     }
 
@@ -364,7 +352,7 @@ void EnemyMeleeAI::UnsubscribeFromHealth()
 
 void EnemyMeleeAI::RefreshClosestTarget()
 {
-    if (!owner || !targetTracker || !HasSimulationAuthority()) {
+    if (!targetTracker || !HasSimulationAuthority()) {
         return;
     }
 
@@ -520,7 +508,7 @@ void EnemyMeleeAI::StartAttack()
 
 void EnemyMeleeAI::PlayReplicatedAttack(std::uint32_t attackSequence)
 {
-    if (!owner || HasSimulationAuthority() || attackSequence == 0) {
+    if (HasSimulationAuthority() || attackSequence == 0) {
         return;
     }
 
@@ -590,15 +578,11 @@ void EnemyMeleeAI::EnterRepositioning()
 
 bool EnemyMeleeAI::HasValidCombatSetup() const
 {
-    return owner && targetTracker && locomotion && meleeAttack;
+    return targetTracker && locomotion && meleeAttack;
 }
 
 RTBEngine::Physics::PhysicsWorld* EnemyMeleeAI::ResolvePhysicsWorld() const
 {
-    if (!owner) {
-        return nullptr;
-    }
-
     auto* rbComp = owner->GetComponent<RTBEngine::Scene::RigidBodyComponent>();
     if (rbComp && rbComp->HasRigidBody() && rbComp->GetRigidBody()) {
         if (RTBEngine::Physics::PhysicsWorld* world = rbComp->GetRigidBody()->GetPhysicsWorld()) {
@@ -618,7 +602,7 @@ RTBEngine::Physics::PhysicsWorld* EnemyMeleeAI::ResolvePhysicsWorld() const
 
 void EnemyMeleeAI::UpdateReplicatedLocomotionAnimation(float deltaTime)
 {
-    if (!owner || !animationDriver || deltaTime <= 0.0f) {
+    if (!animationDriver || deltaTime <= 0.0f) {
         return;
     }
 
@@ -647,7 +631,7 @@ void EnemyMeleeAI::UpdateReplicatedLocomotionAnimation(float deltaTime)
 
 void EnemyMeleeAI::HandleDamageTaken(const HealthComponent::DamageTakenEvent& eventData)
 {
-    if (!owner || eventData.damage.amount <= 0.0f ||
+    if (eventData.damage.amount <= 0.0f ||
         state == State::Dead || state == State::Dying || state == State::Shrinking) {
         return;
     }
@@ -680,7 +664,7 @@ void EnemyMeleeAI::HandleDamageTaken(const HealthComponent::DamageTakenEvent& ev
 
 void EnemyMeleeAI::HandleDeath(const HealthComponent::DeathEvent& /*eventData*/)
 {
-    if (!owner || state == State::Dying || state == State::Shrinking || state == State::Dead) {
+    if (state == State::Dying || state == State::Shrinking || state == State::Dead) {
         return;
     }
 

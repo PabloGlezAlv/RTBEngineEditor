@@ -82,7 +82,7 @@ void FloatingDamageNumberSpawner::UnbindDamageSubscription()
 
 void FloatingDamageNumberSpawner::HandleDamageTaken(const HealthComponent::DamageTakenEvent& eventData)
 {
-    if (eventData.damage.amount <= 0.0f || !owner) {
+    if (eventData.damage.amount <= 0.0f) {
         return;
     }
 
@@ -96,7 +96,7 @@ void FloatingDamageNumberSpawner::HandleDamageTaken(const HealthComponent::Damag
 
 void FloatingDamageNumberSpawner::SpawnDamageNumber(float amount, const RTBEngine::Math::Vector3& worldPosition)
 {
-    if (!owner || amount <= 0.0f || !damageNumberPrefab) {
+    if (amount <= 0.0f || !damageNumberPrefab) {
         return;
     }
 

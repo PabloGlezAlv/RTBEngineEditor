@@ -26,7 +26,7 @@ namespace PlayerCombatNet {
         std::uint32_t networkAttackSequence,
         const RTBEngine::Math::Vector3& pendingNetworkAttackDirection)
     {
-        if (!owner || RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
+        if (RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
             return;
         }
 
@@ -55,7 +55,7 @@ namespace PlayerCombatNet {
         RTBEngine::Math::Vector3& outAttackDirection)
     {
         outAttackDirection = RTBEngine::Math::Vector3::Zero();
-        if (!owner || !networkIdentity || networkIdentity->networkOwnerUserId.empty()) {
+        if (!networkIdentity || networkIdentity->networkOwnerUserId.empty()) {
             return false;
         }
 

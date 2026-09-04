@@ -71,8 +71,8 @@ void PlayerSpecialLeapAttack::ClampSettings()
 
 void PlayerSpecialLeapAttack::CacheGameplayReferences()
 {
-    controller = owner ? owner->GetComponent<ThirdPersonCharacterController>() : nullptr;
-    rigidBodyComponent = owner ? owner->GetComponent<RTBEngine::Scene::RigidBodyComponent>() : nullptr;
+    controller = owner->GetComponent<ThirdPersonCharacterController>();
+    rigidBodyComponent = owner->GetComponent<RTBEngine::Scene::RigidBodyComponent>();
     ResolveLandingAuraPrefab();
 }
 
@@ -93,10 +93,6 @@ void PlayerSpecialLeapAttack::ResolveLandingAuraPrefab()
 
 void PlayerSpecialLeapAttack::ValidateRequiredReferences() const
 {
-    if (!owner) {
-        return;
-    }
-
     if (!jumpPathPreviewTrail) {
         RTB_WARN("[PlayerSpecialLeapAttack] jumpPathPreviewTrail is not assigned on '" +
                  owner->GetName() + "'.");
@@ -231,10 +227,6 @@ void PlayerSpecialLeapAttack::HidePreviewTrails() const
 RTBEngine::Math::Vector3 PlayerSpecialLeapAttack::GetFeetOrigin(
     const RTBEngine::Math::Vector3& /*direction*/) const
 {
-    if (!owner) {
-        return RTBEngine::Math::Vector3::Zero();
-    }
-
     // Fixed origin at feet: do not push forward or the aim length looks inconsistent.
     RTBEngine::Math::Vector3 origin = CharacterCombatOrigins::GetFeetWorld(owner);
     origin.y += trailHeightOffset;
@@ -243,10 +235,6 @@ RTBEngine::Math::Vector3 PlayerSpecialLeapAttack::GetFeetOrigin(
 
 void PlayerSpecialLeapAttack::SnapLandingToGround(RTBEngine::Math::Vector3& feetPosition) const
 {
-    if (!owner) {
-        return;
-    }
-
     RTBEngine::Physics::PhysicsWorld* physicsWorld =
         CharacterCombatUtils::ResolvePhysicsWorld(owner);
     if (!physicsWorld) {
@@ -304,7 +292,7 @@ void PlayerSpecialLeapAttack::ResolveLeapEndpoints(
     outFeetEnd.y = outFeetStart.y;
     SnapLandingToGround(outFeetEnd);
 
-    outRootStart = owner ? owner->GetWorldPosition() : outFeetStart;
+    outRootStart = owner->GetWorldPosition();
     const RTBEngine::Math::Vector3 rootToFeet = outFeetStart - outRootStart;
     outRootEnd = outFeetEnd - rootToFeet;
 }
@@ -313,7 +301,7 @@ void PlayerSpecialLeapAttack::UpdateAimPreview(
     const RTBEngine::Math::Vector3& direction,
     float aimStrength)
 {
-    if (active || !owner) {
+    if (active) {
         HideAimPreview();
         return;
     }
@@ -353,7 +341,7 @@ void PlayerSpecialLeapAttack::HideAimPreview()
 
 void PlayerSpecialLeapAttack::ApplyMovementLock(float deltaTime)
 {
-    if (!active || !owner || !CharacterCombatUtils::HasPlanarDirection(leapDirection)) {
+    if (!active || !CharacterCombatUtils::HasPlanarDirection(leapDirection)) {
         return;
     }
 
@@ -364,10 +352,6 @@ void PlayerSpecialLeapAttack::ApplyMovementLock(float deltaTime)
 
 void PlayerSpecialLeapAttack::SetActorWorldPosition(const RTBEngine::Math::Vector3& position)
 {
-    if (!owner) {
-        return;
-    }
-
     CharacterCombatUtils::SetActorWorldPosition(
         owner,
         position,
@@ -386,7 +370,7 @@ bool PlayerSpecialLeapAttack::TryActivate(
     const RTBEngine::Math::Vector3& direction,
     float aimStrength)
 {
-    if (active || !owner) {
+    if (active) {
         return false;
     }
 
@@ -452,7 +436,7 @@ void PlayerSpecialLeapAttack::ApplyLandingImpact()
 
     SpawnLandingAura();
 
-    if (!owner || damage <= 0.0f) {
+    if (damage <= 0.0f) {
         return;
     }
 
@@ -517,7 +501,7 @@ void PlayerSpecialLeapAttack::FinishLeap()
 
 void PlayerSpecialLeapAttack::OnUpdate(float deltaTime)
 {
-    if (!active || !owner) {
+    if (!active) {
         FinishLeap();
         return;
     }
@@ -535,7 +519,7 @@ void PlayerSpecialLeapAttack::OnUpdate(float deltaTime)
 
 void PlayerSpecialLeapAttack::OnLateUpdate(float /*deltaTime*/)
 {
-    if (!active || !owner) {
+    if (!active) {
         return;
     }
 

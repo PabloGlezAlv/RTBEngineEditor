@@ -54,10 +54,6 @@ void PlayerDamageFeedback::OnDestroy()
 
 bool PlayerDamageFeedback::IsLocallyControlled() const
 {
-    if (!owner) {
-        return true;
-    }
-
     const RTBEngine::Scene::NetworkIdentity* identity = owner->GetComponent<RTBEngine::Scene::NetworkIdentity>();
     if (!identity) {
         return true;
@@ -68,7 +64,7 @@ bool PlayerDamageFeedback::IsLocallyControlled() const
 
 void PlayerDamageFeedback::ResolveHurtAudio()
 {
-    if (hurtAudio || !owner) {
+    if (hurtAudio) {
         return;
     }
 
@@ -96,7 +92,7 @@ void PlayerDamageFeedback::UnbindDamageSubscription()
 
 void PlayerDamageFeedback::HandleDamageTaken(const HealthComponent::DamageTakenEvent& eventData)
 {
-    if (!owner || eventData.damage.amount <= 0.0f || !IsLocallyControlled()) {
+    if (eventData.damage.amount <= 0.0f || !IsLocallyControlled()) {
         return;
     }
 
@@ -106,7 +102,7 @@ void PlayerDamageFeedback::HandleDamageTaken(const HealthComponent::DamageTakenE
 
 void PlayerDamageFeedback::ApplyKnockback(const HealthComponent::DamageContext& damage)
 {
-    if (damage.knockbackStrength <= 0.0f || !owner) {
+    if (damage.knockbackStrength <= 0.0f) {
         return;
     }
 

@@ -83,16 +83,12 @@ void PlayerSpecialBouncingBallAttack::ResolveBallPrefab()
 
 void PlayerSpecialBouncingBallAttack::CacheGameplayReferences()
 {
-    controller = owner ? owner->GetComponent<ThirdPersonCharacterController>() : nullptr;
+    controller = owner->GetComponent<ThirdPersonCharacterController>();
     ResolveBallPrefab();
 }
 
 void PlayerSpecialBouncingBallAttack::ValidateRequiredReferences() const
 {
-    if (!owner) {
-        return;
-    }
-
     if (!pathPreviewTrail) {
         RTB_WARN("[PlayerSpecialBouncingBallAttack] pathPreviewTrail is not assigned on '" +
                  owner->GetName() + "'.");
@@ -246,10 +242,6 @@ void PlayerSpecialBouncingBallAttack::ShowBounceCirclesPreview(
 RTBEngine::Math::Vector3 PlayerSpecialBouncingBallAttack::GetLaunchOrigin(
     const RTBEngine::Math::Vector3& direction) const
 {
-    if (!owner) {
-        return RTBEngine::Math::Vector3::Zero();
-    }
-
     RTBEngine::Math::Vector3 origin = CharacterCombatOrigins::GetFeetWorld(owner);
     origin.y += launchHeightOffset;
     origin = CharacterCombatOrigins::ApplyPlanarDirectionOffset(
@@ -264,7 +256,7 @@ bool PlayerSpecialBouncingBallAttack::BuildAimPath(
     float aimStrength,
     BouncingBallTrajectory::Path& outPath) const
 {
-    if (!owner || !CharacterCombatUtils::HasPlanarDirection(direction)) {
+    if (!CharacterCombatUtils::HasPlanarDirection(direction)) {
         return false;
     }
 
@@ -291,7 +283,7 @@ void PlayerSpecialBouncingBallAttack::UpdateAimPreview(
     const RTBEngine::Math::Vector3& direction,
     float aimStrength)
 {
-    if (active || !owner) {
+    if (active) {
         HideAimPreview();
         return;
     }
@@ -322,7 +314,7 @@ void PlayerSpecialBouncingBallAttack::HideAimPreview()
 
 void PlayerSpecialBouncingBallAttack::ApplyMovementLock(float deltaTime)
 {
-    if (!active || !owner || !CharacterCombatUtils::HasPlanarDirection(aimDirection)) {
+    if (!active || !CharacterCombatUtils::HasPlanarDirection(aimDirection)) {
         return;
     }
 
@@ -335,7 +327,7 @@ bool PlayerSpecialBouncingBallAttack::TryActivate(
     const RTBEngine::Math::Vector3& direction,
     float aimStrength)
 {
-    if (active || !owner) {
+    if (active) {
         return false;
     }
 

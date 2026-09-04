@@ -25,7 +25,7 @@ namespace PlayerCameraFollow {
         float cameraDistance,
         const RTBEngine::Math::Vector3& cameraFocusOffset)
     {
-        if (!owner || !cameraObject) {
+        if (!cameraObject) {
             return;
         }
 
@@ -62,7 +62,7 @@ namespace PlayerCameraFollow {
         float cameraDistance,
         const RTBEngine::Math::Vector3& cameraFocusOffset)
     {
-        if (!owner || !cameraObject || !targetPawn) {
+        if (!cameraObject || !targetPawn) {
             return;
         }
 

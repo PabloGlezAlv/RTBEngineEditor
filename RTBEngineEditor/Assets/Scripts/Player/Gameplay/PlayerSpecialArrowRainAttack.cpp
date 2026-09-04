@@ -98,16 +98,12 @@ void PlayerSpecialArrowRainAttack::ResolvePrefabs()
 
 void PlayerSpecialArrowRainAttack::CacheGameplayReferences()
 {
-    controller = owner ? owner->GetComponent<ThirdPersonCharacterController>() : nullptr;
+    controller = owner->GetComponent<ThirdPersonCharacterController>();
     ResolvePrefabs();
 }
 
 void PlayerSpecialArrowRainAttack::ValidateRequiredReferences() const
-{
-    if (!owner) {
-        return;
-    }
-    if (!areaPreviewTrail) {
+{    if (!areaPreviewTrail) {
         RTB_WARN("[PlayerSpecialArrowRainAttack] areaPreviewTrail missing on '" +
                  owner->GetName() + "'.");
     }
@@ -202,10 +198,6 @@ void PlayerSpecialArrowRainAttack::ShowAreaCirclePreview(
 
 void PlayerSpecialArrowRainAttack::SnapToGround(RTBEngine::Math::Vector3& position) const
 {
-    if (!owner) {
-        return;
-    }
-
     RTBEngine::Physics::PhysicsWorld* physicsWorld =
         CharacterCombatUtils::ResolvePhysicsWorld(owner);
     if (!physicsWorld) {
@@ -235,7 +227,7 @@ bool PlayerSpecialArrowRainAttack::ResolveRainCenter(
     float aimStrength,
     RTBEngine::Math::Vector3& outCenter) const
 {
-    if (!owner || !CharacterCombatUtils::HasPlanarDirection(direction)) {
+    if (!CharacterCombatUtils::HasPlanarDirection(direction)) {
         return false;
     }
 
@@ -259,7 +251,7 @@ void PlayerSpecialArrowRainAttack::UpdateAimPreview(
     const RTBEngine::Math::Vector3& direction,
     float aimStrength)
 {
-    if (active || !owner) {
+    if (active) {
         HideAimPreview();
         return;
     }
@@ -289,7 +281,7 @@ void PlayerSpecialArrowRainAttack::HideAimPreview()
 
 void PlayerSpecialArrowRainAttack::ApplyMovementLock(float deltaTime)
 {
-    if (!active || !owner || !CharacterCombatUtils::HasPlanarDirection(aimDirection)) {
+    if (!active || !CharacterCombatUtils::HasPlanarDirection(aimDirection)) {
         return;
     }
     if (controller) {
@@ -330,7 +322,7 @@ void PlayerSpecialArrowRainAttack::SpawnImpactAura() const
 
 void PlayerSpecialArrowRainAttack::SpawnAllFallingArrows()
 {
-    if (!arrowVisualPrefab || !owner || arrowsSpawned) {
+    if (!arrowVisualPrefab || arrowsSpawned) {
         return;
     }
 
@@ -403,7 +395,7 @@ void PlayerSpecialArrowRainAttack::ClearFallingArrows()
 
 void PlayerSpecialArrowRainAttack::ApplyRainDamageTick()
 {
-    if (!owner || damagePerTick <= 0.0f) {
+    if (damagePerTick <= 0.0f) {
         return;
     }
     if (!CombatAuthority::CanApplyDamage(owner)) {
@@ -465,7 +457,7 @@ bool PlayerSpecialArrowRainAttack::TryActivate(
     const RTBEngine::Math::Vector3& direction,
     float aimStrength)
 {
-    if (active || !owner) {
+    if (active) {
         return false;
     }
 

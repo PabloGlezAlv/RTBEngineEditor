@@ -14,7 +14,7 @@ bool CharacterBase::IsCharacterDead() const
 
 void CharacterBase::ValidateCharacterHealth()
 {
-    if (PeekHealthSlot() || !owner) {
+    if (PeekHealthSlot()) {
         return;
     }
 
@@ -48,10 +48,6 @@ void CharacterBase::UnsubscribeCharacterDeath()
 
 bool CharacterBase::HasSimulationAuthority() const
 {
-    if (!owner) {
-        return true;
-    }
-
     const RTBEngine::Scene::NetworkIdentity* identity = owner->GetComponent<RTBEngine::Scene::NetworkIdentity>();
     if (!identity) {
         return true;
@@ -63,10 +59,6 @@ bool CharacterBase::HasSimulationAuthority() const
 
 bool CharacterBase::IsLocallyControlled() const
 {
-    if (!owner) {
-        return true;
-    }
-
     const RTBEngine::Scene::NetworkIdentity* identity = owner->GetComponent<RTBEngine::Scene::NetworkIdentity>();
     if (!identity) {
         return true;
@@ -84,10 +76,6 @@ bool CharacterBase::HasLocalGameplayAuthority() const
 
 bool CharacterBase::IsStunned() const
 {
-    if (!owner) {
-        return false;
-    }
-
     const StunReceiver* stun = owner->GetComponent<StunReceiver>();
     return stun && stun->IsStunned();
 }

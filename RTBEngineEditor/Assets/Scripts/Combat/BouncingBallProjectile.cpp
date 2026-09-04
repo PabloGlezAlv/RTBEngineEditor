@@ -74,7 +74,7 @@ void BouncingBallProjectile::Launch(const LaunchConfig& config)
 {
     ClampSettings();
 
-    if (!owner || config.path.samples.size() < 2) {
+    if (config.path.samples.size() < 2) {
         FinishAndDestroy();
         return;
     }
@@ -341,7 +341,7 @@ void BouncingBallProjectile::FinishAndDestroy()
 
 void BouncingBallProjectile::OnUpdate(float deltaTime)
 {
-    if (!launched || finished || pendingDestroy || !owner || deltaTime <= 0.0f) {
+    if (!launched || finished || pendingDestroy || deltaTime <= 0.0f) {
         return;
     }
 

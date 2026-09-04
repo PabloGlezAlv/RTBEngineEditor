@@ -131,10 +131,6 @@ RTB_END_REGISTER(PlayerPawnSpawner)
 
 void PlayerPawnSpawner::OnAwake()
 {
-    if (!owner) {
-        return;
-    }
-
     // Drop stale pawns left behind after Play→Stop scene reloads.
     PlayerRegistry::GetInstance().Clear();
 

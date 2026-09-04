@@ -37,7 +37,7 @@ void ProjectileTrailFadeLifetime::BeginFade()
     SetEnabled(true);
     SetUpdateTickEnabled(true);
 
-    trailRenderer = owner ? owner->GetComponent<RTBEngine::Scene::TrailRenderer>() : nullptr;
+    trailRenderer = owner->GetComponent<RTBEngine::Scene::TrailRenderer>();
     if (trailRenderer) {
         trailRenderer->SetGlobalAlphaScale(1.0f);
         trailRenderer->SetVisible(true);
@@ -46,12 +46,12 @@ void ProjectileTrailFadeLifetime::BeginFade()
 
 void ProjectileTrailFadeLifetime::OnStart()
 {
-    trailRenderer = owner ? owner->GetComponent<RTBEngine::Scene::TrailRenderer>() : nullptr;
+    trailRenderer = owner->GetComponent<RTBEngine::Scene::TrailRenderer>();
 }
 
 void ProjectileTrailFadeLifetime::OnUpdate(float deltaTime)
 {
-    if (!trailRenderer || !owner) {
+    if (!trailRenderer) {
         Finish();
         return;
     }

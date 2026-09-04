@@ -99,7 +99,7 @@ void ComicOuchSpawner::UnbindDamageSubscription()
 
 void ComicOuchSpawner::HandleDamageTaken(const HealthComponent::DamageTakenEvent& eventData)
 {
-    if (eventData.damage.amount <= 0.0f || !owner) {
+    if (eventData.damage.amount <= 0.0f) {
         return;
     }
 
@@ -119,7 +119,7 @@ void ComicOuchSpawner::HandleDamageTaken(const HealthComponent::DamageTakenEvent
 
 void ComicOuchSpawner::SpawnBubble(const RTBEngine::Math::Vector3& worldPosition)
 {
-    if (!owner || !bubblePrefab || bubbleTextures.empty()) {
+    if (!bubblePrefab || bubbleTextures.empty()) {
         return;
     }
 

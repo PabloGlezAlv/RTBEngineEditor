@@ -51,7 +51,7 @@ void FloatingDamageNumberLifetime::OnDisable()
 
 void FloatingDamageNumberLifetime::ResolveDamageText()
 {
-    if (damageText || !owner) {
+    if (damageText) {
         return;
     }
 
@@ -60,7 +60,7 @@ void FloatingDamageNumberLifetime::ResolveDamageText()
 
 void FloatingDamageNumberLifetime::ResolveDamageCanvas()
 {
-    if (damageCanvas || !owner) {
+    if (damageCanvas) {
         return;
     }
 
@@ -132,7 +132,7 @@ void FloatingDamageNumberLifetime::EnsureWorldSpaceBillboard()
 
 void FloatingDamageNumberLifetime::Play(float damageAmount, const RTBEngine::Math::Vector3& worldPosition)
 {
-    if (!owner || damageAmount <= 0.0f) {
+    if (damageAmount <= 0.0f) {
         return;
     }
 
@@ -164,7 +164,7 @@ void FloatingDamageNumberLifetime::Play(float damageAmount, const RTBEngine::Mat
 
 void FloatingDamageNumberLifetime::OnUpdate(float deltaTime)
 {
-    if (!isPlaying || !owner) {
+    if (!isPlaying) {
         return;
     }
 
