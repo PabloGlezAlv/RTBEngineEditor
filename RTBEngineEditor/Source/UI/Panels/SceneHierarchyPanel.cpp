@@ -336,8 +336,7 @@ namespace RTBEditor {
                 if (ImGui::BeginMenu("UI")) {
                     if (ImGui::MenuItem("Empty")) {
                         auto* go = new RTBEngine::Scene::GameObject("GameObject");
-                        auto* container = new RTBEngine::UI::UIContainer();
-                        go->AddComponent(container);
+                        go->AddComponent<RTBEngine::UI::UIContainer>();
                         if (creationParent) go->SetParent(creationParent);
                         activeScene->AddGameObject(go);
                         context.selectedGameObject = go;
@@ -671,10 +670,9 @@ namespace RTBEditor {
         if (parent) go->SetParent(parent);
 
         auto& resources = RTBEngine::Core::ResourceManager::GetInstance();
-        auto* renderer = new RTBEngine::Scene::MeshRenderer();
+        auto* renderer = go->AddComponent<RTBEngine::Scene::MeshRenderer>();
         renderer->SetMesh(resources.GetDefaultSphere());
         renderer->SetShader(resources.GetShader("basic"));
-        go->AddComponent(renderer);
 
         scene->AddGameObject(go);
         context.selectedGameObject = go;
@@ -686,10 +684,9 @@ namespace RTBEditor {
         if (parent) go->SetParent(parent);
 
         auto& resources = RTBEngine::Core::ResourceManager::GetInstance();
-        auto* renderer = new RTBEngine::Scene::MeshRenderer();
+        auto* renderer = go->AddComponent<RTBEngine::Scene::MeshRenderer>();
         renderer->SetMesh(resources.GetDefaultCube());
         renderer->SetShader(resources.GetShader("basic"));
-        go->AddComponent(renderer);
 
         scene->AddGameObject(go);
         context.selectedGameObject = go;
@@ -701,10 +698,9 @@ namespace RTBEditor {
         if (parent) go->SetParent(parent);
 
         auto& resources = RTBEngine::Core::ResourceManager::GetInstance();
-        auto* renderer = new RTBEngine::Scene::MeshRenderer();
+        auto* renderer = go->AddComponent<RTBEngine::Scene::MeshRenderer>();
         renderer->SetMesh(resources.GetDefaultPlane());
         renderer->SetShader(resources.GetShader("basic"));
-        go->AddComponent(renderer);
 
         scene->AddGameObject(go);
         context.selectedGameObject = go;
@@ -717,7 +713,7 @@ namespace RTBEditor {
             go->SetParent(parent);
         }
 
-        auto* particleSystem = new RTBEngine::Scene::ParticleSystem();
+        auto* particleSystem = go->AddComponent<RTBEngine::Scene::ParticleSystem>();
         particleSystem->maxParticles = 256;
         particleSystem->emissionRate = 40.0f;
         particleSystem->emitterShape = RTBEngine::Rendering::ParticleEmitterShape::Cone;
@@ -731,7 +727,6 @@ namespace RTBEditor {
         particleSystem->playOnAwake = true;
         particleSystem->loop = true;
         particleSystem->simulateInEditMode = true;
-        go->AddComponent(particleSystem);
 
         scene->AddGameObject(go);
         context.selectedGameObject = go;
@@ -742,9 +737,8 @@ namespace RTBEditor {
         auto* go = new RTBEngine::Scene::GameObject("Canvas");
         if (parent) go->SetParent(parent);
 
-        auto* canvas = new RTBEngine::UI::Canvas();
+        auto* canvas = go->AddComponent<RTBEngine::UI::Canvas>();
         canvas->SetRenderMode(RTBEngine::UI::Canvas::RenderMode::ScreenSpaceOverlay);
-        go->AddComponent(canvas);
 
         scene->AddGameObject(go);
         context.selectedGameObject = go;
@@ -755,14 +749,13 @@ namespace RTBEditor {
         auto* go = new RTBEngine::Scene::GameObject("Text");
         if (parent) go->SetParent(parent);
 
-        auto* uiText = new RTBEngine::UI::UIText();
+        auto* uiText = go->AddComponent<RTBEngine::UI::UIText>();
         uiText->SetAnchorMin(RTBEngine::Math::Vector2(0.5f, 0.5f));
         uiText->SetAnchorMax(RTBEngine::Math::Vector2(0.5f, 0.5f));
         uiText->SetAnchoredPosition(RTBEngine::Math::Vector2(0.0f, 0.0f));
         uiText->SetSizeDelta(RTBEngine::Math::Vector2(160.0f, 30.0f));
         uiText->SetText("Text");
         uiText->SetAlignment(RTBEngine::UI::TextAlignment::Center);
-        go->AddComponent(uiText);
 
         scene->AddGameObject(go);
         context.selectedGameObject = go;
@@ -774,16 +767,14 @@ namespace RTBEditor {
         auto* buttonGO = new RTBEngine::Scene::GameObject("Button");
         if (parent) buttonGO->SetParent(parent);
 
-        auto* uiPanel = new RTBEngine::UI::UIPanel();
+        auto* uiPanel = buttonGO->AddComponent<RTBEngine::UI::UIPanel>();
         uiPanel->SetAnchorMin(RTBEngine::Math::Vector2(0.5f, 0.5f));
         uiPanel->SetAnchorMax(RTBEngine::Math::Vector2(0.5f, 0.5f));
         uiPanel->SetAnchoredPosition(RTBEngine::Math::Vector2(0.0f, 0.0f));
         uiPanel->SetSizeDelta(RTBEngine::Math::Vector2(160.0f, 40.0f));
-        buttonGO->AddComponent(uiPanel);
 
         // UIPanel must be added first so UIButton::OnAwake() finds it via GetComponent<UIPanel>()
-        auto* uiButton = new RTBEngine::UI::UIButton();
-        buttonGO->AddComponent(uiButton);
+        buttonGO->AddComponent<RTBEngine::UI::UIButton>();
 
         scene->AddGameObject(buttonGO);
 
@@ -791,14 +782,13 @@ namespace RTBEditor {
         auto* textGO = new RTBEngine::Scene::GameObject("Text");
         textGO->SetParent(buttonGO);
 
-        auto* uiText = new RTBEngine::UI::UIText();
+        auto* uiText = textGO->AddComponent<RTBEngine::UI::UIText>();
         uiText->SetAnchorMin(RTBEngine::Math::Vector2(0.0f, 0.0f));
         uiText->SetAnchorMax(RTBEngine::Math::Vector2(1.0f, 1.0f));
         uiText->SetAnchoredPosition(RTBEngine::Math::Vector2(0.0f, 0.0f));
         uiText->SetSizeDelta(RTBEngine::Math::Vector2(0.0f, 0.0f));
         uiText->SetText("Button");
         uiText->SetAlignment(RTBEngine::UI::TextAlignment::Center);
-        textGO->AddComponent(uiText);
 
         scene->AddGameObject(textGO);
 
@@ -810,7 +800,7 @@ namespace RTBEditor {
         auto* inputGO = new RTBEngine::Scene::GameObject("InputField");
         if (parent) inputGO->SetParent(parent);
 
-        auto* panel = new RTBEngine::UI::UIPanel();
+        auto* panel = inputGO->AddComponent<RTBEngine::UI::UIPanel>();
         panel->SetAnchorMin(RTBEngine::Math::Vector2(0.5f, 0.5f));
         panel->SetAnchorMax(RTBEngine::Math::Vector2(0.5f, 0.5f));
         panel->SetAnchoredPosition(RTBEngine::Math::Vector2(0.0f, 0.0f));
@@ -819,20 +809,18 @@ namespace RTBEditor {
         panel->SetBorderColor(RTBEngine::Math::Vector4(0.62f, 0.69f, 0.94f, 1.0f));
         panel->SetBorderThickness(1.0f);
         panel->SetHasBorder(true);
-        inputGO->AddComponent(panel);
 
-        auto* inputField = new RTBEngine::UI::UIInputField();
+        auto* inputField = inputGO->AddComponent<RTBEngine::UI::UIInputField>();
         inputField->placeholder = "Enter name";
         inputField->maxLength = 24;
         inputField->backgroundPanel = panel;
-        inputGO->AddComponent(inputField);
 
         scene->AddGameObject(inputGO);
 
         auto* textGO = new RTBEngine::Scene::GameObject("Text");
         textGO->SetParent(inputGO);
 
-        auto* uiText = new RTBEngine::UI::UIText();
+        auto* uiText = textGO->AddComponent<RTBEngine::UI::UIText>();
         uiText->SetAnchorMin(RTBEngine::Math::Vector2(0.0f, 0.0f));
         uiText->SetAnchorMax(RTBEngine::Math::Vector2(1.0f, 1.0f));
         uiText->SetAnchoredPosition(RTBEngine::Math::Vector2(12.0f, 0.0f));
@@ -841,7 +829,6 @@ namespace RTBEditor {
         uiText->SetColor(RTBEngine::Math::Vector4(0.68f, 0.70f, 0.76f, 1.0f));
         uiText->SetAlignment(RTBEngine::UI::TextAlignment::Left);
         uiText->SetRaycastTarget(false);
-        textGO->AddComponent(uiText);
 
         inputField->textComponent = uiText;
         inputField->OnValidate();
@@ -856,26 +843,24 @@ namespace RTBEditor {
         auto* sliderGO = new RTBEngine::Scene::GameObject("Slider");
         if (parent) sliderGO->SetParent(parent);
 
-        auto* trackPanel = new RTBEngine::UI::UIPanel();
+        auto* trackPanel = sliderGO->AddComponent<RTBEngine::UI::UIPanel>();
         trackPanel->SetAnchorMin(RTBEngine::Math::Vector2(0.5f, 0.5f));
         trackPanel->SetAnchorMax(RTBEngine::Math::Vector2(0.5f, 0.5f));
         trackPanel->SetAnchoredPosition(RTBEngine::Math::Vector2(0.0f, 0.0f));
         trackPanel->SetSizeDelta(RTBEngine::Math::Vector2(200.0f, 20.0f));
         trackPanel->SetBackgroundColor(RTBEngine::Math::Vector4(0.18f, 0.18f, 0.18f, 1.0f));
-        sliderGO->AddComponent(trackPanel);
 
-        auto* slider = new RTBEngine::UI::UISlider();
+        auto* slider = sliderGO->AddComponent<RTBEngine::UI::UISlider>();
         slider->minValue = 0.0f;
         slider->maxValue = 1.0f;
         slider->value = 0.5f;
-        sliderGO->AddComponent(slider);
 
         scene->AddGameObject(sliderGO);
 
         auto* fillGO = new RTBEngine::Scene::GameObject("Fill");
         fillGO->SetParent(sliderGO);
 
-        auto* fillPanel = new RTBEngine::UI::UIPanel();
+        auto* fillPanel = fillGO->AddComponent<RTBEngine::UI::UIPanel>();
         fillPanel->SetAnchorMin(RTBEngine::Math::Vector2(0.0f, 0.0f));
         fillPanel->SetAnchorMax(RTBEngine::Math::Vector2(0.0f, 1.0f));
         fillPanel->SetPivot(RTBEngine::Math::Vector2(0.0f, 0.5f));
@@ -883,13 +868,12 @@ namespace RTBEditor {
         fillPanel->SetSizeDelta(RTBEngine::Math::Vector2(100.0f, 0.0f));
         fillPanel->SetBackgroundColor(RTBEngine::Math::Vector4(0.22f, 0.72f, 0.28f, 1.0f));
         fillPanel->SetRaycastTarget(false);
-        fillGO->AddComponent(fillPanel);
         scene->AddGameObject(fillGO);
 
         auto* handleGO = new RTBEngine::Scene::GameObject("Handle");
         handleGO->SetParent(sliderGO);
 
-        auto* handlePanel = new RTBEngine::UI::UIPanel();
+        auto* handlePanel = handleGO->AddComponent<RTBEngine::UI::UIPanel>();
         handlePanel->SetAnchorMin(RTBEngine::Math::Vector2(0.0f, 0.5f));
         handlePanel->SetAnchorMax(RTBEngine::Math::Vector2(0.0f, 0.5f));
         handlePanel->SetPivot(RTBEngine::Math::Vector2(0.5f, 0.5f));
@@ -897,7 +881,6 @@ namespace RTBEditor {
         handlePanel->SetSizeDelta(RTBEngine::Math::Vector2(20.0f, 20.0f));
         handlePanel->SetBackgroundColor(RTBEngine::Math::Vector4(0.92f, 0.92f, 0.92f, 1.0f));
         handlePanel->SetRaycastTarget(false);
-        handleGO->AddComponent(handlePanel);
         scene->AddGameObject(handleGO);
 
         slider->fillPanel = fillPanel;

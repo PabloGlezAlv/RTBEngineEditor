@@ -30,13 +30,12 @@ namespace RTBEditor {
                 -30.0f * (3.14159265f / 180.0f),
                 0.0f));
 
-        auto* lightComponent = new RTBEngine::Scene::LightComponent();
+        auto* lightComponent = lightObject->AddComponent<RTBEngine::Scene::LightComponent>();
         lightComponent->lightType = RTBEngine::Rendering::LightType::Directional;
         lightComponent->color = RTBEngine::Math::Color(1.0f, 0.97f, 0.92f, 1.0f);
         lightComponent->intensity = 1.2f;
         lightComponent->syncPosition = false;
         lightComponent->syncDirection = true;
-        lightObject->AddComponent(lightComponent);
 
         stagingScene->AddGameObject(lightObject, false);
         stagingScene->BringGameObjectToLife(lightObject);

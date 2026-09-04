@@ -23,7 +23,6 @@
 #include <RTBEngine/Scene/SceneManager.h>
 #include <RTBEngine/Scene/TrailRenderer.h>
 #include <RTBEngine/Physics/PhysicsWorld.h>
-#include <RTBEngine/Scripting/ComponentRegistry.h>
 
 #include <algorithm>
 #include <cmath>
@@ -366,12 +365,10 @@ void ProjectileComponent::EnsureFlightTrail()
 
     flightTrail = owner->GetComponent<RTBEngine::Scene::TrailRenderer>();
     if (!flightTrail) {
-        flightTrail = static_cast<RTBEngine::Scene::TrailRenderer*>(
-            RTBEngine::Scripting::ComponentRegistry::GetInstance().CreateComponent("TrailRenderer"));
+        flightTrail = owner->AddComponent<RTBEngine::Scene::TrailRenderer>();
         if (!flightTrail) {
             return;
         }
-        owner->AddComponent(flightTrail);
     }
 
     flightTrail->width = kProjectileTrailWidth;
@@ -461,21 +458,18 @@ void ProjectileComponent::ReleaseTrailForFadeout()
 
     RTBEngine::Scene::TrailRenderer* ghostTrail = trailGhost->GetComponent<RTBEngine::Scene::TrailRenderer>();
     if (!ghostTrail) {
-        ghostTrail = static_cast<RTBEngine::Scene::TrailRenderer*>(
-            RTBEngine::Scripting::ComponentRegistry::GetInstance().CreateComponent("TrailRenderer"));
+        ghostTrail = trailGhost->AddComponent<RTBEngine::Scene::TrailRenderer>();
         if (!ghostTrail) {
             flightTrail->SetVisible(false);
             flightTrail->ClearPoints();
             flightTrail = nullptr;
             return;
         }
-        trailGhost->AddComponent(ghostTrail);
     }
 
     ProjectileTrailFadeLifetime* fadeLifetime = trailGhost->GetComponent<ProjectileTrailFadeLifetime>();
     if (!fadeLifetime) {
-        fadeLifetime = new ProjectileTrailFadeLifetime();
-        trailGhost->AddComponent(fadeLifetime);
+        fadeLifetime = trailGhost->AddComponent<ProjectileTrailFadeLifetime>();
     }
 
     ghostTrail->width = trailWidth;
@@ -492,7 +486,9 @@ void ProjectileComponent::ReleaseTrailForFadeout()
     ghostTrail->SetPoints(trailPoints);
     ghostTrail->SetVisible(true);
 
-    fadeLifetime->BeginFade();
+    if (fadeLifetime) {
+        fadeLifetime->BeginFade();
+    }
 
     flightTrail->SetVisible(false);
     flightTrail->ClearPoints();

@@ -890,8 +890,7 @@ if (ImGui::BeginPopup("ComponentSearch")) {
     for (auto& [name, typeInfo] : TypeRegistry::GetInstance().GetRegisteredTypes()) {
         if (/* name matches filter */) {
             if (ImGui::Selectable(name.c_str())) {
-                Scene::Component* comp = typeInfo->Create();
-                go->AddComponent(comp);   // AddComponent with raw pointer variant
+                Scene::Component* comp = go->AddComponentOfType(name.c_str());
                 SceneManager::GetInstance().MarkSceneDirty();
                 ImGui::CloseCurrentPopup();
             }

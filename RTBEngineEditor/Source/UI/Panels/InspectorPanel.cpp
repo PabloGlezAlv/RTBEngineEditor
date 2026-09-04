@@ -863,10 +863,8 @@ namespace RTBEditor {
 
                             if (ImGui::Selectable(type.c_str())) {
                                 auto* newComp =
-                                    RTBEngine::Reflection::TypeRegistry::GetInstance().CreateComponent(type);
+                                    context.selectedGameObject->AddComponentOfType(type.c_str());
                                 if (newComp) {
-                                    context.selectedGameObject->AddComponent(newComp);
-
                                     if (auto* boxCollider =
                                             dynamic_cast<RTBEngine::Scene::BoxColliderComponent*>(newComp)) {
                                         boxCollider->FitToOwnerMesh();

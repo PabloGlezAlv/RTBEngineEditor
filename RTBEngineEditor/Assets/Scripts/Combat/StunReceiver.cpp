@@ -52,9 +52,7 @@ StunReceiver* EnsureStunReceiver(RTBEngine::Scene::GameObject* owner)
         return existing;
     }
 
-    auto* stun = new StunReceiver();
-    owner->AddComponent(stun);
-    return stun;
+    return owner->AddComponent<StunReceiver>();
 }
 
 void ApplyStunTo(RTBEngine::Scene::GameObject* owner, float duration)

@@ -103,8 +103,10 @@ void PerfSwarmBenchmark::EnsureInstanceMeshRenderer()
 
     instanceMeshRenderer = owner->GetComponent<RTBEngine::Scene::MeshRenderer>();
     if (!instanceMeshRenderer) {
-        instanceMeshRenderer = new RTBEngine::Scene::MeshRenderer();
-        owner->AddComponent(instanceMeshRenderer);
+        instanceMeshRenderer = owner->AddComponent<RTBEngine::Scene::MeshRenderer>();
+        if (!instanceMeshRenderer) {
+            return;
+        }
     }
 
     RTBEngine::Core::ResourceManager& resources = RTBEngine::Core::ResourceManager::GetInstance();
@@ -228,17 +230,22 @@ void PerfSwarmBenchmark::SpawnSwarm()
         agentObject->GetTransform().SetScale(
             RTBEngine::Math::Vector3(agentScale, agentScale, agentScale));
 
-        auto* meshRenderer = new RTBEngine::Scene::MeshRenderer();
+        auto* meshRenderer = agentObject->AddComponent<RTBEngine::Scene::MeshRenderer>();
+        if (!meshRenderer) {
+            continue;
+        }
         meshRenderer->SetMesh(cubeMesh);
         meshRenderer->colorRef = RTBEngine::Math::Vector4(
             0.25f + 0.75f * t,
             0.35f + 0.40f * (1.0f - t),
             0.90f - 0.55f * t,
             1.0f);
-        agentObject->AddComponent(meshRenderer);
         meshRenderer->SetUpdateTickEnabled(false);
 
-        auto* agent = new PerfSwarmAgent();
+        auto* agent = agentObject->AddComponent<PerfSwarmAgent>();
+        if (!agent) {
+            continue;
+        }
         agent->useEcs = false;
         agent->phase = phase;
         agent->angularSpeed = 0.55f + 1.75f * std::fmod(t * 7.3f, 1.0f);
@@ -247,7 +254,6 @@ void PerfSwarmBenchmark::SpawnSwarm()
         agent->bobSpeed = 1.2f + 2.4f * std::fmod(t * 5.1f, 1.0f);
         agent->height = swarmCenter.y + 1.2f;
         agent->center = swarmCenter;
-        agentObject->AddComponent(agent);
 
         ++spawnedCount;
     }
