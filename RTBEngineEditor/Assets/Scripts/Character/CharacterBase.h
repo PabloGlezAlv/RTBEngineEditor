@@ -10,8 +10,11 @@
 namespace RTBEngine {
     namespace Scene {
         class GameObject;
+        class NetworkIdentity;
     }
 }
+
+class StunReceiver;
 
 enum class CharacterTeam {
     Neutral = 0,
@@ -31,7 +34,13 @@ public:
     HealthComponent* GetHealth() const { return PeekHealthSlot(); }
     bool IsCharacterDead() const;
 
+    /// StunReceiver is added on demand by ApplyStunTo, so it announces itself here
+    /// instead of being polled every frame.
+    void SetCachedStunReceiver(StunReceiver* receiver);
+
 protected:
+    void CacheCharacterBaseReferences();
+    RTBEngine::Scene::NetworkIdentity* GetNetworkIdentity() const { return cachedNetworkIdentity; }
     void ValidateCharacterHealth();
     void RebindCharacterDeathSubscription();
     void UnsubscribeCharacterDeath();
@@ -47,6 +56,8 @@ protected:
 
 private:
     HealthComponent* subscribedCharacterHealth = nullptr;
+    RTBEngine::Scene::NetworkIdentity* cachedNetworkIdentity = nullptr;
+    StunReceiver* cachedStunReceiver = nullptr;
     RTBEngine::Core::EventSubscription characterDeathSubscription;
 };
 

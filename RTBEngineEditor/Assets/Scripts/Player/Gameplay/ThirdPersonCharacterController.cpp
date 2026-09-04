@@ -630,7 +630,7 @@ void ThirdPersonCharacterController::CacheGameplayReferences()
     specialAttackCharge = owner->GetComponent<PlayerSpecialAttackCharge>();
     ammoSystem = owner->GetComponent<PlayerAmmoSystem>();
     rigidBodyComponent = owner->GetComponent<RTBEngine::Scene::RigidBodyComponent>();
-    networkIdentity = owner->GetComponent<RTBEngine::Scene::NetworkIdentity>();
+    CacheCharacterBaseReferences();
     freeLookCamera = nullptr;
     competingCameraDisabled = false;
 
@@ -1880,7 +1880,7 @@ void ThirdPersonCharacterController::TryProcessRemoteAttackInput()
     RTBEngine::Math::Vector3 attackDirection = RTBEngine::Math::Vector3::Zero();
     if (!PlayerCombatNet::TryConsumeRemoteAttackDirection(
             owner,
-            networkIdentity,
+            GetNetworkIdentity(),
             lastProcessedRemoteAttackSequence,
             attackDirection)) {
         return;

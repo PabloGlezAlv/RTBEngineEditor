@@ -214,7 +214,6 @@ private:
     PlayerSpecialAttackCharge* specialAttackCharge = nullptr;
     PlayerAmmoSystem* ammoSystem = nullptr;
     RTBEngine::Scene::RigidBodyComponent* rigidBodyComponent = nullptr;
-    RTBEngine::Scene::NetworkIdentity* networkIdentity = nullptr;
     RTBEngine::Scene::FreeLookCamera* freeLookCamera = nullptr;
     bool competingCameraDisabled = false;
     PlayerAimTrailPresenter aimTrailPresenter;

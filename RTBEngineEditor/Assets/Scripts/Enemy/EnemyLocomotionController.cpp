@@ -21,18 +21,27 @@ RTB_END_REGISTER(EnemyLocomotionController)
 void EnemyLocomotionController::OnStart()
 {
     ClampSettings();
+    rigidBodyComponent = owner->GetComponent<RTBEngine::Scene::RigidBodyComponent>();
 }
 
 void EnemyLocomotionController::OnValidate()
 {
     ClampSettings();
+    rigidBodyComponent = owner->GetComponent<RTBEngine::Scene::RigidBodyComponent>();
+}
+
+RTBEngine::Physics::RigidBody* EnemyLocomotionController::ResolveRigidBody() const
+{
+    if (!rigidBodyComponent || !rigidBodyComponent->HasRigidBody()) {
+        return nullptr;
+    }
+
+    return rigidBodyComponent->GetRigidBody();
 }
 
 void EnemyLocomotionController::MoveTowards(const RTBEngine::Math::Vector3& targetDirection, float deltaTime)
 {
-    auto* rbComp = owner->GetComponent<RTBEngine::Scene::RigidBodyComponent>();
-    RTBEngine::Physics::RigidBody* rigidBody =
-        (rbComp && rbComp->HasRigidBody()) ? rbComp->GetRigidBody() : nullptr;
+    RTBEngine::Physics::RigidBody* rigidBody = ResolveRigidBody();
     const bool useDynamicRigidBody =
         rigidBody &&
         rigidBody->GetType() == RTBEngine::Physics::RigidBodyType::Dynamic &&
@@ -75,12 +84,7 @@ void EnemyLocomotionController::MoveTowards(const RTBEngine::Math::Vector3& targ
 
 void EnemyLocomotionController::StopPlanarMotion() const
 {
-    auto* rbComp = owner->GetComponent<RTBEngine::Scene::RigidBodyComponent>();
-    if (!rbComp || !rbComp->HasRigidBody()) {
-        return;
-    }
-
-    RTBEngine::Physics::RigidBody* rigidBody = rbComp->GetRigidBody();
+    RTBEngine::Physics::RigidBody* rigidBody = ResolveRigidBody();
     if (!rigidBody) {
         return;
     }
@@ -100,12 +104,7 @@ void EnemyLocomotionController::ApplyKnockback(const RTBEngine::Math::Vector3& h
         return;
     }
 
-    auto* rbComp = owner->GetComponent<RTBEngine::Scene::RigidBodyComponent>();
-    if (!rbComp || !rbComp->HasRigidBody()) {
-        return;
-    }
-
-    RTBEngine::Physics::RigidBody* rigidBody = rbComp->GetRigidBody();
+    RTBEngine::Physics::RigidBody* rigidBody = ResolveRigidBody();
     if (!rigidBody || rigidBody->GetType() != RTBEngine::Physics::RigidBodyType::Dynamic) {
         return;
     }

@@ -4,6 +4,15 @@
 #include <RTBEngine/Math/Vectors/Vector3.h>
 #include <RTBEngine/Reflection/PropertyMacros.h>
 
+namespace RTBEngine {
+    namespace Physics {
+        class RigidBody;
+    }
+    namespace Scene {
+        class RigidBodyComponent;
+    }
+}
+
 class EnemyLocomotionController : public RTBEngine::Scene::Component
 {
 public:
@@ -28,4 +37,7 @@ public:
 
 private:
     void ClampSettings();
+    RTBEngine::Physics::RigidBody* ResolveRigidBody() const;
+
+    RTBEngine::Scene::RigidBodyComponent* rigidBodyComponent = nullptr;
 };

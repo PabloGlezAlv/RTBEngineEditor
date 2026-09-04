@@ -307,6 +307,7 @@ void EnemyMeleeAI::ResolveDependencies()
     if (!navAgent) {
         navAgent = owner->GetComponent<RTBEngine::Scene::NavAgentComponent>();
     }
+    CacheCharacterBaseReferences();
     ResolveMeleeAttack();
 }
 

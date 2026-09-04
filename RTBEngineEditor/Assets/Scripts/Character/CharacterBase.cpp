@@ -46,26 +46,35 @@ void CharacterBase::UnsubscribeCharacterDeath()
     subscribedCharacterHealth = nullptr;
 }
 
+void CharacterBase::CacheCharacterBaseReferences()
+{
+    cachedNetworkIdentity = owner->GetComponent<RTBEngine::Scene::NetworkIdentity>();
+    cachedStunReceiver = owner->GetComponent<StunReceiver>();
+}
+
+void CharacterBase::SetCachedStunReceiver(StunReceiver* receiver)
+{
+    cachedStunReceiver = receiver;
+}
+
 bool CharacterBase::HasSimulationAuthority() const
 {
-    const RTBEngine::Scene::NetworkIdentity* identity = owner->GetComponent<RTBEngine::Scene::NetworkIdentity>();
-    if (!identity) {
+    if (!cachedNetworkIdentity) {
         return true;
     }
 
     // Online: only the lobby host runs movement/physics. Offline: always true.
-    return identity->IsSimulatedByHost();
+    return cachedNetworkIdentity->IsSimulatedByHost();
 }
 
 bool CharacterBase::IsLocallyControlled() const
 {
-    const RTBEngine::Scene::NetworkIdentity* identity = owner->GetComponent<RTBEngine::Scene::NetworkIdentity>();
-    if (!identity) {
+    if (!cachedNetworkIdentity) {
         return true;
     }
 
     // True for the human player on this machine (camera + client input send).
-    return identity->IsLocallyControlled();
+    return cachedNetworkIdentity->IsLocallyControlled();
 }
 
 bool CharacterBase::HasLocalGameplayAuthority() const
@@ -76,6 +85,5 @@ bool CharacterBase::HasLocalGameplayAuthority() const
 
 bool CharacterBase::IsStunned() const
 {
-    const StunReceiver* stun = owner->GetComponent<StunReceiver>();
-    return stun && stun->IsStunned();
+    return cachedStunReceiver && cachedStunReceiver->IsStunned();
 }

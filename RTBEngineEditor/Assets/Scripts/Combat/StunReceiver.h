@@ -15,6 +15,8 @@ public:
     StunReceiver();
     ~StunReceiver() override = default;
 
+    void OnEnable() override;
+    void OnDisable() override;
     void OnUpdate(float deltaTime) override;
     void OnValidate() override;
 

@@ -1,5 +1,7 @@
 #include "StunReceiver.h"
 
+#include "CharacterBase.h"
+
 #include <RTBEngine/Scene/GameObject.h>
 
 #include <algorithm>
@@ -12,6 +14,20 @@ RTB_END_REGISTER(StunReceiver)
 StunReceiver::StunReceiver()
 {
     SetUpdateTickEnabled(false);
+}
+
+void StunReceiver::OnEnable()
+{
+    if (CharacterBase* character = owner->GetComponent<CharacterBase>()) {
+        character->SetCachedStunReceiver(this);
+    }
+}
+
+void StunReceiver::OnDisable()
+{
+    if (CharacterBase* character = owner->GetComponent<CharacterBase>()) {
+        character->SetCachedStunReceiver(nullptr);
+    }
 }
 
 void StunReceiver::OnValidate()
