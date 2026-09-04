@@ -15,7 +15,6 @@
 #include "PlayerCombatNet.h"
 #include "PlayerSpecialAttackCharge.h"
 #include "PlayerSpecialAttackUtil.h"
-#include "StunReceiver.h"
 #include "PlayerRegistry.h"
 
 #include <RTBEngine/Animation/Animator.h>
@@ -313,13 +312,11 @@ void ThirdPersonCharacterController::OnFixedUpdate(float fixedDeltaTime)
             return;
         }
 
-        if (const StunReceiver* stun = owner->GetComponent<StunReceiver>()) {
-            if (stun->IsStunned()) {
-                StopPlanarMotion();
-                UpdateAnimatorLocomotion(false, false);
-                SendNetworkInput();
-                return;
-            }
+        if (IsStunned()) {
+            StopPlanarMotion();
+            UpdateAnimatorLocomotion(false, false);
+            SendNetworkInput();
+            return;
         }
 
         if (specialAttackCharge) {
@@ -359,14 +356,12 @@ void ThirdPersonCharacterController::OnFixedUpdate(float fixedDeltaTime)
         return;
     }
 
-    if (const StunReceiver* stun = owner->GetComponent<StunReceiver>()) {
-        if (stun->IsStunned()) {
-            HideAttackAimTrail();
-            SetAimArrowVisible(false);
-            StopPlanarMotion();
-            UpdateAnimatorLocomotion(false, false);
-            return;
-        }
+    if (IsStunned()) {
+        HideAttackAimTrail();
+        SetAimArrowVisible(false);
+        StopPlanarMotion();
+        UpdateAnimatorLocomotion(false, false);
+        return;
     }
 
     if (specialAttackCharge) {

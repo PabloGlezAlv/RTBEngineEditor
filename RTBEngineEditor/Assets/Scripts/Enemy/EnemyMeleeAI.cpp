@@ -7,7 +7,6 @@
 #include "MeleeSphereAttackAbility.h"
 #include "OnlineGameNetMessages.h"
 #include "RoundManager.h"
-#include "StunReceiver.h"
 
 #include <RTBEngine/Core/Logger.h>
 #include <RTBEngine/Core/Time.h>
@@ -99,10 +98,8 @@ void EnemyMeleeAI::OnUpdate(float deltaTime)
         return;
     }
 
-    if (const StunReceiver* stun = owner->GetComponent<StunReceiver>()) {
-        if (stun->IsStunned()) {
-            return;
-        }
+    if (IsStunned()) {
+        return;
     }
 
     if (!HasSimulationAuthority()) {
@@ -149,11 +146,9 @@ void EnemyMeleeAI::OnFixedUpdate(float fixedDeltaTime)
         return;
     }
 
-    if (const StunReceiver* stun = owner->GetComponent<StunReceiver>()) {
-        if (stun->IsStunned()) {
-            locomotion->StopPlanarMotion();
-            return;
-        }
+    if (IsStunned()) {
+        locomotion->StopPlanarMotion();
+        return;
     }
 
     if (!HasSimulationAuthority()) {

@@ -9,17 +9,19 @@ using ThisClass = StunReceiver;
 RTB_REGISTER_COMPONENT(StunReceiver)
 RTB_END_REGISTER(StunReceiver)
 
+StunReceiver::StunReceiver()
+{
+    SetUpdateTickEnabled(false);
+}
+
 void StunReceiver::OnValidate()
 {
     remaining = std::max(0.0f, remaining);
+    SetUpdateTickEnabled(remaining > 0.0f);
 }
 
 void StunReceiver::OnUpdate(float deltaTime)
 {
-    if (remaining <= 0.0f) {
-        return;
-    }
-
     remaining = std::max(0.0f, remaining - std::max(0.0f, deltaTime));
     if (remaining <= 0.0f) {
         SetUpdateTickEnabled(false);

@@ -1,4 +1,5 @@
 #include "CharacterBase.h"
+#include "StunReceiver.h"
 
 #include <RTBEngine/Core/Logger.h>
 #include <RTBEngine/Scene/NetworkIdentity.h>
@@ -79,4 +80,14 @@ bool CharacterBase::HasLocalGameplayAuthority() const
 {
     // Legacy alias kept for existing call sites; means simulation authority.
     return HasSimulationAuthority();
+}
+
+bool CharacterBase::IsStunned() const
+{
+    if (!owner) {
+        return false;
+    }
+
+    const StunReceiver* stun = owner->GetComponent<StunReceiver>();
+    return stun && stun->IsStunned();
 }

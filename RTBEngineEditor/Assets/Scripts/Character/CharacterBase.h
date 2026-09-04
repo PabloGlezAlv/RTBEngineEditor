@@ -38,6 +38,7 @@ protected:
     bool HasSimulationAuthority() const;
     bool IsLocallyControlled() const;
     bool HasLocalGameplayAuthority() const;
+    bool IsStunned() const;
 
     virtual HealthComponent*& AccessHealthSlot() = 0;
     virtual HealthComponent* PeekHealthSlot() const = 0;

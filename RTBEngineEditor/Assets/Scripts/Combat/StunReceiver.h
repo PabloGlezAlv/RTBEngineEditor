@@ -12,7 +12,7 @@ namespace RTBEngine {
 // Lightweight CC: freezes AI/player locomotion while remaining > 0.
 class StunReceiver : public RTBEngine::Scene::Component {
 public:
-    StunReceiver() = default;
+    StunReceiver();
     ~StunReceiver() override = default;
 
     void OnUpdate(float deltaTime) override;
