@@ -3,13 +3,13 @@
 #include "CharacterCatalog.h"
 #include "CharacterDefinition.h"
 #include "CharacterGameplaySpawner.h"
-#include "CharacterStatsApplier.h"
 #include "OnlinePlayerManager.h"
 #include "PlayerCharacterSelection.h"
 #include "PlayerRegistry.h"
 #include "RoundManager.h"
 
 #include "ThirdPersonCharacterController.h"
+#include "PlayerBasicAttackDriver.h"
 #include "PlayerSpecialAttackCharge.h"
 
 #include <RTBEngine/Animation/Animator.h>
@@ -58,9 +58,35 @@ void WireSpawnedPlayerCamera(RTBEngine::Scene::GameObject* spawnedPawn)
     }
 }
 
-void WireSpawnedPlayerReferences(
+void BindSpawnedPawnHud(
     RTBEngine::Scene::GameObject* spawnedPawn,
-    OnlinePlayerManager* onlinePlayerManager,
+    RTBEngine::UI::UIJoystick* attackJoystick,
+    RTBEngine::UI::UIJoystick* specialAttackJoystick,
+    RTBEngine::UI::UIImage* specialAttackReadyIcon)
+{
+    if (auto* basicAttack = spawnedPawn->GetComponent<PlayerBasicAttackDriver>()) {
+        basicAttack->SetAttackJoystick(attackJoystick);
+        if (!basicAttack->GetAttackJoystick()) {
+            RTB_WARN("[PlayerPawnSpawner] attackJoystick is not assigned on PlayerPawnSpawner.");
+        }
+    } else {
+        RTB_WARN("[PlayerPawnSpawner] PlayerBasicAttackDriver is missing on the spawned pawn.");
+    }
+
+    if (auto* specialCharge = spawnedPawn->GetComponent<PlayerSpecialAttackCharge>()) {
+        specialCharge->SetSpecialAttackJoystick(specialAttackJoystick);
+        specialCharge->SetReadyIcon(specialAttackReadyIcon);
+        if (!specialCharge->GetSpecialAttackJoystick()) {
+            RTB_WARN("[PlayerPawnSpawner] specialAttackJoystick is not assigned on PlayerPawnSpawner.");
+        }
+        if (!specialCharge->GetReadyIcon()) {
+            RTB_WARN("[PlayerPawnSpawner] specialAttackReadyIcon is not assigned on PlayerPawnSpawner.");
+        }
+    }
+}
+
+void FinishRuntimeSpawnedPawn(
+    RTBEngine::Scene::GameObject* spawnedPawn,
     RTBEngine::UI::UIJoystick* attackJoystick,
     RTBEngine::UI::UIJoystick* specialAttackJoystick,
     RTBEngine::UI::UIImage* specialAttackReadyIcon)
@@ -75,23 +101,11 @@ void WireSpawnedPlayerReferences(
     }
 
     WireSpawnedPlayerCamera(spawnedPawn);
-
-    controller->SetAttackJoystick(attackJoystick);
-    if (!controller->GetAttackJoystick()) {
-        RTB_WARN("[PlayerPawnSpawner] attackJoystick is not assigned on PlayerPawnSpawner.");
-    }
-
-    if (auto* specialCharge = spawnedPawn->GetComponent<PlayerSpecialAttackCharge>()) {
-        specialCharge->SetSpecialAttackJoystick(specialAttackJoystick);
-        specialCharge->SetReadyIcon(specialAttackReadyIcon);
-        if (!specialCharge->GetSpecialAttackJoystick()) {
-            RTB_WARN("[PlayerPawnSpawner] specialAttackJoystick is not assigned on PlayerPawnSpawner.");
-        }
-        if (!specialCharge->GetReadyIcon()) {
-            RTB_WARN("[PlayerPawnSpawner] specialAttackReadyIcon is not assigned on PlayerPawnSpawner.");
-        }
-        specialCharge->RefreshAfterSpawn();
-    }
+    BindSpawnedPawnHud(
+        spawnedPawn,
+        attackJoystick,
+        specialAttackJoystick,
+        specialAttackReadyIcon);
 
     RTBEngine::Scene::Scene* scene = RTBEngine::Scene::SceneManager::GetInstance().GetActiveScene();
     if (scene) {
@@ -101,20 +115,12 @@ void WireSpawnedPlayerReferences(
         }
     }
 
-    if (auto* statsApplier = spawnedPawn->GetComponent<CharacterStatsApplier>()) {
-        PlayerCharacterSelection& selection = PlayerCharacterSelection::GetInstance();
-        selection.EnsureSelectionFromCatalog();
-        if (CharacterDefinition* definition = selection.GetSelectedDefinition()) {
-            CharacterStatsApplier::ApplyDefinition(spawnedPawn, *definition);
-        }
+    if (auto* specialCharge = spawnedPawn->GetComponent<PlayerSpecialAttackCharge>()) {
+        specialCharge->RefreshAfterSpawn();
     }
 
     controller->RefreshAfterSpawn();
     RTBEngine::Input::InputManager::GetInstance().SetMouseRelativeMode(false);
-
-    if (onlinePlayerManager) {
-        onlinePlayerManager->localPlayerObject = spawnedPawn;
-    }
 }
 
 } // namespace
@@ -144,18 +150,6 @@ void PlayerPawnSpawner::OnAwake()
             }
             if (candidate->GetName() == "Player") {
                 spawnedPawn = candidate;
-                WireSpawnedPlayerReferences(
-                    spawnedPawn,
-                    onlinePlayerManager,
-                    attackJoystick,
-                    specialAttackJoystick,
-                    specialAttackReadyIcon);
-                if (onlinePlayerManager) {
-                    onlinePlayerManager->localPlayerObject = spawnedPawn;
-                }
-                if (roundManager) {
-                    roundManager->playerObject = spawnedPawn;
-                }
                 PlayerRegistry::GetInstance().RegisterPlayerPawn(spawnedPawn);
                 owner->SetActive(false);
                 return;
@@ -192,9 +186,8 @@ void PlayerPawnSpawner::OnAwake()
     }
 
     spawnedPawn->SetName("Player");
-    WireSpawnedPlayerReferences(
+    FinishRuntimeSpawnedPawn(
         spawnedPawn,
-        onlinePlayerManager,
         attackJoystick,
         specialAttackJoystick,
         specialAttackReadyIcon);

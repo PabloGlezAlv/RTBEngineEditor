@@ -58,18 +58,10 @@ void PlayerSpecialDashAttack::CacheGameplayReferences()
     physicsPose = CharacterCombatUtils::ResolveActorPhysicsPose(owner);
 }
 
-void PlayerSpecialDashAttack::ValidateRequiredReferences() const
-{    if (!pathPreviewTrail) {
-        RTB_WARN("[PlayerSpecialDashAttack] pathPreviewTrail missing on '" +
-                 owner->GetName() + "'.");
-    }
-}
-
 void PlayerSpecialDashAttack::OnStart()
 {
     ClampSettings();
     CacheGameplayReferences();
-    ValidateRequiredReferences();
     HideAimPreview();
     SetUpdateTickEnabled(false);
 }

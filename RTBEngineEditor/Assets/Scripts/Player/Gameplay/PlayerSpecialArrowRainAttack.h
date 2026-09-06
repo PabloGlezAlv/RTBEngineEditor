@@ -112,7 +112,6 @@ private:
     void ClampSettings();
     void CacheGameplayReferences();
     void ResolvePrefabs();
-    void ValidateRequiredReferences() const;
     void ConfigurePreviewTrails() const;
     void HidePreviewTrails() const;
     void ShowAreaCirclePreview(const RTBEngine::Math::Vector3& center) const;

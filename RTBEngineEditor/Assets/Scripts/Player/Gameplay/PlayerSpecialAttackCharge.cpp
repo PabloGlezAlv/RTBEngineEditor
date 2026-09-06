@@ -90,30 +90,6 @@ void PlayerSpecialAttackCharge::CacheGameplayReferences()
     controller = owner->GetComponent<ThirdPersonCharacterController>();
 }
 
-void PlayerSpecialAttackCharge::ValidateRequiredReferences() const
-{
-    if (!IsLocalPlayer()) {
-        return;
-    }
-
-    if (!specialAttackJoystick) {
-        RTB_WARN("[PlayerSpecialAttackCharge] specialAttackJoystick is not assigned on '" +
-                 owner->GetName() + "'.");
-    }
-    if (!readyIcon) {
-        RTB_WARN("[PlayerSpecialAttackCharge] readyIcon is not assigned on '" +
-                 owner->GetName() + "'.");
-    }
-    if (!specialAttack) {
-        RTB_WARN("[PlayerSpecialAttackCharge] No special attack component on '" +
-                 owner->GetName() + "'.");
-    }
-    if (!controller) {
-        RTB_WARN("[PlayerSpecialAttackCharge] ThirdPersonCharacterController is missing on '" +
-                 owner->GetName() + "'.");
-    }
-}
-
 void PlayerSpecialAttackCharge::ApplyVisuals(bool forceReset)
 {
     if (!forceReset && !IsLocalPlayer()) {
@@ -317,7 +293,6 @@ void PlayerSpecialAttackCharge::RefreshAfterSpawn()
         return;
     }
 
-    ValidateRequiredReferences();
     RebindSpecialJoystickSubscription();
     SetUpdateTickEnabled(true);
     currentHits = 0;
@@ -335,7 +310,6 @@ void PlayerSpecialAttackCharge::OnStart()
         return;
     }
 
-    ValidateRequiredReferences();
     RebindSpecialJoystickSubscription();
     SetUpdateTickEnabled(true);
     currentHits = 0;

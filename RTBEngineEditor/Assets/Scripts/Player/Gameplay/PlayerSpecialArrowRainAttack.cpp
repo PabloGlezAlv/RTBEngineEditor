@@ -103,21 +103,10 @@ void PlayerSpecialArrowRainAttack::CacheGameplayReferences()
     ResolvePrefabs();
 }
 
-void PlayerSpecialArrowRainAttack::ValidateRequiredReferences() const
-{    if (!areaPreviewTrail) {
-        RTB_WARN("[PlayerSpecialArrowRainAttack] areaPreviewTrail missing on '" +
-                 owner->GetName() + "'.");
-    }
-    if (!arrowVisualPrefab) {
-        RTB_WARN("[PlayerSpecialArrowRainAttack] Failed to resolve arrow visual prefab.");
-    }
-}
-
 void PlayerSpecialArrowRainAttack::OnStart()
 {
     ClampSettings();
     CacheGameplayReferences();
-    ValidateRequiredReferences();
     HideAimPreview();
     SetUpdateTickEnabled(false);
 }

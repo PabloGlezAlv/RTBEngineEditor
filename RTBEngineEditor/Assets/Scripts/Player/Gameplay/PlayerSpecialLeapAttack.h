@@ -92,7 +92,6 @@ private:
     void ClampSettings();
     void CacheGameplayReferences();
     void ResolveLandingAuraPrefab();
-    void ValidateRequiredReferences() const;
     void ConfigurePreviewTrails() const;
     void ShowJumpPathPreview(
         const RTBEngine::Math::Vector3& start,

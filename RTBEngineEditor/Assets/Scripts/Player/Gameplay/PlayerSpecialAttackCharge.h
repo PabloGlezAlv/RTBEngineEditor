@@ -55,7 +55,6 @@ public:
     bool IsLocalPlayer() const;
     void ClampSettings();
     void CacheGameplayReferences();
-    void ValidateRequiredReferences() const;
     void ApplyVisuals(bool forceReset);
     void ResetSceneJoystickVisuals();
     void RebindSpecialJoystickSubscription();

@@ -27,16 +27,20 @@ return {
                         replicateRotation = true
                     },
                     {
+                        type = "PlayerPawnMotor",
+                        moveSpeed = 4.00,
+                        sprintMultiplier = 1.75,
+                        turnSpeed = 720.00,
+                    },
+                    {
                         type = "ThirdPersonCharacterController",
                         cameraObject = "0E7CE370-7C0E-45A8-89CA-AD7A3E70C216",
                         health = "E8682E33-50ED-45D8-BC76-B31113639F9E/HealthComponent",
                         team = 1,
-                        moveSpeed = 4.00,
-                        sprintMultiplier = 1.75,
-                        turnSpeed = 720.00,
-                        cameraDistance = 11.00,
-                        cameraFocusOffset = Vector3(0.00, 1.05, 0.00),
                         animator = "5200AC9B-039A-416E-82AE-FD5FE1754C95/Animator",
+                    },
+                    {
+                        type = "PlayerBasicAttackDriver",
                         attackAbility = "E8682E33-50ED-45D8-BC76-B31113639F9E/PlayerMeleeSweepAttackAbility",
                         attackAimTrail = "7C57C988-6629-4FE8-AFF1-8D4D39C84D1B/TrailRenderer",
                         aimTrailForwardOffset = 0.40,
@@ -993,6 +997,11 @@ return {
                                 orthographicSize = 3.50,
                                 syncWithTransform = true,
                                 isMainCamera = true
+                            },
+                            {
+                                type = "PlayerFollowCamera",
+                                cameraDistance = 11.00,
+                                cameraFocusOffset = Vector3(0.00, 1.05, 0.00),
                             },
                         }
                     },

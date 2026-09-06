@@ -96,7 +96,6 @@ private:
     void ClampSettings();
     void CacheGameplayReferences();
     void ResolveBallPrefab();
-    void ValidateRequiredReferences() const;
     void ConfigurePreviewTrails() const;
     void HidePreviewTrails() const;
     void ShowPathPreview(const BouncingBallTrajectory::Path& path) const;

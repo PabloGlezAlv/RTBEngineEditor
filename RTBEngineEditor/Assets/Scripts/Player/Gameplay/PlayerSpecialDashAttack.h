@@ -81,7 +81,6 @@ private:
 
     void ClampSettings();
     void CacheGameplayReferences();
-    void ValidateRequiredReferences() const;
     void ConfigurePreviewTrail() const;
     void HidePreviewTrail() const;
     void ShowPathPreview(

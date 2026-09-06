@@ -91,7 +91,6 @@ public:
     void CacheGameplayReferences();
     void BindBeamPresenter();
     void ApplyBeamLook();
-    void ValidateRequiredReferences() const;
     void StopBeam();
     RTBEngine::Math::Vector3 GetBeamOrigin(const RTBEngine::Math::Vector3& direction) const;
     RTBEngine::Math::Vector3 GetCombatOrigin(const RTBEngine::Math::Vector3& direction) const;

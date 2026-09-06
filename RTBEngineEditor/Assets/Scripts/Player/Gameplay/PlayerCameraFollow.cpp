@@ -1,23 +1,11 @@
 #include "PlayerCameraFollow.h"
 
+#include "PlayerCameraBasis.h"
+
 #include <RTBEngine/Math/Quaternions/Quaternion.h>
 #include <RTBEngine/Scene/GameObject.h>
 
 namespace PlayerCameraFollow {
-    namespace {
-        constexpr float kPi = 3.14159265358979323846f;
-        constexpr float kDegToRad = kPi / 180.0f;
-        constexpr float kFixedCameraYawDegrees = 0.0f;
-        constexpr float kFixedCameraPitchDegrees = 50.0f;
-
-        RTBEngine::Math::Quaternion MakeOrbitRotation()
-        {
-            return RTBEngine::Math::Quaternion::FromEulerAngles(
-                kFixedCameraPitchDegrees * kDegToRad,
-                kFixedCameraYawDegrees * kDegToRad,
-                0.0f);
-        }
-    }
 
     void ApplyFollow(
         RTBEngine::Scene::GameObject* owner,
@@ -29,7 +17,7 @@ namespace PlayerCameraFollow {
             return;
         }
 
-        const RTBEngine::Math::Quaternion orbitRotation = MakeOrbitRotation();
+        const RTBEngine::Math::Quaternion orbitRotation = PlayerCameraBasis::GetOrbitRotation();
         const RTBEngine::Math::Quaternion ownerWorldRotation = owner->GetWorldRotation();
         const RTBEngine::Math::Vector3 worldFocusOffset = ownerWorldRotation * cameraFocusOffset;
         const bool cameraIsChildOfOwner = (cameraObject->GetParent() == owner);
@@ -66,7 +54,7 @@ namespace PlayerCameraFollow {
             return;
         }
 
-        const RTBEngine::Math::Quaternion orbitRotation = MakeOrbitRotation();
+        const RTBEngine::Math::Quaternion orbitRotation = PlayerCameraBasis::GetOrbitRotation();
         const RTBEngine::Math::Quaternion targetWorldRotation = targetPawn->GetWorldRotation();
         const RTBEngine::Math::Vector3 worldFocusOffset = targetWorldRotation * cameraFocusOffset;
         const RTBEngine::Math::Vector3 worldFocusPoint =

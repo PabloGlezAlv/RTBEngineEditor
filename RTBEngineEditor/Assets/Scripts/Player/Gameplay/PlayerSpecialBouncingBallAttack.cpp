@@ -88,27 +88,10 @@ void PlayerSpecialBouncingBallAttack::CacheGameplayReferences()
     ResolveBallPrefab();
 }
 
-void PlayerSpecialBouncingBallAttack::ValidateRequiredReferences() const
-{
-    if (!pathPreviewTrail) {
-        RTB_WARN("[PlayerSpecialBouncingBallAttack] pathPreviewTrail is not assigned on '" +
-                 owner->GetName() + "'.");
-    }
-    if (!bouncePreviewTrail) {
-        RTB_WARN("[PlayerSpecialBouncingBallAttack] bouncePreviewTrail is not assigned on '" +
-                 owner->GetName() + "'.");
-    }
-    if (ballPrefabRef.empty() || !ballPrefab) {
-        RTB_WARN("[PlayerSpecialBouncingBallAttack] Failed to resolve ball prefab '" +
-                 ballPrefabRef + "'.");
-    }
-}
-
 void PlayerSpecialBouncingBallAttack::OnStart()
 {
     ClampSettings();
     CacheGameplayReferences();
-    ValidateRequiredReferences();
     HideAimPreview();
     SetUpdateTickEnabled(false);
 }

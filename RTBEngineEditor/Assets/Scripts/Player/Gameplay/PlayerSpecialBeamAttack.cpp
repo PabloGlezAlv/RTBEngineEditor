@@ -87,22 +87,10 @@ void PlayerSpecialBeamAttack::ApplyBeamLook()
     beamPresenter.ApplyDefaults();
 }
 
-void PlayerSpecialBeamAttack::ValidateRequiredReferences() const
-{
-    if (!energyBeam) {
-        RTB_WARN("[PlayerSpecialBeamAttack] energyBeam is not assigned on '" + owner->GetName() + "'.");
-    }
-    if (!aimPreviewTrail) {
-        RTB_WARN("[PlayerSpecialBeamAttack] aimPreviewTrail is not assigned on '" +
-                 owner->GetName() + "'.");
-    }
-}
-
 void PlayerSpecialBeamAttack::OnStart()
 {
     ClampSettings();
     CacheGameplayReferences();
-    ValidateRequiredReferences();
     HideAimPreview();
     HideBeamVisual();
     SetUpdateTickEnabled(false);

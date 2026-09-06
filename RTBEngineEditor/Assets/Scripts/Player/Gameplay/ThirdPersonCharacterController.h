@@ -4,7 +4,7 @@
 #include "CharacterCombatOrigins.h"
 #include "HealthComponent.h"
 #include "ICharacterStatReceiver.h"
-#include "PlayerAimTrailPresenter.h"
+#include "PlayerLocomotionAnimator.h"
 
 #include <RTBEngine/Core/Event.h>
 #include <RTBEngine/Scene/Component.h>
@@ -41,6 +41,9 @@ namespace RTBEngine {
 class CharacterAbility;
 class CharacterDefinition;
 class PlayerAmmoSystem;
+class PlayerBasicAttackDriver;
+class PlayerFollowCamera;
+class PlayerPawnMotor;
 class PlayerSpecialAttackCharge;
 class IPlayerSpecialAttack;
 
@@ -68,15 +71,31 @@ public:
     void ApplyCharacterStats(const CharacterDefinition& definition) override;
     void RefreshAfterSpawn();
 
+    bool IsDead() const { return dead; }
+    bool IsCombatBusy() const;
+
+    // Movement intents: callers supply the direction, the pawn decides how to apply it.
+    void ApplyAimMovement(const RTBEngine::Math::Vector3& aimFacingDirection, float deltaTime);
+    void ApplyAttackFacingLock(const RTBEngine::Math::Vector3& attackDirection, float deltaTime);
+    void FaceAttackDirection(const RTBEngine::Math::Vector3& attackDirection);
+    void FaceTowardPlanarDirection(const RTBEngine::Math::Vector3& direction, float deltaTime);
+    void StopPlanarMotion();
     RTBEngine::Math::Vector3 GetPlanarAttackDirectionFromJoystick(
         const RTBEngine::Math::Vector2& joystickValue) const;
-    void FaceTowardPlanarDirection(const RTBEngine::Math::Vector3& direction, float deltaTime);
+
+    void RefreshLocomotionAnimation();
+    void ForceStartLocomotionAnimation();
+    bool UsesReplicatedAnimator() const;
+    void UpdateAnimatorFromReplicatedMotion(float deltaTime);
+    RTBEngine::Animation::Animator* EnsureAnimator();
+
+    void QueueNetworkAttack(const RTBEngine::Math::Vector3& attackDirection);
 
     RTBEngine::Scene::GameObject* GetCameraObject() const { return cameraObject; }
     void SetCameraObject(RTBEngine::Scene::GameObject* camera) { cameraObject = camera; }
     RTBEngine::Animation::Animator* GetAnimator() const { return animator; }
-    RTBEngine::UI::UIJoystick* GetAttackJoystick() const { return attackJoystick; }
-    void SetAttackJoystick(RTBEngine::UI::UIJoystick* joystick) { attackJoystick = joystick; }
+    RTBEngine::UI::UIJoystick* GetAttackJoystick() const;
+    void SetAttackJoystick(RTBEngine::UI::UIJoystick* joystick);
     void ClearLocalOnlyInputAndCamera();
 
     RTB_COMPONENT(ThirdPersonCharacterController)
@@ -89,150 +108,41 @@ public:
     RTB_SERIALIZE()
     int team = static_cast<int>(CharacterTeam::Player);
     RTB_SERIALIZE()
-    float moveSpeed = 4.0f;
-    RTB_SERIALIZE()
-    float sprintMultiplier = 1.75f;
-    RTB_SERIALIZE()
-    float turnSpeed = 720.0f;
-    RTB_SERIALIZE()
-    float cameraDistance = 11.0f;
-    RTB_SERIALIZE()
-    RTBEngine::Math::Vector3 cameraFocusOffset = RTBEngine::Math::Vector3(0.0f, 1.2f, 0.0f);
-    RTB_SERIALIZE()
     RTBEngine::Animation::Animator* animator = nullptr;
-    RTB_SERIALIZE()
-    CharacterAbility* attackAbility = nullptr;
-    RTB_SERIALIZE()
-    RTBEngine::UI::UIJoystick* attackJoystick = nullptr;
-    RTB_SERIALIZE()
-    RTBEngine::Scene::TrailRenderer* attackAimTrail = nullptr;
-    RTB_SERIALIZE()
-    float aimTrailForwardOffset = 0.40f;
-    RTB_SERIALIZE()
-    float aimTrailHeightOffset = 0.0f;
-    RTB_SERIALIZE()
-    float aimTrailWallClipRadius = 0.45f;
-    RTB_SERIALIZE()
-    RTBEngine::Scene::GameObject* aimArrowVisual = nullptr;
 
 private:
-    enum class State {
-        Locomotion,
-        Aiming,
-        Attacking,
-        Dead
-    };
-
-    enum class AimPhase {
-        Draw,
-        Hold
-    };
-
-    State state = State::Locomotion;
-    AimPhase aimPhase = AimPhase::Draw;
-    bool wasDraggingJoystick = false;
-    bool usingMouseAim = false;
-    bool wasMouseAiming = false;
-    RTBEngine::Math::Vector2 cachedAttackJoystickValue = RTBEngine::Math::Vector2::Zero();
-    float attackStateElapsed = 0.0f;
-    bool attackAbilitySafetyExpired = false;
-    RTBEngine::Scripting::LatentActionHandle attackSafetyHandle;
-    bool missingHealthWarningShown = false;
-    bool missingAttackAbilityWarningShown = false;
-    bool missingAnimatorWarningShown = false;
-    bool missingCameraWarningShown = false;
-    bool missingAttackAimTrailWarningShown = false;
-    RTBEngine::UI::UIJoystick* subscribedAttackJoystick = nullptr;
-    RTBEngine::Core::EventSubscription attackJoystickReleaseSubscription;
-    RTBEngine::Core::EventSubscription aimDrawFinishedSubscription;
-    RTBEngine::Core::EventSubscription attackFinishedSubscription;
-    bool attackClipFinished = false;
-    RTBEngine::Math::Vector3 activeAttackDirection = RTBEngine::Math::Vector3::Zero();
+    bool dead = false;
 
     void ClampSettings();
-    void ValidateRequiredReferences();
     void CacheGameplayReferences();
     void DisableCompetingCameraController();
     void ApplyCameraFollowTransform();
     void ApplySpectateCameraFollow(RTBEngine::Scene::GameObject* targetPawn);
     void EnsureAnimationReady();
-    void ForceStartLocomotionAnimation();
+    void HideCombatAimVisuals();
     void RebindHealthSubscription();
     void UnsubscribeFromHealth();
-    void RebindAttackJoystickSubscription();
-    void UnsubscribeFromAttackJoystick();
-    void RebindAnimatorKeySubscriptions();
-    void UnsubscribeFromAnimatorKeys();
-    void HandleJoystickAttackReleased(const RTBEngine::Math::Vector2& joystickValue);
-    void HandleAttackReleasedWithDirection(const RTBEngine::Math::Vector3& attackDirection);
-    bool SupportsMouseAimInput() const;
-    bool CanStartAiming() const;
-    void TryBeginAiming();
-    void UpdateAimingState(float deltaTime);
-    void FinishAiming();
-    void UpdateAimFacing(float deltaTime);
-    void UpdateAimingMovement(float deltaTime);
     void UpdateSpecialAttackAimingMovement(float deltaTime, const RTBEngine::Math::Vector3& aimDirection);
-    void SetAimArrowVisible(bool visible);
-    void UpdateAttackAimTrail();
-    void HideAttackAimTrail();
-    void UpdateAttackFacingLock(float deltaTime);
     void UpdateMovement(float deltaTime);
     void UpdateAnimatorLocomotion(bool hasMovementInput, bool isRunning);
-    bool UsesReplicatedAnimator() const;
-    void UpdateAnimatorFromLocalInput();
-    void UpdateAnimatorFromReplicatedMotion(float deltaTime);
-    void StartAttack(const RTBEngine::Math::Vector3& attackDirection);
-    void FinishAttack();
     void HandleDeath(const HealthComponent::DeathEvent& eventData);
     void HandleCharacterDeath(const HealthComponent::DeathEvent& eventData) override;
     HealthComponent*& AccessHealthSlot() override;
     HealthComponent* PeekHealthSlot() const override;
     int GetCharacterTeam() const override;
-    void FaceAttackDirection(const RTBEngine::Math::Vector3& attackDirection);
-    void StopPlanarMotion() const;
     RTBEngine::Math::Vector3 GetDesiredMoveDirection(bool& outIsRunning) const;
-    float GetAimRangeForVisual() const;
-    RTBEngine::Math::Vector3 GetAttackDirectionFromJoystick(const RTBEngine::Math::Vector2& joystickValue) const;
-    RTBEngine::Math::Vector3 GetAttackDirectionFromCamera() const;
     void UpdateAimFacingToward(const RTBEngine::Math::Vector3& aimDirection, float deltaTime);
-    RTBEngine::Math::Vector3 GetActiveAttackDirection() const;
     void SendNetworkInput();
-    void TryProcessRemoteAttackInput();
-    void PlayPredictedAttackVisual(const RTBEngine::Math::Vector3& attackDirection);
-    void UpdatePredictedAttackVisual(float deltaTime);
-    void PollAttackCompletion(float deltaTime);
-    void ScheduleAttackSafetyTimeout();
-    void ClearAttackSafetyTimeout();
-    void ApplyDynamicPlanarMotion(RTBEngine::Physics::RigidBody* rigidBody,
-                                  const RTBEngine::Math::Vector3& moveDirection,
-                                  const RTBEngine::Math::Vector3& facingDirection,
-                                  float moveSpeed,
-                                  float deltaTime,
-                                  float turnSpeedDegrees = -1.0f);
-    void ApplyExternalKnockbackVelocity(RTBEngine::Physics::RigidBody* rigidBody, float deltaTime);
-    void SyncDynamicBodyRotation(const RTBEngine::Math::Quaternion& rotation);
 
     IPlayerSpecialAttack* specialAttack = nullptr;
     PlayerSpecialAttackCharge* specialAttackCharge = nullptr;
-    PlayerAmmoSystem* ammoSystem = nullptr;
-    RTBEngine::Scene::RigidBodyComponent* rigidBodyComponent = nullptr;
-    CharacterCombatOrigins::ColliderBody colliderBody;
-    RTBEngine::Scene::FreeLookCamera* freeLookCamera = nullptr;
-    bool competingCameraDisabled = false;
-    PlayerAimTrailPresenter aimTrailPresenter;
+    PlayerPawnMotor* pawnMotor = nullptr;
+    PlayerFollowCamera* followCamera = nullptr;
+    PlayerBasicAttackDriver* basicAttackDriver = nullptr;
+    PlayerLocomotionAnimator locomotionAnimator;
 
-    RTBEngine::Math::Vector3 externalPlanarVelocity = RTBEngine::Math::Vector3::Zero();
-    float externalPlanarDecay = 10.0f;
     std::uint32_t inputSequenceNumber = 0;
     std::uint32_t networkAttackSequence = 0;
-    std::uint32_t lastProcessedRemoteAttackSequence = 0;
     RTBEngine::Math::Vector3 pendingNetworkAttackDirection = RTBEngine::Math::Vector3::Zero();
-    RTBEngine::Math::Vector3 lastReplicatedWorldPosition = RTBEngine::Math::Vector3::Zero();
-    bool hasReplicatedMotionSample = false;
-    float replicatedPlanarSpeed = 0.0f;
     bool replicatedAnimatorReady = false;
-    bool deathCameraFrozen = false;
-    RTBEngine::Math::Vector3 frozenCameraWorldPosition = RTBEngine::Math::Vector3::Zero();
-    RTBEngine::Math::Quaternion frozenCameraWorldRotation = RTBEngine::Math::Quaternion::Identity();
 };

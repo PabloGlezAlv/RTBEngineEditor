@@ -91,27 +91,10 @@ void PlayerSpecialLeapAttack::ResolveLandingAuraPrefab()
     }
 }
 
-void PlayerSpecialLeapAttack::ValidateRequiredReferences() const
-{
-    if (!jumpPathPreviewTrail) {
-        RTB_WARN("[PlayerSpecialLeapAttack] jumpPathPreviewTrail is not assigned on '" +
-                 owner->GetName() + "'.");
-    }
-    if (!impactPreviewTrail) {
-        RTB_WARN("[PlayerSpecialLeapAttack] impactPreviewTrail is not assigned on '" +
-                 owner->GetName() + "'.");
-    }
-    if (!landingAuraPrefabRef.empty() && !landingAuraPrefab) {
-        RTB_WARN("[PlayerSpecialLeapAttack] Failed to resolve landing aura prefab '" +
-                 landingAuraPrefabRef + "'.");
-    }
-}
-
 void PlayerSpecialLeapAttack::OnStart()
 {
     ClampSettings();
     CacheGameplayReferences();
-    ValidateRequiredReferences();
     HideAimPreview();
     SetUpdateTickEnabled(false);
 }
