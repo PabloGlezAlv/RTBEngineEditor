@@ -899,23 +899,7 @@ namespace RTBEditor {
                         uiLayer->GetSelectedGameObject());
                 }
 
-                // Post-process samples scene depth: bind color-only continue FBO so depth
-                // is no longer an active attachment (Vulkan render-pass break + OpenGL feedback).
-                if (RTBEngine::Rendering::Framebuffer* colorOnly = framebuffer->GetColorOnlyContinueTarget()) {
-                    colorOnly->Bind();
-                    device.SetViewport(0, 0, vpWidth, vpHeight);
-                    engineApp->RenderPostProcessPasses(
-                        sceneViewScene,
-                        editorCamera,
-                        {
-                            framebuffer->GetColorTextureID(),
-                            framebuffer->GetDepthTextureID(),
-                            vpWidth,
-                            vpHeight
-                        });
-                } else {
-                    engineApp->RenderBloomPass(framebuffer->GetColorTextureID(), vpWidth, vpHeight);
-                }
+                engineApp->RenderScenePostProcess(sceneViewScene, editorCamera, framebuffer);
 
                 framebuffer->Unbind();
             }
@@ -929,7 +913,6 @@ namespace RTBEditor {
             int vpWidth = static_cast<int>(gameView->GetRenderWidth());
             int vpHeight = static_cast<int>(gameView->GetRenderHeight());
 
-            // We only need to render Game view if it exists and has a camera
             if (framebuffer && mainCamComp && vpWidth > 0 && vpHeight > 0) {
                 mainCamComp->SyncNow();
                 RTBEngine::Rendering::Camera* mainCamera = mainCamComp->GetCamera();
@@ -937,24 +920,7 @@ namespace RTBEditor {
                     framebuffer->Bind();
                     device.SetViewport(0, 0, vpWidth, vpHeight);
                     engineApp->RenderScene(activeScene, mainCamera, framebuffer);
-                    if (RTBEngine::Rendering::Framebuffer* colorOnly = framebuffer->GetColorOnlyContinueTarget()) {
-                        colorOnly->Bind();
-                        device.SetViewport(0, 0, vpWidth, vpHeight);
-                        engineApp->RenderPostProcessPasses(
-                            activeScene,
-                            mainCamera,
-                            {
-                                framebuffer->GetColorTextureID(),
-                                framebuffer->GetDepthTextureID(),
-                                vpWidth,
-                                vpHeight
-                            });
-                    } else {
-                        engineApp->RenderBloomPass(framebuffer->GetColorTextureID(), vpWidth, vpHeight);
-                    }
-
-                    // Note: Scene UI is rendered in GameViewPanel::OnUIRender()
-                    // after the framebuffer image, within the ImGui frame
+                    engineApp->RenderScenePostProcess(activeScene, mainCamera, framebuffer);
 
                     framebuffer->Unbind();
                 }
