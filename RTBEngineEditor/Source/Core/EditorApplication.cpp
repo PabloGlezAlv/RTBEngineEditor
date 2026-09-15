@@ -795,6 +795,8 @@ namespace RTBEditor {
     }
 
     void EditorApplication::Render() {
+        RTBEngine::Rendering::RHI::RenderDevice::Get().BeginFrame();
+
         // Render scene to Scene View Panel framebuffer
         RenderSceneToFramebuffer();
 
@@ -851,13 +853,11 @@ namespace RTBEditor {
             if (framebuffer && editorCamera && vpWidth > 0 && vpHeight > 0) {
                 framebuffer->Bind();
                 device.SetViewport(0, 0, vpWidth, vpHeight);
-                engineApp->RenderShadowPass(sceneViewScene);
+                engineApp->RenderScene(sceneViewScene, editorCamera, framebuffer);
                 framebuffer->Bind();
                 device.SetViewport(0, 0, vpWidth, vpHeight);
-                engineApp->UploadSceneLighting(sceneViewScene);
-                RTBEngine::Rendering::LightingUBO::GetInstance().Bind();
-                RTBEngine::Rendering::GI::DDGISystem::GetInstance().Update(sceneViewScene);
-                engineApp->RenderGeometryPass(sceneViewScene, editorCamera);
+                
+
 
                 // Render editor grid and axes
                 if (sceneView->GetGridRenderer()) {
@@ -936,8 +936,7 @@ namespace RTBEditor {
                 if (mainCamera) {
                     framebuffer->Bind();
                     device.SetViewport(0, 0, vpWidth, vpHeight);
-                    // For now, reuse shadow maps from first pass
-                    engineApp->RenderGeometryPass(activeScene, mainCamera);
+                    engineApp->RenderScene(activeScene, mainCamera, framebuffer);
                     if (RTBEngine::Rendering::Framebuffer* colorOnly = framebuffer->GetColorOnlyContinueTarget()) {
                         colorOnly->Bind();
                         device.SetViewport(0, 0, vpWidth, vpHeight);

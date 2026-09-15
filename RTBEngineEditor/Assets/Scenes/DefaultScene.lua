@@ -11,14 +11,11 @@ function CreateScene()
                     {
                         type = "LightComponent",
                         lightType = "Directional",
-                        lightMode = "Realtime",
                         color = Color(1.00, 1.00, 1.00, 1.00),
                         intensity = 4.10,
                         range = 10.00,
                         spotAngle = 45.00,
                         spotInnerAngle = 30.00,
-                        castShadows = true,
-                        shadowBias = 0.00,
                         syncPosition = true,
                         syncDirection = true
                     },
@@ -202,7 +199,7 @@ function CreateScene()
                             {
                                 type = "UIImage",
                                 texture = "Default/UI/joystick bg.png",
-                                tintColor = Color(0.84, 1.00, 0.00, 1.00),
+                                tintColor = Color(0.84, 1.00, 0.00, 0.08),
                                 preserveAspect = true,
                                 isVisible = true,
                                 raycastTarget = false,
@@ -230,7 +227,7 @@ function CreateScene()
                                     {
                                         type = "UIImage",
                                         texture = "Default/UI/joystick.png",
-                                        tintColor = Color(0.89, 0.97, 0.34, 1.00),
+                                        tintColor = Color(0.89, 0.97, 0.34, 0.08),
                                         preserveAspect = true,
                                         isVisible = true,
                                         raycastTarget = false,
@@ -643,6 +640,9 @@ function CreateScene()
                 position = Vector3(-3.00, 0.00, 0.00),
                 overrides = {
                     components = {
+                        { type = "EnemyAnimationDriver",
+                            animator = "FFDE083C-282F-446B-94A3-168E6565CE33/Animator",
+                        },
                         { type = "EnemyMeleeAI",
                             health = "753770D2-B00E-4859-B7D3-5ABF1249B014/HealthComponent",
                             targetTracker = "753770D2-B00E-4859-B7D3-5ABF1249B014/EnemyTargetTracker",
@@ -653,6 +653,44 @@ function CreateScene()
                         },
                     },
                 },
+                children = {
+                    {
+                        name = "Enemy Model",
+                        uuid = "FFDE083C-282F-446B-94A3-168E6565CE33",
+                        scale = Vector3(0.85, 0.85, 0.85),
+                        components = {
+                            {
+                                type = "Animator",
+                                modelRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Barbarian.fbx",
+                                currentClipName = "",
+                                defaultClip = "",
+                                speed = 1.00,
+                                playing = false,
+                                looping = true,
+                                additionalModels = {
+                                    "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_MovementBasic.fbx",
+                                    "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_General.fbx",
+                                    "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_CombatMelee.fbx"                                },
+                                keyClips = {
+                                        {
+                                            key = "Walk",
+                                            clipFbxRef = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_MovementBasic.fbx|Walking_A",
+                                            loop = true
+                                        },
+                                        {
+                                            key = "Attack",
+                                            clipFbxRef = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_CombatMelee.fbx|Melee_2H_Attack_Chop",
+                                            loop = false
+                                        },
+                                        {
+                                            key = "Death",
+                                            clipFbxRef = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_General.fbx|Death_A",
+                                            loop = false
+                                        }                                }
+                            },
+                        },
+                    },
+                }
             },
             {
                 name = "OnlinePlayers",
@@ -705,9 +743,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "RigidBodyComponent",
@@ -740,9 +776,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -775,9 +809,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -810,9 +842,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -845,9 +875,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -880,9 +908,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -915,9 +941,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -950,9 +974,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -985,9 +1007,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -1020,9 +1040,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -1055,9 +1073,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -1090,9 +1106,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -1125,9 +1139,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -1160,9 +1172,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -1195,9 +1205,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -1230,9 +1238,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -1265,9 +1271,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -1300,9 +1304,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -1335,9 +1337,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -1370,9 +1370,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -1405,9 +1403,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -1440,9 +1436,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -1475,9 +1469,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -1510,9 +1502,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -1544,9 +1534,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -1579,9 +1567,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -1614,9 +1600,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -1649,9 +1633,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -1684,9 +1666,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -1719,9 +1699,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -1754,9 +1732,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -1789,9 +1765,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -1824,9 +1798,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -1859,9 +1831,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -1894,9 +1864,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -1929,9 +1897,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -1964,9 +1930,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -1999,9 +1963,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -2034,9 +1996,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -2069,9 +2029,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -2104,9 +2062,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -2139,9 +2095,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -2174,9 +2128,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -2209,9 +2161,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -2244,9 +2194,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -2279,9 +2227,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -2314,9 +2260,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -2349,9 +2293,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -2384,9 +2326,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -2439,9 +2379,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -2480,9 +2418,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -2521,9 +2457,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -2547,7 +2481,7 @@ function CreateScene()
                                 uuid = "2511373C-D1A9-4183-AE10-3CC6C9A44409",
                                 staticFlags = 15,
                                 position = Vector3(14.00, -0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
                                 components = {
                                     {
                                         type = "Occludable",
@@ -2562,9 +2496,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -2602,9 +2534,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -2642,9 +2572,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -2682,9 +2610,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -2722,9 +2648,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -2762,9 +2686,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -2802,9 +2724,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -2842,9 +2762,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -2868,7 +2786,7 @@ function CreateScene()
                                 uuid = "56BF061A-D1D6-441B-B6E6-26165AEED521",
                                 staticFlags = 15,
                                 position = Vector3(-12.00, 0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
                                 components = {
                                     {
                                         type = "Occludable",
@@ -2883,9 +2801,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -2909,7 +2825,7 @@ function CreateScene()
                                 uuid = "0475162D-E451-45F6-90B0-551038025002",
                                 staticFlags = 15,
                                 position = Vector3(-8.00, 0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
                                 components = {
                                     {
                                         type = "Occludable",
@@ -2924,9 +2840,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -2950,7 +2864,7 @@ function CreateScene()
                                 uuid = "8987FEDF-75C9-4809-90E3-782CB9278901",
                                 staticFlags = 15,
                                 position = Vector3(-4.00, 0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
                                 components = {
                                     {
                                         type = "Occludable",
@@ -2965,9 +2879,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -2991,7 +2903,7 @@ function CreateScene()
                                 uuid = "013C2A45-B1B5-4645-A8AC-EE5824F94914",
                                 staticFlags = 15,
                                 position = Vector3(0.00, 0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
                                 components = {
                                     {
                                         type = "Occludable",
@@ -3006,9 +2918,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -3032,7 +2942,7 @@ function CreateScene()
                                 uuid = "06B97D68-350C-4301-8DE6-C714191DBF3D",
                                 staticFlags = 15,
                                 position = Vector3(4.00, 0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
                                 components = {
                                     {
                                         type = "Occludable",
@@ -3047,9 +2957,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -3073,7 +2981,7 @@ function CreateScene()
                                 uuid = "03EA9125-FCEF-4F65-A817-7C2697593C83",
                                 staticFlags = 15,
                                 position = Vector3(8.00, 0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
                                 components = {
                                     {
                                         type = "Occludable",
@@ -3088,9 +2996,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -3114,7 +3020,7 @@ function CreateScene()
                                 uuid = "677F63A1-66E1-4D54-9A76-C7F8BC485349",
                                 staticFlags = 15,
                                 position = Vector3(12.00, 0.00, 14.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
                                 components = {
                                     {
                                         type = "Occludable",
@@ -3129,9 +3035,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -3170,9 +3074,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -3211,9 +3113,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "RigidBodyComponent",
@@ -3252,9 +3152,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -3293,9 +3191,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -3334,9 +3230,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -3375,9 +3269,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -3416,9 +3308,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -3457,9 +3347,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -3498,9 +3386,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -3539,9 +3425,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -3580,9 +3464,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -3621,9 +3503,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -3662,9 +3542,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -3703,9 +3581,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -3743,9 +3619,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -3783,9 +3657,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -3823,9 +3695,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -3863,9 +3733,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -3904,9 +3772,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -3945,9 +3811,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -3986,9 +3850,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -4027,9 +3889,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -4073,9 +3933,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -4113,9 +3971,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -4153,9 +4009,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -4193,9 +4047,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                     {
                                         type = "BoxColliderComponent",
@@ -4227,9 +4079,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                 },
                                 children = {
@@ -4241,14 +4091,11 @@ function CreateScene()
                                             {
                                                 type = "LightComponent",
                                                 lightType = "Point",
-                                                lightMode = "Realtime",
                                                 color = Color(1.00, 0.55, 0.20, 1.00),
                                                 intensity = 2.50,
                                                 range = 6.00,
                                                 spotAngle = 45.00,
                                                 spotInnerAngle = 30.00,
-                                                castShadows = true,
-                                                shadowBias = 0.00,
                                                 syncPosition = true,
                                                 syncDirection = true
                                             },
@@ -4274,7 +4121,7 @@ function CreateScene()
                                                         textureSheetRows = 2,
                                                         textureSheetFrameCount = 8,
                                                         textureSheetFramesPerSecond = 14.00,
-                                                        animationOffset = 0.00,
+                                                        animationOffset = 0.41,
                                                         blendMode = "Additive",
                                                         visible = true,
                                                         playOnAwake = true,
@@ -4318,6 +4165,9 @@ function CreateScene()
                                                         emitterShape = "Cone",
                                                         shapeRadius = 0.04,
                                                         coneAngle = 28.00,
+                                                        lineLength = 1.00,
+                                                        orbitRadius = 1.00,
+                                                        orbitSpeed = 2.00,
                                                         boxSize = Vector3(1.00, 1.00, 1.00),
                                                         startLifetime = 0.70,
                                                         startSpeed = 1.40,
@@ -4354,6 +4204,9 @@ function CreateScene()
                                                         emitterShape = "Cone",
                                                         shapeRadius = 0.06,
                                                         coneAngle = 40.00,
+                                                        lineLength = 1.00,
+                                                        orbitRadius = 1.00,
+                                                        orbitSpeed = 2.00,
                                                         boxSize = Vector3(1.00, 1.00, 1.00),
                                                         startLifetime = 1.80,
                                                         startSpeed = 0.55,
@@ -4395,9 +4248,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                 },
                                 children = {
@@ -4409,14 +4260,11 @@ function CreateScene()
                                             {
                                                 type = "LightComponent",
                                                 lightType = "Point",
-                                                lightMode = "Realtime",
                                                 color = Color(1.00, 0.55, 0.20, 1.00),
                                                 intensity = 2.50,
                                                 range = 6.00,
                                                 spotAngle = 45.00,
                                                 spotInnerAngle = 30.00,
-                                                castShadows = true,
-                                                shadowBias = 0.00,
                                                 syncPosition = true,
                                                 syncDirection = true
                                             },
@@ -4442,7 +4290,7 @@ function CreateScene()
                                                         textureSheetRows = 2,
                                                         textureSheetFrameCount = 8,
                                                         textureSheetFramesPerSecond = 14.00,
-                                                        animationOffset = 0.00,
+                                                        animationOffset = 4.67,
                                                         blendMode = "Additive",
                                                         visible = true,
                                                         playOnAwake = true,
@@ -4486,6 +4334,9 @@ function CreateScene()
                                                         emitterShape = "Cone",
                                                         shapeRadius = 0.04,
                                                         coneAngle = 28.00,
+                                                        lineLength = 1.00,
+                                                        orbitRadius = 1.00,
+                                                        orbitSpeed = 2.00,
                                                         boxSize = Vector3(1.00, 1.00, 1.00),
                                                         startLifetime = 0.70,
                                                         startSpeed = 1.40,
@@ -4522,6 +4373,9 @@ function CreateScene()
                                                         emitterShape = "Cone",
                                                         shapeRadius = 0.06,
                                                         coneAngle = 40.00,
+                                                        lineLength = 1.00,
+                                                        orbitRadius = 1.00,
+                                                        orbitSpeed = 2.00,
                                                         boxSize = Vector3(1.00, 1.00, 1.00),
                                                         startLifetime = 1.80,
                                                         startSpeed = 0.55,
@@ -4554,7 +4408,7 @@ function CreateScene()
                                 name = "torch_n",
                                 uuid = "31C7F376-69C7-4C51-B45C-57D2EBB9EA73",
                                 position = Vector3(0.00, 0.00, 13.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
@@ -4564,9 +4418,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                 },
                                 children = {
@@ -4578,14 +4430,11 @@ function CreateScene()
                                             {
                                                 type = "LightComponent",
                                                 lightType = "Point",
-                                                lightMode = "Realtime",
                                                 color = Color(1.00, 0.55, 0.20, 1.00),
                                                 intensity = 2.50,
                                                 range = 6.00,
                                                 spotAngle = 45.00,
                                                 spotInnerAngle = 30.00,
-                                                castShadows = true,
-                                                shadowBias = 0.00,
                                                 syncPosition = true,
                                                 syncDirection = true
                                             },
@@ -4611,7 +4460,7 @@ function CreateScene()
                                                         textureSheetRows = 2,
                                                         textureSheetFrameCount = 8,
                                                         textureSheetFramesPerSecond = 14.00,
-                                                        animationOffset = 0.00,
+                                                        animationOffset = 3.34,
                                                         blendMode = "Additive",
                                                         visible = true,
                                                         playOnAwake = true,
@@ -4655,6 +4504,9 @@ function CreateScene()
                                                         emitterShape = "Cone",
                                                         shapeRadius = 0.04,
                                                         coneAngle = 28.00,
+                                                        lineLength = 1.00,
+                                                        orbitRadius = 1.00,
+                                                        orbitSpeed = 2.00,
                                                         boxSize = Vector3(1.00, 1.00, 1.00),
                                                         startLifetime = 0.70,
                                                         startSpeed = 1.40,
@@ -4691,6 +4543,9 @@ function CreateScene()
                                                         emitterShape = "Cone",
                                                         shapeRadius = 0.06,
                                                         coneAngle = 40.00,
+                                                        lineLength = 1.00,
+                                                        orbitRadius = 1.00,
+                                                        orbitSpeed = 2.00,
                                                         boxSize = Vector3(1.00, 1.00, 1.00),
                                                         startLifetime = 1.80,
                                                         startSpeed = 0.55,
@@ -4732,9 +4587,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                 }
                             },
@@ -4751,9 +4604,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                 }
                             },
@@ -4771,9 +4622,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                 }
                             },
@@ -4781,7 +4630,7 @@ function CreateScene()
                                 name = "banner_1",
                                 uuid = "60FDC273-65AE-491F-A7EC-4B6E0DB54C3F",
                                 position = Vector3(0.00, 0.00, 13.50),
-                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
@@ -4791,9 +4640,7 @@ function CreateScene()
                                         shaderRef = "basic",
                                         shaderPropertyOverrides = "",
                                         meshIndex = 0,
-                                        multiMesh = false,
-                                        castShadows = true,
-                                        receiveShadows = true
+                                        multiMesh = false
                                     },
                                 }
                             },
@@ -4821,24 +4668,22 @@ function CreateScene()
                         { type = "PlayerBasicAttackDriver",
                             attackAbility = "F86013BD-FF24-4672-91B3-9411CDF272AE/ProjectileAttackAbility",
                             attackJoystick = "B4C7E92D-5F22-43A9-8E3B-2A6D7D1A8C10/UIJoystick",
-                            attackAimTrail = "7C57C988-6629-4FE8-AFF1-8D4D39C84D1B/TrailRenderer",
-                            aimTrailForwardOffset = 0.40,
-                            aimTrailHeightOffset = 0.00,
-                            aimArrowVisual = "R4NG3R00-ARRO-4000-8000-000000000001",
+                            aimArrowVisual = nil,
                         },
-                        { type = "PlayerSpecialAttackCharge",
-                            specialAttackJoystick = "B5D8E93E-6F33-44BA-9F4C-3B7E8E2B9D11/UIJoystick",
-                            readyIcon = "C2A14D70-1B9E-4F83-A551-6D8E9C0F1122/UIImage",
+                        { type = "HealthComponent",
+                            maxHealth = 72.00,
+                            currentHealth = 72.00,
                         },
                         { type = "PlayerDamageFeedback",
                             health = "F86013BD-FF24-4672-91B3-9411CDF272AE/HealthComponent",
                         },
                         { type = "PlayerAmmoSystem",
                             ammoSlider = "A1447084-CE03-491F-A070-85BF4BD352D6/UISlider",
-                            ammoFillPanel = "A1000001-0011-4000-8000-000000000011/UIPanel",
+                            fullReloadDuration = 8.50,
                         },
-                        { type = "ProjectileAttackAbility",
-                            hitAudio = "C0MBAT-H1T0-4001-8000-000000000001/AudioSourceComponent",
+                        { type = "PlayerSpecialAttackCharge",
+                            specialAttackJoystick = "B5D8E93E-6F33-44BA-9F4C-3B7E8E2B9D11/UIJoystick",
+                            readyIcon = "C2A14D70-1B9E-4F83-A551-6D8E9C0F1122/UIImage",
                         },
                     },
                 },
@@ -4936,37 +4781,6 @@ function CreateScene()
                                                     },
                                                 }
                                             },
-                                            {
-                                                name = "NameplateAmmoTrack",
-                                                uuid = "A1447084-CE03-491F-A070-85BF4BD352D6",
-                                                components = {
-                                                    {
-                                                        type = "UIPanel",
-                                                        backgroundColor = Color(0.00, 0.00, 0.00, 0.00),
-                                                        borderColor = Color(0.00, 0.00, 0.00, 0.00),
-                                                        borderThickness = 0.00,
-                                                        hasBorder = false,
-                                                        isVisible = true,
-                                                        raycastTarget = false,
-                                                        anchorMin = Vector2(0.50, 0.10),
-                                                        anchorMax = Vector2(0.50, 0.10),
-                                                        pivot = Vector2(0.50, 0.50),
-                                                        anchoredPosition = Vector2(0.00, -10.00),
-                                                        sizeDelta = Vector2(168.00, 5.00),
-                                                        rotation = 0.00,
-                                                        scale = Vector2(1.00, 1.00)
-                                                    },
-                                                    {
-                                                        type = "UISlider",
-                                                        minValue = 0.00,
-                                                        maxValue = 1.00,
-                                                        value = 1.00,
-                                                        interactable = false,
-                                                        fillPanel = "A1000001-0011-4000-8000-000000000011/UIPanel",
-                                                        handlePanel = "A1000001-0012-4000-8000-000000000012/UIPanel"
-                                                    },
-                                                },
-                                            },
                                         }
                                     },
                                 }
@@ -4981,10 +4795,10 @@ function CreateScene()
                             {
                                 type = "Animator",
                                 modelRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Rogue.fbx",
-                                currentClipName = "Idle",
+                                currentClipName = "",
                                 defaultClip = "Idle",
                                 speed = 1.00,
-                                playing = true,
+                                playing = false,
                                 looping = true,
                                 additionalModels = {
                                     "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_MovementBasic.fbx",
@@ -5028,8 +4842,6 @@ function CreateScene()
                                         }                                }
                             },
                         },
-                        children = {
-                        }
                     },
                     {
                         name = "MainCamera",
@@ -5046,6 +4858,11 @@ function CreateScene()
                                 orthographicSize = 3.50,
                                 syncWithTransform = true,
                                 isMainCamera = true
+                            },
+                            {
+                                type = "PlayerFollowCamera",
+                                cameraDistance = 11.00,
+                                cameraFocusOffset = Vector3(0.00, 1.05, 0.00)
                             },
                         }
                     },

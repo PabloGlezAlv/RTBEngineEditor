@@ -145,7 +145,7 @@ namespace RTBEditor {
     void EditorLayer::End() {
         ImGui::Render();
         auto& device = RTBEngine::Rendering::RHI::RenderDevice::Get();
-        device.QueueImGuiDrawData(ImGui::GetDrawData());
+        device.RecordImGuiDrawData(ImGui::GetDrawData());
 
         ImGuiIO& io = ImGui::GetIO();
         // OpenGL multi-viewport only; Vulkan secondary viewports are not configured.
