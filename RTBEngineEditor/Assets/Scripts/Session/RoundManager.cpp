@@ -755,10 +755,9 @@ void RoundManager::HandleAnyPlayerDeath(HealthComponent* deadHealth)
 
     if (AreAllPlayersDead()) {
         if (trackedPlayers.size() <= 1) {
-            if (playerHealth && deadHealth == playerHealth && IsTrackedPlayerLocallyControlled() &&
-                !localRespawnPending) {
-                BeginLocalRespawnCountdown();
-            }
+            CancelLocalRespawnCountdown();
+            EndGame(GameResult::Lose);
+            RequestFinalScene();
         } else {
             BeginTeamWipe();
         }
