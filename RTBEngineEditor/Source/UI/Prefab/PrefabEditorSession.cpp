@@ -1,6 +1,7 @@
 #include "PrefabEditorSession.h"
 #include <RTBEngine/Scene/Prefab.h>
 #include <RTBEngine/Scene/PrefabRegistry.h>
+#include <RTBEngine/Scene/PrefabOverrideOps.h>
 #include <RTBEngine/Scene/GameObject.h>
 #include <RTBEngine/Scene/LightComponent.h>
 #include <RTBEngine/Rendering/Lighting/Light.h>
@@ -108,7 +109,10 @@ namespace RTBEditor {
             return false;
         }
 
-        RTBEngine::Scene::PrefabRegistry::GetInstance().Reload(prefab->GetName());
+        if (!RTBEngine::Scene::PrefabOverrideOps::ReloadAssetAndRefreshInstances(prefab->GetName())) {
+            RTB_ERROR("PrefabEditorSession: Failed to reload prefab: " + prefab->GetName());
+            return false;
+        }
         isDirty = false;
         return true;
     }

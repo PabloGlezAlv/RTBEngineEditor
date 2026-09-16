@@ -56,6 +56,8 @@ int main(int argc, char* argv[]) {
     config.window.height = 900;
     config.window.maximized = true;
     config.initialScenePath = ""; // Start with empty scene
+    config.imguiDocking = true;
+    config.imguiViewports = true;
     ConfigureEditorOnline(config);
     ConfigureGraphicsAPI(config);
 

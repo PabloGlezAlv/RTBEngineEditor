@@ -4691,8 +4691,6 @@ function CreateScene()
                         name = "PlayerNameplate",
                         uuid = "1BBB9837-C7AC-4612-AAA7-5F19B0A7CB43",
                         prefab = "Player Nameplate",
-                        position = Vector3(0.00, 2.20, 0.00),
-                        rotation = Quaternion.FromEulerAngles(50.00, -180.00, 0.00),
                     },
                     {
                         name = "Avatar",
