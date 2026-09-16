@@ -151,18 +151,6 @@ namespace {
         }
     }
 
-    bool IsLikelyDebugEngineDll(const fs::path& dllPath)
-    {
-        std::error_code error;
-        const auto fileSize = fs::file_size(dllPath, error);
-        if (error) {
-            return false;
-        }
-
-        // Release RTBEngine.dll is ~2 MB; Debug is ~9 MB. RTBPlayer links Release only.
-        return fileSize > 5'000'000;
-    }
-
     std::string FormatProcessExitCode(unsigned long exitCode)
     {
         std::ostringstream stream;
@@ -447,13 +435,6 @@ namespace RTBEditor {
 
         if (!fs::exists(engineDllSourcePath)) {
             SetResult(false, "RTBEngine.dll not found in SDK Bin. Build RTBEngine Release first.");
-            return false;
-        }
-
-        if (IsLikelyDebugEngineDll(engineDllSourcePath)) {
-            SetResult(false,
-                "SDK Bin contains a Debug RTBEngine.dll. RTBPlayer requires Release. "
-                "Build RTBEngine Release and RTBPlayer Release, then Prepare again.");
             return false;
         }
 
