@@ -5,6 +5,7 @@
 #include <RTBEngine/Scene/GameObject.h>
 #include <RTBEngine/UI/Elements/UISlider.h>
 #include <algorithm>
+#include <string>
 
 using ThisClass = HealthBarUI;
 
@@ -44,6 +45,34 @@ void HealthBarUI::OnDestroy()
 void HealthBarUI::ResolveSlider()
 {
     slider = owner->GetComponent<RTBEngine::UI::UISlider>();
+    if (slider) {
+        slider->OnValidate();
+        if (!fillPanel && slider->fillPanel) {
+            fillPanel = slider->fillPanel;
+        }
+    }
+
+    if (fillPanel) {
+        return;
+    }
+
+    for (RTBEngine::Scene::GameObject* child : owner->GetChildren()) {
+        if (!child) {
+            continue;
+        }
+
+        if (child->GetName().find("Fill") == std::string::npos) {
+            continue;
+        }
+
+        if (RTBEngine::UI::UIPanel* panel = child->GetComponent<RTBEngine::UI::UIPanel>()) {
+            fillPanel = panel;
+            if (slider && !slider->fillPanel) {
+                slider->fillPanel = panel;
+            }
+            break;
+        }
+    }
 }
 
 RTBEngine::UI::UIPanel* HealthBarUI::GetEffectiveFillPanel() const
@@ -62,6 +91,7 @@ RTBEngine::UI::UIPanel* HealthBarUI::GetEffectiveFillPanel() const
 void HealthBarUI::RebindHealthSubscription()
 {
     if (subscribedHealth == health && healthSubscription.IsValid()) {
+        UpdateVisuals();
         return;
     }
 

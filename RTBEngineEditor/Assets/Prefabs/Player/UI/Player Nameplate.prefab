@@ -21,8 +21,8 @@ return {
                 },
                 {
                     type = "PlayerNameplateUI",
-                    displayNameText = nil,
-                    healthBarUI = nil
+                    displayNameText = "A1000001-0004-4000-8000-000000000004/UIText",
+                    healthBarUI = "A1000001-0005-4000-8000-000000000005/HealthBarUI"
                 },
             },
             children = {
@@ -104,13 +104,13 @@ return {
                                     maxValue = 1.00,
                                     value = 1.00,
                                     interactable = false,
-                                    fillPanel = nil,
-                                    handlePanel = nil
+                                    fillPanel = "A1000001-0006-4000-8000-000000000006/UIPanel",
+                                    handlePanel = "A1000001-0007-4000-8000-000000000007/UIPanel"
                                 },
                                 {
                                     type = "HealthBarUI",
                                     health = nil,
-                                    fillPanel = nil,
+                                    fillPanel = "A1000001-0006-4000-8000-000000000006/UIPanel",
                                     highHealthColor = Color(0.12, 0.78, 0.24, 1.00),
                                     midHealthColor = Color(0.95, 0.74, 0.16, 1.00),
                                     lowHealthColor = Color(0.82, 0.18, 0.18, 1.00)
@@ -210,8 +210,8 @@ return {
                                     maxValue = 1.00,
                                     value = 1.00,
                                     interactable = false,
-                                    fillPanel = nil,
-                                    handlePanel = nil
+                                    fillPanel = "A1000001-0011-4000-8000-000000000011/UIPanel",
+                                    handlePanel = "A1000001-0012-4000-8000-000000000012/UIPanel"
                                 },
                             },
                             children = {

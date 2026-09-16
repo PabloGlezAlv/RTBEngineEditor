@@ -84,6 +84,7 @@ void PlayerNameplateUI::OnStart()
     DisableCanvasBillboard(owner->GetComponent<RTBEngine::UI::Canvas>());
     ApplyFixedWorldOrientation();
 
+    ResolveBindings();
     RefreshDisplayName();
     BindHealthBar();
 
@@ -102,6 +103,11 @@ void PlayerNameplateUI::OnStart()
 void PlayerNameplateUI::OnLateUpdate(float /*deltaTime*/)
 {
     ApplyFixedWorldOrientation();
+    if (!displayNameText || !healthBarUI) {
+        ResolveBindings();
+        BindHealthBar();
+    }
+    RefreshDisplayName();
 }
 
 void PlayerNameplateUI::OnDestroy()
@@ -113,14 +119,27 @@ void PlayerNameplateUI::OnValidate()
 {
     DisableCanvasBillboard(owner->GetComponent<RTBEngine::UI::Canvas>());
     ApplyFixedWorldOrientation();
+    ResolveBindings();
     RefreshDisplayName();
     BindHealthBar();
 }
 
 void PlayerNameplateUI::ForceRefreshDisplayName()
 {
+    ResolveBindings();
     RefreshDisplayName();
     BindHealthBar();
+}
+
+void PlayerNameplateUI::ResolveBindings()
+{
+    if (!displayNameText) {
+        displayNameText = owner->GetComponentInChildren<RTBEngine::UI::UIText>();
+    }
+
+    if (!healthBarUI) {
+        healthBarUI = owner->GetComponentInChildren<HealthBarUI>();
+    }
 }
 
 void PlayerNameplateUI::ApplyFixedWorldOrientation() const
@@ -181,10 +200,6 @@ void PlayerNameplateUI::BindHealthBar()
     }
 
     HealthComponent* health = playerRoot->GetComponent<HealthComponent>();
-    if (healthBarUI->health == health) {
-        return;
-    }
-
     healthBarUI->health = health;
     healthBarUI->RefreshBinding();
 }

@@ -10,6 +10,7 @@
 #include <RTBEngine/Scene/Scene.h>
 #include <RTBEngine/Scene/SceneManager.h>
 #include <RTBEngine/Online/OnlineGameplayNet.h>
+#include <RTBEngine/Online/OnlineSystem.h>
 #include <RTBEngine/UI/UIElement.h>
 
 #include <algorithm>
@@ -94,6 +95,23 @@ void PartyHealthHud::OnStart()
             RefreshEntries();
         });
 
+    profileChangedSubscription =
+        RTBEngine::Online::OnlineSystem::GetInstance().SubscribeToPlayerSessionProfileChanged(
+            [this](const RTBEngine::Online::PlayerSessionProfileChangedEvent&) {
+                RefreshEntries();
+            });
+
+    RefreshEntries();
+}
+
+void PartyHealthHud::OnUpdate(float deltaTime)
+{
+    refreshTimer += std::max(0.0f, deltaTime);
+    if (refreshTimer < std::max(0.05f, refreshInterval)) {
+        return;
+    }
+
+    refreshTimer = 0.0f;
     RefreshEntries();
 }
 
@@ -101,6 +119,7 @@ void PartyHealthHud::OnDestroy()
 {
     pawnSpawnedSubscription.Reset();
     pawnDestroyedSubscription.Reset();
+    profileChangedSubscription.Reset();
     ClearSpawnedEntries();
 }
 
@@ -255,10 +274,8 @@ void PartyHealthHud::BindEntry(
 
     if (entry.healthBar) {
         HealthComponent* health = pawn ? pawn->GetComponent<HealthComponent>() : nullptr;
-        if (entry.healthBar->health != health) {
-            entry.healthBar->health = health;
-            entry.healthBar->RefreshBinding();
-        }
+        entry.healthBar->health = health;
+        entry.healthBar->RefreshBinding();
     }
 }
 

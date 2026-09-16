@@ -103,11 +103,7 @@ namespace {
     {
         RTBEngine::Online::OnlineSystem& online = RTBEngine::Online::OnlineSystem::GetInstance();
         if (ownerUserId == online.GetLocalUserId()) {
-            if (const RTBEngine::Online::IOnlineIdentity* identity = online.GetIdentity()) {
-                if (!identity->GetDisplayName().empty()) {
-                    return identity->GetDisplayName();
-                }
-            }
+            return GameNet::ResolveLocalDisplayName();
         }
 
         const std::string lobbyName = online.GetLobbyMemberDisplayName(ownerUserId);
@@ -180,6 +176,11 @@ void OnlinePlayerManager::OnStart()
             [this](const RTBEngine::Online::PlayerSessionProfileChangedEvent& event) {
                 if (!event.removed) {
                     EnsureRemotePawnsSpawned();
+                }
+
+                if (RTBEngine::Scene::GameObject* pawn =
+                        PlayerRegistry::GetInstance().FindBySlot(event.playerSlot)) {
+                    RefreshNameplatesForPawn(pawn);
                 }
             });
 
@@ -265,7 +266,18 @@ void OnlinePlayerManager::RegisterPlayerSessionProfiles(
     for (std::size_t memberIndex = 0; memberIndex < members.size(); ++memberIndex) {
         const RTBEngine::Online::OnlineUserId& member = members[memberIndex];
         const int playerSlot = static_cast<int>(memberIndex);
-        const std::string displayName = ResolveLobbyMemberDisplayName(member, playerSlot);
+        std::string displayName = ResolveLobbyMemberDisplayName(member, playerSlot);
+
+        GameNet::PlayerSessionSnapshot existingSnapshot;
+        const bool hasExistingSnapshot =
+            GameNet::OnlineGameNetSubsystem::TryGetPlayerSessionSnapshot(playerSlot, existingSnapshot);
+        if (hasExistingSnapshot && !existingSnapshot.displayName.empty()) {
+            displayName = existingSnapshot.displayName;
+        }
+
+        if (member == online.GetLocalUserId()) {
+            displayName = GameNet::ResolveLocalDisplayName();
+        }
 
         RTBEngine::Online::OnlinePlayerProfile profile;
         profile.userId = member;
@@ -288,13 +300,13 @@ void OnlinePlayerManager::RegisterPlayerSessionProfiles(
             continue;
         }
 
-        GameNet::PlayerSessionSnapshot existingSnapshot;
-        if (!GameNet::OnlineGameNetSubsystem::TryGetPlayerSessionSnapshot(playerSlot, existingSnapshot) ||
-            existingSnapshot.characterId.empty()) {
+        if (!hasExistingSnapshot || existingSnapshot.characterId.empty()) {
             continue;
         }
 
-        existingSnapshot.displayName = displayName;
+        if (!displayName.empty()) {
+            existingSnapshot.displayName = displayName;
+        }
         existingSnapshot.ownerUserIdKey = member.ToString();
         GameNet::OnlineGameNetSubsystem::MergePlayerSessionSnapshot(existingSnapshot);
     }

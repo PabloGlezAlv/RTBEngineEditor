@@ -2,6 +2,7 @@
 
 #include "CharacterDefinition.h"
 #include "CombatAuthority.h"
+#include "OnlineGameNetMessages.h"
 
 #include <RTBEngine/Core/Logger.h>
 #include <RTBEngine/Scene/GameObject.h>
@@ -109,8 +110,22 @@ void PlayerAmmoSystem::EnsureReferences()
         }
     }
 
+    if (ammoSlider) {
+        ammoSlider->OnValidate();
+    }
+
+    if (!ammoFillPanel) {
+        if (RTBEngine::Scene::GameObject* ammoFill = FindDescendantByName(owner, "NameplateAmmoFill")) {
+            ammoFillPanel = ammoFill->GetComponent<RTBEngine::UI::UIPanel>();
+        }
+    }
+
     if (!ammoFillPanel && ammoSlider && ammoSlider->fillPanel) {
         ammoFillPanel = ammoSlider->fillPanel;
+    }
+
+    if (ammoSlider && ammoFillPanel && !ammoSlider->fillPanel) {
+        ammoSlider->fillPanel = ammoFillPanel;
     }
 
     if (!ammoSlider) {
@@ -132,6 +147,7 @@ void PlayerAmmoSystem::OnStart()
     }
 
     RefreshNetworkState();
+    UpdateVisuals();
 }
 
 void PlayerAmmoSystem::OnLateUpdate(float deltaTime)
@@ -149,12 +165,19 @@ void PlayerAmmoSystem::RefreshNetworkState()
 {
     EnsureReferences();
     const bool localPlayer = IsLocalPlayer();
-    SetBarVisible(localPlayer);
+    SetBarVisible(true);
     SetUpdateTickEnabled(localPlayer);
-
+    UpdateVisuals();
     if (localPlayer) {
-        UpdateVisuals();
+        SyncAmmoToNetwork();
     }
+}
+
+void PlayerAmmoSystem::ApplyNetworkNormalizedAmmo(float normalized)
+{
+    normalizedAmmo = std::clamp(normalized, 0.0f, 1.0f);
+    EnsureReferences();
+    UpdateVisuals();
 }
 
 void PlayerAmmoSystem::RechargeAmmo(float deltaTime)
@@ -163,6 +186,7 @@ void PlayerAmmoSystem::RechargeAmmo(float deltaTime)
         if (normalizedAmmo < 1.0f) {
             normalizedAmmo = 1.0f;
             UpdateVisuals();
+            SyncAmmoToNetwork();
         }
         return;
     }
@@ -170,6 +194,7 @@ void PlayerAmmoSystem::RechargeAmmo(float deltaTime)
     const float reloadRate = 1.0f / GetEffectiveReloadDuration();
     normalizedAmmo = std::min(1.0f, normalizedAmmo + std::max(0.0f, deltaTime) * reloadRate);
     UpdateVisuals();
+    SyncAmmoToNetwork();
 }
 
 void PlayerAmmoSystem::OnValidate()
@@ -213,6 +238,7 @@ void PlayerAmmoSystem::ConsumeShot()
 
     normalizedAmmo = std::max(0.0f, normalizedAmmo - GetShotCost());
     UpdateVisuals();
+    SyncAmmoToNetwork();
 }
 
 bool PlayerAmmoSystem::HasAmmoAvailable(RTBEngine::Scene::GameObject* instigator)
@@ -251,6 +277,16 @@ void PlayerAmmoSystem::RefillAmmo()
 {
     normalizedAmmo = 1.0f;
     UpdateVisuals();
+    SyncAmmoToNetwork();
+}
+
+void PlayerAmmoSystem::SyncAmmoToNetwork()
+{
+    if (!IsLocalPlayer()) {
+        return;
+    }
+
+    GameNet::OnlineGameNetSubsystem::TrySyncPlayerAmmoFromComponent(this, normalizedAmmo);
 }
 
 RTBEngine::Math::Vector4 PlayerAmmoSystem::EvaluateFillColor() const
@@ -264,10 +300,6 @@ RTBEngine::Math::Vector4 PlayerAmmoSystem::EvaluateFillColor() const
 
 void PlayerAmmoSystem::UpdateVisuals()
 {
-    if (!IsLocalPlayer()) {
-        return;
-    }
-
     if (!ammoSlider) {
         return;
     }

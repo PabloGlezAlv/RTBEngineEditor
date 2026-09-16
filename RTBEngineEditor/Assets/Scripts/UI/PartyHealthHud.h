@@ -29,6 +29,7 @@ public:
     RTB_COMPONENT(PartyHealthHud)
 
     void OnStart() override;
+    void OnUpdate(float deltaTime) override;
     void OnDestroy() override;
 
 private:
@@ -44,6 +45,8 @@ private:
 
     RTBEngine::Core::EventSubscription pawnSpawnedSubscription;
     RTBEngine::Core::EventSubscription pawnDestroyedSubscription;
+    RTBEngine::Core::EventSubscription profileChangedSubscription;
+    float refreshTimer = 0.0f;
 
     void RefreshEntries();
     void ClearSpawnedEntries();

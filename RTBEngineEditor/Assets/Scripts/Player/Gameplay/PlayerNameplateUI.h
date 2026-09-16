@@ -62,6 +62,8 @@ private:
 
 
 
+    void ResolveBindings();
+
     void RefreshDisplayName() const;
 
     void BindHealthBar();

@@ -12,6 +12,7 @@
 #include <vector>
 
 class HealthComponent;
+class PlayerAmmoSystem;
 
 namespace GameNet {
 
@@ -71,6 +72,11 @@ namespace GameNet {
         float normalizedHealth = 1.0f;
     };
 
+    struct PlayerAmmoSnapshot {
+        int playerSlot = -1;
+        float normalizedAmmo = 1.0f;
+    };
+
     struct EnemyAttackSnapshot {
         std::uint32_t networkId = 0;
         std::uint32_t attackSequence = 0;
@@ -114,6 +120,7 @@ namespace GameNet {
         static void HostSyncAuthoritativeRemotePlayers();
 
         static void TrySyncPlayerHealthFromComponent(::HealthComponent* health, float normalizedHealth);
+        static void TrySyncPlayerAmmoFromComponent(::PlayerAmmoSystem* ammo, float normalizedAmmo);
 
         static bool BroadcastEnemySpawn(const EnemySpawnSnapshot& snapshot);
         static bool TryConsumeEnemySpawn(EnemySpawnSnapshot& outSnapshot);

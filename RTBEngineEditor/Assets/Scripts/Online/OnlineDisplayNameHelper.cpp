@@ -66,6 +66,16 @@ namespace GameNet {
 
         RTBEngine::Online::OnlineSystem& online = RTBEngine::Online::OnlineSystem::GetInstance();
 
+        const std::string& sessionName = online.GetSessionDisplayName();
+
+        if (!sessionName.empty()) {
+
+            return sessionName;
+
+        }
+
+
+
         if (const RTBEngine::Online::IOnlineIdentity* identity = online.GetIdentity()) {
 
             if (identity->IsLoggedIn() && !identity->GetDisplayName().empty()) {
@@ -73,16 +83,6 @@ namespace GameNet {
                 return identity->GetDisplayName();
 
             }
-
-        }
-
-
-
-        const std::string& sessionName = online.GetSessionDisplayName();
-
-        if (!sessionName.empty()) {
-
-            return sessionName;
 
         }
 

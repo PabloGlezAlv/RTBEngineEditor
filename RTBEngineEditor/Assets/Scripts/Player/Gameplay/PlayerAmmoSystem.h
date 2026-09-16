@@ -25,6 +25,7 @@ public:
     void ConsumeShot();
     void RefillAmmo();
     void RefreshNetworkState();
+    void ApplyNetworkNormalizedAmmo(float normalized);
     float GetNormalizedAmmo() const { return normalizedAmmo; }
 
     static bool HasAmmoAvailable(RTBEngine::Scene::GameObject* instigator);
@@ -58,6 +59,7 @@ public:
     void EnsureReferences();
     void SetBarVisible(bool visible);
     void UpdateVisuals();
+    void SyncAmmoToNetwork();
     void RechargeAmmo(float deltaTime);
     RTBEngine::Math::Vector4 EvaluateFillColor() const;
     float GetShotCost() const;
