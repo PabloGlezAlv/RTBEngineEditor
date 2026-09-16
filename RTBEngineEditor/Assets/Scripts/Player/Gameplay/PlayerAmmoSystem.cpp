@@ -26,6 +26,29 @@ namespace {
 
         return false;
     }
+
+    RTBEngine::Scene::GameObject* FindDescendantByName(RTBEngine::Scene::GameObject* root, const char* name)
+    {
+        if (!root || !name) {
+            return nullptr;
+        }
+
+        for (RTBEngine::Scene::GameObject* child : root->GetChildren()) {
+            if (!child) {
+                continue;
+            }
+
+            if (child->GetName() == name) {
+                return child;
+            }
+
+            if (RTBEngine::Scene::GameObject* nested = FindDescendantByName(child, name)) {
+                return nested;
+            }
+        }
+
+        return nullptr;
+    }
 }
 
 RTB_REGISTER_COMPONENT(PlayerAmmoSystem)
@@ -78,6 +101,16 @@ void PlayerAmmoSystem::EnsureReferences()
         if (fillOwner && IsDescendantOf(fillOwner, owner)) {
             ammoFillPanel = ammoSlider->fillPanel;
         }
+    }
+
+    if (!ammoSlider) {
+        if (RTBEngine::Scene::GameObject* ammoTrack = FindDescendantByName(owner, "NameplateAmmoTrack")) {
+            ammoSlider = ammoTrack->GetComponent<RTBEngine::UI::UISlider>();
+        }
+    }
+
+    if (!ammoFillPanel && ammoSlider && ammoSlider->fillPanel) {
+        ammoFillPanel = ammoSlider->fillPanel;
     }
 
     if (!ammoSlider) {

@@ -1,6 +1,9 @@
 #include "BuildSystem.h"
 #include <fstream>
 #include <RTBEngine/Core/Logger.h>
+#include <RTBEngine/Physics/PhysicsLayerSettings.h>
+#include <RTBEngine/Rendering/Lighting/LightingProjectSettings.h>
+#include <RTBEngine/Rendering/RHI/GraphicsAPI.h>
 #include "../Core/EditorOnlineSettings.h"
 #include "../Project/Project.h"
 #include <algorithm>
@@ -169,6 +172,28 @@ namespace RTBEditor {
             return BuildResult::CopyFailed;
         }
 
+        {
+            const fs::path physicsLayersSource =
+                project->GetProjectDirectory() /
+                RTBEngine::Physics::PhysicsLayerSettings::GetDefaultSettingsFileName();
+            if (fs::exists(physicsLayersSource)) {
+                fs::copy_file(
+                    physicsLayersSource,
+                    settings.outputDirectory / physicsLayersSource.filename(),
+                    fs::copy_options::overwrite_existing);
+            }
+
+            const fs::path lightingSource =
+                project->GetProjectDirectory() /
+                RTBEngine::Rendering::LightingProjectSettings::GetDefaultSettingsFileName();
+            if (fs::exists(lightingSource)) {
+                fs::copy_file(
+                    lightingSource,
+                    settings.outputDirectory / lightingSource.filename(),
+                    fs::copy_options::overwrite_existing);
+            }
+        }
+
         if (onProgress) onProgress("Generating game.cfg...", 0.9f);
         if (!WriteGameConfig(settings.outputDirectory, settings)) {
             RTB_ERROR("Build failed: Could not write game.cfg");
@@ -317,6 +342,13 @@ namespace RTBEditor {
 
             cfgFile << "[Scene]\n";
             cfgFile << "StartScene=" << NormalizeReferencePath(settings.startScene) << "\n";
+
+            const Project* project = Project::GetActiveProject();
+            const RTBEngine::Rendering::RHI::GraphicsAPI graphicsAPI = project
+                ? project->GetGraphicsAPI()
+                : RTBEngine::Rendering::RHI::GraphicsAPI::OpenGL;
+            cfgFile << "\n[Rendering]\n";
+            cfgFile << "GraphicsAPI=" << RTBEngine::Rendering::RHI::GraphicsAPIToString(graphicsAPI) << "\n";
 
             const EditorOnlineSettings editorOnlineSettings = EditorOnlineSettingsStore::Load();
 

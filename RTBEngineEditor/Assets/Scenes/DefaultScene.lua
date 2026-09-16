@@ -4678,7 +4678,6 @@ function CreateScene()
                             health = "F86013BD-FF24-4672-91B3-9411CDF272AE/HealthComponent",
                         },
                         { type = "PlayerAmmoSystem",
-                            ammoSlider = "A1447084-CE03-491F-A070-85BF4BD352D6/UISlider",
                             fullReloadDuration = 8.50,
                         },
                         { type = "PlayerSpecialAttackCharge",
@@ -4691,101 +4690,9 @@ function CreateScene()
                     {
                         name = "PlayerNameplate",
                         uuid = "1BBB9837-C7AC-4612-AAA7-5F19B0A7CB43",
+                        prefab = "Player Nameplate",
                         position = Vector3(0.00, 2.20, 0.00),
                         rotation = Quaternion.FromEulerAngles(50.00, -180.00, 0.00),
-                        children = {
-                            {
-                                name = "NameplateCanvas",
-                                uuid = "51AAC541-14A9-4369-A3AF-32FDFED053CA",
-                                components = {
-                                    {
-                                        type = "Canvas",
-                                        renderMode = "WorldSpace",
-                                        canvasSize = Vector2(200.00, 24.00),
-                                        pixelsPerUnit = 100.00,
-                                        sortOrder = 25,
-                                        faceCamera = false,
-                                        faceCameraLockY = false
-                                    },
-                                    {
-                                        type = "PlayerNameplateUI",
-                                        displayNameText = "A1000001-0004-4000-8000-000000000004/UIText",
-                                        healthBarUI = "40968BFF-6484-4ED6-AF95-45D207A01236/HealthBarUI"
-                                    },
-                                },
-                                children = {
-                                    {
-                                        name = "NameplateRoot",
-                                        uuid = "DBD277BA-8CD7-4043-840D-199101F16746",
-                                        children = {
-                                            {
-                                                name = "NameplateHealthTrack",
-                                                uuid = "40968BFF-6484-4ED6-AF95-45D207A01236",
-                                                components = {
-                                                    {
-                                                        type = "UIPanel",
-                                                        backgroundColor = Color(0.00, 0.00, 0.00, 0.00),
-                                                        borderColor = Color(0.00, 0.00, 0.00, 0.00),
-                                                        borderThickness = 0.00,
-                                                        hasBorder = false,
-                                                        isVisible = true,
-                                                        raycastTarget = false,
-                                                        anchorMin = Vector2(0.50, 0.24),
-                                                        anchorMax = Vector2(0.50, 0.24),
-                                                        pivot = Vector2(0.50, 0.50),
-                                                        anchoredPosition = Vector2(0.00, -2.00),
-                                                        sizeDelta = Vector2(168.00, 5.00),
-                                                        rotation = 0.00,
-                                                        scale = Vector2(1.00, 1.00)
-                                                    },
-                                                    {
-                                                        type = "UISlider",
-                                                        minValue = 0.00,
-                                                        maxValue = 1.00,
-                                                        value = 1.00,
-                                                        interactable = false,
-                                                        fillPanel = "78ED8B41-2F67-415E-946B-1808C2F9C311/UIPanel",
-                                                        handlePanel = "A1000001-0007-4000-8000-000000000007/UIPanel"
-                                                    },
-                                                    {
-                                                        type = "HealthBarUI",
-                                                        health = "F86013BD-FF24-4672-91B3-9411CDF272AE/HealthComponent",
-                                                        fillPanel = "78ED8B41-2F67-415E-946B-1808C2F9C311/UIPanel",
-                                                        highHealthColor = Color(0.12, 0.78, 0.24, 1.00),
-                                                        midHealthColor = Color(0.95, 0.74, 0.16, 1.00),
-                                                        lowHealthColor = Color(0.82, 0.18, 0.18, 1.00)
-                                                    },
-                                                },
-                                                children = {
-                                                    {
-                                                        name = "NameplateFill",
-                                                        uuid = "78ED8B41-2F67-415E-946B-1808C2F9C311",
-                                                        components = {
-                                                            {
-                                                                type = "UIPanel",
-                                                                backgroundColor = Color(0.12, 0.78, 0.24, 1.00),
-                                                                borderColor = Color(0.00, 0.00, 0.00, 0.00),
-                                                                borderThickness = 0.00,
-                                                                hasBorder = false,
-                                                                isVisible = true,
-                                                                raycastTarget = false,
-                                                                anchorMin = Vector2(0.00, 0.50),
-                                                                anchorMax = Vector2(0.00, 0.50),
-                                                                pivot = Vector2(0.00, 0.50),
-                                                                anchoredPosition = Vector2(1.00, 0.00),
-                                                                sizeDelta = Vector2(168.00, 12.00),
-                                                                rotation = 0.00,
-                                                                scale = Vector2(1.00, 1.00)
-                                                            },
-                                                        }
-                                                    },
-                                                }
-                                            },
-                                        }
-                                    },
-                                }
-                            },
-                        }
                     },
                     {
                         name = "Avatar",

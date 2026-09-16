@@ -1,6 +1,7 @@
 #include "GameConfig.h"
 #include <RTBEngine/Core/Logger.h>
 #include <RTBEngine/Online/OnlineTypes.h>
+#include <RTBEngine/Rendering/RHI/GraphicsAPI.h>
 #include <cstdint>
 #include <fstream>
 #include <sstream>
@@ -90,6 +91,11 @@ namespace RTBPlayer {
                 }
                 else if (currentSection == "Scene") {
                     if (key == "StartScene") startScene = value;
+                }
+                else if (currentSection == "Rendering") {
+                    if (key == "GraphicsAPI") {
+                        graphicsAPI = RTBEngine::Rendering::RHI::ParseGraphicsAPI(value);
+                    }
                 }
                 else if (currentSection == "Online") {
                     if (key == "Enabled") onlineConfig.enabled = ParseBool(value);

@@ -2,6 +2,8 @@
 
 #include "EditorOnlineSettings.h"
 #include <RTBEngine/Physics/PhysicsLayerSettings.h>
+#include <RTBEngine/Rendering/Lighting/LightingProjectSettings.h>
+#include <RTBEngine/Rendering/RHI/GraphicsAPI.h>
 #include "../Build/BuildSystem.h"
 #include "../Project/Project.h"
 
@@ -474,6 +476,16 @@ namespace RTBEditor {
                     fs::copy_options::overwrite_existing);
             }
 
+            const fs::path lightingSource =
+                project->GetProjectDirectory() /
+                RTBEngine::Rendering::LightingProjectSettings::GetDefaultSettingsFileName();
+            if (fs::exists(lightingSource)) {
+                fs::copy_file(
+                    lightingSource,
+                    playerDirectory / RTBEngine::Rendering::LightingProjectSettings::GetDefaultSettingsFileName(),
+                    fs::copy_options::overwrite_existing);
+            }
+
             if (!CopyDirectoryTree(project->GetAssetRootPath(), playerDirectory / "Assets", error)) {
                 SetResult(false, error);
                 return false;
@@ -618,6 +630,13 @@ namespace RTBEditor {
 
         cfgFile << "[Scene]\n";
         cfgFile << "StartScene=" << NormalizeReferencePath(settings.startScene) << "\n";
+
+        const Project* project = Project::GetActiveProject();
+        const RTBEngine::Rendering::RHI::GraphicsAPI graphicsAPI = project
+            ? project->GetGraphicsAPI()
+            : RTBEngine::Rendering::RHI::GraphicsAPI::OpenGL;
+        cfgFile << "\n[Rendering]\n";
+        cfgFile << "GraphicsAPI=" << RTBEngine::Rendering::RHI::GraphicsAPIToString(graphicsAPI) << "\n";
 
         cfgFile << "\n[Online]\n";
         cfgFile << "Enabled=" << (editorOnlineSettings.enabled ? "true" : "false") << "\n";

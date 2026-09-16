@@ -116,9 +116,11 @@ namespace RTBEditor {
         RTB_INFO("EditorApplication: Loading project from " + projectFilePath.string());
 
         if (project->Load(projectFilePath)) {
+            engineApp->PresentLoadingSplash();
             resources.SetAssetRootPath(project->GetAssetRootPath());
             resources.ScanShaderAssets(project->GetAssetRootPath());
             resources.ReloadAllShaderAssets();
+            engineApp->PresentLoadingSplash();
             const char* buildConfiguration = GetEditorBuildConfiguration();
             fs::path scriptsDllPath = project->GetGameScriptsDllPath(buildConfiguration);
 
@@ -132,10 +134,12 @@ namespace RTBEditor {
             }
 
             ReloadProjectPrefabs(*project);
+            engineApp->PresentLoadingSplash();
 
             const std::string& lastOpen = project->GetLastOpenScene();
             const std::string& sceneToLoad = !lastOpen.empty() ? lastOpen : project->GetStartScene();
             RTBEngine::Scene::SceneManager::GetInstance().LoadScene(sceneToLoad);
+            engineApp->PresentLoadingSplash();
         }
 
         uiLayer = std::make_unique<EditorLayer>();

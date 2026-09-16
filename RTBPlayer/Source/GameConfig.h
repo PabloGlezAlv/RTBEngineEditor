@@ -1,6 +1,7 @@
 #pragma once
 
 #include <RTBEngine/Online/OnlineConfig.h>
+#include <RTBEngine/Rendering/RHI/GraphicsAPI.h>
 
 #include <string>
 
@@ -19,6 +20,7 @@ namespace RTBPlayer {
         int GetWindowHeight() const { return windowHeight; }
         bool IsFullscreen() const { return fullscreen; }
         const std::string& GetStartScene() const { return startScene; }
+        RTBEngine::Rendering::RHI::GraphicsAPI GetGraphicsAPI() const { return graphicsAPI; }
         const RTBEngine::Online::OnlineConfig& GetOnlineConfig() const { return onlineConfig; }
 
     private:
@@ -27,6 +29,8 @@ namespace RTBPlayer {
         int windowHeight = 720;
         bool fullscreen = false;
         std::string startScene = "Assets/Scenes/DefaultScene.lua";
+        RTBEngine::Rendering::RHI::GraphicsAPI graphicsAPI =
+            RTBEngine::Rendering::RHI::GraphicsAPI::OpenGL;
         RTBEngine::Online::OnlineConfig onlineConfig;
     };
 
