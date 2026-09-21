@@ -137,24 +137,14 @@ RTB_END_REGISTER(PlayerPawnSpawner)
 
 void PlayerPawnSpawner::OnAwake()
 {
-    // Drop stale pawns left behind after Play→Stop scene reloads.
+    // Clear runs before OnStart subscriptions, so it only drops pawns from the previous scene.
     PlayerRegistry::GetInstance().Clear();
+}
 
-    // Avoid duplicating a scene-authored Player (editor load runs Awake on spawners).
-    if (RTBEngine::Scene::Scene* activeScene =
-            RTBEngine::Scene::SceneManager::GetInstance().GetActiveScene()) {
-        for (const auto& gameObjectPtr : activeScene->GetGameObjects()) {
-            RTBEngine::Scene::GameObject* candidate = gameObjectPtr.get();
-            if (!candidate || candidate->GetParent() != nullptr) {
-                continue;
-            }
-            if (candidate->GetName() == "Player") {
-                spawnedPawn = candidate;
-                PlayerRegistry::GetInstance().RegisterPlayerPawn(spawnedPawn);
-                owner->SetActive(false);
-                return;
-            }
-        }
+void PlayerPawnSpawner::OnStart()
+{
+    if (!owner) {
+        return;
     }
 
     PlayerCharacterSelection& selection = PlayerCharacterSelection::GetInstance();
@@ -172,13 +162,10 @@ void PlayerPawnSpawner::OnAwake()
         return;
     }
 
-    const RTBEngine::Math::Vector3 spawnPosition = owner->GetWorldPosition();
-    const RTBEngine::Math::Quaternion spawnRotation = owner->GetWorldRotation();
-
     spawnedPawn = CharacterGameplaySpawner::InstantiateFromDefinition(
         *definition,
-        spawnPosition,
-        spawnRotation);
+        owner->GetWorldPosition(),
+        owner->GetWorldRotation());
     if (!spawnedPawn) {
         RTB_WARN("[PlayerPawnSpawner] Failed to instantiate gameplay prefab for '" +
                  definition->characterId + "'.");
@@ -192,15 +179,13 @@ void PlayerPawnSpawner::OnAwake()
         specialAttackJoystick,
         specialAttackReadyIcon);
 
-    if (onlinePlayerManager) {
-        onlinePlayerManager->localPlayerObject = spawnedPawn;
+    if (roundManager) {
+        roundManager->SetLocalPlayerPawn(spawnedPawn);
     }
 
-    if (roundManager) {
-        roundManager->playerObject = spawnedPawn;
+    if (onlinePlayerManager) {
+        onlinePlayerManager->BindLocalPawn(spawnedPawn);
     }
 
     PlayerRegistry::GetInstance().RegisterPlayerPawn(spawnedPawn);
-
-    owner->SetActive(false);
 }

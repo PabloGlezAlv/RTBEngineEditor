@@ -111,9 +111,6 @@ void PlayerRegistry::RegisterPlayerPawn(RTBEngine::Scene::GameObject* pawn)
     }
 
     HealthComponent* health = pawn->GetComponent<HealthComponent>();
-    if (!health) {
-        health = pawn->GetComponentInChildren<HealthComponent>();
-    }
 
     RTBEngine::Scene::NetworkIdentity* identity = pawn->GetComponent<RTBEngine::Scene::NetworkIdentity>();
 

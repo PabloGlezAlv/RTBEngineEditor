@@ -173,13 +173,7 @@ void ProjectileAttackAbility::SetProjectileCombatOverrides(
 {
     totalAttackDamage = std::max(0.0f, damage);
     burstTickCount = std::max(1, burstCount);
-    float resolvedBurstInterval = burstInterval;
-    if (burstTickCount <= 1 && tickCount > 1) {
-        burstTickCount = tickCount;
-        if (resolvedBurstInterval <= 0.0f) {
-            resolvedBurstInterval = tickInterval;
-        }
-    }
+    const float resolvedBurstInterval = burstInterval;
     tickCount = burstTickCount;
 
     projectileSpeedOverride = std::max(0.0f, speed);

@@ -53,6 +53,12 @@ RTB_REGISTER_COMPONENT(RoundManager)
     RTB_PROPERTY_GAMEOBJECT_LIST(spawnPoints)
 RTB_END_REGISTER(RoundManager)
 
+void RoundManager::SetLocalPlayerPawn(RTBEngine::Scene::GameObject* pawn)
+{
+    playerObject = pawn;
+    playerHealth = playerObject ? playerObject->GetComponent<HealthComponent>() : nullptr;
+}
+
 void RoundManager::OnStart()
 {
     GameSession::GetInstance().Reset();
@@ -265,18 +271,14 @@ void RoundManager::InitializeRuntime()
         uiHandler = owner->GetComponent<RoundUIHandler>();
     }
 
+    RTBEngine::Scene::GameObject* localPawn = playerObject;
     if (RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby() &&
         onlinePlayerManager &&
         onlinePlayerManager->localPlayerObject) {
-        playerObject = onlinePlayerManager->localPlayerObject;
+        localPawn = onlinePlayerManager->localPlayerObject;
     }
 
-    if (playerObject) {
-        playerHealth = playerObject->GetComponent<HealthComponent>();
-        if (!playerHealth) {
-            playerHealth = playerObject->GetComponentInChildren<HealthComponent>();
-        }
-    }
+    SetLocalPlayerPawn(localPawn);
 
     enemySpawnPrefab = nullptr;
     if (!enemyPrefabRef.empty()) {
@@ -826,10 +828,6 @@ void RoundManager::RevivePlayerPawn(RTBEngine::Scene::GameObject* pawn)
     }
 
     HealthComponent* health = pawn->GetComponent<HealthComponent>();
-    if (!health) {
-        health = pawn->GetComponentInChildren<HealthComponent>();
-    }
-
     if (health && health->IsDead()) {
         health->Revive();
     }

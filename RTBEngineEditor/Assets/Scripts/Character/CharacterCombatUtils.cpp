@@ -9,6 +9,7 @@
 #include <RTBEngine/Scene/GameObject.h>
 #include <RTBEngine/Scene/PhysicsWorldResolver.h>
 #include <RTBEngine/Scene/RigidBodyComponent.h>
+#include <RTBEngine/Scene/SceneManager.h>
 
 #include <algorithm>
 #include <cmath>
@@ -113,40 +114,17 @@ namespace CharacterCombatUtils {
             return result;
         }
 
-        HealthComponent* nearestHealth = nullptr;
-        RTBEngine::Scene::GameObject* nearestHealthRoot = nullptr;
-
         for (RTBEngine::Scene::GameObject* current = gameObject; current; current = current->GetParent()) {
-            if (CharacterBase* character = current->GetComponent<CharacterBase>()) {
-                result.root = current;
-                result.character = character;
-                result.health = character->GetHealth();
-                if (!result.health) {
-                    result.health = current->GetComponent<HealthComponent>();
-                }
-                if (!result.health) {
-                    result.health = nearestHealth;
-                }
-                return result;
+            HealthComponent* health = current->GetComponent<HealthComponent>();
+            CharacterBase* character = current->GetComponent<CharacterBase>();
+            if (!health && !character) {
+                continue;
             }
 
-            if (!nearestHealth) {
-                if (HealthComponent* health = current->GetComponent<HealthComponent>()) {
-                    nearestHealth = health;
-                    nearestHealthRoot = current;
-                }
-            }
-        }
-
-        if (nearestHealth) {
-            result.root = nearestHealthRoot;
-            result.health = nearestHealth;
+            result.root = current;
+            result.character = character;
+            result.health = health;
             return result;
-        }
-
-        if (HealthComponent* childHealth = gameObject->GetComponentInChildren<HealthComponent>()) {
-            result.root = childHealth->GetOwner();
-            result.health = childHealth;
         }
 
         return result;
@@ -167,7 +145,17 @@ namespace CharacterCombatUtils {
 
     RTBEngine::Physics::PhysicsWorld* ResolvePhysicsWorld(RTBEngine::Scene::GameObject* gameObject)
     {
-        return RTBEngine::Scene::ResolvePhysicsWorldFromGameObject(gameObject, true);
+        if (RTBEngine::Physics::PhysicsWorld* world =
+                RTBEngine::Scene::ResolvePhysicsWorldFromGameObject(gameObject, true)) {
+            return world;
+        }
+
+        RTBEngine::Scene::Scene* scene = gameObject ? gameObject->GetOwningScene() : nullptr;
+        if (!scene) {
+            scene = RTBEngine::Scene::SceneManager::GetInstance().GetActiveScene();
+        }
+
+        return RTBEngine::Scene::ResolvePhysicsWorldFromScene(scene);
     }
 
     std::uint32_t GetPhysicsLayerBit(const char* layerName)
@@ -351,5 +339,4 @@ namespace CharacterCombatUtils {
             position + (rotation * localPose.collider.centerOffset),
             rotation);
     }
-
 }

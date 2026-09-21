@@ -3,6 +3,7 @@
 #include "CharacterGameplaySpawner.h"
 #include "EnemyMeleeAI.h"
 #include "HealthComponent.h"
+#include "HitFlashComponent.h"
 #include "OnlineDisplayNameHelper.h"
 #include "OnlinePlayerManager.h"
 #include "PlayerAmmoSystem.h"
@@ -44,6 +45,7 @@ namespace GameNet {
         std::deque<PlayerNetworkBindSnapshot> pendingPlayerNetworkBinds;
         std::unordered_map<int, PlayerSessionSnapshot> playerSessionSnapshotsBySlot;
         std::unordered_map<int, float> lastBroadcastPlayerHealth;
+        std::unordered_map<std::uint32_t, float> lastBroadcastEnemyHealth;
         std::unordered_map<int, float> lastBroadcastPlayerAmmo;
         std::string pendingMainMenuMessage;
         std::string activeMatchNotification;
@@ -560,6 +562,51 @@ namespace GameNet {
             OnlineGameNetSubsystem::ApplyEnemyDeath(networkId);
         }
 
+        void HandleEnemyHealthState(const RTBEngine::Online::OnlineMessageContext& context)
+        {
+            if (RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
+                return;
+            }
+
+            std::size_t offset = 0;
+            std::uint32_t networkId = RTBEngine::Online::OnlineGameplayNet::kInvalidNetworkObjectId;
+            float normalizedHealth = 1.0f;
+            if (!RTBEngine::Online::OnlineMessageCodec::ReadValue(
+                    context.payload,
+                    context.payloadSize,
+                    offset,
+                    networkId) ||
+                !RTBEngine::Online::OnlineMessageCodec::ReadValue(
+                    context.payload,
+                    context.payloadSize,
+                    offset,
+                    normalizedHealth) ||
+                networkId == RTBEngine::Online::OnlineGameplayNet::kInvalidNetworkObjectId) {
+                return;
+            }
+
+            RTBEngine::Scene::GameObject* enemy = FindGameObjectByNetworkId(networkId);
+            if (!enemy) {
+                return;
+            }
+
+            HealthComponent* health = enemy->GetComponent<HealthComponent>();
+            if (!health || health->IsDead()) {
+                return;
+            }
+
+            const float clamped = std::clamp(normalizedHealth, 0.0f, 1.0f);
+            const float targetHealth = clamped * health->maxHealth;
+            if (targetHealth <= 0.0f || targetHealth >= health->currentHealth - 0.01f) {
+                return;
+            }
+
+            health->SetCurrentHealth(targetHealth);
+            if (HitFlashComponent* hitFlash = enemy->GetComponent<HitFlashComponent>()) {
+                hitFlash->TriggerFlash();
+            }
+        }
+
         void HandlePlayerNetworkBind(const RTBEngine::Online::OnlineMessageContext& context)
         {
             if (RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
@@ -769,6 +816,7 @@ namespace GameNet {
         RTBEngine::Online::OnlineMessageBus::RegisterHandler(kRoundStart, &HandleRoundStart);
         RTBEngine::Online::OnlineMessageBus::RegisterHandler(kRoundCountdown, &HandleRoundCountdown);
         RTBEngine::Online::OnlineMessageBus::RegisterHandler(kEnemyDeathState, &HandleEnemyDeathState);
+        RTBEngine::Online::OnlineMessageBus::RegisterHandler(kEnemyHealthState, &HandleEnemyHealthState);
         RTBEngine::Online::OnlineMessageBus::RegisterHandler(kPlayerNetworkBind, &HandlePlayerNetworkBind);
         RTBEngine::Online::OnlineMessageBus::RegisterHandler(kEnemyAttack, &HandleEnemyAttack);
         RTBEngine::Online::OnlineMessageBus::RegisterHandler(kPlayerHealthState, &HandlePlayerHealthState);
@@ -796,6 +844,7 @@ namespace GameNet {
         RTBEngine::Online::OnlineMessageBus::UnregisterHandler(kRoundStart);
         RTBEngine::Online::OnlineMessageBus::UnregisterHandler(kRoundCountdown);
         RTBEngine::Online::OnlineMessageBus::UnregisterHandler(kEnemyDeathState);
+        RTBEngine::Online::OnlineMessageBus::UnregisterHandler(kEnemyHealthState);
         RTBEngine::Online::OnlineMessageBus::UnregisterHandler(kPlayerNetworkBind);
         RTBEngine::Online::OnlineMessageBus::UnregisterHandler(kEnemyAttack);
         RTBEngine::Online::OnlineMessageBus::UnregisterHandler(kPlayerHealthState);
@@ -816,6 +865,7 @@ namespace GameNet {
         pendingPlayerNetworkBinds.clear();
         playerSessionSnapshotsBySlot.clear();
         lastBroadcastPlayerHealth.clear();
+        lastBroadcastEnemyHealth.clear();
         lastBroadcastPlayerAmmo.clear();
         RTBEngine::Online::OnlineSystem::GetInstance().ClearPlayerSessionProfiles();
         RTBEngine::Online::OnlineGameplayNet::ResetNetworkSession();
@@ -1388,6 +1438,38 @@ namespace GameNet {
             kEnemyDeathState,
             payload,
             kEnemyDeathChannel,
+            RTBEngine::Online::OnlinePacketReliability::Reliable);
+    }
+
+    bool OnlineGameNetSubsystem::BroadcastEnemyHealth(std::uint32_t networkId, float normalizedHealth)
+    {
+        if (!RTBEngine::Online::OnlineGameplayNet::IsLobbyHost() ||
+            networkId == RTBEngine::Online::OnlineGameplayNet::kInvalidNetworkObjectId) {
+            return false;
+        }
+
+        const float clamped = std::clamp(normalizedHealth, 0.0f, 1.0f);
+        if (clamped <= 0.0f) {
+            return false;
+        }
+
+        constexpr float kHealthBroadcastEpsilon = 0.004f;
+        const auto previousIt = lastBroadcastEnemyHealth.find(networkId);
+        if (previousIt != lastBroadcastEnemyHealth.end() &&
+            std::fabs(previousIt->second - clamped) < kHealthBroadcastEpsilon) {
+            return false;
+        }
+
+        lastBroadcastEnemyHealth[networkId] = clamped;
+        Init();
+
+        std::vector<std::uint8_t> payload;
+        RTBEngine::Online::OnlineMessageCodec::AppendValue(payload, networkId);
+        RTBEngine::Online::OnlineMessageCodec::AppendValue(payload, clamped);
+        return RTBEngine::Online::OnlineMessageBus::BroadcastToClients(
+            kEnemyHealthState,
+            payload,
+            kEnemyHealthChannel,
             RTBEngine::Online::OnlinePacketReliability::Reliable);
     }
 

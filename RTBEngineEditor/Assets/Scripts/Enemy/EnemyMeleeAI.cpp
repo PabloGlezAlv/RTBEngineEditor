@@ -641,6 +641,16 @@ void EnemyMeleeAI::HandleDamageTaken(const HealthComponent::DamageTakenEvent& ev
         return;
     }
 
+    if (RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby()) {
+        if (RTBEngine::Scene::NetworkIdentity* identity = GetNetworkIdentity()) {
+            if (identity->HasNetworkId() && eventData.currentHealth > 0.0f) {
+                GameNet::OnlineGameNetSubsystem::BroadcastEnemyHealth(
+                    identity->GetNetworkId(),
+                    eventData.normalizedHealth);
+            }
+        }
+    }
+
     if (meleeAttack && meleeAttack->IsAbilityActive()) {
         meleeAttack->CancelAbility();
         meleeAttack->ClearTargetContext();

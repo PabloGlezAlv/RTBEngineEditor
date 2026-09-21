@@ -133,6 +133,7 @@ namespace GameNet {
 
         static bool BroadcastEnemyDeath(std::uint32_t networkId);
         static void ApplyEnemyDeath(std::uint32_t networkId);
+        static bool BroadcastEnemyHealth(std::uint32_t networkId, float normalizedHealth);
         static bool HasEnemyWithNetworkId(std::uint32_t networkId);
 
         static bool BroadcastEnemyAttack(const EnemyAttackSnapshot& snapshot);

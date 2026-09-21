@@ -160,12 +160,13 @@ RTB_REGISTER_COMPONENT(OnlinePlayerManager)
     RTB_PROPERTY_RANGE(remoteSpawnOffsetX, 0.5f, 20.0f)
 RTB_END_REGISTER(OnlinePlayerManager)
 
-void OnlinePlayerManager::OnStart()
+void OnlinePlayerManager::BeginOnlineSession()
 {
-    if (!RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby()) {
+    if (onlineSessionStarted || !RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby()) {
         return;
     }
 
+    onlineSessionStarted = true;
     GameNet::OnlineGameNetSubsystem::Init();
     RTBEngine::Online::OnlineGameplayNet::ResetNetworkSession();
     authoritativePlayerBinds.clear();
@@ -174,7 +175,7 @@ void OnlinePlayerManager::OnStart()
     sessionProfileSubscription =
         RTBEngine::Online::OnlineSystem::GetInstance().SubscribeToPlayerSessionProfileChanged(
             [this](const RTBEngine::Online::PlayerSessionProfileChangedEvent& event) {
-                if (!event.removed) {
+                if (!event.removed && localPlayerObject) {
                     EnsureRemotePawnsSpawned();
                 }
 
@@ -183,7 +184,25 @@ void OnlinePlayerManager::OnStart()
                     RefreshNameplatesForPawn(pawn);
                 }
             });
+}
 
+void OnlinePlayerManager::OnStart()
+{
+    BeginOnlineSession();
+}
+
+void OnlinePlayerManager::BindLocalPawn(RTBEngine::Scene::GameObject* pawn)
+{
+    if (!pawn) {
+        return;
+    }
+
+    localPlayerObject = pawn;
+    if (!RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby()) {
+        return;
+    }
+
+    BeginOnlineSession();
     ConfigureOnlinePlayers();
 }
 
@@ -204,6 +223,7 @@ void OnlinePlayerManager::OnDestroy()
     sessionProfileSubscription.Reset();
     authoritativePlayerBinds.clear();
     spawnedCharacterIdsBySlot.clear();
+    onlineSessionStarted = false;
 }
 
 void OnlinePlayerManager::OnFixedUpdate(float /*fixedDeltaTime*/)
@@ -221,7 +241,7 @@ void OnlinePlayerManager::OnFixedUpdate(float /*fixedDeltaTime*/)
 void OnlinePlayerManager::ConfigureOnlinePlayers()
 {
     if (!localPlayerObject) {
-        RTB_WARN("[OnlinePlayerManager] Assign localPlayerObject before starting an online match.");
+        RTB_WARN("[OnlinePlayerManager] BindLocalPawn was not called before starting an online match.");
         return;
     }
 

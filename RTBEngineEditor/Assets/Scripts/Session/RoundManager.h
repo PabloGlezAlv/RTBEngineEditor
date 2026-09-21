@@ -50,6 +50,7 @@ public:
 
     std::vector<RTBEngine::Scene::GameObject*> spawnPoints;
 
+    void SetLocalPlayerPawn(RTBEngine::Scene::GameObject* pawn);
     void ApplyNetworkRoundStart(int roundNumber, int enemyCount);
     void ApplyNetworkRoundCountdown(int roundNumber, float duration);
     void ApplyNetworkEnemySpawn(

@@ -579,7 +579,7 @@ function CreateScene()
                 components = {
                     {
                         type = "RoundManager",
-                        playerObject = "F86013BD-FF24-4672-91B3-9411CDF272AE",
+                        playerObject = nil,
                         onlinePlayerManager = "B1A2C3D4-E5F6-7890-ABCD-EF1234567891/OnlinePlayerManager",
                         uiHandler = "62E6AE07-7DC2-42B3-8F0E-AA7CA40264F0/RoundUIHandler",
                         roundCountdownDuration = 5.00,
@@ -698,7 +698,7 @@ function CreateScene()
                 components = {
                     {
                         type = "OnlinePlayerManager",
-                        localPlayerObject = "F86013BD-FF24-4672-91B3-9411CDF272AE",
+                        localPlayerObject = nil,
                         roundManager = "4A7C26F9-7F62-4A3A-B8F0-91A4B36C1601/RoundManager",
                         remoteSpawnOffsetX = 0.50
                     },
@@ -707,7 +707,6 @@ function CreateScene()
             {
                 name = "PlayerSpawnPoint",
                 uuid = "PLSP-AWN0-4000-8000-000000000001",
-                active = false,
                 collisionLayer = "Characters",
                 position = Vector3(0.90, 0.10, 0.00),
                 components = {
@@ -4643,131 +4642,6 @@ function CreateScene()
                                         multiMesh = false
                                     },
                                 }
-                            },
-                        }
-                    },
-                }
-            },
-            {
-                name = "Player",
-                uuid = "F86013BD-FF24-4672-91B3-9411CDF272AE",
-                collisionLayer = "Characters",
-                prefab = "Player Rogue",
-                position = Vector3(0.90, 0.10, 0.00),
-                overrides = {
-                    components = {
-                        { type = "CharacterStatsApplier",
-                            usePlayerSelection = false,
-                            characterDefinitionRef = "Assets/Data/Characters/Rogue.rtbasset",
-                        },
-                        { type = "ThirdPersonCharacterController",
-                            cameraObject = "875ACC83-E59F-4B26-BAE7-B3C4BF3A1637",
-                            health = "F86013BD-FF24-4672-91B3-9411CDF272AE/HealthComponent",
-                            animator = "B07543DC-D2C4-4C9A-BAAE-829055141C7A/Animator",
-                        },
-                        { type = "PlayerBasicAttackDriver",
-                            attackAbility = "F86013BD-FF24-4672-91B3-9411CDF272AE/ProjectileAttackAbility",
-                            attackJoystick = "B4C7E92D-5F22-43A9-8E3B-2A6D7D1A8C10/UIJoystick",
-                            aimArrowVisual = nil,
-                        },
-                        { type = "HealthComponent",
-                            maxHealth = 72.00,
-                            currentHealth = 72.00,
-                        },
-                        { type = "PlayerDamageFeedback",
-                            health = "F86013BD-FF24-4672-91B3-9411CDF272AE/HealthComponent",
-                        },
-                        { type = "PlayerAmmoSystem",
-                            fullReloadDuration = 8.50,
-                        },
-                        { type = "PlayerSpecialAttackCharge",
-                            specialAttackJoystick = "B5D8E93E-6F33-44BA-9F4C-3B7E8E2B9D11/UIJoystick",
-                            readyIcon = "C2A14D70-1B9E-4F83-A551-6D8E9C0F1122/UIImage",
-                        },
-                    },
-                },
-                children = {
-                    {
-                        name = "PlayerNameplate",
-                        uuid = "1BBB9837-C7AC-4612-AAA7-5F19B0A7CB43",
-                        prefab = "Player Nameplate",
-                    },
-                    {
-                        name = "Avatar",
-                        uuid = "B07543DC-D2C4-4C9A-BAAE-829055141C7A",
-                        scale = Vector3(0.85, 0.85, 0.85),
-                        components = {
-                            {
-                                type = "Animator",
-                                modelRef = "Assets/3D/KayKit_Adventurers_2.0_FREE/Characters/fbx/Rogue.fbx",
-                                currentClipName = "",
-                                defaultClip = "Idle",
-                                speed = 1.00,
-                                playing = false,
-                                looping = true,
-                                additionalModels = {
-                                    "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_MovementBasic.fbx",
-                                    "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_General.fbx",
-                                    "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_CombatRanged.fbx"                                },
-                                keyClips = {
-                                        {
-                                            key = "Idle",
-                                            clipFbxRef = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_General.fbx|Idle_A",
-                                            loop = true
-                                        },
-                                        {
-                                            key = "Walk",
-                                            clipFbxRef = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_MovementBasic.fbx|Walking_A",
-                                            loop = true
-                                        },
-                                        {
-                                            key = "Run",
-                                            clipFbxRef = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_MovementBasic.fbx|Running_A",
-                                            loop = true
-                                        },
-                                        {
-                                            key = "AimDraw",
-                                            clipFbxRef = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_CombatRanged.fbx|Ranged_Bow_Draw",
-                                            loop = false
-                                        },
-                                        {
-                                            key = "AimLoop",
-                                            clipFbxRef = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_CombatRanged.fbx|Ranged_Bow_Aiming_Idle",
-                                            loop = true
-                                        },
-                                        {
-                                            key = "Attack",
-                                            clipFbxRef = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_CombatRanged.fbx|Ranged_Bow_Release",
-                                            loop = false
-                                        },
-                                        {
-                                            key = "Death",
-                                            clipFbxRef = "Assets/3D/KayKit_Character_Animations/Animations/fbx/Rig_Medium/Rig_Medium_General.fbx|Death_A",
-                                            loop = false
-                                        }                                }
-                            },
-                        },
-                    },
-                    {
-                        name = "MainCamera",
-                        uuid = "875ACC83-E59F-4B26-BAE7-B3C4BF3A1637",
-                        position = Vector3(0.00, 9.48, -7.07),
-                        rotation = Quaternion.FromEulerAngles(50.00, 0.00, 0.00),
-                        components = {
-                            {
-                                type = "CameraComponent",
-                                fov = 45.00,
-                                nearClip = 0.10,
-                                farClip = 100.00,
-                                projectionType = "Perspective",
-                                orthographicSize = 3.50,
-                                syncWithTransform = true,
-                                isMainCamera = true
-                            },
-                            {
-                                type = "PlayerFollowCamera",
-                                cameraDistance = 11.00,
-                                cameraFocusOffset = Vector3(0.00, 1.05, 0.00)
                             },
                         }
                     },

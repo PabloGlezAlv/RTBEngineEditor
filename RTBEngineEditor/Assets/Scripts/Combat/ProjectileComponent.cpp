@@ -14,6 +14,7 @@
 #include <RTBEngine/Scene/AudioSourceComponent.h>
 #include <RTBEngine/Scene/GameObject.h>
 #include <RTBEngine/Scene/ObjectPool.h>
+#include <RTBEngine/Scene/PhysicsWorldResolver.h>
 #include <RTBEngine/Scene/RigidBodyComponent.h>
 #include "ProjectileTrailFadeLifetime.h"
 
@@ -24,6 +25,8 @@
 #include <RTBEngine/Scene/SceneManager.h>
 #include <RTBEngine/Scene/TrailRenderer.h>
 #include <RTBEngine/Physics/PhysicsWorld.h>
+#include <RTBEngine/Scene/PhysicsWorldResolver.h>
+#include <RTBEngine/Scene/SceneManager.h>
 
 #include <algorithm>
 #include <cmath>
@@ -551,6 +554,17 @@ RTBEngine::Physics::PhysicsWorld* ProjectileComponent::ResolvePhysicsWorld()
     physicsWorld = resolveFromObject(owner);
     if (!physicsWorld) {
         physicsWorld = resolveFromObject(instigator);
+    }
+
+    if (!physicsWorld) {
+        RTBEngine::Scene::Scene* scene = owner ? owner->GetOwningScene() : nullptr;
+        if (!scene && instigator) {
+            scene = instigator->GetOwningScene();
+        }
+        if (!scene) {
+            scene = RTBEngine::Scene::SceneManager::GetInstance().GetActiveScene();
+        }
+        physicsWorld = RTBEngine::Scene::ResolvePhysicsWorldFromScene(scene);
     }
 
     return physicsWorld;

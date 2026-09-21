@@ -34,12 +34,16 @@ public:
     void RemovePawnFromTracking(RTBEngine::Scene::GameObject* pawn, int playerSlot);
     void SyncAuthoritativeRemotePlayers();
     void RequestRemotePawnSync();
+    void BindLocalPawn(RTBEngine::Scene::GameObject* pawn);
 
 private:
     std::vector<RTBEngine::Scene::GameObject*> spawnedRemotePawns;
     std::vector<GameNet::PlayerNetworkBindSnapshot> authoritativePlayerBinds;
     std::unordered_map<int, std::string> spawnedCharacterIdsBySlot;
     RTBEngine::Core::EventSubscription sessionProfileSubscription;
+    bool onlineSessionStarted = false;
+
+    void BeginOnlineSession();
 
     void RegisterPlayerSessionProfiles(
         const std::vector<RTBEngine::Online::OnlineUserId>& members);

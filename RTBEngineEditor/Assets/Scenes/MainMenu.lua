@@ -39,7 +39,7 @@ function CreateScene()
             {
                 name = "Directional Light",
                 uuid = "48103FD7-E1F1-4AAB-8127-C0C2ED5B4111",
-                rotation = Quaternion.FromEulerAngles(44.97, -30.04, -1.42),
+                rotation = Quaternion.FromEulerAngles(36.81, -40.09, -27.94),
                 components = {
                     {
                         type = "LightComponent",
@@ -57,7 +57,7 @@ function CreateScene()
             {
                 name = "Fill Light",
                 uuid = "MM-FILL-0001-4000-8000-000000000001",
-                rotation = Quaternion.FromEulerAngles(27.65, 144.75, -4.59),
+                rotation = Quaternion.FromEulerAngles(-19.36, 140.06, 20.63),
                 components = {
                     {
                         type = "LightComponent",
@@ -296,7 +296,7 @@ function CreateScene()
                                 name = "wall_corner_ne",
                                 uuid = "MM-ENV-WAL-0005-4000-8000-000000000001",
                                 position = Vector3(2.20, 0.00, 6.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
@@ -365,7 +365,7 @@ function CreateScene()
                                 name = "wall_n_w",
                                 uuid = "MM-ENV-WAL-0009-4000-8000-000000000001",
                                 position = Vector3(-7.80, 0.00, 6.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
@@ -383,7 +383,7 @@ function CreateScene()
                                 name = "wall_n_c",
                                 uuid = "MM-ENV-WAL-0010-4000-8000-000000000001",
                                 position = Vector3(-3.80, 0.00, 6.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
@@ -401,7 +401,7 @@ function CreateScene()
                                 name = "wall_n_e",
                                 uuid = "MM-ENV-WAL-0011-4000-8000-000000000001",
                                 position = Vector3(0.20, 0.00, 6.00),
-                                rotation = Quaternion.FromEulerAngles(0.00, 180.00, 0.00),
+                                rotation = Quaternion.FromEulerAngles(0.00, -180.00, 0.00),
                                 components = {
                                     {
                                         type = "MeshRenderer",
@@ -1090,9 +1090,9 @@ function CreateScene()
                         components = {
                             {
                                 type = "UIText",
-                                text = "Player Name",
+                                text = "WELCOME!!!",
                                 color = Color(0.96, 0.94, 0.88, 1.00),
-                                fontSize = 22.00,
+                                fontSize = 63.30,
                                 alignment = "Center",
                                 font = nil,
                                 isVisible = true,
@@ -1123,7 +1123,7 @@ function CreateScene()
                                 anchorMax = Vector2(0.50, 0.50),
                                 pivot = Vector2(0.50, 0.50),
                                 anchoredPosition = Vector2(0.00, 160.00),
-                                sizeDelta = Vector2(520.00, 72.00),
+                                sizeDelta = Vector2(317.00, 72.00),
                                 rotation = 0.00,
                                 scale = Vector2(1.00, 1.00)
                             },
@@ -1151,7 +1151,7 @@ function CreateScene()
                                         type = "UIText",
                                         text = "Enter name",
                                         color = Color(0.62, 0.60, 0.56, 1.00),
-                                        fontSize = 24.00,
+                                        fontSize = 64.70,
                                         alignment = "Left",
                                         font = nil,
                                         isVisible = true,

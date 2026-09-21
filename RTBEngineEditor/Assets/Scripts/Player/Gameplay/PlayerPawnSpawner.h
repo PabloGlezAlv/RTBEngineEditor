@@ -20,6 +20,7 @@ public:
     ~PlayerPawnSpawner() override = default;
 
     void OnAwake() override;
+    void OnStart() override;
 
     RTB_COMPONENT(PlayerPawnSpawner)
 
