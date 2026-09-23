@@ -17,6 +17,7 @@ namespace RTBEditor {
 
     private:
         void DrawDirectorySelector();
+        void DrawLogoSelector();
         void DrawStartSceneSelector();
         void RefreshAvailableScenes();
         bool IsSelectedStartSceneValid() const;

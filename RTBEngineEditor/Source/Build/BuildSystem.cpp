@@ -61,6 +61,42 @@ namespace {
         return fs::exists(scenePath) && fs::is_regular_file(scenePath);
     }
 
+    std::string PrepareBuildLogo(const fs::path& outputDir, const RTBEditor::Project& project, const std::string& logoPath)
+    {
+        if (logoPath.empty()) {
+            return {};
+        }
+
+        fs::path source(logoPath);
+        if (source.is_relative()) {
+            source = project.GetProjectDirectory() / source;
+        }
+        source = fs::absolute(source).lexically_normal();
+        if (!fs::exists(source) || !fs::is_regular_file(source)) {
+            RTB_WARN("Build logo not found, using the engine logo: " + logoPath);
+            return {};
+        }
+
+        std::error_code relativeError;
+        const fs::path relativeToProject = fs::relative(source, project.GetProjectDirectory(), relativeError).lexically_normal();
+        const std::string genericRelative = relativeToProject.generic_string();
+        const std::string assetFolder = project.GetAssetDirectory().lexically_normal().generic_string();
+        const bool insideAssets = !relativeError
+            && !genericRelative.empty()
+            && genericRelative.rfind("..", 0) != 0
+            && (genericRelative == assetFolder || genericRelative.rfind(assetFolder + "/", 0) == 0);
+        if (insideAssets) {
+            return genericRelative;
+        }
+
+        const fs::path destination = outputDir / source.filename();
+        std::error_code sameFileError;
+        if (!fs::exists(destination) || !fs::equivalent(source, destination, sameFileError)) {
+            fs::copy_file(source, destination, fs::copy_options::overwrite_existing);
+        }
+        return destination.filename().generic_string();
+    }
+
     std::string EnsureGenericTrailingSlash(const fs::path& path)
     {
         std::string value = path.lexically_normal().generic_string();
@@ -334,16 +370,24 @@ namespace RTBEditor {
             cfgFile << "[Game]\n";
             cfgFile << "Name=" << settings.gameName << "\n\n";
 
+            const Project* project = Project::GetActiveProject();
+            const std::string logoReference = project
+                ? PrepareBuildLogo(outputDir, *project, settings.logoPath)
+                : std::string();
+
             cfgFile << "[Window]\n";
             cfgFile << "Title=" << settings.gameName << "\n";
             cfgFile << "Width=" << settings.windowWidth << "\n";
             cfgFile << "Height=" << settings.windowHeight << "\n";
-            cfgFile << "Fullscreen=" << (settings.fullscreen ? "true" : "false") << "\n\n";
+            cfgFile << "Fullscreen=" << (settings.fullscreen ? "true" : "false") << "\n";
+            if (!logoReference.empty()) {
+                cfgFile << "Logo=" << logoReference << "\n";
+            }
+            cfgFile << "\n";
 
             cfgFile << "[Scene]\n";
             cfgFile << "StartScene=" << NormalizeReferencePath(settings.startScene) << "\n";
 
-            const Project* project = Project::GetActiveProject();
             const RTBEngine::Rendering::RHI::GraphicsAPI graphicsAPI = project
                 ? project->GetGraphicsAPI()
                 : RTBEngine::Rendering::RHI::GraphicsAPI::OpenGL;

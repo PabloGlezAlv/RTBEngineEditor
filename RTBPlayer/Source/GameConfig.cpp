@@ -85,6 +85,7 @@ namespace RTBPlayer {
 
                 if (currentSection == "Window") {
                     if (key == "Title") windowTitle = value;
+                    else if (key == "Logo") logoPath = value;
                     else if (key == "Width") windowWidth = std::stoi(value);
                     else if (key == "Height") windowHeight = std::stoi(value);
                     else if (key == "Fullscreen") fullscreen = (value == "true" || value == "1");
@@ -141,6 +142,7 @@ namespace RTBPlayer {
 
             if (key == "start-scene") startScene = value;
             else if (key == "window-title") windowTitle = value;
+            else if (key == "logo") logoPath = value;
             else if (key == "online-enabled") onlineConfig.enabled = ParseBool(value);
             else if (key == "display-name") onlineConfig.loginDisplayName = value;
             else if (key == "lan-game-port") onlineConfig.lanGamePort = ParsePort(value, onlineConfig.lanGamePort);

@@ -8,6 +8,7 @@ int main(int argc, char* argv[]) {
 
     RTBEngine::Core::ApplicationConfig config;
     config.window.title = gameConfig.GetWindowTitle();
+    config.logoPath = gameConfig.GetLogoPath();
     config.window.width = gameConfig.GetWindowWidth();
     config.window.height = gameConfig.GetWindowHeight();
     config.window.fullscreen = gameConfig.IsFullscreen();

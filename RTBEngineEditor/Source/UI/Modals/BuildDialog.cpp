@@ -67,6 +67,7 @@ namespace RTBEditor {
             ImGui::InputInt("Width", &settings.windowWidth);
             ImGui::InputInt("Height", &settings.windowHeight);
             ImGui::Checkbox("Fullscreen", &settings.fullscreen);
+            DrawLogoSelector();
 
             ImGui::Separator();
             DrawStartSceneSelector();
@@ -113,6 +114,67 @@ namespace RTBEditor {
             ImGui::EndPopup();
         }
         if (!showResultOpen) showResult = false;
+    }
+
+    void BuildDialog::DrawLogoSelector() {
+        static char logoBuf[1024];
+        if (settings.logoPath != logoBuf) {
+            strcpy_s(logoBuf, sizeof(logoBuf), settings.logoPath.c_str());
+        }
+
+        if (ImGui::InputText("Logo", logoBuf, sizeof(logoBuf))) {
+            settings.logoPath = logoBuf;
+        }
+        if (ImGui::IsItemHovered()) {
+            ImGui::SetTooltip("Window icon and loading splash. Leave empty to use the engine logo.");
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Browse Logo...")) {
+            IFileDialog* fileDialog = nullptr;
+            HRESULT hr = CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_ALL, IID_IFileDialog, (void**)&fileDialog);
+            if (SUCCEEDED(hr)) {
+                COMDLG_FILTERSPEC filters[] = {
+                    { L"Images", L"*.png;*.jpg;*.jpeg;*.bmp;*.tga;*.webp" }
+                };
+                fileDialog->SetFileTypes(1, filters);
+                fileDialog->SetTitle(L"Select Game Logo");
+
+                if (SUCCEEDED(fileDialog->Show(NULL))) {
+                    IShellItem* item = nullptr;
+                    hr = fileDialog->GetResult(&item);
+                    if (SUCCEEDED(hr)) {
+                        PWSTR filePath = nullptr;
+                        hr = item->GetDisplayName(SIGDN_FILESYSPATH, &filePath);
+                        if (SUCCEEDED(hr)) {
+                            fs::path selected(filePath);
+                            Project* project = Project::GetActiveProject();
+                            if (project) {
+                                std::error_code relativeError;
+                                const fs::path relative = fs::relative(selected, project->GetProjectDirectory(), relativeError).lexically_normal();
+                                const std::string genericRelative = relative.generic_string();
+                                if (!relativeError && !genericRelative.empty() && genericRelative.rfind("..", 0) != 0) {
+                                    settings.logoPath = genericRelative;
+                                } else {
+                                    settings.logoPath = selected.lexically_normal().string();
+                                }
+                            } else {
+                                settings.logoPath = selected.lexically_normal().string();
+                            }
+                            CoTaskMemFree(filePath);
+                        }
+                        item->Release();
+                    }
+                }
+                fileDialog->Release();
+            }
+        }
+        if (!settings.logoPath.empty()) {
+            ImGui::SameLine();
+            if (ImGui::Button("Clear Logo")) {
+                settings.logoPath.clear();
+                logoBuf[0] = '\0';
+            }
+        }
     }
 
     void BuildDialog::DrawDirectorySelector() {

@@ -13,6 +13,7 @@ namespace RTBEditor {
         int windowWidth = 1280;
         int windowHeight = 720;
         bool fullscreen = false;
+        std::string logoPath;
     };
 
     enum class BuildResult {

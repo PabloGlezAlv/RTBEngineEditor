@@ -16,6 +16,7 @@ namespace RTBPlayer {
         void ApplyCommandLine(int argc, char* argv[]);
 
         const std::string& GetWindowTitle() const { return windowTitle; }
+        const std::string& GetLogoPath() const { return logoPath; }
         int GetWindowWidth() const { return windowWidth; }
         int GetWindowHeight() const { return windowHeight; }
         bool IsFullscreen() const { return fullscreen; }
@@ -25,6 +26,7 @@ namespace RTBPlayer {
 
     private:
         std::string windowTitle = "RTBEngine Game";
+        std::string logoPath;
         int windowWidth = 1280;
         int windowHeight = 720;
         bool fullscreen = false;
