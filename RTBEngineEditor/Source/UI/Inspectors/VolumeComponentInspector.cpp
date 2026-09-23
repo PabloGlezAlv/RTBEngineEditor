@@ -29,7 +29,7 @@ namespace RTBEditor {
                 changed = true;
             }
             if (ImGui::IsItemHovered()) {
-                ImGui::SetTooltip("Activa este efecto en el volumen.");
+                ImGui::SetTooltip("Enable this effect on the volume.");
             }
 
             ImGui::SameLine();
@@ -60,7 +60,7 @@ namespace RTBEditor {
             changed = true;
         }
         if (ImGui::IsItemHovered()) {
-            ImGui::SetTooltip("Activa o desactiva este volumen en el stack.");
+            ImGui::SetTooltip("Enable or disable this volume in the stack.");
         }
 
         ImGui::SameLine();
@@ -86,7 +86,7 @@ namespace RTBEditor {
 
         ImGui::BeginDisabled(!volumeActive);
 
-        if (ImGui::TreeNodeEx("Zona", ImGuiTreeNodeFlags_DefaultOpen)) {
+        if (ImGui::TreeNodeEx("Bounds", ImGuiTreeNodeFlags_DefaultOpen)) {
             DrawParamRow("global", "Global", [&]() {
                 if (ImGui::Checkbox("##global", &volume->isGlobal)) {
                     changed = true;
@@ -94,7 +94,7 @@ namespace RTBEditor {
             });
 
             if (!volume->isGlobal) {
-                DrawParamRow("size", "Tamaño", [&]() {
+                DrawParamRow("size", "Size", [&]() {
                     float size[3] = { volume->size.x, volume->size.y, volume->size.z };
                     if (ImGui::DragFloat3("##size", size, 0.1f, 0.1f, 500.0f)) {
                         volume->size = RTBEngine::Math::Vector3(size[0], size[1], size[2]);
@@ -102,22 +102,22 @@ namespace RTBEditor {
                     }
                 });
 
-                DrawParamRow("blend", "Blend dist.", [&]() {
+                DrawParamRow("blend", "Blend distance", [&]() {
                     if (ImGui::DragFloat("##blend", &volume->blendDistance, 0.05f, 0.01f, 50.0f)) {
                         changed = true;
                     }
                 });
             } else {
-                ImGui::TextDisabled("Global: afecta toda la cámara.");
+                ImGui::TextDisabled("Global: affects the whole camera view.");
             }
 
-            DrawParamRow("priority", "Prioridad", [&]() {
+            DrawParamRow("priority", "Priority", [&]() {
                 if (ImGui::DragInt("##priority", &volume->priority, 1.0f, -100, 100)) {
                     changed = true;
                 }
             });
 
-            DrawParamRow("weight", "Peso", [&]() {
+            DrawParamRow("weight", "Weight", [&]() {
                 if (ImGui::SliderFloat("##weight", &volume->weight, 0.0f, 1.0f)) {
                     changed = true;
                 }
@@ -142,27 +142,27 @@ namespace RTBEditor {
                     changed = true;
                 }
             });
-            DrawParamRow("fogDen", "Densidad", [&]() {
+            DrawParamRow("fogDen", "Density", [&]() {
                 if (ImGui::DragFloat("##fogDen", &volume->fogDensity, 0.001f, 0.0f, 0.5f, "%.4f")) {
                     changed = true;
                 }
             });
-            DrawParamRow("fogH", "Altura", [&]() {
+            DrawParamRow("fogH", "Height", [&]() {
                 if (ImGui::DragFloat("##fogH", &volume->fogHeight, 0.1f, -50.0f, 200.0f, "%.2f")) {
                     changed = true;
                 }
             });
-            DrawParamRow("fogHF", "Falloff altura", [&]() {
+            DrawParamRow("fogHF", "Height falloff", [&]() {
                 if (ImGui::DragFloat("##fogHF", &volume->fogHeightFalloff, 0.01f, 0.0f, 2.0f, "%.3f")) {
                     changed = true;
                 }
             });
-            DrawParamRow("fogStart", "Inicio", [&]() {
+            DrawParamRow("fogStart", "Start", [&]() {
                 if (ImGui::DragFloat("##fogStart", &volume->fogStart, 0.5f, 0.0f, 500.0f, "%.1f")) {
                     changed = true;
                 }
             });
-            DrawParamRow("fogEnd", "Fin", [&]() {
+            DrawParamRow("fogEnd", "End", [&]() {
                 if (ImGui::DragFloat("##fogEnd", &volume->fogEnd, 1.0f, 1.0f, 1000.0f, "%.1f")) {
                     changed = true;
                 }
@@ -181,12 +181,12 @@ namespace RTBEditor {
             }
             ImGui::BeginDisabled(!volume->overrideVolumetricFog);
 
-            DrawParamRow("volInt", "Intensidad", [&]() {
+            DrawParamRow("volInt", "Intensity", [&]() {
                 if (ImGui::DragFloat("##volInt", &volume->volumetricIntensity, 0.01f, 0.0f, 4.0f, "%.2f")) {
                     changed = true;
                 }
             });
-            DrawParamRow("volAniso", "Anisotropía", [&]() {
+            DrawParamRow("volAniso", "Anisotropy", [&]() {
                 if (ImGui::DragFloat("##volAniso", &volume->volumetricAnisotropy, 0.01f, -0.95f, 0.95f, "%.2f")) {
                     changed = true;
                 }
@@ -196,7 +196,7 @@ namespace RTBEditor {
                     changed = true;
                 }
             });
-            DrawParamRow("volMaxL", "Max luminancia", [&]() {
+            DrawParamRow("volMaxL", "Max luminance", [&]() {
                 if (ImGui::DragFloat("##volMaxL", &volume->volumetricMaxLuminance, 0.01f, 0.05f, 8.0f, "%.2f")) {
                     changed = true;
                 }
@@ -220,7 +220,7 @@ namespace RTBEditor {
                     changed = true;
                 }
             });
-            DrawParamRow("bloomInt", "Intensidad", [&]() {
+            DrawParamRow("bloomInt", "Intensity", [&]() {
                 if (ImGui::DragFloat("##bloomInt", &volume->bloomIntensity, 0.01f, 0.0f, 4.0f, "%.2f")) {
                     changed = true;
                 }
