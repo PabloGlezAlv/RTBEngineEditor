@@ -18,7 +18,6 @@
 using ThisClass = BouncingBallProjectile;
 
 namespace {
-    constexpr float kWalkableNormalY = 0.65f;
     constexpr float kImpactFxBaseRadius = 1.0f;
 }
 
@@ -200,51 +199,11 @@ void BouncingBallProjectile::ApplyAreaDamage(
     }
 }
 
-bool BouncingBallProjectile::TryHitWallAlongSegment(
-    const RTBEngine::Math::Vector3& from,
-    const RTBEngine::Math::Vector3& to,
-    RTBEngine::Math::Vector3& outHitPoint) const
-{
-    RTBEngine::Physics::PhysicsWorld* world =
-        physicsWorld ? physicsWorld : CharacterCombatUtils::ResolvePhysicsWorld(instigator);
-    if (!world) {
-        return false;
-    }
-
-    const RTBEngine::Math::Vector3 segment = to - from;
-    if (segment.LengthSquared() <= 0.000001f) {
-        return false;
-    }
-
-    RTBEngine::Physics::PhysicsQueryOptions options;
-    options.ignoredObject = instigator;
-    options.ignoreIgnoredObjectHierarchy = true;
-    options.ignoreTriggers = true;
-    options.layerMask = CharacterCombatUtils::GetPhysicsLayerBit("Default");
-
-    RTBEngine::Physics::PhysicsQueryHit hit;
-    if (!world->SphereCastClosest(from, to, contactRadius, hit, options)) {
-        return false;
-    }
-
-    // Walkable ground is for bounces; only solid walls/ceilings stop the ball.
-    if (hit.normal.y > kWalkableNormalY) {
-        return false;
-    }
-
-    outHitPoint = hit.point;
-    return true;
-}
-
 bool BouncingBallProjectile::TryHitEnemiesAlongSegment(
     const RTBEngine::Math::Vector3& from,
     const RTBEngine::Math::Vector3& to)
 {
     if (!instigator || damage <= 0.0f) {
-        return false;
-    }
-
-    if (!CombatAuthority::CanApplyDamage(instigator)) {
         return false;
     }
 
@@ -299,28 +258,6 @@ bool BouncingBallProjectile::TryHitEnemiesAlongSegment(
     return true;
 }
 
-void BouncingBallProjectile::TriggerBounce(int bounceIndex)
-{
-    if (bounceIndex < 0 || bounceIndex >= path.bounceCount) {
-        return;
-    }
-
-    const RTBEngine::Math::Vector3& bouncePoint =
-        path.bouncePoints[static_cast<std::size_t>(bounceIndex)];
-    const float radius = path.bounceRadii[static_cast<std::size_t>(bounceIndex)];
-
-    RTBEngine::Math::Vector3 hitDirection = RTBEngine::Math::Vector3::Forward();
-    if (bounceIndex > 0) {
-        hitDirection =
-            bouncePoint - path.bouncePoints[static_cast<std::size_t>(bounceIndex - 1)];
-    } else if (!path.samples.empty()) {
-        hitDirection = bouncePoint - path.samples.front();
-    }
-
-    SpawnImpactFx(bouncePoint, radius);
-    ApplyAreaDamage(bouncePoint, radius, hitDirection);
-}
-
 void BouncingBallProjectile::FinishAndDestroy()
 {
     if (finished) {
@@ -345,17 +282,6 @@ void BouncingBallProjectile::OnUpdate(float deltaTime)
     const RTBEngine::Math::Vector3 nextPosition =
         BouncingBallTrajectory::EvaluateAtDistance(path, distanceTravelled, &sampleIndex);
 
-    RTBEngine::Math::Vector3 wallHitPoint;
-    if (TryHitWallAlongSegment(previousPosition, nextPosition, wallHitPoint)) {
-        const float aoeRadius = CurrentAoeRadius();
-        RTBEngine::Math::Vector3 hitDirection = nextPosition - previousPosition;
-        ApplyAreaDamage(wallHitPoint, aoeRadius, hitDirection);
-        SpawnImpactFx(wallHitPoint, aoeRadius);
-        owner->GetTransform().SetPosition(wallHitPoint);
-        FinishAndDestroy();
-        return;
-    }
-
     if (TryHitEnemiesAlongSegment(previousPosition, nextPosition)) {
         FinishAndDestroy();
         return;
@@ -378,7 +304,6 @@ void BouncingBallProjectile::OnUpdate(float deltaTime)
             break;
         }
 
-        TriggerBounce(nextBounceIndex);
         ++nextBounceIndex;
     }
 

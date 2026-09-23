@@ -336,6 +336,10 @@ void PlayerSpecialLeapAttack::ApplyMovementLock(float deltaTime)
 
 void PlayerSpecialLeapAttack::SetActorWorldPosition(const RTBEngine::Math::Vector3& position)
 {
+    if (!CombatAuthority::HasSimulationAuthority(owner)) {
+        return;
+    }
+
     CharacterCombatUtils::SetActorWorldPosition(
         owner,
         position,

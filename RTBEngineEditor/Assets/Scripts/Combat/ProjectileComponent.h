@@ -7,6 +7,7 @@
 #include <RTBEngine/Math/Vectors/Vector3.h>
 #include <RTBEngine/Reflection/PropertyMacros.h>
 
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -67,6 +68,8 @@ public:
 
     void BeginFlight(const ProjectileRuntimeContext& context);
     void Initialize(const ProjectileConfig& config);
+    void SetNetworkSpawnId(std::uint32_t spawnId);
+    static void DestroyByNetworkSpawnId(std::uint32_t spawnId);
 
     static float ResolveMaxDistance(float speed, float lifetime, float maxDistance);
     float GetTravelDistance() const { return maxDistance; }
@@ -98,6 +101,7 @@ private:
     int appliedHitCount = 0;
     bool initialized = false;
     bool pendingDestroy = false;
+    std::uint32_t networkSpawnId = 0;
     RTBEngine::Scene::TrailRenderer* flightTrail = nullptr;
     std::vector<HealthComponent*> hitTargets;
     RTBEngine::ECS::Entity ecsEntity = RTBEngine::ECS::kNullEntity;

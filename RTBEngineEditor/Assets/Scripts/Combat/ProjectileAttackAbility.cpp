@@ -360,6 +360,7 @@ bool ProjectileAttackAbility::SpawnProjectile(RTBEngine::Scene::GameObject* inst
         config.impactParticlePrefabRef = projectile->impactParticlePrefabRef;
         config.trailFadePrefabRef = projectile->trailFadePrefabRef;
         projectile->Initialize(config);
+        projectile->SetNetworkSpawnId(networkSnapshot->spawnId);
     } else {
         ProjectileComponent::ProjectileRuntimeContext context;
         context.instigator = instigator;
@@ -394,6 +395,7 @@ bool ProjectileAttackAbility::SpawnProjectile(RTBEngine::Scene::GameObject* inst
         snapshot.ignoreSameTeam = projectile->ignoreSameTeam;
         snapshot.destroyOnHit = projectile->destroyOnHit;
         snapshot.maxHits = projectile->maxHits;
+        projectile->SetNetworkSpawnId(snapshot.spawnId);
         GameNet::OnlineGameNetSubsystem::BroadcastProjectileSpawn(snapshot);
     }
 

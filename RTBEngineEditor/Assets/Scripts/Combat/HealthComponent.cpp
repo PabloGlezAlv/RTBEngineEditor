@@ -55,6 +55,25 @@ void HealthComponent::SetCurrentHealth(float value)
     NotifyHealthChanged(false);
 }
 
+void HealthComponent::NotifyDamagePresentation(float amount, const RTBEngine::Math::Vector3& hitPoint)
+{
+    if (amount <= 0.0f) {
+        return;
+    }
+
+    DamageTakenEvent damageEventData;
+    damageEventData.previousHealth = currentHealth + amount;
+    damageEventData.currentHealth = currentHealth;
+    damageEventData.maxHealth = maxHealth;
+    damageEventData.normalizedHealth = GetHealthNormalized();
+    damageEventData.damage.amount = amount;
+    damageEventData.damage.hitPoint = hitPoint;
+
+    lastDamageTakenEvent = damageEventData;
+    hasLastDamageTakenEvent = true;
+    damageTakenEvent.Invoke(damageEventData);
+}
+
 void HealthComponent::Heal(float amount)
 {
     if (amount <= 0.0f) {

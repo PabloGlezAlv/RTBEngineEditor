@@ -210,6 +210,12 @@ void EnemyMeleeAI::OnFixedUpdate(float fixedDeltaTime)
 void EnemyMeleeAI::OnLateUpdate(float deltaTime)
 {
     if (!HasSimulationAuthority()) {
+        if (state == State::Dying && !deathPoseLocked) {
+            if (!animationDriver || !animationDriver->HasDeathAnimation() || !animationDriver->IsDeathPlaying()) {
+                LockDeathPose();
+            }
+        }
+
         if (state == State::Attacking) {
             if (animationDriver && animationDriver->IsAttackPlaying()) {
                 return;

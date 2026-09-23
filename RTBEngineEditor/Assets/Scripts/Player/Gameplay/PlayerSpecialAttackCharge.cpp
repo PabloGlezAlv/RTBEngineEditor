@@ -2,8 +2,13 @@
 
 #include "CharacterCombatUtils.h"
 #include "CombatAuthority.h"
+#include "OnlineGameNetMessages.h"
+#include "PlayerRegistry.h"
 #include "PlayerSpecialAttackUtil.h"
 #include "ThirdPersonCharacterController.h"
+
+#include <RTBEngine/Online/OnlineGameplayNet.h>
+#include <RTBEngine/Scene/NetworkIdentity.h>
 
 #include <RTBEngine/Core/Logger.h>
 #include <RTBEngine/Scene/GameObject.h>
@@ -151,14 +156,75 @@ void PlayerSpecialAttackCharge::RegisterSuccessfulHit()
         return;
     }
 
+    RegisterAuthoritativeHit();
+}
+
+bool PlayerSpecialAttackCharge::RegisterAuthoritativeHit()
+{
     ClampSettings();
     if (currentHits >= hitsToFullyCharge) {
-        return;
+        return false;
     }
 
     ++currentHits;
     currentHits = std::min(currentHits, hitsToFullyCharge);
-    ApplyVisuals(false);
+    if (IsLocalPlayer()) {
+        ApplyVisuals(false);
+    }
+    return true;
+}
+
+void PlayerSpecialAttackCharge::ApplyReplicatedCharge(int hits)
+{
+    ClampSettings();
+    currentHits = std::clamp(hits, 0, hitsToFullyCharge);
+    if (IsLocalPlayer()) {
+        ApplyVisuals(false);
+    }
+}
+
+bool PlayerSpecialAttackCharge::ActivateOnPawn(
+    RTBEngine::Scene::GameObject* pawn,
+    const RTBEngine::Math::Vector3& direction,
+    float aimStrength,
+    bool requireCharge)
+{
+    if (!pawn) {
+        return false;
+    }
+
+    PlayerSpecialAttackCharge* charge = pawn->GetComponent<PlayerSpecialAttackCharge>();
+    if (charge) {
+        charge->CacheGameplayReferences();
+    }
+
+    IPlayerSpecialAttack* attack = charge
+        ? charge->specialAttack
+        : ResolvePlayerSpecialAttack(pawn);
+    if (!attack || attack->IsActive()) {
+        return false;
+    }
+
+    if (requireCharge && (!charge || !charge->IsReady())) {
+        return false;
+    }
+
+    if (!attack->TryActivate(direction, aimStrength)) {
+        return false;
+    }
+
+    if (!charge) {
+        return true;
+    }
+
+    if (requireCharge || charge->IsLocalPlayer()) {
+        charge->currentHits = 0;
+        if (charge->IsLocalPlayer()) {
+            charge->ApplyVisuals(false);
+        }
+    }
+
+    return true;
 }
 
 bool PlayerSpecialAttackCharge::ConsumeCharge()
@@ -228,11 +294,28 @@ void PlayerSpecialAttackCharge::HandleSpecialJoystickReleased(
         return;
     }
 
+    if (RTBEngine::Online::OnlineGameplayNet::IsInOnlineLobby() &&
+        !RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
+        GameNet::OnlineGameNetSubsystem::SendSpecialAttack(attackDirection, aimStrength);
+        return;
+    }
+
     if (!specialAttack->TryActivate(attackDirection, aimStrength)) {
         return;
     }
 
     ConsumeCharge();
+
+    if (RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
+        const RTBEngine::Scene::NetworkIdentity* identity =
+            owner->GetComponent<RTBEngine::Scene::NetworkIdentity>();
+        if (identity && identity->networkPlayerSlot >= 0) {
+            GameNet::OnlineGameNetSubsystem::BroadcastSpecialAttack(
+                identity->networkPlayerSlot,
+                attackDirection,
+                aimStrength);
+        }
+    }
 }
 
 bool PlayerSpecialAttackCharge::TryGetSpecialAimDirection(

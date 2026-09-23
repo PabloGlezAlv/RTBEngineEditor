@@ -66,6 +66,8 @@ public:
 
     void SetMaxHealth(float value);
     void SetCurrentHealth(float value);
+    // Fires the damage presentation without changing health or killing the actor.
+    void NotifyDamagePresentation(float amount, const RTBEngine::Math::Vector3& hitPoint = RTBEngine::Math::Vector3::Zero());
     void Heal(float amount);
     void Revive();
     void TakeDamage(float amount);

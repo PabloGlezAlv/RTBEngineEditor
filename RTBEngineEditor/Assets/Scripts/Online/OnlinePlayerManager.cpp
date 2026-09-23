@@ -14,6 +14,7 @@
 #include "RoundManager.h"
 #include "ThirdPersonCharacterController.h"
 #include "PlayerSpecialAttackCharge.h"
+#include "ProjectileComponent.h"
 
 #include <RTBEngine/Core/Logger.h>
 #include <RTBEngine/Scene/GameObject.h>
@@ -235,6 +236,48 @@ void OnlinePlayerManager::OnFixedUpdate(float /*fixedDeltaTime*/)
     GameNet::ProjectileSpawnSnapshot spawnSnapshot;
     while (GameNet::OnlineGameNetSubsystem::TryConsumeProjectileSpawn(spawnSnapshot)) {
         ProjectileAttackAbility::SpawnFromNetworkSnapshot(spawnSnapshot);
+    }
+
+    std::uint32_t despawnId = 0;
+    while (GameNet::OnlineGameNetSubsystem::TryConsumeProjectileDespawn(despawnId)) {
+        ProjectileComponent::DestroyByNetworkSpawnId(despawnId);
+    }
+
+    int chargeSlot = -1;
+    int chargeHits = 0;
+    while (GameNet::OnlineGameNetSubsystem::TryConsumeSpecialCharge(chargeSlot, chargeHits)) {
+        if (RTBEngine::Scene::GameObject* pawn = PlayerRegistry::GetInstance().FindBySlot(chargeSlot)) {
+            if (auto* charge = pawn->GetComponent<PlayerSpecialAttackCharge>()) {
+                charge->ApplyReplicatedCharge(chargeHits);
+            }
+        }
+    }
+
+    int specialSlot = -1;
+    float specialStrength = 0.0f;
+    RTBEngine::Math::Vector3 specialDirection = RTBEngine::Math::Vector3::Zero();
+    while (GameNet::OnlineGameNetSubsystem::TryConsumeAuthoritativeSpecialAttack(
+        specialSlot,
+        specialDirection,
+        specialStrength)) {
+        RTBEngine::Scene::GameObject* pawn = PlayerRegistry::GetInstance().FindBySlot(specialSlot);
+        if (!PlayerSpecialAttackCharge::ActivateOnPawn(pawn, specialDirection, specialStrength, true)) {
+            continue;
+        }
+
+        GameNet::OnlineGameNetSubsystem::BroadcastSpecialAttack(
+            specialSlot,
+            specialDirection,
+            specialStrength);
+        GameNet::OnlineGameNetSubsystem::BroadcastSpecialCharge(specialSlot, 0);
+    }
+
+    while (GameNet::OnlineGameNetSubsystem::TryConsumeSpecialAttackVisual(
+        specialSlot,
+        specialDirection,
+        specialStrength)) {
+        RTBEngine::Scene::GameObject* pawn = PlayerRegistry::GetInstance().FindBySlot(specialSlot);
+        PlayerSpecialAttackCharge::ActivateOnPawn(pawn, specialDirection, specialStrength, false);
     }
 }
 

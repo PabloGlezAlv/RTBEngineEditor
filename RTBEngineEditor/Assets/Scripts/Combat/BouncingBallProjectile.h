@@ -85,13 +85,8 @@ private:
         const RTBEngine::Math::Vector3& center,
         float radius,
         const RTBEngine::Math::Vector3& hitDirection);
-    bool TryHitWallAlongSegment(
-        const RTBEngine::Math::Vector3& from,
-        const RTBEngine::Math::Vector3& to,
-        RTBEngine::Math::Vector3& outHitPoint) const;
     bool TryHitEnemiesAlongSegment(
         const RTBEngine::Math::Vector3& from,
         const RTBEngine::Math::Vector3& to);
-    void TriggerBounce(int bounceIndex);
     void FinishAndDestroy();
 };

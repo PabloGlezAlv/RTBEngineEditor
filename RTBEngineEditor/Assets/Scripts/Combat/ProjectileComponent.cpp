@@ -6,6 +6,7 @@
 #include "FloatingDamageNumberSpawner.h"
 #include "HitFlashComponent.h"
 #include "LocalHostileHitNotify.h"
+#include "OnlineGameNetMessages.h"
 #include "ProjectileComponents.h"
 #include "ProjectileSimulation.h"
 
@@ -30,6 +31,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <unordered_map>
 
 using ThisClass = ProjectileComponent;
 
@@ -38,6 +40,20 @@ namespace {
     constexpr float kDistanceEpsilon = 0.0001f;
     constexpr float kMinTrailPointDistance = 0.04f;
     constexpr float kMinTrailPointDistanceSq = kMinTrailPointDistance * kMinTrailPointDistance;
+
+    std::unordered_map<std::uint32_t, ProjectileComponent*> projectilesBySpawnId;
+
+    void UnregisterProjectileSpawnId(ProjectileComponent* projectile, std::uint32_t spawnId)
+    {
+        if (spawnId == 0) {
+            return;
+        }
+
+        const auto it = projectilesBySpawnId.find(spawnId);
+        if (it != projectilesBySpawnId.end() && it->second == projectile) {
+            projectilesBySpawnId.erase(it);
+        }
+    }
     constexpr std::size_t kMaxTrailPoints = 48;
     constexpr float kProjectileTrailWidth = 0.10f;
     constexpr float kPi = 3.14159265358979323846f;
@@ -167,6 +183,8 @@ void ProjectileComponent::OnDisable()
     distanceTravelled = 0.0f;
     pendingDestroy = false;
     initialized = false;
+    UnregisterProjectileSpawnId(this, networkSpawnId);
+    networkSpawnId = 0;
 
     if (flightTrail) {
         flightTrail->SetVisible(false);
@@ -638,11 +656,8 @@ bool ProjectileComponent::HandleSweepHit(const RTBEngine::Math::Vector3& previou
     HealthComponent* targetHealth = ResolveHitHealth(hit.gameObject);
     if (targetHealth && !HasAlreadyHit(targetHealth)) {
         TryTriggerHitFlash(hit.gameObject);
-        if (CombatAuthority::IsLocallyControlled(instigator)) {
-            if (!applyDamage) {
-                TryTriggerDamageNumber(hit.gameObject, damage, hit.point);
-            }
-            LocalHostileHitNotify::NotifySuccessfulHit(instigator);
+        if (CombatAuthority::IsLocallyControlled(instigator) && !applyDamage) {
+            TryTriggerDamageNumber(hit.gameObject, damage, hit.point);
         }
     }
 
@@ -655,6 +670,7 @@ bool ProjectileComponent::HandleSweepHit(const RTBEngine::Math::Vector3& previou
             damageContext.hitDirection = direction;
             damageContext.knockbackStrength = knockbackStrength;
             targetHealth->TakeDamage(damage, damageContext);
+            LocalHostileHitNotify::NotifySuccessfulHit(instigator);
 
             if (CombatAuthority::IsLocallyControlled(instigator) && hitAudio) {
                 hitAudio->PlayOneShot();
@@ -727,11 +743,8 @@ bool ProjectileComponent::ProcessEcsHit(RTBEngine::Scene::GameObject* hitObject,
     HealthComponent* targetHealth = ResolveHitHealth(hitObject);
     if (targetHealth && !HasAlreadyHit(targetHealth)) {
         TryTriggerHitFlash(hitObject);
-        if (CombatAuthority::IsLocallyControlled(instigator)) {
-            if (!applyDamage) {
-                TryTriggerDamageNumber(hitObject, damage, hitPoint);
-            }
-            LocalHostileHitNotify::NotifySuccessfulHit(instigator);
+        if (CombatAuthority::IsLocallyControlled(instigator) && !applyDamage) {
+            TryTriggerDamageNumber(hitObject, damage, hitPoint);
         }
     }
 
@@ -744,6 +757,7 @@ bool ProjectileComponent::ProcessEcsHit(RTBEngine::Scene::GameObject* hitObject,
             damageContext.hitDirection = direction;
             damageContext.knockbackStrength = knockbackStrength;
             targetHealth->TakeDamage(damage, damageContext);
+            LocalHostileHitNotify::NotifySuccessfulHit(instigator);
 
             if (CombatAuthority::IsLocallyControlled(instigator) && hitAudio) {
                 hitAudio->PlayOneShot();
@@ -794,10 +808,44 @@ void ProjectileComponent::SyncEcsSimulation(float /*deltaTime*/)
     }
 }
 
+void ProjectileComponent::SetNetworkSpawnId(std::uint32_t spawnId)
+{
+    if (networkSpawnId == spawnId) {
+        return;
+    }
+
+    UnregisterProjectileSpawnId(this, networkSpawnId);
+    networkSpawnId = spawnId;
+    if (networkSpawnId != 0) {
+        projectilesBySpawnId[networkSpawnId] = this;
+    }
+}
+
+void ProjectileComponent::DestroyByNetworkSpawnId(std::uint32_t spawnId)
+{
+    if (spawnId == 0) {
+        return;
+    }
+
+    const auto it = projectilesBySpawnId.find(spawnId);
+    if (it == projectilesBySpawnId.end() || !it->second) {
+        return;
+    }
+
+    it->second->DestroyProjectile();
+}
+
 void ProjectileComponent::DestroyProjectile()
 {
     if (pendingDestroy) {
         return;
+    }
+
+    const std::uint32_t spawnId = networkSpawnId;
+    UnregisterProjectileSpawnId(this, networkSpawnId);
+    networkSpawnId = 0;
+    if (spawnId != 0 && CombatAuthority::ShouldProjectileApplyDamage()) {
+        GameNet::OnlineGameNetSubsystem::BroadcastProjectileDespawn(spawnId);
     }
 
     pendingDestroy = true;

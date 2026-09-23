@@ -23,6 +23,10 @@ namespace GameNet {
     constexpr std::uint16_t kPlayerSessionReport = 80;
     constexpr std::uint16_t kPlayerAmmoState = 81;
     constexpr std::uint16_t kEnemyHealthState = 82;
+    constexpr std::uint16_t kProjectileDespawn = 83;
+    constexpr std::uint16_t kPlayerSpecialCharge = 84;
+    constexpr std::uint16_t kPlayerSpecialAttack = 85;
+    constexpr std::uint16_t kPlayerSpecialAttackVisual = 86;
 
     constexpr std::uint8_t kCombatInputChannel = 4;
     constexpr std::uint8_t kProjectileChannel = 5;
@@ -39,5 +43,6 @@ namespace GameNet {
     constexpr std::uint8_t kRoundCountdownChannel = 16;
     constexpr std::uint8_t kPlayerAmmoChannel = 17;
     constexpr std::uint8_t kEnemyHealthChannel = 18;
+    constexpr std::uint8_t kPlayerSpecialChannel = 19;
 
 }

@@ -94,6 +94,26 @@ namespace GameNet {
 
         static bool BroadcastProjectileSpawn(const ProjectileSpawnSnapshot& snapshot);
         static bool TryConsumeProjectileSpawn(ProjectileSpawnSnapshot& outSnapshot);
+        static bool BroadcastProjectileDespawn(std::uint32_t spawnId);
+        static bool TryConsumeProjectileDespawn(std::uint32_t& outSpawnId);
+
+        static bool BroadcastSpecialCharge(int playerSlot, int hits);
+        static bool TryConsumeSpecialCharge(int& outPlayerSlot, int& outHits);
+        static bool SendSpecialAttack(
+            const RTBEngine::Math::Vector3& direction,
+            float aimStrength);
+        static bool BroadcastSpecialAttack(
+            int playerSlot,
+            const RTBEngine::Math::Vector3& direction,
+            float aimStrength);
+        static bool TryConsumeAuthoritativeSpecialAttack(
+            int& outPlayerSlot,
+            RTBEngine::Math::Vector3& outDirection,
+            float& outAimStrength);
+        static bool TryConsumeSpecialAttackVisual(
+            int& outPlayerSlot,
+            RTBEngine::Math::Vector3& outDirection,
+            float& outAimStrength);
 
         static bool BroadcastPlayerDeath(int playerSlot);
         static void ApplyPlayerDeathForSlot(int playerSlot);

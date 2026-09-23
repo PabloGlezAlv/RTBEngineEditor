@@ -269,6 +269,10 @@ void PlayerSpecialDashAttack::ApplyMovementLock(float deltaTime)
 
 void PlayerSpecialDashAttack::SetActorWorldPosition(const RTBEngine::Math::Vector3& position)
 {
+    if (!CombatAuthority::HasSimulationAuthority(owner)) {
+        return;
+    }
+
     CharacterCombatUtils::SetActorWorldPosition(
         owner,
         position,

@@ -6,6 +6,10 @@
 #include <RTBEngine/Scene/Component.h>
 
 namespace RTBEngine {
+    namespace Scene {
+        class GameObject;
+    }
+
     namespace UI {
         class UIImage;
         class UIJoystick;
@@ -27,6 +31,14 @@ public:
     RTBEngine::UI::UIImage* GetReadyIcon() const { return readyIcon; }
 
     void RegisterSuccessfulHit();
+    bool RegisterAuthoritativeHit();
+    void ApplyReplicatedCharge(int hits);
+    int GetCurrentHits() const { return currentHits; }
+    static bool ActivateOnPawn(
+        RTBEngine::Scene::GameObject* pawn,
+        const RTBEngine::Math::Vector3& direction,
+        float aimStrength,
+        bool requireCharge);
     bool IsReady() const;
     float GetChargeNormalized() const;
     void RefreshAfterSpawn();

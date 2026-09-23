@@ -1,12 +1,40 @@
 # Changelog — RTBEngineEditor
 
-**Current version:** `0.11.0`
+**Current version:** `1.0.0`
 
 API documentation: [`README.md`](README.md)
 
-**Requirements:** RTBEngine SDK **0.11.0** (generate with `../RTBEngine/BuildSDK.bat`).
+**Requirements:** RTBEngine SDK **1.0.0** (generate with `../RTBEngine/BuildSDK.bat`).
 
 ---
+
+## [1.0.0] — 2026
+
+### Added
+- Charged special attacks: energy beam, mage bouncing ball, archer arrow rain, leap, and rogue dash, fired from the charge joystick.
+- Energy-beam VFX, plus bloom controls on volumes and project settings.
+- Attack trail prefab; the basic-attack trail stops on walls.
+- Static / dynamic object flags in the editor.
+- Game-build logo override (window icon and loading splash). Leave it empty to keep the engine logo.
+- Solo play: the player does not respawn after death.
+- Graphics API in game settings, and the splash screen on play.
+
+### Changed
+- Third-person control is split from combat. Scene overrides no longer wipe combat references.
+- Knockback, targets, authority, and locomotion come from `CharacterBase` and cached lookups.
+- Projectile aim range is derived from speed and lifetime.
+- Gameplay uses `AddComponent<T>` and inherit macros. Pool reuse goes through `OnEnable` / `OnDisable`.
+- Post-process runs through the engine stack. Editor, game view, and the built player render the same way.
+- Volume inspector text is in English.
+- Online pawns spawn from the selected character and bind once. Projectile damage stays on the host.
+
+### Fixed
+- Rogue dash no longer drops through the floor.
+- Beam visual, player movement, stun updates, nameplates, display names, and the health bar.
+- Online combat: projectiles despawn on the peer that does not own them; special charge and special attacks replicate (the host applies them, clients play the visual).
+- Damage numbers and the comic hit panel show on clients when replicated health drops.
+- The mage ball keeps bouncing on the ground and explodes only on a direct enemy hit.
+- A dead enemy on a client plays the death animation, then scales down and disappears.
 
 ## [0.11.0] — 2026
 

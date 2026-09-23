@@ -3,7 +3,6 @@
 #include "CharacterGameplaySpawner.h"
 #include "EnemyMeleeAI.h"
 #include "HealthComponent.h"
-#include "HitFlashComponent.h"
 #include "OnlineDisplayNameHelper.h"
 #include "OnlinePlayerManager.h"
 #include "PlayerAmmoSystem.h"
@@ -39,6 +38,24 @@ namespace GameNet {
         bool subsystemInitialized = false;
         std::unordered_map<std::string, PlayerCombatInput> latestCombatInputs;
         std::deque<ProjectileSpawnSnapshot> pendingProjectileSpawns;
+        std::deque<std::uint32_t> pendingProjectileDespawns;
+
+        struct QueuedSpecialCharge {
+            int playerSlot = -1;
+            int hits = 0;
+        };
+
+        struct QueuedSpecialAttack {
+            int playerSlot = -1;
+            float directionX = 0.0f;
+            float directionZ = 0.0f;
+            float aimStrength = 1.0f;
+        };
+
+        std::deque<QueuedSpecialCharge> pendingSpecialCharges;
+        std::deque<QueuedSpecialAttack> pendingAuthoritativeSpecialAttacks;
+        std::deque<QueuedSpecialAttack> pendingSpecialAttackVisuals;
+        std::unordered_map<std::string, std::uint32_t> lastSpecialAttackSequenceByUser;
         std::deque<EnemySpawnSnapshot> pendingEnemySpawns;
         std::deque<RoundStartSnapshot> pendingRoundStarts;
         std::deque<RoundCountdownSnapshot> pendingRoundCountdowns;
@@ -337,6 +354,134 @@ namespace GameNet {
             pendingProjectileSpawns.push_back(snapshot);
         }
 
+        void HandleProjectileDespawn(const RTBEngine::Online::OnlineMessageContext& context)
+        {
+            if (RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
+                return;
+            }
+
+            std::size_t offset = 0;
+            std::uint32_t spawnId = 0;
+            if (!RTBEngine::Online::OnlineMessageCodec::ReadValue(
+                    context.payload,
+                    context.payloadSize,
+                    offset,
+                    spawnId) ||
+                spawnId == 0) {
+                return;
+            }
+
+            pendingProjectileDespawns.push_back(spawnId);
+        }
+
+        void HandleSpecialCharge(const RTBEngine::Online::OnlineMessageContext& context)
+        {
+            if (RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
+                return;
+            }
+
+            std::size_t offset = 0;
+            QueuedSpecialCharge charge;
+            if (!RTBEngine::Online::OnlineMessageCodec::ReadValue(
+                    context.payload,
+                    context.payloadSize,
+                    offset,
+                    charge.playerSlot) ||
+                !RTBEngine::Online::OnlineMessageCodec::ReadValue(
+                    context.payload,
+                    context.payloadSize,
+                    offset,
+                    charge.hits) ||
+                charge.playerSlot < 0) {
+                return;
+            }
+
+            pendingSpecialCharges.push_back(charge);
+        }
+
+        void HandleSpecialAttackRequest(const RTBEngine::Online::OnlineMessageContext& context)
+        {
+            if (!RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
+                return;
+            }
+
+            std::size_t offset = 0;
+            std::uint32_t sequence = 0;
+            QueuedSpecialAttack attack;
+            if (!RTBEngine::Online::OnlineMessageCodec::ReadValue(
+                    context.payload,
+                    context.payloadSize,
+                    offset,
+                    sequence) ||
+                !RTBEngine::Online::OnlineMessageCodec::ReadValue(
+                    context.payload,
+                    context.payloadSize,
+                    offset,
+                    attack.directionX) ||
+                !RTBEngine::Online::OnlineMessageCodec::ReadValue(
+                    context.payload,
+                    context.payloadSize,
+                    offset,
+                    attack.directionZ) ||
+                !RTBEngine::Online::OnlineMessageCodec::ReadValue(
+                    context.payload,
+                    context.payloadSize,
+                    offset,
+                    attack.aimStrength) ||
+                sequence == 0) {
+                return;
+            }
+
+            const std::string senderKey = context.senderUserId.ToString();
+            const auto previous = lastSpecialAttackSequenceByUser.find(senderKey);
+            if (previous != lastSpecialAttackSequenceByUser.end() && previous->second == sequence) {
+                return;
+            }
+            lastSpecialAttackSequenceByUser[senderKey] = sequence;
+
+            attack.playerSlot = PlayerRegistry::GetInstance().FindSlotByOwnerUserId(senderKey);
+            if (attack.playerSlot < 0) {
+                return;
+            }
+
+            pendingAuthoritativeSpecialAttacks.push_back(attack);
+        }
+
+        void HandleSpecialAttackVisual(const RTBEngine::Online::OnlineMessageContext& context)
+        {
+            if (RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
+                return;
+            }
+
+            std::size_t offset = 0;
+            QueuedSpecialAttack attack;
+            if (!RTBEngine::Online::OnlineMessageCodec::ReadValue(
+                    context.payload,
+                    context.payloadSize,
+                    offset,
+                    attack.playerSlot) ||
+                !RTBEngine::Online::OnlineMessageCodec::ReadValue(
+                    context.payload,
+                    context.payloadSize,
+                    offset,
+                    attack.directionX) ||
+                !RTBEngine::Online::OnlineMessageCodec::ReadValue(
+                    context.payload,
+                    context.payloadSize,
+                    offset,
+                    attack.directionZ) ||
+                !RTBEngine::Online::OnlineMessageCodec::ReadValue(
+                    context.payload,
+                    context.payloadSize,
+                    offset,
+                    attack.aimStrength) ||
+                attack.playerSlot < 0) {
+                return;
+            }
+
+            pendingSpecialAttackVisuals.push_back(attack);
+        }
+
         RTBEngine::Scene::GameObject* FindPawnByPlayerSlot(int playerSlot)
         {
             return PlayerRegistry::GetInstance().FindBySlot(playerSlot);
@@ -596,15 +741,16 @@ namespace GameNet {
             }
 
             const float clamped = std::clamp(normalizedHealth, 0.0f, 1.0f);
-            const float targetHealth = clamped * health->maxHealth;
-            if (targetHealth <= 0.0f || targetHealth >= health->currentHealth - 0.01f) {
+            const float targetHealth = std::max(0.0f, clamped * health->maxHealth);
+            const float damageAmount = health->currentHealth - targetHealth;
+            if (damageAmount <= 0.01f) {
                 return;
             }
 
-            health->SetCurrentHealth(targetHealth);
-            if (HitFlashComponent* hitFlash = enemy->GetComponent<HitFlashComponent>()) {
-                hitFlash->TriggerFlash();
+            if (targetHealth > 0.0f) {
+                health->SetCurrentHealth(targetHealth);
             }
+            health->NotifyDamagePresentation(damageAmount);
         }
 
         void HandlePlayerNetworkBind(const RTBEngine::Online::OnlineMessageContext& context)
@@ -711,7 +857,12 @@ namespace GameNet {
             }
 
             const float clamped = std::clamp(snapshot.normalizedHealth, 0.0f, 1.0f);
-            health->SetCurrentHealth(clamped * health->maxHealth);
+            const float targetHealth = clamped * health->maxHealth;
+            const float damageAmount = health->currentHealth - targetHealth;
+            health->SetCurrentHealth(targetHealth);
+            if (damageAmount > 0.01f) {
+                health->NotifyDamagePresentation(damageAmount);
+            }
         }
 
         void ApplyPlayerAmmoSnapshot(const PlayerAmmoSnapshot& snapshot)
@@ -809,6 +960,10 @@ namespace GameNet {
 
         RTBEngine::Online::OnlineMessageBus::RegisterHandler(kPlayerCombatInput, &HandleCombatInput);
         RTBEngine::Online::OnlineMessageBus::RegisterHandler(kProjectileSpawn, &HandleProjectileSpawn);
+        RTBEngine::Online::OnlineMessageBus::RegisterHandler(kProjectileDespawn, &HandleProjectileDespawn);
+        RTBEngine::Online::OnlineMessageBus::RegisterHandler(kPlayerSpecialCharge, &HandleSpecialCharge);
+        RTBEngine::Online::OnlineMessageBus::RegisterHandler(kPlayerSpecialAttack, &HandleSpecialAttackRequest);
+        RTBEngine::Online::OnlineMessageBus::RegisterHandler(kPlayerSpecialAttackVisual, &HandleSpecialAttackVisual);
         RTBEngine::Online::OnlineMessageBus::RegisterHandler(kPlayerDeathState, &HandlePlayerDeathState);
         RTBEngine::Online::OnlineMessageBus::RegisterHandler(kPlayerRevive, &HandlePlayerRevive);
         RTBEngine::Online::OnlineMessageBus::RegisterHandler(kPlayerReviveRequest, &HandlePlayerReviveRequest);
@@ -837,6 +992,10 @@ namespace GameNet {
 
         RTBEngine::Online::OnlineMessageBus::UnregisterHandler(kPlayerCombatInput);
         RTBEngine::Online::OnlineMessageBus::UnregisterHandler(kProjectileSpawn);
+        RTBEngine::Online::OnlineMessageBus::UnregisterHandler(kProjectileDespawn);
+        RTBEngine::Online::OnlineMessageBus::UnregisterHandler(kPlayerSpecialCharge);
+        RTBEngine::Online::OnlineMessageBus::UnregisterHandler(kPlayerSpecialAttack);
+        RTBEngine::Online::OnlineMessageBus::UnregisterHandler(kPlayerSpecialAttackVisual);
         RTBEngine::Online::OnlineMessageBus::UnregisterHandler(kPlayerDeathState);
         RTBEngine::Online::OnlineMessageBus::UnregisterHandler(kPlayerRevive);
         RTBEngine::Online::OnlineMessageBus::UnregisterHandler(kPlayerReviveRequest);
@@ -859,6 +1018,11 @@ namespace GameNet {
         matchNotificationSecondsRemaining = 0.0f;
         latestCombatInputs.clear();
         pendingProjectileSpawns.clear();
+        pendingProjectileDespawns.clear();
+        pendingSpecialCharges.clear();
+        pendingAuthoritativeSpecialAttacks.clear();
+        pendingSpecialAttackVisuals.clear();
+        lastSpecialAttackSequenceByUser.clear();
         pendingEnemySpawns.clear();
         pendingRoundStarts.clear();
         pendingRoundCountdowns.clear();
@@ -921,6 +1085,140 @@ namespace GameNet {
 
         outSnapshot = pendingProjectileSpawns.front();
         pendingProjectileSpawns.pop_front();
+        return true;
+    }
+
+    bool OnlineGameNetSubsystem::BroadcastProjectileDespawn(std::uint32_t spawnId)
+    {
+        if (!RTBEngine::Online::OnlineGameplayNet::IsLobbyHost() || spawnId == 0) {
+            return false;
+        }
+
+        Init();
+        std::vector<std::uint8_t> payload;
+        RTBEngine::Online::OnlineMessageCodec::AppendValue(payload, spawnId);
+        return RTBEngine::Online::OnlineMessageBus::BroadcastToClients(
+            kProjectileDespawn,
+            payload,
+            kProjectileChannel,
+            RTBEngine::Online::OnlinePacketReliability::Reliable);
+    }
+
+    bool OnlineGameNetSubsystem::TryConsumeProjectileDespawn(std::uint32_t& outSpawnId)
+    {
+        if (pendingProjectileDespawns.empty()) {
+            return false;
+        }
+
+        outSpawnId = pendingProjectileDespawns.front();
+        pendingProjectileDespawns.pop_front();
+        return true;
+    }
+
+    bool OnlineGameNetSubsystem::BroadcastSpecialCharge(int playerSlot, int hits)
+    {
+        if (!RTBEngine::Online::OnlineGameplayNet::IsLobbyHost() || playerSlot < 0) {
+            return false;
+        }
+
+        Init();
+        std::vector<std::uint8_t> payload;
+        RTBEngine::Online::OnlineMessageCodec::AppendValue(payload, playerSlot);
+        RTBEngine::Online::OnlineMessageCodec::AppendValue(payload, hits);
+        return RTBEngine::Online::OnlineMessageBus::BroadcastToClients(
+            kPlayerSpecialCharge,
+            payload,
+            kPlayerSpecialChannel,
+            RTBEngine::Online::OnlinePacketReliability::Reliable);
+    }
+
+    bool OnlineGameNetSubsystem::TryConsumeSpecialCharge(int& outPlayerSlot, int& outHits)
+    {
+        if (pendingSpecialCharges.empty()) {
+            return false;
+        }
+
+        outPlayerSlot = pendingSpecialCharges.front().playerSlot;
+        outHits = pendingSpecialCharges.front().hits;
+        pendingSpecialCharges.pop_front();
+        return true;
+    }
+
+    bool OnlineGameNetSubsystem::SendSpecialAttack(
+        const RTBEngine::Math::Vector3& direction,
+        float aimStrength)
+    {
+        if (RTBEngine::Online::OnlineGameplayNet::IsLobbyHost()) {
+            return false;
+        }
+
+        Init();
+        static std::uint32_t nextSequence = 1;
+        std::vector<std::uint8_t> payload;
+        RTBEngine::Online::OnlineMessageCodec::AppendValue(payload, nextSequence++);
+        RTBEngine::Online::OnlineMessageCodec::AppendValue(payload, direction.x);
+        RTBEngine::Online::OnlineMessageCodec::AppendValue(payload, direction.z);
+        RTBEngine::Online::OnlineMessageCodec::AppendValue(payload, aimStrength);
+        return RTBEngine::Online::OnlineMessageBus::SendToHost(
+            kPlayerSpecialAttack,
+            payload,
+            kPlayerSpecialChannel,
+            RTBEngine::Online::OnlinePacketReliability::Reliable);
+    }
+
+    bool OnlineGameNetSubsystem::BroadcastSpecialAttack(
+        int playerSlot,
+        const RTBEngine::Math::Vector3& direction,
+        float aimStrength)
+    {
+        if (!RTBEngine::Online::OnlineGameplayNet::IsLobbyHost() || playerSlot < 0) {
+            return false;
+        }
+
+        Init();
+        std::vector<std::uint8_t> payload;
+        RTBEngine::Online::OnlineMessageCodec::AppendValue(payload, playerSlot);
+        RTBEngine::Online::OnlineMessageCodec::AppendValue(payload, direction.x);
+        RTBEngine::Online::OnlineMessageCodec::AppendValue(payload, direction.z);
+        RTBEngine::Online::OnlineMessageCodec::AppendValue(payload, aimStrength);
+        return RTBEngine::Online::OnlineMessageBus::BroadcastToClients(
+            kPlayerSpecialAttackVisual,
+            payload,
+            kPlayerSpecialChannel,
+            RTBEngine::Online::OnlinePacketReliability::Reliable);
+    }
+
+    bool OnlineGameNetSubsystem::TryConsumeAuthoritativeSpecialAttack(
+        int& outPlayerSlot,
+        RTBEngine::Math::Vector3& outDirection,
+        float& outAimStrength)
+    {
+        if (pendingAuthoritativeSpecialAttacks.empty()) {
+            return false;
+        }
+
+        const QueuedSpecialAttack attack = pendingAuthoritativeSpecialAttacks.front();
+        pendingAuthoritativeSpecialAttacks.pop_front();
+        outPlayerSlot = attack.playerSlot;
+        outDirection = RTBEngine::Math::Vector3(attack.directionX, 0.0f, attack.directionZ);
+        outAimStrength = attack.aimStrength;
+        return true;
+    }
+
+    bool OnlineGameNetSubsystem::TryConsumeSpecialAttackVisual(
+        int& outPlayerSlot,
+        RTBEngine::Math::Vector3& outDirection,
+        float& outAimStrength)
+    {
+        if (pendingSpecialAttackVisuals.empty()) {
+            return false;
+        }
+
+        const QueuedSpecialAttack attack = pendingSpecialAttackVisuals.front();
+        pendingSpecialAttackVisuals.pop_front();
+        outPlayerSlot = attack.playerSlot;
+        outDirection = RTBEngine::Math::Vector3(attack.directionX, 0.0f, attack.directionZ);
+        outAimStrength = attack.aimStrength;
         return true;
     }
 
