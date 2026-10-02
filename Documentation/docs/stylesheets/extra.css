@@ -1,0 +1,47 @@
+:root {
+  --md-primary-fg-color: #2c2c2c;
+  --md-primary-fg-color--light: #3e3e3e;
+  --md-primary-fg-color--dark: #1b1b1b;
+  --md-accent-fg-color: #c7782a;
+  --md-typeset-a-color: #9a5b16;
+}
+
+[data-md-color-scheme="slate"] {
+  --md-primary-fg-color: #1b1b1b;
+  --md-accent-fg-color: #e39a4a;
+  --md-typeset-a-color: #e39a4a;
+  --md-default-bg-color: #1e1e1e;
+  --md-code-bg-color: #2a2a2a;
+}
+
+.md-header {
+  background-color: #1e1e1e;
+}
+
+.md-tabs {
+  background-color: #252525;
+}
+
+.md-typeset h1 {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.md-typeset code {
+  font-size: 0.84em;
+}
+
+.md-typeset .admonition,
+.md-typeset details {
+  border-left-width: 4px;
+}
+
+.api-sig {
+  font-family: var(--md-code-font-family);
+  font-size: 0.84rem;
+  background: var(--md-code-bg-color);
+  border-radius: 0.2rem;
+  padding: 0.55rem 0.75rem;
+  margin: 0.4rem 0 0.8rem;
+  overflow-x: auto;
+}

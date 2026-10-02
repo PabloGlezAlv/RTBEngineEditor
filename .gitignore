@@ -417,3 +417,7 @@ RTBEngineEditor/RTBEngine_SDK/
 
 # Editor asset temp/backup files (never commit)
 RTBEngineEditor/Assets/**/*.tmp
+
+# MkDocs (Documentation site). Source is versioned; the build is not.
+Documentation/site/
+Documentation/.cache/

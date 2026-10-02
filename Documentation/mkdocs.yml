@@ -1,0 +1,275 @@
+site_name: Manual de RTBEngine
+site_description: Manual, editor y referencia de scripting de RTBEngine 1.0
+site_url: https://pabloglezalv.github.io/RTBEngineEditor/
+repo_url: https://github.com/PabloGlezAlv/RTBEngineEditor
+repo_name: RTBEngineEditor
+edit_uri: edit/main/Documentation/docs/
+copyright: RTBEngine 1.0
+
+docs_dir: docs
+site_dir: site
+
+theme:
+  name: material
+  language: es
+  logo: assets/logo.svg
+  favicon: assets/logo.svg
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-night
+        name: Oscuro
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-sunny
+        name: Claro
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.expand
+    - navigation.indexes
+    - navigation.top
+    - navigation.footer
+    - navigation.tracking
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.tabs.link
+    - toc.follow
+
+extra_css:
+  - stylesheets/extra.css
+
+hooks:
+  - hooks/search_i18n.py
+
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - def_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: false
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+
+plugins:
+  - search
+  - i18n:
+      docs_structure: folder
+      fallback_to_default: true
+      reconfigure_material: true
+      reconfigure_search: true
+      languages:
+        - locale: es
+          default: true
+          name: Español
+          build: true
+          site_name: Manual de RTBEngine
+        - locale: en
+          name: English
+          build: true
+          site_name: RTBEngine Manual
+          theme:
+            palette:
+              - media: "(prefers-color-scheme: light)"
+                scheme: default
+                primary: custom
+                accent: custom
+                toggle:
+                  icon: material/weather-night
+                  name: Dark
+              - media: "(prefers-color-scheme: dark)"
+                scheme: slate
+                primary: custom
+                accent: custom
+                toggle:
+                  icon: material/weather-sunny
+                  name: Light
+          nav_translations:
+            Inicio: Home
+            Manual: Manual
+            Empezar: Getting started
+            Qué es RTBEngine: What is RTBEngine
+            Instalación: Installation
+            Tu primer juego: Your first game
+            Arquitectura: Architecture
+            Bucle de frame: Frame loop
+            Escena: Scene
+            GameObject: GameObject
+            Componentes: Components
+            Escenas: Scenes
+            Prefabs: Prefabs
+            Object Pool: Object Pool
+            Scripting: Scripting
+            Componentes C++: C++ components
+            Ciclo de vida: Lifecycle
+            Propiedades: Properties
+            Frontera DLL: DLL boundary
+            Acciones latentes: Latent actions
+            Física: Physics
+            Cuerpos rígidos: Rigid bodies
+            Colisiones: Collisions
+            Capas: Layers
+            Gráficos: Graphics
+            Mallas y materiales: Meshes and materials
+            Luces y sombras: Lights and shadows
+            Cámara: Camera
+            Partículas: Particles
+            Postproceso: Post-processing
+            OpenGL y Vulkan: OpenGL and Vulkan
+            Animación: Animation
+            Audio: Audio
+            Input: Input
+            Interfaz de usuario: User interface
+            Navegación: Navigation
+            Matemáticas: Math
+            ECS: ECS
+            Assets: Assets
+            Editor: Editor
+            La interfaz: The interface
+            Jerarquía: Hierarchy
+            Inspector: Inspector
+            Vista de escena: Scene view
+            Vista de juego: Game view
+            Navegador de contenido: Content browser
+            Consola: Console
+            Reproducción: Playback
+            Prefabs en el editor: Prefabs in the editor
+            Atajos: Shortcuts
+            Compilar el juego: Building the game
+            Ajustes del proyecto: Project settings
+            Ventanas opcionales: Optional windows
+            Online: Online
+            Partida en LAN: LAN match
+            Relay de Internet: Internet relay
+            Mensajes de red: Network messages
+            Scripting API: Scripting API
+            Índice: Index
+            Scene y SceneManager: Scene and SceneManager
+            MeshRenderer: MeshRenderer
+            Light: Light
+            RigidBody: RigidBody
+            Colliders: Colliders
+            ParticleSystem: ParticleSystem
+            Volume: Volume
+            TrailRenderer: TrailRenderer
+            Animator: Animator
+            UI: UI
+            Network: Network
+            Math: Math
+            Reflection: Reflection
+            Logger: Logger
+            Application: Application
+
+nav:
+  - Inicio: index.md
+  - Manual:
+      - manual/index.md
+      - Empezar:
+          - Qué es RTBEngine: manual/que-es.md
+          - Instalación: manual/instalacion.md
+          - Tu primer juego: manual/primer-juego.md
+          - Arquitectura: manual/arquitectura.md
+          - Bucle de frame: manual/bucle.md
+      - Escena:
+          - GameObject: manual/escena/gameobject.md
+          - Componentes: manual/escena/componentes.md
+          - Escenas: manual/escena/escenas.md
+          - Prefabs: manual/escena/prefabs.md
+          - Object Pool: manual/escena/object-pool.md
+      - Scripting:
+          - Componentes C++: manual/scripting/componentes-cpp.md
+          - Ciclo de vida: manual/scripting/ciclo-de-vida.md
+          - Propiedades: manual/scripting/reflexion.md
+          - Frontera DLL: manual/scripting/frontera-dll.md
+          - Acciones latentes: manual/scripting/acciones-latentes.md
+      - Física:
+          - Cuerpos rígidos: manual/fisica/cuerpos.md
+          - Colisiones: manual/fisica/colisiones.md
+          - Capas: manual/fisica/capas.md
+      - Gráficos:
+          - Mallas y materiales: manual/graficos/mallas.md
+          - Luces y sombras: manual/graficos/luces.md
+          - Cámara: manual/graficos/camara.md
+          - Partículas: manual/graficos/particulas.md
+          - Postproceso: manual/graficos/postproceso.md
+          - OpenGL y Vulkan: manual/graficos/rhi.md
+      - Animación: manual/animacion.md
+      - Audio: manual/audio.md
+      - Input: manual/input.md
+      - Interfaz de usuario: manual/ui.md
+      - Navegación: manual/navegacion.md
+      - Matemáticas: manual/matematicas.md
+      - ECS: manual/ecs.md
+      - Assets: manual/assets.md
+  - Editor:
+      - editor/index.md
+      - La interfaz: editor/interfaz.md
+      - Jerarquía: editor/jerarquia.md
+      - Inspector: editor/inspector.md
+      - Vista de escena: editor/vista-escena.md
+      - Vista de juego: editor/vista-juego.md
+      - Navegador de contenido: editor/navegador.md
+      - Consola: editor/consola.md
+      - Reproducción: editor/toolbar.md
+      - Prefabs en el editor: editor/prefabs.md
+      - Atajos: editor/atajos.md
+      - Compilar el juego: editor/build.md
+      - Ajustes del proyecto: editor/ajustes.md
+      - Ventanas opcionales: editor/ventanas.md
+  - Online:
+      - online/index.md
+      - Partida en LAN: online/lan.md
+      - Relay de Internet: online/relay.md
+      - Mensajes de red: online/mensajes.md
+  - Scripting API:
+      - api/index.md
+      - Application: api/application.md
+      - Logger: api/logger.md
+      - Component: api/component.md
+      - GameObject: api/gameobject.md
+      - Transform: api/transform.md
+      - Scene y SceneManager: api/scene.md
+      - Prefab: api/prefab.md
+      - ObjectPool: api/objectpool.md
+      - MeshRenderer: api/meshrenderer.md
+      - Camera: api/camera.md
+      - Light: api/light.md
+      - RigidBody: api/rigidbody.md
+      - Colliders: api/colliders.md
+      - Audio: api/audio.md
+      - ParticleSystem: api/particles.md
+      - Volume: api/volume.md
+      - TrailRenderer: api/trail.md
+      - Animator: api/animator.md
+      - Input: api/input.md
+      - UI: api/ui.md
+      - Navigation: api/navigation.md
+      - Online: api/online.md
+      - Network: api/network.md
+      - Math: api/math.md
+      - Reflection: api/reflection.md
+      - ECS: api/ecs.md
